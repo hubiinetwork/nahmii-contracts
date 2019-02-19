@@ -12,6 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 import {Configurable} from "./Configurable.sol";
+import {NonceManageable} from "./NonceManageable.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -23,7 +24,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
  * @title NullSettlementChallengeState
  * @notice Where null settlements challenge state is managed
  */
-contract NullSettlementChallengeState is Ownable, Servable, Configurable, BalanceTrackable {
+contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceManageable, BalanceTrackable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -40,8 +41,6 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    uint256 public nonce;
-
     SettlementTypesLib.Proposal[] public proposals;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
     mapping(address => uint256[]) public proposalIndicesByWallet;
@@ -53,8 +52,8 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         uint256 expirationTime);
     event SetProposalStatusEvent(address wallet, MonetaryTypesLib.Currency currency,
         SettlementTypesLib.Status status);
-    event AddProposalEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber, bool balanceReward);
+    event AddProposalEvent(uint256 nonce, address wallet, int256 stageAmount, int256 targetBalanceAmount,
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward);
     event DisqualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
         address challengerWallet, bytes32 candidateHash, string candidateType);
     event QualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
@@ -304,14 +303,14 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         require(hasProposalExpired(wallet, currency));
 
         // Add proposal
-        _addProposal(
+        SettlementTypesLib.Proposal storage proposal = _addProposal(
             wallet, stageAmount, targetBalanceAmount,
             currency, blockNumber, balanceReward
         );
 
         // Emit event
         emit AddProposalEvent(
-            wallet, stageAmount, targetBalanceAmount, currency, nonce,
+            proposal.nonce, wallet, stageAmount, targetBalanceAmount, currency,
             blockNumber, balanceReward
         );
     }
@@ -376,8 +375,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function _addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber,
-        bool balanceReward)
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward)
     private
     returns (SettlementTypesLib.Proposal storage)
     {
@@ -390,7 +388,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
 
         // Populate proposal
         proposals[proposals.length - 1].wallet = wallet;
-        proposals[proposals.length - 1].nonce = ++nonce;
+        proposals[proposals.length - 1].nonce = nonceManager.incrementNonce();
         proposals[proposals.length - 1].blockNumber = blockNumber;
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[proposals.length - 1].status = SettlementTypesLib.Status.Qualified;

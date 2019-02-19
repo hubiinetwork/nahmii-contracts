@@ -57,6 +57,7 @@ const MockedNullSettlementDispute = artifacts.require('MockedNullSettlementDispu
 const MockedValidator = artifacts.require('MockedValidator');
 const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
+const NonceManager = artifacts.require('NonceManager');
 const NonFungibleBalanceLib = artifacts.require('NonFungibleBalanceLib');
 const NullSettlement = artifacts.require('NullSettlement');
 // const NullSettlementChallenge = artifacts.require('NullSettlementChallenge');
@@ -190,14 +191,11 @@ module.exports = (deployer, network, accounts) => {
             ]);
             await deployer.link(MonetaryTypesLib, [
                 Configuration,
-                // DriipSettlement,
                 DriipSettlementByPayment,
                 DriipSettlementByTrade,
-                // DriipSettlementChallenge,
                 DriipSettlementChallengeByPayment,
                 DriipSettlementChallengeByTrade,
                 DriipSettlementChallengeState,
-                // DriipSettlementDispute,
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
@@ -206,7 +204,6 @@ module.exports = (deployer, network, accounts) => {
                 MockedClientFund,
                 NullSettlement,
                 NullSettlementChallengeState,
-                // NullSettlementDispute,
                 NullSettlementDisputeByPayment,
                 NullSettlementDisputeByTrade,
                 NullSettlementState,
@@ -223,14 +220,11 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(NahmiiTypesLib, [
                 CancelOrdersChallenge,
                 ClientFundable,
-                // DriipSettlement,
                 DriipSettlementByPayment,
                 DriipSettlementByTrade,
-                // DriipSettlementChallenge,
                 DriipSettlementChallengeByPayment,
                 DriipSettlementChallengeByTrade,
                 DriipSettlementChallengeState,
-                // DriipSettlementDispute,
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
@@ -254,8 +248,6 @@ module.exports = (deployer, network, accounts) => {
                 MockedNullSettlementDispute,
                 MockedValidator,
                 NullSettlementChallengeState,
-                // NullSettlementChallenge,
-                // NullSettlementDispute,
                 PaymentHasher,
                 TradeHasher,
                 Validatable,
@@ -267,11 +259,8 @@ module.exports = (deployer, network, accounts) => {
                 BalanceTracker
             ]);
             await deployer.link(PaymentTypesLib, [
-                // DriipSettlement,
                 DriipSettlementByPayment,
-                // DriipSettlementChallenge,
                 DriipSettlementChallengeByPayment,
-                // DriipSettlementDispute,
                 DriipSettlementDisputeByPayment,
                 FraudChallengeByDuplicateDriipNonceOfPayments,
                 FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
@@ -284,9 +273,7 @@ module.exports = (deployer, network, accounts) => {
                 MockedNullSettlementChallenge,
                 MockedNullSettlementDispute,
                 MockedValidator,
-                // NullSettlementChallenge,
                 NullSettlementChallengeByPayment,
-                // NullSettlementDispute,
                 NullSettlementDisputeByPayment,
                 PaymentHasher,
                 Validatable,
@@ -300,14 +287,11 @@ module.exports = (deployer, network, accounts) => {
                 CancelOrdersChallenge,
                 ClientFund,
                 Configuration,
-                // DriipSettlement,
                 DriipSettlementByPayment,
                 DriipSettlementByTrade,
-                // DriipSettlementChallenge,
                 DriipSettlementChallengeByPayment,
                 DriipSettlementChallengeByTrade,
                 DriipSettlementChallengeState,
-                // DriipSettlementDispute,
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
@@ -316,11 +300,9 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByTradeOrderResiduals,
                 FraudChallengeByTradeSucceedingPayment,
                 NullSettlement,
-                // NullSettlementChallenge,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade,
                 NullSettlementChallengeState,
-                // NullSettlementDispute,
                 NullSettlementDisputeByPayment,
                 NullSettlementDisputeByTrade,
                 NullSettlementState,
@@ -336,23 +318,18 @@ module.exports = (deployer, network, accounts) => {
                 BalanceTracker,
                 CancelOrdersChallenge,
                 ClientFund,
-                // DriipSettlement,
                 DriipSettlementByPayment,
                 DriipSettlementByTrade,
-                // DriipSettlementChallenge,
                 DriipSettlementChallengeByPayment,
                 DriipSettlementChallengeByTrade,
                 DriipSettlementChallengeState,
-                // DriipSettlementDispute,
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
                 NullSettlement,
-                // NullSettlementChallenge,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade,
                 NullSettlementChallengeState,
-                // NullSettlementDispute,
                 NullSettlementDisputeByPayment,
                 NullSettlementDisputeByTrade,
                 NullSettlementState,
@@ -366,25 +343,20 @@ module.exports = (deployer, network, accounts) => {
                 WalletLocker
             ]);
             await deployer.link(SettlementTypesLib, [
-                // DriipSettlement,
                 DriipSettlementByPayment,
                 DriipSettlementByTrade,
-                // DriipSettlementChallenge,
                 DriipSettlementChallengeByPayment,
                 DriipSettlementChallengeByTrade,
                 DriipSettlementChallengeState,
-                // DriipSettlementDispute,
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
                 MockedDriipSettlementChallenge,
                 MockedNullSettlementChallenge,
                 NullSettlement,
-                // NullSettlementChallenge,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade,
                 NullSettlementChallengeState,
-                // NullSettlementDispute,
                 NullSettlementDisputeByPayment,
                 NullSettlementDisputeByTrade,
                 NullSettlementState
@@ -394,11 +366,8 @@ module.exports = (deployer, network, accounts) => {
             ]);
             await deployer.link(TradeTypesLib, [
                 CancelOrdersChallenge,
-                // DriipSettlement,
                 DriipSettlementByTrade,
-                // DriipSettlementChallenge,
                 DriipSettlementChallengeByTrade,
-                // DriipSettlementDispute,
                 DriipSettlementDisputeByTrade,
                 FraudChallengeByDoubleSpentOrders,
                 FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
@@ -415,9 +384,7 @@ module.exports = (deployer, network, accounts) => {
                 MockedNullSettlementChallenge,
                 MockedNullSettlementDispute,
                 MockedValidator,
-                // NullSettlementChallenge,
                 NullSettlementChallengeByTrade,
-                // NullSettlementDispute,
                 NullSettlementDisputeByTrade,
                 TradeHasher,
                 Validatable,
@@ -507,26 +474,14 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'Validator', '', Validator, true);
             await execDeploy(ctl, 'CommunityVote', '', CommunityVote);
             await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
-            // await execDeploy(ctl, 'DriipSettlement', '', DriipSettlement);
             await execDeploy(ctl, 'DriipSettlementByPayment', '', DriipSettlementByPayment);
             await execDeploy(ctl, 'DriipSettlementByTrade', '', DriipSettlementByTrade);
-            // await execDeploy(ctl, 'DriipSettlementChallenge', '', DriipSettlementChallenge);
             await execDeploy(ctl, 'DriipSettlementChallengeByPayment', '', DriipSettlementChallengeByPayment);
             await execDeploy(ctl, 'DriipSettlementChallengeByTrade', '', DriipSettlementChallengeByTrade);
             await execDeploy(ctl, 'DriipSettlementChallengeState', '', DriipSettlementChallengeState);
-            // await execDeploy(ctl, 'DriipSettlementDispute', '', DriipSettlementDispute);
             await execDeploy(ctl, 'DriipSettlementDisputeByPayment', '', DriipSettlementDisputeByPayment);
             await execDeploy(ctl, 'DriipSettlementDisputeByTrade', '', DriipSettlementDisputeByTrade);
             await execDeploy(ctl, 'DriipSettlementState', '', DriipSettlementState);
-            await execDeploy(ctl, 'NullSettlement', '', NullSettlement);
-            // await execDeploy(ctl, 'NullSettlementChallenge', '', NullSettlementChallenge);
-            await execDeploy(ctl, 'NullSettlementChallengeByPayment', '', NullSettlementChallengeByPayment);
-            await execDeploy(ctl, 'NullSettlementChallengeByTrade', '', NullSettlementChallengeByTrade);
-            await execDeploy(ctl, 'NullSettlementChallengeState', '', NullSettlementChallengeState);
-            // await execDeploy(ctl, 'NullSettlementDispute', '', NullSettlementDispute);
-            await execDeploy(ctl, 'NullSettlementDisputeByPayment', '', NullSettlementDisputeByPayment);
-            await execDeploy(ctl, 'NullSettlementDisputeByTrade', '', NullSettlementDisputeByTrade);
-            await execDeploy(ctl, 'NullSettlementState', '', NullSettlementState);
             await execDeploy(ctl, 'FraudChallenge', '', FraudChallenge);
             await execDeploy(ctl, 'FraudChallengeByOrder', '', FraudChallengeByOrder);
             await execDeploy(ctl, 'FraudChallengeByTrade', '', FraudChallengeByTrade);
@@ -540,6 +495,14 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfTrades', '', FraudChallengeByDuplicateDriipNonceOfTrades);
             await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfPayments', '', FraudChallengeByDuplicateDriipNonceOfPayments);
             await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfTradeAndPayment', '', FraudChallengeByDuplicateDriipNonceOfTradeAndPayment);
+            await execDeploy(ctl, 'NonceManager', '', NonceManager);
+            await execDeploy(ctl, 'NullSettlement', '', NullSettlement);
+            await execDeploy(ctl, 'NullSettlementChallengeByPayment', '', NullSettlementChallengeByPayment);
+            await execDeploy(ctl, 'NullSettlementChallengeByTrade', '', NullSettlementChallengeByTrade);
+            await execDeploy(ctl, 'NullSettlementChallengeState', '', NullSettlementChallengeState);
+            await execDeploy(ctl, 'NullSettlementDisputeByPayment', '', NullSettlementDisputeByPayment);
+            await execDeploy(ctl, 'NullSettlementDisputeByTrade', '', NullSettlementDisputeByTrade);
+            await execDeploy(ctl, 'NullSettlementState', '', NullSettlementState);
             await execDeploy(ctl, 'PaymentHasher', '', PaymentHasher);
             await execDeploy(ctl, 'RevenueFund', 'TradesRevenueFund', RevenueFund);
             await execDeploy(ctl, 'RevenueFund', 'PaymentsRevenueFund', RevenueFund);

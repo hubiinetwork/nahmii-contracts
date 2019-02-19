@@ -12,6 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 import {Configurable} from "./Configurable.sol";
+import {NonceManageable} from "./NonceManageable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
@@ -22,7 +23,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
  * @title DriipSettlementChallengeState
  * @notice Where driip settlement challenge state is managed
  */
-contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
+contract DriipSettlementChallengeState is Ownable, Servable, Configurable, NonceManageable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -50,8 +51,8 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         uint256 expirationTime);
     event SetProposalStatusEvent(address wallet, MonetaryTypesLib.Currency currency,
         SettlementTypesLib.Status status);
-    event AddProposalEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber, bool balanceReward,
+    event AddProposalEvent(uint256 nonce, address wallet, int256 stageAmount, int256 targetBalanceAmount,
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward,
         bytes32 driipHash, string driipType);
     event DisqualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
         address challengerWallet, bytes32 candidateHash, string candidateType);
@@ -318,14 +319,13 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param stageAmount The proposal stage amount
     /// @param targetBalanceAmount The proposal target balance amount
     /// @param currency The concerned currency
-    /// @param nonce The proposal nonce
     /// @param blockNumber The proposal block number
     /// @param balanceReward The candidate balance reward
     /// @param driipHash The candidate driip hash
     /// @param driipType The candidate driip type
     function addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber,
-        bool balanceReward, bytes32 driipHash, string driipType)
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward,
+        bytes32 driipHash, string driipType)
     public
     onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
     {
@@ -335,7 +335,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         // Add proposal
         SettlementTypesLib.Proposal storage proposal = _addProposal(
             wallet, stageAmount, targetBalanceAmount,
-            currency, nonce, blockNumber, balanceReward
+            currency, blockNumber, balanceReward
         );
 
         // Update driip specifics
@@ -344,7 +344,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
 
         // Emit event
         emit AddProposalEvent(
-            wallet, stageAmount, targetBalanceAmount, currency, nonce,
+            proposal.nonce, wallet, stageAmount, targetBalanceAmount, currency,
             blockNumber, balanceReward, driipHash, driipType
         );
     }
@@ -409,8 +409,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function _addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 nonce, uint256 blockNumber,
-        bool balanceReward)
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward)
     private
     returns (SettlementTypesLib.Proposal storage)
     {
@@ -423,7 +422,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
 
         // Populate proposal
         proposals[proposals.length - 1].wallet = wallet;
-        proposals[proposals.length - 1].nonce = nonce;
+        proposals[proposals.length - 1].nonce = nonceManager.incrementNonce();
         proposals[proposals.length - 1].blockNumber = blockNumber;
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[proposals.length - 1].status = SettlementTypesLib.Status.Qualified;

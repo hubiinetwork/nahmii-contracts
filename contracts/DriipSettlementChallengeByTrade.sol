@@ -384,7 +384,7 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
-            wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.intended, trade.nonce,
+            wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.intended,
             trade.blockNumber, balanceReward, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }
@@ -400,7 +400,7 @@ contract DriipSettlementChallengeByTrade is Ownable, Challenge, ValidatableV2, W
 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
-            wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.conjugate, trade.nonce,
+            wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.conjugate,
             trade.blockNumber, balanceReward, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }

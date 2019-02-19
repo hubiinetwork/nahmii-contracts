@@ -349,8 +349,8 @@ contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, W
 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
-            wallet, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.nonce,
-            payment.blockNumber, balanceReward, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
+            wallet, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.blockNumber,
+            balanceReward, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
     }
 
