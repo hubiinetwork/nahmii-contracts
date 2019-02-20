@@ -323,9 +323,9 @@ module.exports = (glob) => {
                 await ethersConfiguration._reset({gasLimit: 1e6});
                 await ethersNullSettlementChallenge._reset({gasLimit: 1e6});
 
-                await ethersNullSettlementChallenge.setProposalStatus(
-                    glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
-                );
+                // await ethersNullSettlementChallenge.setProposalStatus(
+                //     glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                // );
                 await ethersNullSettlementChallenge._setProposalNonce(1);
                 await ethersNullSettlementChallenge._setProposalExpired(true);
                 await ethersNullSettlementChallenge._addProposalStageAmount(10);
@@ -344,9 +344,9 @@ module.exports = (glob) => {
 
             describe('if null settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge.setProposalStatus(
-                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersNullSettlementChallenge.setProposalStatus(
+                    //     glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
                 });
 
                 it('should revert', async () => {
@@ -430,9 +430,9 @@ module.exports = (glob) => {
                 await ethersConfiguration._reset({gasLimit: 1e6});
                 await ethersNullSettlementChallenge._reset({gasLimit: 1e6});
 
-                await ethersNullSettlementChallenge.setProposalStatus(
-                    glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
-                );
+                // await ethersNullSettlementChallenge.setProposalStatus(
+                //     glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                // );
                 await ethersNullSettlementChallenge._setProposalNonce(1);
                 await ethersNullSettlementChallenge._setProposalExpired(true);
                 await ethersNullSettlementChallenge._addProposalStageAmount(10);
@@ -465,9 +465,9 @@ module.exports = (glob) => {
 
             describe('if null settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersNullSettlementChallenge.setProposalStatus(
-                        wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersNullSettlementChallenge.setProposalStatus(
+                    //     wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
                 });
 
                 it('should revert', async () => {

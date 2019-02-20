@@ -20,7 +20,6 @@ contract NonceManager is Ownable, Servable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register DriipSettlementChallengeState and NullSettlementChallengeState as services and enable actions
     string constant public INCREMENT_NONCE_ACTION = "increment_nonce";
 
     //

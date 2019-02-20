@@ -39,7 +39,6 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register DriipSettlementChallengeByTrade as service and enable actions
     string constant public CHALLENGE_BY_ORDER_ACTION = "challenge_by_order";
     string constant public UNCHALLENGE_ORDER_CANDIDATE_BY_TRADE_ACTION = "unchallenge_order_candidate_by_trade";
     string constant public CHALLENGE_BY_TRADE_ACTION = "challenge_by_trade";

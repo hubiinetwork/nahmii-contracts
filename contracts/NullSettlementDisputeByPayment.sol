@@ -15,14 +15,12 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
 import {Servable} from "./Servable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
-import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 
 /**
@@ -30,14 +28,13 @@ import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
  * @notice The where payment related disputes of null settlement challenge happens
  */
 contract NullSettlementDisputeByPayment is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable,
-FraudChallengable, CancelOrdersChallengable, Servable {
+FraudChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register NullSettlementChallengeByPayment as service and enable action
     string constant public CHALLENGE_BY_PAYMENT_ACTION = "challenge_by_payment";
 
     //

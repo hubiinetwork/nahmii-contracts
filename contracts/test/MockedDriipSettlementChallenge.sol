@@ -126,26 +126,12 @@ contract MockedDriipSettlementChallenge {
         return _proposalTargetBalanceAmount;
     }
 
-    function setProposalExpirationTime(address, address, uint256,
-        uint256 expirationTime)
-    public
-    {
-        _proposalExpirationTime = expirationTime;
-    }
-
     function proposalExpirationTime(address, address, uint256)
     public
     view
     returns (uint256)
     {
         return _proposalExpirationTime;
-    }
-
-    function setProposalStatus(address, address, uint256,
-        SettlementTypesLib.Status status)
-    public
-    {
-        _proposalStatus = status;
     }
 
     function proposalStatus(address, address, uint256)

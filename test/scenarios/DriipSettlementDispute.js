@@ -437,10 +437,10 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalBalanceReward(true);
 
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        order.wallet, order.placement.currencies.conjugate.ct, order.placement.currencies.conjugate.id,
-                        mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     order.wallet, order.placement.currencies.conjugate.ct, order.placement.currencies.conjugate.id,
+                    //     mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
 
                     await ethersDriipSettlementChallenge._setProposalDisqualificationChallenger(glob.user_a);
                 });
@@ -589,10 +589,10 @@ module.exports = (glob) => {
 
             describe('if called with security bond reward and proposal initially is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        order.wallet, order.placement.currencies.conjugate.ct, order.placement.currencies.conjugate.id,
-                        mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     order.wallet, order.placement.currencies.conjugate.ct, order.placement.currencies.conjugate.id,
+                    //     mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
 
                     await ethersDriipSettlementChallenge._setProposalDisqualificationChallenger(glob.user_a);
                 });
@@ -728,9 +728,9 @@ module.exports = (glob) => {
                     }
                 });
 
-                await web3DriipSettlementChallenge.setProposalStatus(
-                    glob.user_a, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                );
+                // await web3DriipSettlementChallenge.setProposalStatus(
+                //     glob.user_a, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                // );
                 await web3DriipSettlementChallenge._setProposalDisqualificationCandidateType(
                     'order'
                 );
@@ -798,9 +798,9 @@ module.exports = (glob) => {
 
             describe('if called on proposal that has not been disqualified', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallenge.setProposalStatus(
-                        glob.user_a, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
-                    );
+                    // await web3DriipSettlementChallenge.setProposalStatus(
+                    //     glob.user_a, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    // );
                 });
 
                 it('should revert', async () => {
@@ -881,10 +881,10 @@ module.exports = (glob) => {
                 let topic, filter;
 
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id,
-                        mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id,
+                    //     mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
 
                     await ethersDriipSettlementChallenge._setProposalDisqualificationChallenger(glob.user_a);
 
@@ -931,10 +931,10 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalBalanceReward(true);
 
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id,
-                        mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id,
+                    //     mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
 
                     await ethersDriipSettlementChallenge._setProposalDisqualificationChallenger(glob.user_a);
 
@@ -1171,10 +1171,10 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalBalanceReward(true);
 
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id,
-                        mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id,
+                    //     mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
 
                     await ethersDriipSettlementChallenge._setProposalDisqualificationChallenger(glob.user_a);
                 });
@@ -1325,10 +1325,10 @@ module.exports = (glob) => {
 
             describe('if called with security bond reward and proposal initially is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id,
-                        mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     trade.buyer.wallet, trade.currencies.conjugate.ct, trade.currencies.conjugate.id,
+                    //     mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
 
                     await ethersDriipSettlementChallenge._setProposalDisqualificationChallenger(glob.user_a);
                 });
@@ -1612,10 +1612,10 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallenge._setProposalBalanceReward(true);
 
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id,
-                        mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     payment.sender.wallet, payment.currency.ct, payment.currency.id,
+                    //     mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
 
                     await ethersDriipSettlementChallenge._setProposalDisqualificationChallenger(glob.user_a);
                 });
@@ -1768,10 +1768,10 @@ module.exports = (glob) => {
 
             describe('if called with security bond reward and proposal initially is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id,
-                        mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     payment.sender.wallet, payment.currency.ct, payment.currency.id,
+                    //     mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
 
                     await ethersDriipSettlementChallenge._setProposalDisqualificationChallenger(glob.user_a);
                 });

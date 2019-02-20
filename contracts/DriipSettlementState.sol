@@ -32,7 +32,6 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register DriipSettlementByTrade and DriipSettlementByPayment as services and enable actions
     string constant public INIT_SETTLEMENT_ACTION = "init_settlement";
     string constant public SET_SETTLEMENT_ROLE_DONE_ACTION = "set_settlement_role_done";
     string constant public SET_MAX_NONCE_ACTION = "set_max_nonce";

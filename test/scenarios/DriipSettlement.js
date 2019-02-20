@@ -622,9 +622,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
                 });
 
                 it('should revert', async () => {
@@ -640,9 +640,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    // );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.intended.current);
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.conjugate.current);
                 });
@@ -899,9 +899,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
                 });
 
                 it('should revert', async () => {
@@ -916,9 +916,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(trade.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     trade.buyer.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    // );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.intended.current);
                     await ethersDriipSettlementChallenge._addProposalStageAmount(trade.buyer.balances.conjugate.current);
                 });
@@ -1156,9 +1156,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
                 });
 
                 it('should revert', async () => {
@@ -1174,9 +1174,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    // );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(payment.sender.balances.current);
                 });
 
@@ -1399,9 +1399,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+                    // );
                 });
 
                 it('should revert', async () => {
@@ -1416,9 +1416,9 @@ module.exports = (glob) => {
                     });
 
                     await ethersDriipSettlementChallenge._setProposalNonce(payment.nonce);
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
-                    );
+                    // await ethersDriipSettlementChallenge.setProposalStatus(
+                    //     payment.sender.wallet, mocks.address0, 0, mocks.settlementStatuses.indexOf('Qualified')
+                    // );
                     await ethersDriipSettlementChallenge._addProposalStageAmount(payment.sender.balances.current);
                 });
 

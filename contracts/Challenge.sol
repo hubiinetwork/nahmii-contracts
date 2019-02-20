@@ -10,7 +10,7 @@ pragma solidity ^0.4.25;
 
 import {Configurable} from "./Configurable.sol";
 
-// TODO Rename to NormalOperational
+// TODO Rename to ConfigurableOperational
 /**
  * @title Challenge
  * @notice A configurable with extra for challenges

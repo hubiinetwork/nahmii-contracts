@@ -30,7 +30,6 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register NullSettlementByTrade and NullSettlementByPayment as services and enable actions
     string constant public SET_MAX_NULL_NONCE_ACTION = "set_max_null_nonce";
     string constant public SET_MAX_NULL_NONCE_WALLET_CURRENCY_ACTION = "set_max_null_nonce_wallet_currency";
 

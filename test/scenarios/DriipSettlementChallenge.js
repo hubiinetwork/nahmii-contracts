@@ -1185,97 +1185,51 @@ module.exports = (glob) => {
             });
         });
 
-        describe('setProposalExpirationTime()', () => {
-            describe('if called from other than settlement dispute', () => {
-                it('should revert', async () => {
-                    web3DriipSettlementChallenge.setProposalExpirationTime(
-                        glob.owner, mocks.address0, 0, 1000
-                    ).should.be.rejected
-                });
-            });
-
-            describe('if no settlement challenge has been started for the wallet and currency', () => {
-                beforeEach(async () => {
-                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlementChallenge.setProposalExpirationTime(
-                        glob.owner, mocks.address0, 0, 1000
-                    ).should.be.rejected
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                let payment;
-
-                beforeEach(async () => {
-                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
-
-                    payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
-
-                    await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 3e6}
-                    );
-                });
-
-                it('should successfully set end time of proposal', async () => {
-                    await ethersDriipSettlementChallenge.setProposalExpirationTime(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id, 1000
-                    );
-
-                    (await ethersDriipSettlementChallenge.proposalExpirationTime(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id
-                    ))._bn.should.eq.BN(1000);
-                });
-            });
-        });
-
-        describe('setProposalStatus()', () => {
-            describe('if called from other than settlement dispute', () => {
-                it('should revert', async () => {
-                    web3DriipSettlementChallenge.setProposalStatus(
-                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    ).should.be.rejected
-                });
-            });
-
-            describe('if no settlement challenge has been started for the wallet and currency', () => {
-                beforeEach(async () => {
-                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlementChallenge.setProposalStatus(
-                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    ).should.be.rejected
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                let payment;
-
-                beforeEach(async () => {
-                    await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
-
-                    payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
-
-                    await ethersDriipSettlementChallenge.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 3e6}
-                    );
-                });
-
-                it('should successfully set status of proposal', async () => {
-                    await ethersDriipSettlementChallenge.setProposalStatus(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id, mocks.settlementStatuses.indexOf('Disqualified')
-                    );
-
-                    (await ethersDriipSettlementChallenge.proposalStatus(
-                        payment.sender.wallet, payment.currency.ct, payment.currency.id
-                    )).should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                });
-            });
-        });
+        // describe('setProposalStatus()', () => {
+        //     describe('if called from other than settlement dispute', () => {
+        //         it('should revert', async () => {
+        //             web3DriipSettlementChallenge.setProposalStatus(
+        //                 glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+        //             ).should.be.rejected
+        //         });
+        //     });
+        //
+        //     describe('if no settlement challenge has been started for the wallet and currency', () => {
+        //         beforeEach(async () => {
+        //             await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
+        //         });
+        //
+        //         it('should revert', async () => {
+        //             ethersDriipSettlementChallenge.setProposalStatus(
+        //                 glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+        //             ).should.be.rejected
+        //         });
+        //     });
+        //
+        //     describe('if within operational constraints', () => {
+        //         let payment;
+        //
+        //         beforeEach(async () => {
+        //             await web3DriipSettlementChallenge.setDriipSettlementDispute(glob.owner);
+        //
+        //             payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
+        //
+        //             await ethersDriipSettlementChallenge.startChallengeFromPayment(
+        //                 payment, payment.sender.balances.current, {gasLimit: 3e6}
+        //             );
+        //         });
+        //
+        //         it('should successfully set status of proposal', async () => {
+        //             await ethersDriipSettlementChallenge.setProposalStatus(
+        //                 payment.sender.wallet, payment.currency.ct, payment.currency.id, mocks.settlementStatuses.indexOf('Disqualified')
+        //             );
+        //
+        //             (await ethersDriipSettlementChallenge.proposalStatus(
+        //                 payment.sender.wallet, payment.currency.ct, payment.currency.id
+        //             )).should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
+        //         });
+        //     });
+        // });
 
         describe('disqualifyProposal()', () => {
             let challengedPayment, candidatePayment;

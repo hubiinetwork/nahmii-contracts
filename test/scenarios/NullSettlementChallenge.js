@@ -628,91 +628,48 @@ module.exports = (glob) => {
             });
         });
 
-        describe('setProposalExpirationTime()', () => {
-            describe('if called from other than settlement dispute', () => {
-                it('should revert', async () => {
-                    web3NullSettlementChallenge.setProposalExpirationTime(
-                        glob.owner, mocks.address0, 0, 1000
-                    ).should.be.rejected
-                });
-            });
-
-            describe('if no settlement challenge has been started for the wallet and currency', () => {
-                beforeEach(async () => {
-                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.setProposalExpirationTime(
-                        glob.owner, mocks.address0, 0, 1000
-                    ).should.be.rejected
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                beforeEach(async () => {
-                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
-
-                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
-                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
-
-                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
-                });
-
-                it('should successfully set end time of proposal', async () => {
-                    await ethersNullSettlementChallenge.setProposalExpirationTime(
-                        glob.owner, mocks.address0, 0, 1000
-                    );
-
-                    (await ethersNullSettlementChallenge.proposalExpirationTime(
-                        glob.owner, mocks.address0, 0
-                    ))._bn.should.eq.BN(1000);
-                });
-            });
-        });
-
-        describe('setProposalStatus()', () => {
-            describe('if called from other than settlement dispute', () => {
-                it('should revert', async () => {
-                    web3NullSettlementChallenge.setProposalStatus(
-                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    ).should.be.rejected
-                });
-            });
-
-            describe('if no settlement challenge has been started for the wallet and currency', () => {
-                beforeEach(async () => {
-                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallenge.setProposalStatus(
-                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    ).should.be.rejected
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                beforeEach(async () => {
-                    await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
-
-                    await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
-                    await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
-
-                    await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
-                });
-
-                it('should successfully set status of proposal', async () => {
-                    await ethersNullSettlementChallenge.setProposalStatus(
-                        glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
-                    );
-
-                    (await ethersNullSettlementChallenge.proposalStatus(
-                        glob.owner, mocks.address0, 0
-                    )).should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                });
-            });
-        });
+        // describe('setProposalStatus()', () => {
+        //     describe('if called from other than settlement dispute', () => {
+        //         it('should revert', async () => {
+        //             web3NullSettlementChallenge.setProposalStatus(
+        //                 glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+        //             ).should.be.rejected
+        //         });
+        //     });
+        //
+        //     describe('if no settlement challenge has been started for the wallet and currency', () => {
+        //         beforeEach(async () => {
+        //             await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
+        //         });
+        //
+        //         it('should revert', async () => {
+        //             ethersNullSettlementChallenge.setProposalStatus(
+        //                 glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+        //             ).should.be.rejected
+        //         });
+        //     });
+        //
+        //     describe('if within operational constraints', () => {
+        //         beforeEach(async () => {
+        //             await web3NullSettlementChallenge.setNullSettlementDispute(glob.owner);
+        //
+        //             await web3BalanceTracker._setLogSize(depositedBalanceType, 1);
+        //             await web3BalanceTracker._setLastLog(depositedBalanceType, 10, 1);
+        //
+        //             await web3NullSettlementChallenge.startChallenge(1, mocks.address0, 0, {gas: 3e6});
+        //         });
+        //
+        //         it('should successfully set status of proposal', async () => {
+        //             await ethersNullSettlementChallenge.setProposalStatus(
+        //                 glob.owner, mocks.address0, 0, mocks.settlementStatuses.indexOf('Disqualified')
+        //             );
+        //
+        //             (await ethersNullSettlementChallenge.proposalStatus(
+        //                 glob.owner, mocks.address0, 0
+        //             )).should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
+        //         });
+        //     });
+        // });
 
         describe('proposalDisqualificationChallenger()', () => {
             describe('if no settlement challenge has been started for the wallet and currency', () => {

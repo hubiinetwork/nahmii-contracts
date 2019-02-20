@@ -30,9 +30,6 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Nonce
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register DriipSettlementChallengeByTrade, DriipSettlementDisputeByTrade, DriipSettlementChallengeByPayment and DriipSettlementDisputeByPayment as services and enable actions
-    string constant public SET_PROPOSAL_EXPIRATION_TIME_ACTION = "set_proposal_expiration_time";
-    string constant public SET_PROPOSAL_STATUS_ACTION = "set_proposal_status";
     string constant public ADD_PROPOSAL_ACTION = "add_proposal";
     string constant public DISQUALIFY_PROPOSAL_ACTION = "disqualify_proposal";
     string constant public QUALIFY_PROPOSAL_ACTION = "qualify_proposal";
@@ -276,42 +273,6 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Nonce
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
         return proposals[index - 1].disqualification.candidateHash;
-    }
-
-    /// @notice Set settlement proposal end time property of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The address of the concerned wallet
-    /// @param currency The concerned currency
-    /// @param expirationTime The end time value
-    function setProposalExpirationTime(address wallet, MonetaryTypesLib.Currency currency,
-        uint256 expirationTime)
-    public
-    onlyEnabledServiceAction(SET_PROPOSAL_EXPIRATION_TIME_ACTION)
-    {
-        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
-        proposals[index - 1].expirationTime = expirationTime;
-
-        // Emit event
-        emit SetProposalExpirationTimeEvent(wallet, currency, expirationTime);
-    }
-
-    /// @notice Set settlement proposal status property of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The address of the concerned wallet
-    /// @param currency The concerned currency
-    /// @param status The status value
-    function setProposalStatus(address wallet, MonetaryTypesLib.Currency currency,
-        SettlementTypesLib.Status status)
-    public
-    onlyEnabledServiceAction(SET_PROPOSAL_STATUS_ACTION)
-    {
-        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
-        proposals[index - 1].status = status;
-
-        // Emit event
-        emit SetProposalStatusEvent(wallet, currency, status);
     }
 
     /// @notice Add proposal

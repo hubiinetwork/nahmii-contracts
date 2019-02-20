@@ -22,7 +22,6 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementTypesLib} from "./SettlementTypesLib.sol";
-import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 
 /**
@@ -37,7 +36,6 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register NullSettlementChallengeByPayment as service and enable action
     string constant public CHALLENGE_BY_ORDER_ACTION = "challenge_by_order";
     string constant public CHALLENGE_BY_TRADE_ACTION = "challenge_by_trade";
 

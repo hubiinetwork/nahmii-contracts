@@ -31,12 +31,8 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register NullSettlementChallengeByTrade, NullSettlementDisputeByTrade, NullSettlementChallengeByPayment and NullSettlementDisputeByPayment as services and enable actions
-    string constant public SET_PROPOSAL_EXPIRATION_TIME_ACTION = "set_proposal_expiration_time";
-    string constant public SET_PROPOSAL_STATUS_ACTION = "set_proposal_status";
     string constant public ADD_PROPOSAL_ACTION = "add_proposal";
     string constant public DISQUALIFY_PROPOSAL_ACTION = "disqualify_proposal";
-    string constant public QUALIFY_PROPOSAL_ACTION = "qualify_proposal";
 
     //
     // Variables
@@ -250,42 +246,6 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].disqualification.candidateHash;
     }
 
-    /// @notice Set settlement proposal end time property of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The address of the concerned wallet
-    /// @param currency The concerned currency
-    /// @param expirationTime The end time value
-    function setProposalExpirationTime(address wallet, MonetaryTypesLib.Currency currency,
-        uint256 expirationTime)
-    public
-    onlyEnabledServiceAction(SET_PROPOSAL_EXPIRATION_TIME_ACTION)
-    {
-        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
-        proposals[index - 1].expirationTime = expirationTime;
-
-        // Emit event
-        emit SetProposalExpirationTimeEvent(wallet, currency, expirationTime);
-    }
-
-    /// @notice Set settlement proposal status property of the given wallet
-    /// @dev This function can only be called by this contract's dispute instance
-    /// @param wallet The address of the concerned wallet
-    /// @param currency The concerned currency
-    /// @param status The status value
-    function setProposalStatus(address wallet, MonetaryTypesLib.Currency currency,
-        SettlementTypesLib.Status status)
-    public
-    onlyEnabledServiceAction(SET_PROPOSAL_STATUS_ACTION)
-    {
-        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
-        proposals[index - 1].status = status;
-
-        // Emit event
-        emit SetProposalStatusEvent(wallet, currency, status);
-    }
-
     /// @notice Add proposal
     /// @param wallet The address of the concerned challenged wallet
     /// @param stageAmount The proposal stage amount
@@ -344,31 +304,6 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         emit DisqualifyProposalEvent(
             challengedWallet, currency, challengerWallet, candidateHash, candidateType
         );
-    }
-
-    /// @notice (Re)Qualify a proposal
-    /// @param wallet The address of the concerned challenged wallet
-    /// @param currency The concerned currency
-    function qualifyProposal(address wallet, MonetaryTypesLib.Currency currency)
-    public
-    onlyEnabledServiceAction(QUALIFY_PROPOSAL_ACTION)
-    {
-        // Get the proposal index
-        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
-
-        // Emit event
-        emit QualifyProposalEvent(
-            wallet, currency,
-            proposals[index - 1].disqualification.challenger,
-            proposals[index - 1].disqualification.candidateHash,
-            proposals[index - 1].disqualification.candidateType
-        );
-
-        // Update proposal
-        proposals[index - 1].status = SettlementTypesLib.Status.Qualified;
-        proposals[index - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
-        delete proposals[index - 1].disqualification;
     }
 
     //

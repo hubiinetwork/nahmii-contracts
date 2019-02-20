@@ -37,7 +37,6 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Register DriipSettlementChallengeByPayment as service and enable action
     string constant public CHALLENGE_BY_PAYMENT_ACTION = "challenge_by_payment";
 
     //
