@@ -21,7 +21,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
-import {SettlementTypesLib} from "./SettlementTypesLib.sol";
+import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 
 /**
@@ -268,7 +268,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     private
     {
         // Unlock wallet/currency for existing challenger if previously locked
-        if (SettlementTypesLib.Status.Disqualified == nullSettlementChallengeState.proposalStatus(
+        if (SettlementChallengeTypesLib.Status.Disqualified == nullSettlementChallengeState.proposalStatus(
             wallet, currency
         ))
             walletLocker.unlockFungibleByProxy(
@@ -293,7 +293,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     private
     {
         // Deprive existing challenger of reward if previously locked
-        if (SettlementTypesLib.Status.Disqualified == nullSettlementChallengeState.proposalStatus(
+        if (SettlementChallengeTypesLib.Status.Disqualified == nullSettlementChallengeState.proposalStatus(
             wallet, currency
         ))
             securityBond.depriveAbsolute(

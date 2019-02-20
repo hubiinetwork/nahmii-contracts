@@ -18,7 +18,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
-import {SettlementTypesLib} from "./SettlementTypesLib.sol";
+import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 
 /**
  * @title NullSettlementChallengeState
@@ -37,17 +37,13 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    SettlementTypesLib.Proposal[] public proposals;
+    SettlementChallengeTypesLib.Proposal[] public proposals;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
     mapping(address => uint256[]) public proposalIndicesByWallet;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetProposalExpirationTimeEvent(address wallet, MonetaryTypesLib.Currency currency,
-        uint256 expirationTime);
-    event SetProposalStatusEvent(address wallet, MonetaryTypesLib.Currency currency,
-        SettlementTypesLib.Status status);
     event AddProposalEvent(uint256 nonce, address wallet, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward);
     event DisqualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
@@ -141,7 +137,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
     function proposalStatus(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
-    returns (SettlementTypesLib.Status)
+    returns (SettlementChallengeTypesLib.Status)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
@@ -263,7 +259,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         require(hasProposalExpired(wallet, currency));
 
         // Add proposal
-        SettlementTypesLib.Proposal storage proposal = _addProposal(
+        SettlementChallengeTypesLib.Proposal storage proposal = _addProposal(
             wallet, stageAmount, targetBalanceAmount,
             currency, blockNumber, balanceReward
         );
@@ -293,7 +289,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         require(0 != index);
 
         // Update proposal
-        proposals[index - 1].status = SettlementTypesLib.Status.Disqualified;
+        proposals[index - 1].status = SettlementChallengeTypesLib.Status.Disqualified;
         proposals[index - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[index - 1].disqualification.challenger = challengerWallet;
         proposals[index - 1].disqualification.blockNumber = blockNumber;
@@ -312,7 +308,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
     function _addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward)
     private
-    returns (SettlementTypesLib.Proposal storage)
+    returns (SettlementChallengeTypesLib.Proposal storage)
     {
         // Require that stage and target balance amounts are positive
         require(stageAmount.isPositiveInt256());
@@ -326,7 +322,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         proposals[proposals.length - 1].nonce = nonceManager.incrementNonce();
         proposals[proposals.length - 1].blockNumber = blockNumber;
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
-        proposals[proposals.length - 1].status = SettlementTypesLib.Status.Qualified;
+        proposals[proposals.length - 1].status = SettlementChallengeTypesLib.Status.Qualified;
         proposals[proposals.length - 1].currency = currency;
         proposals[proposals.length - 1].stageAmount = stageAmount;
         proposals[proposals.length - 1].targetBalanceAmount = targetBalanceAmount;

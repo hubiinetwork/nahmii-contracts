@@ -19,7 +19,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
-import {SettlementTypesLib} from "./SettlementTypesLib.sol";
+import {DriipSettlementTypesLib} from "./DriipSettlementTypesLib.sol";
 
 /**
  * @title DriipSettlementState
@@ -43,7 +43,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     // -----------------------------------------------------------------------------------------------------------------
     uint256 public maxDriipNonce;
 
-    SettlementTypesLib.Settlement[] public settlements;
+    DriipSettlementTypesLib.Settlement[] public settlements;
     mapping(address => uint256[]) public walletSettlementIndices;
     mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxNonce;
@@ -53,9 +53,9 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event InitSettlementEvent(SettlementTypesLib.Settlement settlement);
+    event InitSettlementEvent(DriipSettlementTypesLib.Settlement settlement);
     event SetSettlementRoleDoneEvent(address wallet, uint256 nonce,
-        SettlementTypesLib.SettlementRole settlementRole, bool done);
+        DriipSettlementTypesLib.SettlementRole settlementRole, bool done);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
         uint256 maxNonce);
     event SetTotalFeeEvent(address wallet, Beneficiary beneficiary, address destination,
@@ -97,7 +97,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     function settlementByWalletAndIndex(address wallet, uint256 index)
     public
     view
-    returns (SettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement)
     {
         require(walletSettlementIndices[wallet].length > index);
         return settlements[walletSettlementIndices[wallet][index] - 1];
@@ -110,7 +110,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     function settlementByWalletAndNonce(address wallet, uint256 nonce)
     public
     view
-    returns (SettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement)
     {
         require(0 < walletNonceSettlementIndex[wallet][nonce]);
         return settlements[walletNonceSettlementIndex[wallet][nonce] - 1];
@@ -165,7 +165,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     /// @param settlementRole The settlement role
     /// @return True if settlement is done for role, else false
     function isSettlementRoleDone(address wallet, uint256 nonce,
-        SettlementTypesLib.SettlementRole settlementRole)
+        DriipSettlementTypesLib.SettlementRole settlementRole)
     public
     view
     returns (bool)
@@ -178,9 +178,9 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
             return false;
 
         // Return done of settlement role
-        if (SettlementTypesLib.SettlementRole.Origin == settlementRole)
+        if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
             return settlements[index - 1].origin.done;
-        else // SettlementTypesLib.SettlementRole.Target == settlementRole
+        else // DriipSettlementTypesLib.SettlementRole.Target == settlementRole
             return settlements[index - 1].target.done;
     }
 
@@ -190,7 +190,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     /// @param settlementRole The settlement role
     /// @param done The done flag
     function setSettlementRoleDone(address wallet, uint256 nonce,
-        SettlementTypesLib.SettlementRole settlementRole, bool done)
+        DriipSettlementTypesLib.SettlementRole settlementRole, bool done)
     public
     onlyEnabledServiceAction(SET_SETTLEMENT_ROLE_DONE_ACTION)
     {
@@ -201,9 +201,9 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         require(0 != index);
 
         // Update the settlement role done value
-        if (SettlementTypesLib.SettlementRole.Origin == settlementRole)
+        if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
             settlements[index - 1].origin.done = done;
-        else // SettlementTypesLib.SettlementRole.Target == settlementRole
+        else // DriipSettlementTypesLib.SettlementRole.Target == settlementRole
             settlements[index - 1].target.done = done;
 
         // Emit event

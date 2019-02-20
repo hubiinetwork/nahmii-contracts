@@ -20,7 +20,7 @@ import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
-import {SettlementTypesLib} from "./SettlementTypesLib.sol";
+import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 
 /**
  * @title NullSettlement
@@ -118,7 +118,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         require(nullSettlementChallengeState.hasProposalExpired(wallet, currency));
 
         // Require that driip settlement challenge qualified
-        require(SettlementTypesLib.Status.Qualified == nullSettlementChallengeState.proposalStatus(
+        require(SettlementChallengeTypesLib.Status.Qualified == nullSettlementChallengeState.proposalStatus(
             wallet, currency
         ));
 

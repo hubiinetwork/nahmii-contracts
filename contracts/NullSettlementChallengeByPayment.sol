@@ -19,7 +19,7 @@ import {NullSettlementDisputeByPayment} from "./NullSettlementDisputeByPayment.s
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
-import {SettlementTypesLib} from "./SettlementTypesLib.sol";
+import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 
 /**
  * @title NullSettlementChallengeByPayment
@@ -181,7 +181,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     function proposalStatus(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLib.Status)
+    returns (SettlementChallengeTypesLib.Status)
     {
         return nullSettlementChallengeState.proposalStatus(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)

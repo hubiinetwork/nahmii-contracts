@@ -26,7 +26,8 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
-import {SettlementTypesLib} from "./SettlementTypesLib.sol";
+import {DriipSettlementTypesLib} from "./DriipSettlementTypesLib.sol";
+import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 
 /**
  * @title DriipSettlementByTrade
@@ -143,7 +144,7 @@ FraudChallengable, WalletLockable {
     function settlementByWalletAndIndex(address wallet, uint256 index)
     public
     view
-    returns (SettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement)
     {
         return driipSettlementState.settlementByWalletAndIndex(wallet, index);
     }
@@ -155,7 +156,7 @@ FraudChallengable, WalletLockable {
     function settlementByWalletAndNonce(address wallet, uint256 nonce)
     public
     view
-    returns (SettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement)
     {
         return driipSettlementState.settlementByWalletAndNonce(wallet, nonce);
     }
@@ -205,10 +206,10 @@ FraudChallengable, WalletLockable {
         require(driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate));
 
         // Require that driip settlement challenge proposals qualified
-        require(SettlementTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
+        require(SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
             wallet, trade.currencies.intended
         ));
-        require(SettlementTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
+        require(SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
             wallet, trade.currencies.conjugate
         ));
 
@@ -230,7 +231,7 @@ FraudChallengable, WalletLockable {
 
         // Extract properties depending on settlement role
         (
-        SettlementTypesLib.SettlementRole settlementRole,
+        DriipSettlementTypesLib.SettlementRole settlementRole,
         TradeTypesLib.TradeParty memory party
         ) = _getRoleProperties(trade, wallet);
 
@@ -298,16 +299,16 @@ FraudChallengable, WalletLockable {
     private
     view
     returns (
-        SettlementTypesLib.SettlementRole settlementRole,
+        DriipSettlementTypesLib.SettlementRole settlementRole,
         TradeTypesLib.TradeParty memory party
     )
     {
         if (validator.isTradeSeller(trade, wallet)) {
-            settlementRole = SettlementTypesLib.SettlementRole.Origin;
+            settlementRole = DriipSettlementTypesLib.SettlementRole.Origin;
             party = trade.seller;
 
         } else {
-            settlementRole = SettlementTypesLib.SettlementRole.Target;
+            settlementRole = DriipSettlementTypesLib.SettlementRole.Target;
             party = trade.buyer;
         }
     }

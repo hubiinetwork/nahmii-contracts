@@ -70,7 +70,8 @@ const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
-const SettlementTypesLib = artifacts.require('SettlementTypesLib');
+const SettlementChallengeTypesLib = artifacts.require('SettlementChallengeTypesLib');
+const DriipSettlementTypesLib = artifacts.require('DriipSettlementTypesLib');
 const SignerManager = artifacts.require('SignerManager');
 const Strings = artifacts.require('Strings');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
@@ -140,7 +141,8 @@ module.exports = (deployer, network, accounts) => {
             NonFungibleBalanceLib.address = addressStorage.get('NonFungibleBalanceLib');
             SafeMathIntLib.address = addressStorage.get('SafeMathIntLib');
             SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
-            SettlementTypesLib.address = addressStorage.get('SettlementTypesLib');
+            SettlementChallengeTypesLib.address = addressStorage.get('SettlementChallengeTypesLib');
+            DriipSettlementTypesLib.address = addressStorage.get('DriipSettlementTypesLib');
             Strings.address = addressStorage.get('Strings');
             TxHistoryLib.address = addressStorage.get('TxHistoryLib');
 
@@ -334,7 +336,7 @@ module.exports = (deployer, network, accounts) => {
                 ValidatorV2,
                 WalletLocker
             ]);
-            await deployer.link(SettlementTypesLib, [
+            await deployer.link(SettlementChallengeTypesLib, [
                 DriipSettlementByPayment,
                 DriipSettlementByTrade,
                 DriipSettlementChallengeByPayment,
@@ -342,7 +344,6 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementChallengeState,
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
-                DriipSettlementState,
                 MockedDriipSettlementChallenge,
                 MockedNullSettlementChallenge,
                 NullSettlement,
@@ -350,8 +351,12 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementChallengeByTrade,
                 NullSettlementChallengeState,
                 NullSettlementDisputeByPayment,
-                NullSettlementDisputeByTrade,
-                NullSettlementState
+                NullSettlementDisputeByTrade
+            ]);
+            await deployer.link(DriipSettlementTypesLib, [
+                DriipSettlementByPayment,
+                DriipSettlementByTrade,
+                DriipSettlementState
             ]);
             await deployer.link(Strings, [
                 PartnerFund

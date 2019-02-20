@@ -21,7 +21,7 @@ import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
-import {SettlementTypesLib} from "./SettlementTypesLib.sol";
+import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 
 /**
  * @title DriipSettlementChallengeByPayment
@@ -195,7 +195,7 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
     function proposalStatus(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLib.Status)
+    returns (SettlementChallengeTypesLib.Status)
     {
         return driipSettlementChallengeState.proposalStatus(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)

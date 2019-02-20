@@ -19,7 +19,7 @@ import {NullSettlementDisputeByTrade} from "./NullSettlementDisputeByTrade.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
-import {SettlementTypesLib} from "./SettlementTypesLib.sol";
+import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 
 /**
  * @title NullSettlementChallengeByTrade
@@ -181,7 +181,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     function proposalStatus(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (SettlementTypesLib.Status)
+    returns (SettlementChallengeTypesLib.Status)
     {
         return nullSettlementChallengeState.proposalStatus(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)

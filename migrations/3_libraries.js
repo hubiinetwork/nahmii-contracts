@@ -18,7 +18,8 @@ const NonFungibleBalanceLib = artifacts.require('NonFungibleBalanceLib');
 const PaymentTypesLib = artifacts.require('PaymentTypesLib');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
-const SettlementTypesLib = artifacts.require('SettlementTypesLib');
+const SettlementChallengeTypesLib = artifacts.require('SettlementChallengeTypesLib');
+const DriipSettlementTypesLib = artifacts.require('DriipSettlementTypesLib');
 const Strings = artifacts.require('Strings');
 const TradeTypesLib = artifacts.require('TradeTypesLib');
 const TxHistoryLib = artifacts.require('TxHistoryLib');
@@ -68,6 +69,7 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'MonetaryTypesLib', '', MonetaryTypesLib);
                 await execDeploy(ctl, 'SafeMathIntLib', '', SafeMathIntLib);
                 await execDeploy(ctl, 'SafeMathUintLib', '', SafeMathUintLib);
+                await execDeploy(ctl, 'DriipSettlementTypesLib', '', DriipSettlementTypesLib);
 
                 await deployer.link(ConstantsLib, [
                     BlockNumbDisdIntsLib
@@ -78,7 +80,7 @@ module.exports = (deployer, network, accounts) => {
                     CurrenciesLib,
                     NahmiiTypesLib,
                     PaymentTypesLib,
-                    SettlementTypesLib,
+                    DriipSettlementTypesLib,
                     TradeTypesLib
                 ]);
                 await deployer.link(SafeMathIntLib, [
@@ -96,7 +98,7 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'BlockNumbFiguresLib', '', BlockNumbFiguresLib);
                 await execDeploy(ctl, 'BlockNumbReferenceCurrenciesLib', '', BlockNumbReferenceCurrenciesLib);
                 await execDeploy(ctl, 'CurrenciesLib', '', CurrenciesLib);
-                await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
+                await execDeploy(ctl, 'SettlementChallengeTypesLib', '', SettlementChallengeTypesLib);
 
                 await deployer.link(CurrenciesLib, [
                     FungibleBalanceLib,

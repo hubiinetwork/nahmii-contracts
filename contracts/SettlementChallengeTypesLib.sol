@@ -12,15 +12,14 @@ pragma experimental ABIEncoderV2;
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
- * @title     SettlementTypesLib
- * @dev       Types for settlements
+ * @title     SettlementChallengeTypesLib
+ * @dev       Types for settlement challenges
  */
-library SettlementTypesLib {
+library SettlementChallengeTypesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     enum Status {Qualified, Disqualified}
-    enum SettlementRole {Origin, Target}
 
     struct Proposal {
         address wallet;
@@ -60,18 +59,5 @@ library SettlementTypesLib {
         // Candidate info
         string candidateType;
         bytes32 candidateHash;
-    }
-
-    struct SettlementParty {
-        uint256 nonce;
-        address wallet;
-        bool done;
-    }
-
-    struct Settlement {
-        string settledType;
-        bytes32 settledHash;
-        SettlementParty origin;
-        SettlementParty target;
     }
 }

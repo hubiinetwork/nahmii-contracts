@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {PaymentTypesLib} from "../PaymentTypesLib.sol";
 import {TradeTypesLib} from "../TradeTypesLib.sol";
-import {SettlementTypesLib} from "../SettlementTypesLib.sol";
+import {SettlementChallengeTypesLib} from "../SettlementChallengeTypesLib.sol";
 //import {NullSettlementDispute} from "../NullSettlementDispute.sol";
 
 /**
@@ -26,7 +26,7 @@ contract MockedNullSettlementChallenge {
     uint256 public _proposalStageAmountIndex;
     int256 public _proposalTargetBalanceAmount;
     uint256 public _proposalExpirationTime;
-    SettlementTypesLib.Status public _proposalStatus;
+    SettlementChallengeTypesLib.Status public _proposalStatus;
     bool public _proposalBalanceReward;
     address public _proposalDisqualificationChallenger;
     uint256 public _proposalDisqualificationBlockNumber;
@@ -132,7 +132,7 @@ contract MockedNullSettlementChallenge {
     function proposalStatus(address, address, uint256)
     public
     view
-    returns (SettlementTypesLib.Status)
+    returns (SettlementChallengeTypesLib.Status)
     {
         return _proposalStatus;
     }
@@ -211,7 +211,7 @@ contract MockedNullSettlementChallenge {
         bytes32 candidateHash, string candidateType)
     public
     {
-        _proposalStatus = SettlementTypesLib.Status.Disqualified;
+        _proposalStatus = SettlementChallengeTypesLib.Status.Disqualified;
         //        _proposalExpirationTime = 0;
         _proposalDisqualificationChallenger = challenger;
         _proposalDisqualificationBlockNumber = blockNumber;

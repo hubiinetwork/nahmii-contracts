@@ -23,7 +23,7 @@ import {Strings} from "solidity-util/lib/Strings.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
-import {SettlementTypesLib} from "./SettlementTypesLib.sol";
+import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 
 /**
@@ -148,7 +148,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         require(!driipSettlementChallengeState.hasProposalExpired(order.wallet, currency));
 
         // Require that proposal has been disqualified
-        require(SettlementTypesLib.Status.Disqualified == driipSettlementChallengeState.proposalStatus(
+        require(SettlementChallengeTypesLib.Status.Disqualified == driipSettlementChallengeState.proposalStatus(
             order.wallet, currency
         ));
 
@@ -350,7 +350,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     private
     {
         // Unlock wallet/currency for existing challenger if previously locked
-        if (SettlementTypesLib.Status.Disqualified == driipSettlementChallengeState.proposalStatus(
+        if (SettlementChallengeTypesLib.Status.Disqualified == driipSettlementChallengeState.proposalStatus(
             wallet, currency
         ))
             walletLocker.unlockFungibleByProxy(
@@ -375,7 +375,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     private
     {
         // Deprive existing challenger of reward if previously locked
-        if (SettlementTypesLib.Status.Disqualified == driipSettlementChallengeState.proposalStatus(
+        if (SettlementChallengeTypesLib.Status.Disqualified == driipSettlementChallengeState.proposalStatus(
             wallet, currency
         ))
             securityBond.depriveAbsolute(

@@ -26,7 +26,8 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
-import {SettlementTypesLib} from "./SettlementTypesLib.sol";
+import {DriipSettlementTypesLib} from "./DriipSettlementTypesLib.sol";
+import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 
 /**
  * @title DriipSettlementByPayment
@@ -143,7 +144,7 @@ FraudChallengable, WalletLockable {
     function settlementByWalletAndIndex(address wallet, uint256 index)
     public
     view
-    returns (SettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement)
     {
         return driipSettlementState.settlementByWalletAndIndex(wallet, index);
     }
@@ -155,7 +156,7 @@ FraudChallengable, WalletLockable {
     function settlementByWalletAndNonce(address wallet, uint256 nonce)
     public
     view
-    returns (SettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement)
     {
         return driipSettlementState.settlementByWalletAndNonce(wallet, nonce);
     }
@@ -204,7 +205,7 @@ FraudChallengable, WalletLockable {
         require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
         // Require that driip settlement challenge proposal qualified
-        require(SettlementTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
+        require(SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
             wallet, payment.currency
         ));
 
@@ -225,7 +226,7 @@ FraudChallengable, WalletLockable {
 
         // Extract properties depending on settlement role
         (
-        SettlementTypesLib.SettlementRole settlementRole,uint256 walletNonce,
+        DriipSettlementTypesLib.SettlementRole settlementRole,uint256 walletNonce,
         NahmiiTypesLib.OriginFigure[] memory totalFees, int256 currentBalance
         ) = _getRoleProperties(payment, wallet);
 
@@ -271,18 +272,18 @@ FraudChallengable, WalletLockable {
     private
     view
     returns (
-        SettlementTypesLib.SettlementRole settlementRole, uint256 walletNonce,
+        DriipSettlementTypesLib.SettlementRole settlementRole, uint256 walletNonce,
         NahmiiTypesLib.OriginFigure[] memory totalFees, int256 currentBalance
     )
     {
         if (validator.isPaymentSender(payment, wallet)) {
-            settlementRole = SettlementTypesLib.SettlementRole.Origin;
+            settlementRole = DriipSettlementTypesLib.SettlementRole.Origin;
             walletNonce = payment.sender.nonce;
             totalFees = payment.sender.fees.total;
             currentBalance = payment.sender.balances.current;
 
         } else {
-            settlementRole = SettlementTypesLib.SettlementRole.Target;
+            settlementRole = DriipSettlementTypesLib.SettlementRole.Target;
             walletNonce = payment.recipient.nonce;
             totalFees = payment.recipient.fees.total;
             currentBalance = payment.recipient.balances.current;
