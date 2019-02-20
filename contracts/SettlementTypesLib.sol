@@ -10,9 +10,7 @@ pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
-// TODO Consider splitting SettlementTypesLib into part for SettlementChallengeTypesLib
 /**
  * @title     SettlementTypesLib
  * @dev       Types for settlements

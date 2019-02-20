@@ -96,6 +96,7 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'BlockNumbFiguresLib', '', BlockNumbFiguresLib);
                 await execDeploy(ctl, 'BlockNumbReferenceCurrenciesLib', '', BlockNumbReferenceCurrenciesLib);
                 await execDeploy(ctl, 'CurrenciesLib', '', CurrenciesLib);
+                await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
 
                 await deployer.link(CurrenciesLib, [
                     FungibleBalanceLib,
@@ -110,12 +111,10 @@ module.exports = (deployer, network, accounts) => {
 
                 await deployer.link(NahmiiTypesLib, [
                     PaymentTypesLib,
-                    SettlementTypesLib,
                     TradeTypesLib
                 ]);
 
                 await execDeploy(ctl, 'PaymentTypesLib', '', PaymentTypesLib);
-                await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
                 await execDeploy(ctl, 'TradeTypesLib', '', TradeTypesLib);
 
             } else if (network.startsWith('mainnet')) {
