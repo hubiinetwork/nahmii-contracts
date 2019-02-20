@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Challenge} from "./Challenge.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
@@ -20,7 +20,7 @@ import {PaymentTypesLib} from "./PaymentTypesLib.sol";
  * @title FraudChallengeByDuplicateDriipNonceOfPayments
  * @notice Where driips are challenged wrt fraud by duplicate drip nonce of payments
  */
-contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Challenge, Validatable,
+contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, ConfigurableOperational, Validatable,
 SecurityBondable {
     //
     // Events

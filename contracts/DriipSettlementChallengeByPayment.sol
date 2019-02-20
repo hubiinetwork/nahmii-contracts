@@ -10,7 +10,7 @@ pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Challenge} from "./Challenge.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {Validatable} from "./Validatable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -27,7 +27,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
  * @title DriipSettlementChallengeByPayment
  * @notice Where driip settlements pertaining to payments are started and disputed
  */
-contract DriipSettlementChallengeByPayment is Ownable, Challenge, Validatable, WalletLockable {
+contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, Validatable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 

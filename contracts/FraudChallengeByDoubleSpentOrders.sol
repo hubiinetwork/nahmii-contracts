@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Challenge} from "./Challenge.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {ValidatableV2} from "./ValidatableV2.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
@@ -20,7 +20,7 @@ import {TradeTypesLib} from "./TradeTypesLib.sol";
  * @title FraudChallengeByDoubleSpentOrders
  * @notice Where driips are challenged wrt fraud by double spent orders
  */
-contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, Challenge, ValidatableV2,
+contract FraudChallengeByDoubleSpentOrders is Ownable, FraudChallengable, ConfigurableOperational, ValidatableV2,
 SecurityBondable {
     //
     // Events

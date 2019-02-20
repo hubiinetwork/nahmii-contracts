@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Challenge} from "./Challenge.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {ValidatableV2} from "./ValidatableV2.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
@@ -22,7 +22,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
  * @title FraudChallengeByTradeOrderResiduals
  * @notice Where driips are challenged wrt fraud by mismatch in trade order residuals
  */
-contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Challenge, ValidatableV2,
+contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, ConfigurableOperational, ValidatableV2,
 SecurityBondable, WalletLockable {
     using SafeMathIntLib for int256;
 

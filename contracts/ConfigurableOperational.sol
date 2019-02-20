@@ -10,12 +10,11 @@ pragma solidity ^0.4.25;
 
 import {Configurable} from "./Configurable.sol";
 
-// TODO Rename to ConfigurableOperational
 /**
- * @title Challenge
- * @notice A configurable with extra for challenges
+ * @title ConfigurableOperational
+ * @notice A configurable with modifiers for operational mode state validation
  */
-contract Challenge is Configurable {
+contract ConfigurableOperational is Configurable {
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------

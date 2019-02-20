@@ -10,7 +10,7 @@ pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
-import {Challenge} from "./Challenge.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -25,7 +25,7 @@ import {SettlementTypesLib} from "./SettlementTypesLib.sol";
  * @title NullSettlementChallengeByPayment
  * @notice Where null settlements pertaining to payments are started and disputed
  */
-contract NullSettlementChallengeByPayment is Ownable, Challenge, BalanceTrackable, WalletLockable {
+contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, BalanceTrackable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
