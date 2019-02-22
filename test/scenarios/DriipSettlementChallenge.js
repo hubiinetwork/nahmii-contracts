@@ -20,6 +20,7 @@ chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
 chai.should();
 
+// TODO Remove
 module.exports = (glob) => {
     describe('DriipSettlementChallenge', () => {
         let web3DriipSettlementChallenge, ethersDriipSettlementChallenge;

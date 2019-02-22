@@ -34,7 +34,6 @@ contract NonceManageable is Ownable {
     function setNonceManager(NonceManager newNonceManager) public
     onlyDeployer
     notNullAddress(newNonceManager)
-    notSameAddresses(newNonceManager, nonceManager)
     {
         // Update field
         NonceManager oldNonceManager = nonceManager;

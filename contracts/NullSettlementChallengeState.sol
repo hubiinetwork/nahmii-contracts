@@ -70,6 +70,66 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals.length;
     }
 
+    /// @notice Add proposal
+    /// @param wallet The address of the concerned challenged wallet
+    /// @param stageAmount The proposal stage amount
+    /// @param targetBalanceAmount The proposal target balance amount
+    /// @param currency The concerned currency
+    /// @param blockNumber The proposal block number
+    /// @param balanceReward The candidate balance reward
+    function addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
+        MonetaryTypesLib.Currency currency, uint256 blockNumber,
+        bool balanceReward)
+    public
+    onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
+    {
+        // Require that wallet has no overlap with active proposal
+        require(hasProposalExpired(wallet, currency));
+
+        // Add proposal
+        SettlementChallengeTypesLib.Proposal storage proposal = _addProposal(
+            wallet, stageAmount, targetBalanceAmount,
+            currency, blockNumber, balanceReward
+        );
+
+        // Emit event
+        emit AddProposalEvent(
+            proposal.nonce, wallet, stageAmount, targetBalanceAmount, currency,
+            blockNumber, balanceReward
+        );
+    }
+
+    /// @notice Disqualify a proposal
+    /// @dev A call to this function will intentionally override previous disqualifications if existent
+    /// @param challengedWallet The address of the concerned challenged wallet
+    /// @param currency The concerned currency
+    /// @param challengerWallet The address of the concerned challenger wallet
+    /// @param blockNumber The disqualification block number
+    /// @param candidateHash The candidate hash
+    /// @param candidateType The candidate type
+    function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
+        uint256 blockNumber, bytes32 candidateHash, string candidateType)
+    public
+    onlyEnabledServiceAction(DISQUALIFY_PROPOSAL_ACTION)
+    {
+        // Get the proposal index
+        uint256 index = proposalIndexByWalletCurrency[challengedWallet][currency.ct][currency.id];
+        require(0 != index);
+
+        // Update proposal
+        proposals[index - 1].status = SettlementChallengeTypesLib.Status.Disqualified;
+        proposals[index - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
+        proposals[index - 1].disqualification.challenger = challengerWallet;
+        proposals[index - 1].disqualification.blockNumber = blockNumber;
+        proposals[index - 1].disqualification.candidateHash = candidateHash;
+        proposals[index - 1].disqualification.candidateType = candidateType;
+
+        // Emit event
+        emit DisqualifyProposalEvent(
+            challengedWallet, currency, challengerWallet, candidateHash, candidateType
+        );
+    }
+
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
@@ -214,20 +274,6 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].disqualification.blockNumber;
     }
 
-    /// @notice Get the disqualification candidate type of the given wallet and currency
-    /// @param wallet The address of the concerned wallet
-    /// @param currency The concerned currency
-    /// @return The candidate type of the settlement disqualification
-    function proposalDisqualificationCandidateType(address wallet, MonetaryTypesLib.Currency currency)
-    public
-    view
-    returns (string)
-    {
-        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
-        return proposals[index - 1].disqualification.candidateType;
-    }
-
     /// @notice Get the disqualification candidate hash of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
@@ -242,64 +288,18 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].disqualification.candidateHash;
     }
 
-    /// @notice Add proposal
-    /// @param wallet The address of the concerned challenged wallet
-    /// @param stageAmount The proposal stage amount
-    /// @param targetBalanceAmount The proposal target balance amount
+    /// @notice Get the disqualification candidate type of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @param blockNumber The proposal block number
-    /// @param balanceReward The candidate balance reward
-    function addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber,
-        bool balanceReward)
+    /// @return The candidate type of the settlement disqualification
+    function proposalDisqualificationCandidateType(address wallet, MonetaryTypesLib.Currency currency)
     public
-    onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
+    view
+    returns (string)
     {
-        // Require that wallet has no overlap with active proposal
-        require(hasProposalExpired(wallet, currency));
-
-        // Add proposal
-        SettlementChallengeTypesLib.Proposal storage proposal = _addProposal(
-            wallet, stageAmount, targetBalanceAmount,
-            currency, blockNumber, balanceReward
-        );
-
-        // Emit event
-        emit AddProposalEvent(
-            proposal.nonce, wallet, stageAmount, targetBalanceAmount, currency,
-            blockNumber, balanceReward
-        );
-    }
-
-    /// @notice Disqualify a proposal
-    /// @dev A call to this function will intentionally override previous disqualifications if existent
-    /// @param challengedWallet The address of the concerned challenged wallet
-    /// @param currency The concerned currency
-    /// @param challengerWallet The address of the concerned challenger wallet
-    /// @param blockNumber The disqualification block number
-    /// @param candidateHash The candidate hash
-    /// @param candidateType The candidate type
-    function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
-        uint256 blockNumber, bytes32 candidateHash, string candidateType)
-    public
-    onlyEnabledServiceAction(DISQUALIFY_PROPOSAL_ACTION)
-    {
-        // Get the proposal index
-        uint256 index = proposalIndexByWalletCurrency[challengedWallet][currency.ct][currency.id];
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-
-        // Update proposal
-        proposals[index - 1].status = SettlementChallengeTypesLib.Status.Disqualified;
-        proposals[index - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
-        proposals[index - 1].disqualification.challenger = challengerWallet;
-        proposals[index - 1].disqualification.blockNumber = blockNumber;
-        proposals[index - 1].disqualification.candidateHash = candidateHash;
-        proposals[index - 1].disqualification.candidateType = candidateType;
-
-        // Emit event
-        emit DisqualifyProposalEvent(
-            challengedWallet, currency, challengerWallet, candidateHash, candidateType
-        );
+        return proposals[index - 1].disqualification.candidateType;
     }
 
     //
