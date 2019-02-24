@@ -17,7 +17,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDisputeByPayment} from "./DriipSettlementDisputeByPayment.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
-import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
+//import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
@@ -36,7 +36,7 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementDisputeByPayment public driipSettlementDisputeByPayment;
     DriipSettlementChallengeState public driipSettlementChallengeState;
-    NullSettlementChallengeState public nullSettlementChallengeState;
+    //    NullSettlementChallengeState public nullSettlementChallengeState;
 
     //
     // Events
@@ -45,8 +45,8 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         DriipSettlementDisputeByPayment newDriipSettlementDisputeByPayment);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
-    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
-        NullSettlementChallengeState newNullSettlementChallengeState);
+    //    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
+    //        NullSettlementChallengeState newNullSettlementChallengeState);
     event StartChallengeFromPaymentEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
     event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
         int256 stageAmount);
@@ -86,15 +86,15 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
 
     /// @notice Set the null settlement challenge state contract
     /// @param newNullSettlementChallengeState The (address of) NullSettlementChallengeState contract instance
-    function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
-    public
-    onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
-    {
-        NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
-        nullSettlementChallengeState = newNullSettlementChallengeState;
-        emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
-    }
+    //    function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
+    //    public
+    //    onlyDeployer
+    //    notNullAddress(newNullSettlementChallengeState)
+    //    {
+    //        NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
+    //        nullSettlementChallengeState = newNullSettlementChallengeState;
+    //        emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
+    //    }
 
     /// @notice Start settlement challenge on payment
     /// @param payment The challenged payment
@@ -361,7 +361,8 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         require(validator.isPaymentParty(payment, wallet));
 
         // Require that there is no ongoing overlapping null settlement challenge
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
+        // TODO Resolve dependency between DSC and NSC
+        //        require(nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
         // Deduce the concerned balance amount
         int256 balanceAmount = _paymentBalanceAmount(payment, wallet);
