@@ -20,9 +20,8 @@ chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
 chai.should();
 
-// TODO Remove
 module.exports = (glob) => {
-    describe('NullSettlementChallenge', () => {
+    describe('NullSettlementChallengeByPayment', () => {
         let web3NullSettlementChallenge, ethersNullSettlementChallenge;
         let web3NullSettlementDispute, ethersNullSettlementDispute;
         let web3Configuration, ethersConfiguration;

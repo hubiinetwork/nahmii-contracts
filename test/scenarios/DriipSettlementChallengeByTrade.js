@@ -5,9 +5,9 @@ const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Wallet, Contract, utils} = require('ethers');
 const mocks = require('../mocks');
-const DriipSettlementChallengeByPayment = artifacts.require('DriipSettlementChallengeByPayment');
+const DriipSettlementChallengeByTrade = artifacts.require('DriipSettlementChallengeByTrade');
 const SignerManager = artifacts.require('SignerManager');
-const MockedDriipSettlementDisputeByPayment = artifacts.require('MockedDriipSettlementDisputeByPayment');
+const MockedDriipSettlementDisputeByTrade = artifacts.require('MockedDriipSettlementDisputeByTrade');
 const MockedDriipSettlementChallengeState = artifacts.require('MockedDriipSettlementChallengeState');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
@@ -19,13 +19,13 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe('DriipSettlementChallengeByPayment', () => {
-        let web3DriipSettlementChallengeByPayment, ethersDriipSettlementChallengeByPayment;
+    describe('DriipSettlementChallengeByTrade', () => {
+        let web3DriipSettlementChallengeByTrade, ethersDriipSettlementChallengeByTrade;
         let web3SignerManager;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let web3WalletLocker, ethersWalletLocker;
-        let web3DriipSettlementDisputeByPayment, ethersDriipSettlementDisputeByPayment;
+        let web3DriipSettlementDisputeByTrade, ethersDriipSettlementDisputeByTrade;
         let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
         let provider;
 
@@ -34,8 +34,8 @@ module.exports = (glob) => {
 
             web3SignerManager = await SignerManager.new(glob.owner);
 
-            web3DriipSettlementDisputeByPayment = await MockedDriipSettlementDisputeByPayment.new();
-            ethersDriipSettlementDisputeByPayment = new Contract(web3DriipSettlementDisputeByPayment.address, MockedDriipSettlementDisputeByPayment.abi, glob.signer_owner);
+            web3DriipSettlementDisputeByTrade = await MockedDriipSettlementDisputeByTrade.new();
+            ethersDriipSettlementDisputeByTrade = new Contract(web3DriipSettlementDisputeByTrade.address, MockedDriipSettlementDisputeByTrade.abi, glob.signer_owner);
             web3DriipSettlementChallengeState = await MockedDriipSettlementChallengeState.new();
             ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, MockedDriipSettlementChallengeState.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
@@ -47,28 +47,28 @@ module.exports = (glob) => {
         });
 
         beforeEach(async () => {
-            web3DriipSettlementChallengeByPayment = await DriipSettlementChallengeByPayment.new(glob.owner);
-            ethersDriipSettlementChallengeByPayment = new Contract(web3DriipSettlementChallengeByPayment.address, DriipSettlementChallengeByPayment.abi, glob.signer_owner);
+            web3DriipSettlementChallengeByTrade = await DriipSettlementChallengeByTrade.new(glob.owner);
+            ethersDriipSettlementChallengeByTrade = new Contract(web3DriipSettlementChallengeByTrade.address, DriipSettlementChallengeByTrade.abi, glob.signer_owner);
 
-            await ethersDriipSettlementChallengeByPayment.setConfiguration(ethersConfiguration.address);
-            await ethersDriipSettlementChallengeByPayment.setValidator(ethersValidator.address);
-            await ethersDriipSettlementChallengeByPayment.setWalletLocker(ethersWalletLocker.address);
-            await ethersDriipSettlementChallengeByPayment.setDriipSettlementDisputeByPayment(ethersDriipSettlementDisputeByPayment.address);
-            await ethersDriipSettlementChallengeByPayment.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
+            await ethersDriipSettlementChallengeByTrade.setConfiguration(ethersConfiguration.address);
+            await ethersDriipSettlementChallengeByTrade.setValidator(ethersValidator.address);
+            await ethersDriipSettlementChallengeByTrade.setWalletLocker(ethersWalletLocker.address);
+            await ethersDriipSettlementChallengeByTrade.setDriipSettlementDisputeByTrade(ethersDriipSettlementDisputeByTrade.address);
+            await ethersDriipSettlementChallengeByTrade.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
 
             await ethersConfiguration.setEarliestSettlementBlockNumber(0);
         });
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                (await web3DriipSettlementChallengeByPayment.deployer.call()).should.equal(glob.owner);
-                (await web3DriipSettlementChallengeByPayment.operator.call()).should.equal(glob.owner);
+                (await web3DriipSettlementChallengeByTrade.deployer.call()).should.equal(glob.owner);
+                (await web3DriipSettlementChallengeByTrade.operator.call()).should.equal(glob.owner);
             });
         });
 
         describe('configuration()', () => {
             it('should equal value initialized', async () => {
-                (await ethersDriipSettlementChallengeByPayment.configuration())
+                (await ethersDriipSettlementChallengeByTrade.configuration())
                     .should.equal(utils.getAddress(ethersConfiguration.address));
             });
         });
@@ -82,19 +82,19 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallengeByPayment.setConfiguration(address);
+                    const result = await web3DriipSettlementChallengeByTrade.setConfiguration(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetConfigurationEvent');
 
-                    (await ethersDriipSettlementChallengeByPayment.configuration())
+                    (await ethersDriipSettlementChallengeByTrade.configuration())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallengeByPayment.setConfiguration(address, {from: glob.user_a})
+                    web3DriipSettlementChallengeByTrade.setConfiguration(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -102,7 +102,7 @@ module.exports = (glob) => {
 
         describe('validator()', () => {
             it('should equal value initialized', async () => {
-                (await ethersDriipSettlementChallengeByPayment.validator())
+                (await ethersDriipSettlementChallengeByTrade.validator())
                     .should.equal(utils.getAddress(ethersValidator.address));
             });
         });
@@ -116,32 +116,32 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallengeByPayment.setValidator(address);
+                    const result = await web3DriipSettlementChallengeByTrade.setValidator(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetValidatorEvent');
 
-                    (await ethersDriipSettlementChallengeByPayment.validator())
+                    (await ethersDriipSettlementChallengeByTrade.validator())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallengeByPayment.setValidator(address, {from: glob.user_a})
+                    web3DriipSettlementChallengeByTrade.setValidator(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
         });
 
-        describe('driipSettlementDisputeByPayment()', () => {
+        describe('driipSettlementDisputeByTrade()', () => {
             it('should equal value initialized', async () => {
-                (await ethersDriipSettlementChallengeByPayment.driipSettlementDisputeByPayment())
-                    .should.equal(utils.getAddress(ethersDriipSettlementDisputeByPayment.address));
+                (await ethersDriipSettlementChallengeByTrade.driipSettlementDisputeByTrade())
+                    .should.equal(utils.getAddress(ethersDriipSettlementDisputeByTrade.address));
             });
         });
 
-        describe('setDriipSettlementDisputeByPayment()', () => {
+        describe('setDriipSettlementDisputeByTrade()', () => {
             let address;
 
             before(() => {
@@ -150,26 +150,26 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallengeByPayment.setDriipSettlementDisputeByPayment(address);
+                    const result = await web3DriipSettlementChallengeByTrade.setDriipSettlementDisputeByTrade(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDriipSettlementDisputeByPaymentEvent');
+                    result.logs[0].event.should.equal('SetDriipSettlementDisputeByTradeEvent');
 
-                    (await ethersDriipSettlementChallengeByPayment.driipSettlementDisputeByPayment())
+                    (await ethersDriipSettlementChallengeByTrade.driipSettlementDisputeByTrade())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallengeByPayment.setDriipSettlementDisputeByPayment(address, {from: glob.user_a}).should.be.rejected;
+                    web3DriipSettlementChallengeByTrade.setDriipSettlementDisputeByTrade(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });
 
         describe('driipSettlementChallengeState()', () => {
             it('should equal value initialized', async () => {
-                (await ethersDriipSettlementChallengeByPayment.driipSettlementChallengeState())
+                (await ethersDriipSettlementChallengeByTrade.driipSettlementChallengeState())
                     .should.equal(utils.getAddress(ethersDriipSettlementChallengeState.address));
             });
         });
@@ -183,33 +183,33 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallengeByPayment.setDriipSettlementChallengeState(address);
+                    const result = await web3DriipSettlementChallengeByTrade.setDriipSettlementChallengeState(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetDriipSettlementChallengeStateEvent');
 
-                    (await ethersDriipSettlementChallengeByPayment.driipSettlementChallengeState())
+                    (await ethersDriipSettlementChallengeByTrade.driipSettlementChallengeState())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementChallengeByPayment.setDriipSettlementChallengeState(address, {from: glob.user_a})
+                    web3DriipSettlementChallengeByTrade.setDriipSettlementChallengeState(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
         });
 
-        describe('startChallengeFromPayment()', () => {
-            let payment;
+        describe('startChallengeFromTrade()', () => {
+            let trade;
 
             beforeEach(async () => {
                 await ethersValidator._reset({gasLimit: 4e6});
                 await ethersWalletLocker._reset();
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
 
-                payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
+                trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
             });
 
             describe('if wallet is locked', () => {
@@ -218,20 +218,22 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTrade(
+                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current,
+                        {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
 
-            describe('if called with improperly sealed payment', () => {
+            describe('if called with improperly sealed trade', () => {
                 beforeEach(async () => {
-                    await web3Validator.setGenuinePaymentSeals(false);
+                    await web3Validator.setGenuineTradeSeal(false);
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTrade(
+                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current,
+                        {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -242,20 +244,22 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTrade(
+                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current,
+                        {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
 
-            describe('if called from sender that is not payment party', () => {
+            describe('if called from sender that is not trade party', () => {
                 beforeEach(async () => {
-                    await web3Validator.setPaymentParty(false);
+                    await web3Validator.setTradeParty(false);
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTrade(
+                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current,
+                        {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -266,50 +270,64 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentEvent'].topics
+                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeEvent'].topics
                     };
                 });
 
                 it('should start challenge successfully', async () => {
-                    await ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current, {gasLimit: 3e6}
+                    await ethersDriipSettlementChallengeByTrade.startChallengeFromTrade(
+                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current,
+                        {gasLimit: 3e6}
                     );
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    const proposal = await ethersDriipSettlementChallengeState._proposals(0);
-                    proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                    proposal.stageAmount._bn.should.eq.BN(payment.sender.balances.current._bn);
-                    proposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    proposal.currency.ct.should.equal(payment.currency.ct);
-                    proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
-                    proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
-                    proposal.balanceReward.should.be.true;
-                    proposal.challengedHash.should.equal(payment.seals.operator.hash);
-                    proposal.challengedType.should.equal('payment');
+                    const intendedProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                    intendedProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                    intendedProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
+                    intendedProposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
+                    intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                    intendedProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    intendedProposal.balanceReward.should.be.true;
+                    intendedProposal.challengedHash.should.equal(trade.seal.hash);
+                    intendedProposal.challengedType.should.equal('trade');
+
+                    const conjugateProposal = await ethersDriipSettlementChallengeState._proposals(1);
+                    conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                    conjugateProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
+                    conjugateProposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                    conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                    conjugateProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    conjugateProposal.balanceReward.should.be.true;
+                    conjugateProposal.challengedHash.should.equal(trade.seal.hash);
+                    conjugateProposal.challengedType.should.equal('trade');
                 });
             });
         });
 
-        describe('startChallengeFromPaymentByProxy()', () => {
-            let payment;
+        describe('startChallengeFromTradeByProxy()', () => {
+            let trade;
 
             beforeEach(async () => {
                 await ethersValidator._reset({gasLimit: 4e6});
+                await ethersWalletLocker._reset();
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
 
-                payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
+                trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
             });
 
-            describe('if called with improperly sealed payment', () => {
+            describe('if called with improperly sealed trade', () => {
                 beforeEach(async () => {
-                    await web3Validator.setGenuinePaymentSeals(false);
+                    await web3Validator.setGenuineTradeSeal(false);
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
-                        payment.sender.wallet, payment, payment.sender.balances.current
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTradeByProxy(
+                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -320,20 +338,22 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
-                        payment.sender.wallet, payment, payment.sender.balances.current
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTradeByProxy(
+                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
 
-            describe('if called from sender that is not payment party', () => {
+            describe('if called from sender that is not trade party', () => {
                 beforeEach(async () => {
-                    await web3Validator.setPaymentParty(false);
+                    await web3Validator.setTradeParty(false);
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
-                        payment.sender.wallet, payment, payment.sender.balances.current
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTradeByProxy(
+                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -344,28 +364,40 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentByProxyEvent'].topics
+                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeByProxyEvent'].topics
                     };
                 });
 
                 it('should start challenge successfully', async () => {
-                    await ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
-                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
+                    await ethersDriipSettlementChallengeByTrade.startChallengeFromTradeByProxy(
+                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
                     );
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    const proposal = await ethersDriipSettlementChallengeState._proposals(0);
-                    proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                    proposal.stageAmount._bn.should.eq.BN(payment.sender.balances.current._bn);
-                    proposal.targetBalanceAmount._bn.should.eq.BN(0);
-                    proposal.currency.ct.should.equal(payment.currency.ct);
-                    proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
-                    proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
-                    proposal.balanceReward.should.be.false;
-                    proposal.challengedHash.should.equal(payment.seals.operator.hash);
-                    proposal.challengedType.should.equal('payment');
+                    const intendedProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                    intendedProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                    intendedProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
+                    intendedProposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
+                    intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                    intendedProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    intendedProposal.balanceReward.should.be.false;
+                    intendedProposal.challengedHash.should.equal(trade.seal.hash);
+                    intendedProposal.challengedType.should.equal('trade');
+
+                    const conjugateProposal = await ethersDriipSettlementChallengeState._proposals(1);
+                    conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                    conjugateProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
+                    conjugateProposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                    conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                    conjugateProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    conjugateProposal.balanceReward.should.be.false;
+                    conjugateProposal.challengedHash.should.equal(trade.seal.hash);
+                    conjugateProposal.challengedType.should.equal('trade');
                 });
             });
         });
@@ -377,7 +409,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.hasProposalExpired(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.hasProposalExpired(glob.owner, mocks.address0, 0))
                     .should.be.true;
             });
         });
@@ -389,7 +421,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalNonce(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalNonce(glob.owner, mocks.address0, 0))
                     ._bn.should.eq.BN(1);
             });
         });
@@ -401,7 +433,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalBlockNumber(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalBlockNumber(glob.owner, mocks.address0, 0))
                     ._bn.should.eq.BN(1);
             });
         });
@@ -413,7 +445,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalExpirationTime(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalExpirationTime(glob.owner, mocks.address0, 0))
                     ._bn.should.eq.BN(1);
             });
         });
@@ -425,7 +457,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalStatus(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalStatus(glob.owner, mocks.address0, 0))
                     .should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
             });
         });
@@ -437,7 +469,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalStageAmount(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalStageAmount(glob.owner, mocks.address0, 0))
                     ._bn.should.eq.BN(1);
             });
         });
@@ -449,7 +481,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalTargetBalanceAmount(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalTargetBalanceAmount(glob.owner, mocks.address0, 0))
                     ._bn.should.eq.BN(1);
             });
         });
@@ -461,7 +493,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalChallengedHash(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalChallengedHash(glob.owner, mocks.address0, 0))
                     .should.equal(mocks.hash1)
             });
         });
@@ -469,12 +501,12 @@ module.exports = (glob) => {
         describe('proposalChallengedType()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementChallengeState._setProposalChallengedType('payment');
+                await ethersDriipSettlementChallengeState._setProposalChallengedType('trade');
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalChallengedType(glob.owner, mocks.address0, 0))
-                    .should.equal('payment');
+                (await ethersDriipSettlementChallengeByTrade.proposalChallengedType(glob.owner, mocks.address0, 0))
+                    .should.equal('trade');
             });
         });
 
@@ -485,7 +517,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalBalanceReward(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalBalanceReward(glob.owner, mocks.address0, 0))
                     .should.be.true;
             });
         });
@@ -497,7 +529,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalDisqualificationChallenger(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalDisqualificationChallenger(glob.owner, mocks.address0, 0))
                     .should.equal(utils.getAddress(glob.user_a));
             });
         });
@@ -509,7 +541,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalDisqualificationBlockNumber(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalDisqualificationBlockNumber(glob.owner, mocks.address0, 0))
                     ._bn.should.eq.BN(1);
             });
         });
@@ -521,7 +553,7 @@ module.exports = (glob) => {
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalDisqualificationCandidateHash(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalDisqualificationCandidateHash(glob.owner, mocks.address0, 0))
                     .should.equal(mocks.hash1);
             });
         });
@@ -529,27 +561,60 @@ module.exports = (glob) => {
         describe('proposalDisqualificationCandidateType()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementChallengeState._setProposalDisqualificationCandidateType('payment');
+                await ethersDriipSettlementChallengeState._setProposalDisqualificationCandidateType('trade');
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalDisqualificationCandidateType(glob.owner, mocks.address0, 0))
-                    .should.equal('payment');
+                (await ethersDriipSettlementChallengeByTrade.proposalDisqualificationCandidateType(glob.owner, mocks.address0, 0))
+                    .should.equal('trade');
             });
         });
 
-        describe('challengeByPayment()', () => {
-            let payment;
+        describe('challengeByOrder()', () => {
+            let order;
 
             before(async () => {
-                await ethersDriipSettlementDisputeByPayment._reset();
-                payment = await mocks.mockPayment(glob.owner);
+                await ethersDriipSettlementDisputeByTrade._reset();
+                order = await mocks.mockOrder(glob.owner);
             });
 
-            it('should call corresponding function in challenge dispute instance', async () => {
-                await ethersDriipSettlementChallengeByPayment.challengeByPayment(payment.sender.wallet, payment, {gasLimit: 2e6});
+            it('should call challengeByOrder() of its settlement challenge dispute instance', async () => {
+                await ethersDriipSettlementChallengeByTrade.challengeByOrder(order);
 
-                (await ethersDriipSettlementDisputeByPayment._challengeByPaymentCount())
+                (await ethersDriipSettlementDisputeByTrade._challengeByOrderCount())
+                    ._bn.should.eq.BN(1);
+            });
+        });
+
+        describe('unchallengeOrderCandidateByTrade()', () => {
+            let order, trade;
+
+            before(async () => {
+                await ethersDriipSettlementDisputeByTrade._reset();
+                order = await mocks.mockOrder(glob.owner);
+                trade = await mocks.mockTrade(glob.owner);
+            });
+
+            it('should call challengeByTrade() of its settlement challenge dispute instance', async () => {
+                await ethersDriipSettlementChallengeByTrade.unchallengeOrderCandidateByTrade(order, trade, {gasLimit: 2e6});
+
+                (await ethersDriipSettlementDisputeByTrade._unchallengeOrderCandidateByTradeCount())
+                    ._bn.should.eq.BN(1);
+            });
+        });
+
+        describe('challengeByTrade()', () => {
+            let trade;
+
+            before(async () => {
+                await ethersDriipSettlementDisputeByTrade._reset();
+                trade = await mocks.mockTrade(glob.owner);
+            });
+
+            it('should call challengeByTrade() of its settlement challenge dispute instance', async () => {
+                await ethersDriipSettlementChallengeByTrade.challengeByTrade(trade.buyer.wallet, trade, {gasLimit: 2e6});
+
+                (await ethersDriipSettlementDisputeByTrade._challengeByTradeCount())
                     ._bn.should.eq.BN(1);
             });
         });

@@ -36,7 +36,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementDisputeByTrade public driipSettlementDisputeByTrade;
     DriipSettlementChallengeState public driipSettlementChallengeState;
-    NullSettlementChallengeState public nullSettlementChallengeState;
+    //    NullSettlementChallengeState public nullSettlementChallengeState;
 
     //
     // Events
@@ -87,15 +87,15 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
 
     /// @notice Set the null settlement challenge state contract
     /// @param newNullSettlementChallengeState The (address of) NullSettlementChallengeState contract instance
-    function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
-    public
-    onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
-    {
-        NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
-        nullSettlementChallengeState = newNullSettlementChallengeState;
-        emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
-    }
+    //    function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
+    //    public
+    //    onlyDeployer
+    //    notNullAddress(newNullSettlementChallengeState)
+    //    {
+    //        NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
+    //        nullSettlementChallengeState = newNullSettlementChallengeState;
+    //        emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
+    //    }
 
     /// @notice Start settlement challenge on trade
     /// @param trade The challenged trade
@@ -393,7 +393,8 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     private
     {
         // Require that there is no ongoing overlapping null settlement challenge
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended));
+        // TODO Resolve dependency between DSC and NSC
+        //        require(nullSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended));
 
         // Deduce the concerned balance amount
         int256 balanceAmount = _tradeIntendedBalanceAmount(trade, wallet);
@@ -412,7 +413,8 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     private
     {
         // Require that there is no ongoing overlapping null settlement challenge
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate));
+        // TODO Resolve dependency between DSC and NSC
+        //        require(nullSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate));
 
         // Deduce the concerned balance amount
         int256 balanceAmount = _tradeConjugateBalanceAmount(trade, wallet);

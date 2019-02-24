@@ -64,6 +64,7 @@ contract('Unit tests', function () {
     // require('./scenarios/DriipSettlement')(glob);
     // require('./scenarios/DriipSettlementChallenge')(glob);
     require('./scenarios/DriipSettlementChallengeByPayment')(glob);
+    require('./scenarios/DriipSettlementChallengeByTrade')(glob);
     require('./scenarios/DriipSettlementChallengeState')(glob);
     // require('./scenarios/DriipSettlementDispute')(glob);
     // require('./scenarios/ERC721TransferController')(glob);
