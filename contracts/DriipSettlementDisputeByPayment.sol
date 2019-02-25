@@ -15,7 +15,6 @@ import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
 import {Servable} from "./Servable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -30,7 +29,7 @@ import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol
  * @notice The where payment related disputes of driip settlement challenge happens
  */
 contract DriipSettlementDisputeByPayment is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable,
-FraudChallengable, CancelOrdersChallengable, Servable {
+FraudChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 

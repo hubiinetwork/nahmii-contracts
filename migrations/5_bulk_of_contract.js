@@ -26,6 +26,7 @@ const DriipSettlementChallengeByTrade = artifacts.require('DriipSettlementChalle
 const DriipSettlementDisputeByPayment = artifacts.require('DriipSettlementDisputeByPayment');
 const DriipSettlementDisputeByTrade = artifacts.require('DriipSettlementDisputeByTrade');
 const DriipSettlementState = artifacts.require('DriipSettlementState');
+const DriipSettlementTypesLib = artifacts.require('DriipSettlementTypesLib');
 const ERC20TransferController = artifacts.require('ERC20TransferController');
 const ERC721TransferController = artifacts.require('ERC721TransferController');
 const FraudChallenge = artifacts.require('FraudChallenge');
@@ -72,7 +73,6 @@ const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
 const SettlementChallengeTypesLib = artifacts.require('SettlementChallengeTypesLib');
-const DriipSettlementTypesLib = artifacts.require('DriipSettlementTypesLib');
 const SignerManager = artifacts.require('SignerManager');
 const Strings = artifacts.require('Strings');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
@@ -588,7 +588,6 @@ module.exports = (deployer, network, accounts) => {
             await instance.setSecurityBond(addressStorage.get('SecurityBond'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
-            await instance.setCancelOrdersChallenge(addressStorage.get('CancelOrdersChallenge'));
             await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
             await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), 'challenge_by_payment');
