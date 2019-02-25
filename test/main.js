@@ -84,6 +84,7 @@ contract('Unit tests', function () {
     require('./scenarios/Hasher')(glob);
     require('./scenarios/NullSettlement')(glob);
     // require('./scenarios/NullSettlementChallenge')(glob);
+    require('./scenarios/NullSettlementChallengeByPayment')(glob);
     require('./scenarios/NullSettlementChallengeState')(glob);
     // require('./scenarios/NullSettlementDispute')(glob);
     require('./scenarios/RevenueFund')(glob);

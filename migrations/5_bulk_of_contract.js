@@ -47,7 +47,8 @@ const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallen
 const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedDriipSettlementChallenge = artifacts.require('MockedDriipSettlementChallenge');
-const MockedDriipSettlementDispute = artifacts.require('MockedDriipSettlementDispute');
+const MockedDriipSettlementDisputeByPayment = artifacts.require('MockedDriipSettlementDisputeByPayment');
+const MockedDriipSettlementDisputeByTrade = artifacts.require('MockedDriipSettlementDisputeByTrade');
 const MockedNullSettlementChallenge = artifacts.require('MockedNullSettlementChallenge');
 const MockedNullSettlementDispute = artifacts.require('MockedNullSettlementDispute');
 const MockedValidator = artifacts.require('MockedValidator');
@@ -237,7 +238,6 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByTradeSucceedingPayment,
                 MockedCancelOrdersChallenge,
                 MockedDriipSettlementChallenge,
-                MockedDriipSettlementDispute,
                 MockedNullSettlementChallenge,
                 MockedNullSettlementDispute,
                 MockedValidator,
@@ -263,7 +263,7 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeBySuccessivePayments,
                 FraudChallengeByTradeSucceedingPayment,
                 MockedDriipSettlementChallenge,
-                MockedDriipSettlementDispute,
+                MockedDriipSettlementDisputeByPayment,
                 MockedNullSettlementChallenge,
                 MockedNullSettlementDispute,
                 MockedValidator,
@@ -377,7 +377,7 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByTradeSucceedingPayment,
                 MockedCancelOrdersChallenge,
                 MockedDriipSettlementChallenge,
-                MockedDriipSettlementDispute,
+                MockedDriipSettlementDisputeByTrade,
                 MockedNullSettlementChallenge,
                 MockedNullSettlementDispute,
                 MockedValidator,
