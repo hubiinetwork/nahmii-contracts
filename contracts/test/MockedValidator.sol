@@ -250,7 +250,7 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     // TODO Redo trade seal management to prevent the need for the following pattern
-    // taken from DriipSettlementDispute.js:
+    // taken from DriipSettlementDisputeByTrade.js:
     //   await ethersValidator.isGenuineTradeSeal(trade, {gasLimit: 1e6});
     //   await web3Validator.setGenuineTradeSeal(false);
     function isGenuineTradeSeal(TradeTypesLib.Trade)

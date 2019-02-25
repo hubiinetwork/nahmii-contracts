@@ -62,12 +62,11 @@ contract('Unit tests', function () {
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/CommunityVote')(glob);
     // require('./scenarios/DriipSettlement')(glob);
-    // require('./scenarios/DriipSettlementChallenge')(glob);
     require('./scenarios/DriipSettlementChallengeByPayment')(glob);
     require('./scenarios/DriipSettlementChallengeByTrade')(glob);
     require('./scenarios/DriipSettlementChallengeState')(glob);
-    // require('./scenarios/DriipSettlementDispute')(glob);
     require('./scenarios/DriipSettlementDisputeByPayment')(glob);
+    require('./scenarios/DriipSettlementDisputeByTrade')(glob);
     // require('./scenarios/ERC721TransferController')(glob);
     require('./scenarios/FraudChallenge')(glob);
     require('./scenarios/FraudChallengeByOrder')(glob);
@@ -84,7 +83,6 @@ contract('Unit tests', function () {
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
     require('./scenarios/Hasher')(glob);
     require('./scenarios/NullSettlement')(glob);
-    // require('./scenarios/NullSettlementChallenge')(glob);
     require('./scenarios/NullSettlementChallengeByPayment')(glob);
     require('./scenarios/NullSettlementChallengeByTrade')(glob);
     require('./scenarios/NullSettlementChallengeState')(glob);

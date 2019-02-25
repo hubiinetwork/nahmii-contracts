@@ -13,7 +13,6 @@ import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "../PaymentTypesLib.sol";
 import {TradeTypesLib} from "../TradeTypesLib.sol";
 import {SettlementChallengeTypesLib} from "../SettlementChallengeTypesLib.sol";
-//import {DriipSettlementDispute} from "../DriipSettlementDispute.sol";
 
 // TODO Remove
 /**
@@ -36,7 +35,6 @@ contract MockedDriipSettlementChallenge {
     uint256 public _proposalDisqualificationBlockNumber;
     bytes32 public _proposalDisqualificationCandidateHash;
     string public _proposalDisqualificationCandidateType;
-    //    DriipSettlementDispute public _driipSettlementDispute;
 
     function _reset()
     public
@@ -252,33 +250,23 @@ contract MockedDriipSettlementChallenge {
         delete _proposalDisqualificationCandidateType;
     }
 
-    //    function setDriipSettlementDispute(DriipSettlementDispute driipSettlementDispute)
-    //    public
-    //    {
-    //        _driipSettlementDispute = driipSettlementDispute;
-    //    }
-
-    function challengeByOrder(TradeTypesLib.Order order)
+    function challengeByOrder(TradeTypesLib.Order)
     public
     {
-        //        _driipSettlementDispute.challengeByOrder(order, msg.sender);
     }
 
-    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order order, TradeTypesLib.Trade trade)
+    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order, TradeTypesLib.Trade)
     public
     {
-        //        _driipSettlementDispute.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
     }
 
-    function challengeByTrade(address wallet, TradeTypesLib.Trade trade)
+    function challengeByTrade(address, TradeTypesLib.Trade)
     public
     {
-        //        _driipSettlementDispute.challengeByTrade(wallet, trade, msg.sender);
     }
 
-    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment)
+    function challengeByPayment(address, PaymentTypesLib.Payment)
     public
     {
-        //        _driipSettlementDispute.challengeByPayment(wallet, payment, msg.sender);
     }
 }

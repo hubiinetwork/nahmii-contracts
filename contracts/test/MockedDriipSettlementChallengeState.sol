@@ -61,6 +61,17 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].disqualification.candidateType = candidateType;
     }
 
+    function qualifyProposal(address wallet, MonetaryTypesLib.Currency currency)
+    public
+    {
+        uint256 index = _addProposalIfNone();
+
+        _proposals[index].wallet = wallet;
+        _proposals[index].currency = currency;
+        _proposals[index].status = SettlementChallengeTypesLib.Status.Qualified;
+        delete _proposals[index].disqualification;
+    }
+
     function hasProposalExpired(address, MonetaryTypesLib.Currency)
     public
     view

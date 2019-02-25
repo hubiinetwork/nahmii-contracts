@@ -845,9 +845,12 @@ module.exports = (deployer, network, accounts) => {
             await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'), 'reward');
             await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
             await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), 'reward');
-            // await instance.registerService(addressStorage.get('DriipSettlementDispute'));
-            // await instance.enableServiceAction(addressStorage.get('DriipSettlementDispute'), 'reward');
-            // await instance.enableServiceAction(addressStorage.get('DriipSettlementDispute'), 'deprive');
+            await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
+            await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), 'reward');
+            await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), 'deprive');
+            await instance.registerService(addressStorage.get('DriipSettlementDisputeByTrade'));
+            await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByTrade'), 'reward');
+            await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByTrade'), 'deprive');
             // await instance.registerService(addressStorage.get('NullSettlementDispute'));
             // await instance.enableServiceAction(addressStorage.get('NullSettlementDispute'), 'reward');
 
@@ -863,8 +866,10 @@ module.exports = (deployer, network, accounts) => {
             await instance.setPaymentHasher(addressStorage.get('PaymentHasher'));
 
             instance = await WalletLocker.at(addressStorage.get('WalletLocker'));
-            // await instance.registerService(addressStorage.get('DriipSettlementDispute'));
-            // await instance.authorizeInitialService(addressStorage.get('DriipSettlementDispute'));
+            await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
+            await instance.authorizeInitialService(addressStorage.get('DriipSettlementDisputeByPayment'));
+            await instance.registerService(addressStorage.get('DriipSettlementDisputeByTrade'));
+            await instance.authorizeInitialService(addressStorage.get('DriipSettlementDisputeByTrade'));
             // await instance.registerService(addressStorage.get('NullSettlementDispute'));
             // await instance.authorizeInitialService(addressStorage.get('NullSettlementDispute'));
 
