@@ -851,8 +851,12 @@ module.exports = (deployer, network, accounts) => {
             await instance.registerService(addressStorage.get('DriipSettlementDisputeByTrade'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByTrade'), 'reward');
             await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByTrade'), 'deprive');
-            // await instance.registerService(addressStorage.get('NullSettlementDispute'));
-            // await instance.enableServiceAction(addressStorage.get('NullSettlementDispute'), 'reward');
+            await instance.registerService(addressStorage.get('NullSettlementDisputeByPayment'));
+            await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByPayment'), 'reward');
+            await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByPayment'), 'deprive');
+            await instance.registerService(addressStorage.get('NullSettlementDisputeByTrade'));
+            await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByTrade'), 'reward');
+            await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByTrade'), 'deprive');
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
@@ -870,8 +874,10 @@ module.exports = (deployer, network, accounts) => {
             await instance.authorizeInitialService(addressStorage.get('DriipSettlementDisputeByPayment'));
             await instance.registerService(addressStorage.get('DriipSettlementDisputeByTrade'));
             await instance.authorizeInitialService(addressStorage.get('DriipSettlementDisputeByTrade'));
-            // await instance.registerService(addressStorage.get('NullSettlementDispute'));
-            // await instance.authorizeInitialService(addressStorage.get('NullSettlementDispute'));
+            await instance.registerService(addressStorage.get('NullSettlementDisputeByPayment'));
+            await instance.authorizeInitialService(addressStorage.get('NullSettlementDisputeByPayment'));
+            await instance.registerService(addressStorage.get('NullSettlementDisputeByTrade'));
+            await instance.authorizeInitialService(addressStorage.get('NullSettlementDisputeByTrade'));
 
         } finally {
             if (!helpers.isTestNetwork(network)) {

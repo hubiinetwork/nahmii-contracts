@@ -117,7 +117,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         );
 
         // Emit event
-        emit ChallengeByOrderEvent(nullSettlementChallengeState.proposalNonce(order.wallet, currency), order, challenger);
+        emit ChallengeByOrderEvent(
+            nullSettlementChallengeState.proposalNonce(order.wallet, currency), order, challenger
+        );
     }
 
     /// @notice Challenge the settlement by providing trade candidate
@@ -171,7 +173,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         );
 
         // Emit event
-        emit ChallengeByTradeEvent(wallet, nullSettlementChallengeState.proposalNonce(wallet, currency), trade, challenger);
+        emit ChallengeByTradeEvent(
+            wallet, nullSettlementChallengeState.proposalNonce(wallet, currency), trade, challenger
+        );
     }
 
     //
