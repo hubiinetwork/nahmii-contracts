@@ -201,6 +201,11 @@ FraudChallengable, WalletLockable {
         // Require that wallet is not locked
         require(!walletLocker.isLocked(wallet));
 
+        // Require that the wallet's current driip settlement challenge proposal is defined wrt this payment
+        require(payment.seals.operator.hash == driipSettlementChallengeState.proposalChallengedHash(
+            wallet, payment.currency
+        ));
+
         // Require that proposal has expired
         require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
@@ -208,9 +213,6 @@ FraudChallengable, WalletLockable {
         require(SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
             wallet, payment.currency
         ));
-
-        // Require that the wallet's current driip settlement challenge proposal is defined wrt this payment
-        require(payment.nonce == driipSettlementChallengeState.proposalNonce(wallet, payment.currency));
 
         // Require that operational mode is normal and data is available, or that nonce is
         // smaller than max null nonce

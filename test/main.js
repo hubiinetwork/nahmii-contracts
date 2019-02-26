@@ -62,6 +62,7 @@ contract('Unit tests', function () {
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/CommunityVote')(glob);
     // require('./scenarios/DriipSettlement')(glob);
+    require('./scenarios/DriipSettlementByPayment')(glob);
     require('./scenarios/DriipSettlementChallengeByPayment')(glob);
     require('./scenarios/DriipSettlementChallengeByTrade')(glob);
     require('./scenarios/DriipSettlementChallengeState')(glob);
