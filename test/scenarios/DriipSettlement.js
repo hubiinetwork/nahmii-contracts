@@ -23,6 +23,7 @@ chai.should();
 
 let provider;
 
+// TODO Remove
 module.exports = (glob) => {
     describe('DriipSettlement', () => {
         let web3DriipSettlement, ethersDriipSettlement;

@@ -7,6 +7,7 @@ exports.intentions = ['Buy', 'Sell'];
 exports.sidednesses = ['OneSided', 'TwoSided'];
 exports.challengePhases = ['Dispute', 'Closed'];
 exports.settlementStatuses = ['Qualified', 'Disqualified'];
+exports.settlementRoles = ['Origin', 'Target'];
 
 exports.hash0 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 exports.hash1 = '0x0000000000000000000000000000000000000000000000000000000000000001';

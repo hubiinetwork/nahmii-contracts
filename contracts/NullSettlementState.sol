@@ -45,6 +45,7 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     event SetMaxNullNonceEvent(uint256 maxNullNonce);
     event SetMaxNullNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
         uint256 maxNullNonce);
+    event UpdateMaxNullNonceEvent(uint256 maxDriipNonce);
 
     //
     // Constructor
@@ -98,7 +99,12 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     public
     {
         uint256 _maxNullNonce = communityVote.getMaxNullNonce();
-        if (_maxNullNonce > 0)
-            maxNullNonce = _maxNullNonce;
+        if (0 == _maxNullNonce)
+            return;
+
+        maxNullNonce = _maxNullNonce;
+
+        // Emit event
+        emit UpdateMaxNullNonceEvent(maxNullNonce);
     }
 }

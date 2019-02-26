@@ -58,6 +58,8 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         DriipSettlementTypesLib.SettlementRole settlementRole, bool done);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
         uint256 maxNonce);
+    event SetMaxDriipNonceEvent(uint256 maxDriipNonce);
+    event UpdateMaxDriipNonceEvent(uint256 maxDriipNonce);
     event SetTotalFeeEvent(address wallet, Beneficiary beneficiary, address destination,
         MonetaryTypesLib.Currency currency, MonetaryTypesLib.NoncedAmount totalFee);
 
@@ -210,6 +212,33 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         emit SetSettlementRoleDoneEvent(wallet, nonce, settlementRole, done);
     }
 
+    /// @notice Set the max (driip) nonce
+    /// @param _maxDriipNonce The max nonce
+    function setMaxDriipNonce(uint256 _maxDriipNonce)
+    public
+    onlyEnabledServiceAction(SET_MAX_DRIIP_NONCE_ACTION)
+    {
+        maxDriipNonce = _maxDriipNonce;
+
+        // Emit event
+        emit SetMaxDriipNonceEvent(maxDriipNonce);
+    }
+
+    // TODO Rename to updateMaxDriipNonceFromCommunityVote
+    /// @notice Update the max driip nonce property from CommunityVote contract
+    function updateMaxDriipNonce()
+    public
+    {
+        uint256 _maxDriipNonce = communityVote.getMaxDriipNonce();
+        if (0 == _maxDriipNonce)
+            return;
+
+        maxDriipNonce = _maxDriipNonce;
+
+        // Emit event
+        emit UpdateMaxDriipNonceEvent(maxDriipNonce);
+    }
+
     /// @notice Get the max nonce of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
@@ -236,25 +265,6 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
 
         // Emit event
         emit SetMaxNonceByWalletAndCurrencyEvent(wallet, currency, maxNonce);
-    }
-
-    /// @notice Set the max (driip) nonce
-    /// @param _maxDriipNonce The max nonce
-    function setMaxDriipNonce(uint256 _maxDriipNonce)
-    public
-    onlyEnabledServiceAction(SET_MAX_DRIIP_NONCE_ACTION)
-    {
-        maxDriipNonce = _maxDriipNonce;
-    }
-
-    /// @notice Update the max driip nonce property from CommunityVote contract
-    function updateMaxDriipNonce()
-    public
-    {
-        uint256 _maxDriipNonce = communityVote.getMaxDriipNonce();
-        if (_maxDriipNonce > 0) {
-            maxDriipNonce = _maxDriipNonce;
-        }
     }
 
     /// @notice Get the total fee payed by the given wallet to the given beneficiary and destination

@@ -30,6 +30,7 @@ contract CommunityVotable is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
+    // TODO Rename to freezeCommunityVote() and emit event
     /// @notice Disable future updates of community vote contract
     function disableUpdateOfCommunityVote() 
     public 
