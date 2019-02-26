@@ -30,20 +30,20 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
     string constant public SET_MAX_NULL_NONCE_ACTION = "set_max_null_nonce";
-    string constant public SET_MAX_NULL_NONCE_WALLET_CURRENCY_ACTION = "set_max_null_nonce_wallet_currency";
+    string constant public SET_MAX_NONCE_WALLET_CURRENCY_ACTION = "set_max_nonce_wallet_currency";
 
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     uint256 public maxNullNonce;
 
-    mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxNullNonce;
+    mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxNonce;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetMaxNullNonceEvent(uint256 maxNullNonce);
-    event SetMaxNullNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
+    event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
         uint256 maxNullNonce);
     event UpdateMaxNullNonceEvent(uint256 maxDriipNonce);
 
@@ -72,26 +72,26 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The max nonce
-    function maxNullNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency)
+    function maxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (uint256) {
-        return walletCurrencyMaxNullNonce[wallet][currency.ct][currency.id];
+        return walletCurrencyMaxNonce[wallet][currency.ct][currency.id];
     }
 
     /// @notice Set the max null nonce of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @param _maxNullNonce The max nonce
-    function setMaxNullNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency,
+    function setMaxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency,
         uint256 _maxNullNonce)
     public
-    onlyEnabledServiceAction(SET_MAX_NULL_NONCE_WALLET_CURRENCY_ACTION)
+    onlyEnabledServiceAction(SET_MAX_NONCE_WALLET_CURRENCY_ACTION)
     {
-        walletCurrencyMaxNullNonce[wallet][currency.ct][currency.id] = _maxNullNonce;
+        walletCurrencyMaxNonce[wallet][currency.ct][currency.id] = _maxNullNonce;
 
         // Emit event
-        emit SetMaxNullNonceByWalletAndCurrencyEvent(wallet, currency, _maxNullNonce);
+        emit SetMaxNonceByWalletAndCurrencyEvent(wallet, currency, _maxNullNonce);
     }
 
     /// @notice Update the max null settlement nonce property from CommunityVote contract

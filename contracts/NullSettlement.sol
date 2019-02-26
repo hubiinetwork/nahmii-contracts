@@ -132,10 +132,10 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
 
         // If wallet has previously settled balance of the concerned currency with higher
         // null settlement nonce, then don't settle again
-        require(nonce > nullSettlementState.maxNullNonceByWalletAndCurrency(wallet, currency));
+        require(nonce > nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency));
 
         // Update settled nonce of wallet and currency
-        nullSettlementState.setMaxNullNonceByWalletAndCurrency(wallet, currency, nonce);
+        nullSettlementState.setMaxNonceByWalletAndCurrency(wallet, currency, nonce);
 
         // Stage the proposed amount
         clientFund.stage(
