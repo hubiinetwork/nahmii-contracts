@@ -76,7 +76,7 @@ FraudChallengable, Servable {
     public
     onlyEnabledServiceAction(CHALLENGE_BY_PAYMENT_ACTION)
     onlySealedPayment(payment)
-    onlyPaymentParty(payment, wallet)
+    onlyPaymentSender(payment, wallet)
     {
         // Require that payment candidate is not labelled fraudulent
         require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
@@ -110,7 +110,9 @@ FraudChallengable, Servable {
         );
 
         // Emit event
-        emit ChallengeByPaymentEvent(wallet, nullSettlementChallengeState.proposalNonce(wallet, payment.currency), payment, challenger);
+        emit ChallengeByPaymentEvent(
+            wallet, nullSettlementChallengeState.proposalNonce(wallet, payment.currency), payment, challenger
+        );
     }
 
     //

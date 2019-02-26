@@ -3,9 +3,9 @@ const sinonChai = require('sinon-chai');
 const chaiAsPromised = require('chai-as-promised');
 const {Wallet, utils, Contract} = require('ethers');
 const mocks = require('../mocks');
-const DriipSettlementDisputeByPayment = artifacts.require('DriipSettlementDisputeByPayment');
+const NullSettlementDisputeByPayment = artifacts.require('NullSettlementDisputeByPayment');
 const SignerManager = artifacts.require('SignerManager');
-const MockedDriipSettlementChallengeState = artifacts.require('MockedDriipSettlementChallengeState');
+const MockedNullSettlementChallengeState = artifacts.require('MockedNullSettlementChallengeState');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedValidator = artifacts.require('MockedValidator');
@@ -17,14 +17,14 @@ chai.use(chaiAsPromised);
 chai.should();
 
 module.exports = (glob) => {
-    describe('DriipSettlementDisputeByPayment', () => {
-        let web3DriipSettlementDisputeByPayment, ethersDriipSettlementDisputeByPayment;
+    describe('NullSettlementDisputeByPayment', () => {
+        let web3NullSettlementDisputeByPayment, ethersNullSettlementDisputeByPayment;
         let web3SignerManager;
         let web3Configuration, ethersConfiguration;
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
         let web3WalletLocker, ethersWalletLocker;
-        let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
+        let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
         let web3FraudChallenge, ethersFraudChallenge;
         let provider;
 
@@ -33,8 +33,8 @@ module.exports = (glob) => {
 
             web3SignerManager = await SignerManager.new(glob.owner);
 
-            web3DriipSettlementChallengeState = await MockedDriipSettlementChallengeState.new(glob.owner);
-            ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, MockedDriipSettlementChallengeState.abi, glob.signer_owner);
+            web3NullSettlementChallengeState = await MockedNullSettlementChallengeState.new(glob.owner);
+            ethersNullSettlementChallengeState = new Contract(web3NullSettlementChallengeState.address, MockedNullSettlementChallengeState.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
@@ -51,27 +51,27 @@ module.exports = (glob) => {
         });
 
         beforeEach(async () => {
-            web3DriipSettlementDisputeByPayment = await DriipSettlementDisputeByPayment.new(glob.owner);
-            ethersDriipSettlementDisputeByPayment = new Contract(web3DriipSettlementDisputeByPayment.address, DriipSettlementDisputeByPayment.abi, glob.signer_owner);
+            web3NullSettlementDisputeByPayment = await NullSettlementDisputeByPayment.new(glob.owner);
+            ethersNullSettlementDisputeByPayment = new Contract(web3NullSettlementDisputeByPayment.address, NullSettlementDisputeByPayment.abi, glob.signer_owner);
 
-            await ethersDriipSettlementDisputeByPayment.setConfiguration(ethersConfiguration.address);
-            await ethersDriipSettlementDisputeByPayment.setValidator(ethersValidator.address);
-            await ethersDriipSettlementDisputeByPayment.setSecurityBond(ethersSecurityBond.address);
-            await ethersDriipSettlementDisputeByPayment.setWalletLocker(ethersWalletLocker.address);
-            await ethersDriipSettlementDisputeByPayment.setFraudChallenge(ethersFraudChallenge.address);
-            await ethersDriipSettlementDisputeByPayment.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
+            await ethersNullSettlementDisputeByPayment.setConfiguration(ethersConfiguration.address);
+            await ethersNullSettlementDisputeByPayment.setValidator(ethersValidator.address);
+            await ethersNullSettlementDisputeByPayment.setSecurityBond(ethersSecurityBond.address);
+            await ethersNullSettlementDisputeByPayment.setWalletLocker(ethersWalletLocker.address);
+            await ethersNullSettlementDisputeByPayment.setFraudChallenge(ethersFraudChallenge.address);
+            await ethersNullSettlementDisputeByPayment.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
         });
 
         describe('constructor', () => {
             it('should initialize fields', async () => {
-                (await web3DriipSettlementDisputeByPayment.deployer.call()).should.equal(glob.owner);
-                (await web3DriipSettlementDisputeByPayment.operator.call()).should.equal(glob.owner);
+                (await web3NullSettlementDisputeByPayment.deployer.call()).should.equal(glob.owner);
+                (await web3NullSettlementDisputeByPayment.operator.call()).should.equal(glob.owner);
             });
         });
 
         describe('configuration()', () => {
             it('should equal value initialized', async () => {
-                (await web3DriipSettlementDisputeByPayment.configuration.call())
+                (await web3NullSettlementDisputeByPayment.configuration.call())
                     .should.equal(web3Configuration.address);
             });
         });
@@ -85,19 +85,19 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementDisputeByPayment.setConfiguration(address);
+                    const result = await web3NullSettlementDisputeByPayment.setConfiguration(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetConfigurationEvent');
 
-                    (await ethersDriipSettlementDisputeByPayment.configuration())
+                    (await ethersNullSettlementDisputeByPayment.configuration())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementDisputeByPayment.setConfiguration(address, {from: glob.user_a})
+                    web3NullSettlementDisputeByPayment.setConfiguration(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -105,7 +105,7 @@ module.exports = (glob) => {
 
         describe('validator()', () => {
             it('should equal value initialized', async () => {
-                (await web3DriipSettlementDisputeByPayment.validator.call())
+                (await web3NullSettlementDisputeByPayment.validator.call())
                     .should.equal(web3Validator.address);
             });
         });
@@ -119,19 +119,19 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementDisputeByPayment.setValidator(address);
+                    const result = await web3NullSettlementDisputeByPayment.setValidator(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetValidatorEvent');
 
-                    (await ethersDriipSettlementDisputeByPayment.validator())
+                    (await ethersNullSettlementDisputeByPayment.validator())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementDisputeByPayment.setValidator(address, {from: glob.user_a})
+                    web3NullSettlementDisputeByPayment.setValidator(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -139,7 +139,7 @@ module.exports = (glob) => {
 
         describe('securityBond()', () => {
             it('should equal value initialized', async () => {
-                (await web3DriipSettlementDisputeByPayment.securityBond.call())
+                (await web3NullSettlementDisputeByPayment.securityBond.call())
                     .should.equal(web3SecurityBond.address);
             });
         });
@@ -153,19 +153,19 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementDisputeByPayment.setSecurityBond(address);
+                    const result = await web3NullSettlementDisputeByPayment.setSecurityBond(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetSecurityBondEvent');
 
-                    (await ethersDriipSettlementDisputeByPayment.securityBond())
+                    (await ethersNullSettlementDisputeByPayment.securityBond())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementDisputeByPayment.setSecurityBond(address, {from: glob.user_a})
+                    web3NullSettlementDisputeByPayment.setSecurityBond(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -173,7 +173,7 @@ module.exports = (glob) => {
 
         describe('walletLocker()', () => {
             it('should equal value initialized', async () => {
-                (await web3DriipSettlementDisputeByPayment.walletLocker.call())
+                (await web3NullSettlementDisputeByPayment.walletLocker.call())
                     .should.equal(web3WalletLocker.address);
             });
         });
@@ -187,19 +187,19 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementDisputeByPayment.setWalletLocker(address);
+                    const result = await web3NullSettlementDisputeByPayment.setWalletLocker(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetWalletLockerEvent');
 
-                    (await ethersDriipSettlementDisputeByPayment.walletLocker())
+                    (await ethersNullSettlementDisputeByPayment.walletLocker())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementDisputeByPayment.setWalletLocker(address, {from: glob.user_a})
+                    web3NullSettlementDisputeByPayment.setWalletLocker(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -207,7 +207,7 @@ module.exports = (glob) => {
 
         describe('fraudChallenge()', () => {
             it('should equal value initialized', async () => {
-                (await web3DriipSettlementDisputeByPayment.fraudChallenge.call())
+                (await web3NullSettlementDisputeByPayment.fraudChallenge.call())
                     .should.equal(web3FraudChallenge.address);
             });
         });
@@ -221,32 +221,32 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementDisputeByPayment.setFraudChallenge(address);
+                    const result = await web3NullSettlementDisputeByPayment.setFraudChallenge(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetFraudChallengeEvent');
 
-                    (await ethersDriipSettlementDisputeByPayment.fraudChallenge())
+                    (await ethersNullSettlementDisputeByPayment.fraudChallenge())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementDisputeByPayment.setFraudChallenge(address, {from: glob.user_a})
+                    web3NullSettlementDisputeByPayment.setFraudChallenge(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
         });
         
-        describe('driipSettlementChallengeState()', () => {
+        describe('nullSettlementChallengeState()', () => {
             it('should equal value initialized', async () => {
-                (await web3DriipSettlementDisputeByPayment.driipSettlementChallengeState.call())
-                    .should.equal(web3DriipSettlementChallengeState.address);
+                (await web3NullSettlementDisputeByPayment.nullSettlementChallengeState.call())
+                    .should.equal(web3NullSettlementChallengeState.address);
             });
         });
 
-        describe('setDriipSettlementChallengeState()', () => {
+        describe('setNullSettlementChallengeState()', () => {
             let address;
 
             before(() => {
@@ -255,19 +255,19 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementDisputeByPayment.setDriipSettlementChallengeState(address);
+                    const result = await web3NullSettlementDisputeByPayment.setNullSettlementChallengeState(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDriipSettlementChallengeStateEvent');
+                    result.logs[0].event.should.equal('SetNullSettlementChallengeStateEvent');
 
-                    (await ethersDriipSettlementDisputeByPayment.driipSettlementChallengeState())
+                    (await ethersNullSettlementDisputeByPayment.nullSettlementChallengeState())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementDisputeByPayment.setDriipSettlementChallengeState(address, {from: glob.user_a})
+                    web3NullSettlementDisputeByPayment.setNullSettlementChallengeState(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -279,23 +279,23 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await web3Validator._reset({gasLimit: 4e6});
                 await web3FraudChallenge._reset();
-                await web3DriipSettlementChallengeState._reset({gasLimit: 1e6});
+                await web3NullSettlementChallengeState._reset({gasLimit: 1e6});
                 await web3SecurityBond._reset();
                 await web3WalletLocker._reset();
 
-                await ethersDriipSettlementChallengeState._addProposalIfNone();
+                await ethersNullSettlementChallengeState._addProposalIfNone();
 
                 payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(1)});
 
                 filter = {
                     fromBlock: await provider.getBlockNumber(),
-                    topics: ethersDriipSettlementDisputeByPayment.interface.events['ChallengeByPaymentEvent'].topics
+                    topics: ethersNullSettlementDisputeByPayment.interface.events['ChallengeByPaymentEvent'].topics
                 };
             });
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                    ethersNullSettlementDisputeByPayment.challengeByPayment(
                         payment.sender.wallet, payment, Wallet.createRandom().address, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -303,9 +303,9 @@ module.exports = (glob) => {
 
             describe('if called with improperly sealed payment', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
@@ -314,7 +314,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                    ethersNullSettlementDisputeByPayment.challengeByPayment(
                         payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -322,9 +322,9 @@ module.exports = (glob) => {
 
             describe('if called with wallet that is not payment sender', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
@@ -332,7 +332,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                    ethersNullSettlementDisputeByPayment.challengeByPayment(
                         payment.recipient.wallet, payment, glob.user_a, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -340,9 +340,9 @@ module.exports = (glob) => {
 
             describe('if called with fraudulent payment', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
@@ -350,7 +350,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                    ethersNullSettlementDisputeByPayment.challengeByPayment(
                         payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -358,17 +358,17 @@ module.exports = (glob) => {
 
             describe('if called on expired proposal', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
-                    await web3DriipSettlementChallengeState._setProposalExpired(true);
+                    await web3NullSettlementChallengeState._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                    ethersNullSettlementDisputeByPayment.challengeByPayment(
                         payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -376,19 +376,19 @@ module.exports = (glob) => {
 
             describe('if called on payment whose block number is less than the proposal block number', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalBlockNumber(
+                    await ethersNullSettlementChallengeState._setProposalBlockNumber(
                         payment.blockNumber.add(10)
                     );
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                    ethersNullSettlementDisputeByPayment.challengeByPayment(
                         payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -396,19 +396,19 @@ module.exports = (glob) => {
 
             describe('if called on payment whose block number is less than the proposal disqualification block number', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalDisqualificationBlockNumber(
+                    await ethersNullSettlementChallengeState._setProposalDisqualificationBlockNumber(
                         payment.blockNumber.add(10)
                     );
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                    ethersNullSettlementDisputeByPayment.challengeByPayment(
                         payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -416,19 +416,19 @@ module.exports = (glob) => {
 
             describe('if called on payment whose single transfer amount is less than the proposal target balance amount', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalTargetBalanceAmount(
+                    await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(
                         payment.transfers.single.mul(2)
                     );
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                    ethersNullSettlementDisputeByPayment.challengeByPayment(
                         payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -436,24 +436,24 @@ module.exports = (glob) => {
 
             describe('if called with balance reward and proposal initially is qualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalBalanceReward(true);
+                    await ethersNullSettlementChallengeState._setProposalBalanceReward(true);
                 });
 
                 it('should disqualify proposal and reward new challenger by locking challenged wallet', async () => {
-                    await ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                    await ethersNullSettlementDisputeByPayment.challengeByPayment(
                         payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6}
                     );
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                    const proposal = await ethersNullSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                     proposal.currency.ct.should.equal(payment.currency.ct);
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
@@ -486,30 +486,30 @@ module.exports = (glob) => {
 
             describe('if called with balance reward and proposal initially is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalBalanceReward(true);
-                    await ethersDriipSettlementChallengeState._setProposalStatus(
+                    await ethersNullSettlementChallengeState._setProposalBalanceReward(true);
+                    await ethersNullSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
-                    await ethersDriipSettlementChallengeState._setProposalDisqualificationChallenger(
+                    await ethersNullSettlementChallengeState._setProposalDisqualificationChallenger(
                         glob.user_b
                     );
                 });
 
                 it('should disqualify proposal anew, deprive previous challenger\'s reward and reward new challenger by locking challenged wallet', async () => {
-                    await ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                    await ethersNullSettlementDisputeByPayment.challengeByPayment(
                         payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6}
                     );
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                    const proposal = await ethersNullSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                     proposal.currency.ct.should.equal(payment.currency.ct);
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
@@ -546,9 +546,9 @@ module.exports = (glob) => {
 
             describe('if called with security bond reward and proposal initially is qualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
                 });
@@ -559,13 +559,13 @@ module.exports = (glob) => {
                     });
 
                     it('should disqualify proposal and reward new challenger from security bond', async () => {
-                        await ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                        await ethersNullSettlementDisputeByPayment.challengeByPayment(
                             payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6});
 
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                        const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        const proposal = await ethersNullSettlementChallengeState._proposals(0);
                         proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                         proposal.currency.ct.should.equal(payment.currency.ct);
                         proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
@@ -609,13 +609,13 @@ module.exports = (glob) => {
                     });
 
                     it('should disqualify proposal and reward new challenger from security bond', async () => {
-                        await ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                        await ethersNullSettlementDisputeByPayment.challengeByPayment(
                             payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6});
 
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                        const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        const proposal = await ethersNullSettlementChallengeState._proposals(0);
                         proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                         proposal.currency.ct.should.equal(payment.currency.ct);
                         proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
@@ -656,16 +656,16 @@ module.exports = (glob) => {
 
             describe('if called with security bond reward and proposal initially is disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
-                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                    await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersNullSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalStatus(
+                    await ethersNullSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
-                    await ethersDriipSettlementChallengeState._setProposalDisqualificationChallenger(
+                    await ethersNullSettlementChallengeState._setProposalDisqualificationChallenger(
                         glob.user_b
                     );
                 });
@@ -676,13 +676,13 @@ module.exports = (glob) => {
                     });
 
                     it('should disqualify proposal anew, deprive previous challenger\'s reward and reward new challenger from security bond', async () => {
-                        await ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                        await ethersNullSettlementDisputeByPayment.challengeByPayment(
                             payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6});
 
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                        const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        const proposal = await ethersNullSettlementChallengeState._proposals(0);
                         proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                         proposal.currency.ct.should.equal(payment.currency.ct);
                         proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
@@ -729,13 +729,13 @@ module.exports = (glob) => {
                     });
 
                     it('should disqualify proposal anew, deprive previous challenger\'s reward and reward new challenger from security bond', async () => {
-                        await ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                        await ethersNullSettlementDisputeByPayment.challengeByPayment(
                             payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6});
 
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                        const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        const proposal = await ethersNullSettlementChallengeState._proposals(0);
                         proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                         proposal.currency.ct.should.equal(payment.currency.ct);
                         proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);

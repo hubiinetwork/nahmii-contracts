@@ -1246,7 +1246,7 @@ module.exports = (glob) => {
                     );
 
                     await ethersValidator.isGenuineTradeSeal(trade);
-                    await web3Validator.setGenuineTradeSeal(false);
+                    await ethersValidator.setGenuineTradeSeal(false);
                 });
 
                 it('should revert', async () => {
