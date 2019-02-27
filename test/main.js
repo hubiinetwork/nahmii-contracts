@@ -83,7 +83,6 @@ contract('Unit tests', function () {
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
-    require('./scenarios/Hasher')(glob);
     require('./scenarios/NullSettlement')(glob);
     require('./scenarios/NullSettlementChallengeByPayment')(glob);
     require('./scenarios/NullSettlementChallengeByTrade')(glob);
@@ -91,11 +90,13 @@ contract('Unit tests', function () {
     require('./scenarios/NullSettlementDisputeByPayment')(glob);
     require('./scenarios/NullSettlementDisputeByTrade')(glob);
     require('./scenarios/NullSettlementState')(glob);
+    require('./scenarios/PartnerFund')(glob);
+    require('./scenarios/PaymentHasher')(glob);
     require('./scenarios/RevenueFund')(glob);
     require('./scenarios/SecurityBond')(glob);
     require('./scenarios/SignerManager')(glob);
-    require('./scenarios/PartnerFund')(glob);
     require('./scenarios/TokenHolderRevenueFund')(glob);
+    require('./scenarios/TradeHasher')(glob);
     require('./scenarios/Validator')(glob);
     require('./scenarios/WalletLocker')(glob);
 });
