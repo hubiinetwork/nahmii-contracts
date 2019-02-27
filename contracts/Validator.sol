@@ -14,17 +14,15 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
-import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {Configurable} from "./Configurable.sol";
 import {PaymentHashable} from "./PaymentHashable.sol";
-import {TradeHashable} from "./TradeHashable.sol";
 import {Ownable} from "./Ownable.sol";
 import {SignerManageable} from "./SignerManageable.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 
 /**
  * @title Validator
- * @notice An ownable that validates valuable types (order, trade, payment)
+ * @notice An ownable that validates valuable types (e.g. payment)
  */
 contract Validator is Ownable, SignerManageable, Configurable, PaymentHashable {
     using SafeMathIntLib for int256;
