@@ -140,10 +140,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('disableUpdateOfCommunityVote()', () => {
+        describe('freezeCommunityVote()', () => {
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementState.disableUpdateOfCommunityVote({from: glob.user_a})
+                    web3DriipSettlementState.freezeCommunityVote({from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -156,7 +156,7 @@ module.exports = (glob) => {
                 });
 
                 it('should disable changing community vote', async () => {
-                    await web3DriipSettlementState.disableUpdateOfCommunityVote();
+                    await web3DriipSettlementState.freezeCommunityVote();
                     web3DriipSettlementState.setCommunityVote(address).should.be.rejected;
                 });
             });
@@ -433,20 +433,20 @@ module.exports = (glob) => {
             });
         });
 
-        describe('updateMaxDriipNonce()', () => {
+        describe('updateMaxDriipNonceFromCommunityVote()', () => {
             let filter;
 
             beforeEach(async () => {
                 ethersCommunityVote._reset();
 
                 filter = await fromBlockTopicsFilter(
-                    ethersDriipSettlementState.interface.events.UpdateMaxDriipNonceEvent.topics
+                    ethersDriipSettlementState.interface.events.UpdateMaxDriipNonceFromCommunityVoteEvent.topics
                 );
             });
 
             describe('if community vote returns 0', () => {
                 it('should not update max driip nonce', async () => {
-                    await ethersDriipSettlementState.updateMaxDriipNonce();
+                    await ethersDriipSettlementState.updateMaxDriipNonceFromCommunityVote();
                 });
             });
 
@@ -456,7 +456,7 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully set the new max driip nonce', async () => {
-                    await ethersDriipSettlementState.updateMaxDriipNonce();
+                    await ethersDriipSettlementState.updateMaxDriipNonceFromCommunityVote();
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);

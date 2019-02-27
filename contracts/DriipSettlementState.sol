@@ -59,7 +59,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
         uint256 maxNonce);
     event SetMaxDriipNonceEvent(uint256 maxDriipNonce);
-    event UpdateMaxDriipNonceEvent(uint256 maxDriipNonce);
+    event UpdateMaxDriipNonceFromCommunityVoteEvent(uint256 maxDriipNonce);
     event SetTotalFeeEvent(address wallet, Beneficiary beneficiary, address destination,
         MonetaryTypesLib.Currency currency, MonetaryTypesLib.NoncedAmount totalFee);
 
@@ -224,9 +224,8 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         emit SetMaxDriipNonceEvent(maxDriipNonce);
     }
 
-    // TODO Rename to updateMaxDriipNonceFromCommunityVote
     /// @notice Update the max driip nonce property from CommunityVote contract
-    function updateMaxDriipNonce()
+    function updateMaxDriipNonceFromCommunityVote()
     public
     {
         uint256 _maxDriipNonce = communityVote.getMaxDriipNonce();
@@ -236,7 +235,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         maxDriipNonce = _maxDriipNonce;
 
         // Emit event
-        emit UpdateMaxDriipNonceEvent(maxDriipNonce);
+        emit UpdateMaxDriipNonceFromCommunityVoteEvent(maxDriipNonce);
     }
 
     /// @notice Get the max nonce of the given wallet and currency

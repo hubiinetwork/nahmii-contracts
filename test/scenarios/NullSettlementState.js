@@ -140,10 +140,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('disableUpdateOfCommunityVote()', () => {
+        describe('freezeCommunityVote()', () => {
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlementState.disableUpdateOfCommunityVote({from: glob.user_a})
+                    web3NullSettlementState.freezeCommunityVote({from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -156,7 +156,7 @@ module.exports = (glob) => {
                 });
 
                 it('should disable changing community vote', async () => {
-                    await web3NullSettlementState.disableUpdateOfCommunityVote();
+                    await web3NullSettlementState.freezeCommunityVote();
                     web3NullSettlementState.setCommunityVote(address).should.be.rejected;
                 });
             });
@@ -205,20 +205,20 @@ module.exports = (glob) => {
             });
         });
 
-        describe('updateMaxNullNonce()', () => {
+        describe('updateMaxNullNonceFromCommunityVote()', () => {
             let filter;
 
             beforeEach(async () => {
                 ethersCommunityVote._reset();
 
                 filter = await fromBlockTopicsFilter(
-                    ethersNullSettlementState.interface.events.UpdateMaxNullNonceEvent.topics
+                    ethersNullSettlementState.interface.events.updateMaxNullNonceFromCommunityVoteEvent.topics
                 );
             });
 
             describe('if community vote returns 0', () => {
                 it('should not update max null nonce', async () => {
-                    await ethersNullSettlementState.updateMaxNullNonce();
+                    await ethersNullSettlementState.updateMaxNullNonceFromCommunityVote();
                 });
             });
 
@@ -228,7 +228,7 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully set the new max null nonce', async () => {
-                    await ethersNullSettlementState.updateMaxNullNonce();
+                    await ethersNullSettlementState.updateMaxNullNonceFromCommunityVote();
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);

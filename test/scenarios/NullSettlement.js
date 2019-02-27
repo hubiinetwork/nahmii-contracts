@@ -282,10 +282,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('disableUpdateOfCommunityVote()', () => {
+        describe('freezeCommunityVote()', () => {
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlement.disableUpdateOfCommunityVote({from: glob.user_a}).should.be.rejected;
+                    web3NullSettlement.freezeCommunityVote({from: glob.user_a}).should.be.rejected;
                 });
             });
 
@@ -297,7 +297,7 @@ module.exports = (glob) => {
                 });
 
                 beforeEach(async () => {
-                    await web3NullSettlement.disableUpdateOfCommunityVote();
+                    await web3NullSettlement.freezeCommunityVote();
                 });
 
                 it('should disable changing community vote', async () => {

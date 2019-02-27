@@ -19,26 +19,17 @@ contract CommunityVotable is Ownable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     CommunityVote public communityVote;
-
-    bool public communityVoteUpdateDisabled;
+    bool public communityVoteFrozen;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetCommunityVoteEvent(CommunityVote oldCommunityVote, CommunityVote newCommunityVote);
+    event FreezeCommunityVoteEvent();
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    // TODO Rename to freezeCommunityVote() and emit event
-    /// @notice Disable future updates of community vote contract
-    function disableUpdateOfCommunityVote() 
-    public 
-    onlyDeployer 
-    {
-        communityVoteUpdateDisabled = true;
-    }
-
     /// @notice Set the community vote contract
     /// @param newCommunityVote The (address of) CommunityVote contract instance
     function setCommunityVote(CommunityVote newCommunityVote) 
@@ -47,7 +38,7 @@ contract CommunityVotable is Ownable {
     notNullAddress(newCommunityVote)
     notSameAddresses(newCommunityVote, communityVote)
     {
-        require(!communityVoteUpdateDisabled);
+        require(!communityVoteFrozen);
 
         // Set new community vote
         CommunityVote oldCommunityVote = communityVote;
@@ -55,6 +46,18 @@ contract CommunityVotable is Ownable {
 
         // Emit event
         emit SetCommunityVoteEvent(oldCommunityVote, newCommunityVote);
+    }
+
+    /// @notice Freeze the community vote from further updates
+    /// @dev This operation can not be undone
+    function freezeCommunityVote()
+    public
+    onlyDeployer
+    {
+        communityVoteFrozen = true;
+
+        // Emit event
+        emit FreezeCommunityVoteEvent();
     }
 
     //

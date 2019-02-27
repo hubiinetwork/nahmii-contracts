@@ -413,10 +413,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('disableUpdateOfCommunityVote()', () => {
+        describe('freezeCommunityVote()', () => {
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementByTrade.disableUpdateOfCommunityVote({from: glob.user_a})
+                    web3DriipSettlementByTrade.freezeCommunityVote({from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -429,7 +429,7 @@ module.exports = (glob) => {
                 });
 
                 it('should disable changing community vote', async () => {
-                    await web3DriipSettlementByTrade.disableUpdateOfCommunityVote();
+                    await web3DriipSettlementByTrade.freezeCommunityVote();
                     web3DriipSettlementByTrade.setCommunityVote(address).should.be.rejected;
                 });
             });
