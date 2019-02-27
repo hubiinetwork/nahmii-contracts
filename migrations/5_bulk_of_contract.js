@@ -47,11 +47,11 @@ const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallenge');
 const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
-const MockedDriipSettlementChallenge = artifacts.require('MockedDriipSettlementChallenge');
+// const MockedDriipSettlementChallenge = artifacts.require('MockedDriipSettlementChallenge');
 const MockedDriipSettlementDisputeByPayment = artifacts.require('MockedDriipSettlementDisputeByPayment');
 const MockedDriipSettlementDisputeByTrade = artifacts.require('MockedDriipSettlementDisputeByTrade');
-const MockedNullSettlementChallenge = artifacts.require('MockedNullSettlementChallenge');
-const MockedNullSettlementDispute = artifacts.require('MockedNullSettlementDispute');
+// const MockedNullSettlementChallenge = artifacts.require('MockedNullSettlementChallenge');
+// const MockedNullSettlementDispute = artifacts.require('MockedNullSettlementDispute');
 const MockedValidator = artifacts.require('MockedValidator');
 const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
@@ -237,9 +237,9 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByTradeOrderResiduals,
                 FraudChallengeByTradeSucceedingPayment,
                 MockedCancelOrdersChallenge,
-                MockedDriipSettlementChallenge,
-                MockedNullSettlementChallenge,
-                MockedNullSettlementDispute,
+                // MockedDriipSettlementChallenge,
+                // MockedNullSettlementChallenge,
+                // MockedNullSettlementDispute,
                 MockedValidator,
                 NullSettlementChallengeState,
                 PaymentHasher,
@@ -262,10 +262,10 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments,
                 FraudChallengeByTradeSucceedingPayment,
-                MockedDriipSettlementChallenge,
+                // MockedDriipSettlementChallenge,
                 MockedDriipSettlementDisputeByPayment,
-                MockedNullSettlementChallenge,
-                MockedNullSettlementDispute,
+                // MockedNullSettlementChallenge,
+                // MockedNullSettlementDispute,
                 MockedValidator,
                 NullSettlementChallengeByPayment,
                 NullSettlementDisputeByPayment,
@@ -344,8 +344,8 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementChallengeState,
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
-                MockedDriipSettlementChallenge,
-                MockedNullSettlementChallenge,
+                // MockedDriipSettlementChallenge,
+                // MockedNullSettlementChallenge,
                 NullSettlement,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade,
@@ -376,10 +376,10 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByTradeOrderResiduals,
                 FraudChallengeByTradeSucceedingPayment,
                 MockedCancelOrdersChallenge,
-                MockedDriipSettlementChallenge,
+                // MockedDriipSettlementChallenge,
                 MockedDriipSettlementDisputeByTrade,
-                MockedNullSettlementChallenge,
-                MockedNullSettlementDispute,
+                // MockedNullSettlementChallenge,
+                // MockedNullSettlementDispute,
                 MockedValidator,
                 NullSettlementChallengeByTrade,
                 NullSettlementDisputeByTrade,
