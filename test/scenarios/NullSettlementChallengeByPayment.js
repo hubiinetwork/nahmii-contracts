@@ -194,7 +194,7 @@ module.exports = (glob) => {
 
             describe('if current block number is below earliest settlement block number', () => {
                 beforeEach(async () => {
-                    web3Configuration.setEarliestSettlementBlockNumber((await provider.getBlockNumber()) + 1000);
+                    await web3Configuration.setEarliestSettlementBlockNumber((await provider.getBlockNumber()) + 1000);
                 });
 
                 it('should revert', async () => {
@@ -248,7 +248,7 @@ module.exports = (glob) => {
 
             describe('if current block number is below earliest settlement block number', () => {
                 beforeEach(async () => {
-                    web3Configuration.setEarliestSettlementBlockNumber((await provider.getBlockNumber()) + 1000);
+                    await web3Configuration.setEarliestSettlementBlockNumber((await provider.getBlockNumber()) + 1000);
                 });
 
                 it('should revert', async () => {

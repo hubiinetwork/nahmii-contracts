@@ -243,7 +243,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetPaymentHasherEvent');
 
-                    (await web3Validator.paymentHasher())
+                    (await ethersValidator.paymentHasher())
                         .should.equal(utils.getAddress(address));
                 });
             });
@@ -276,7 +276,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('SetTradeHasherEvent');
 
-                    (await web3Validator.tradeHasher())
+                    (await ethersValidator.tradeHasher())
                         .should.equal(utils.getAddress(address));
                 });
             });
