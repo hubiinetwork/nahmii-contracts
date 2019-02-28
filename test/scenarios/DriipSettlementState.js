@@ -133,9 +133,9 @@ module.exports = (glob) => {
             });
         });
 
-        describe('communityVoteUpdateDisabled()', () => {
+        describe('communityVoteFrozen()', () => {
             it('should equal value initialized', async () => {
-                (await ethersDriipSettlementState.communityVoteUpdateDisabled())
+                (await ethersDriipSettlementState.communityVoteFrozen())
                     .should.be.false;
             });
         });

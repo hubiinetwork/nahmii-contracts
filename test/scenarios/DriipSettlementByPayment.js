@@ -373,9 +373,9 @@ module.exports = (glob) => {
             });
         });
 
-        describe('communityVoteUpdateDisabled()', () => {
+        describe('communityVoteFrozen()', () => {
             it('should equal value initialized', async () => {
-                (await ethersDriipSettlementByPayment.communityVoteUpdateDisabled())
+                (await ethersDriipSettlementByPayment.communityVoteFrozen())
                     .should.be.false;
             });
         });
