@@ -396,15 +396,15 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         // TODO Resolve dependency between DSC and NSC
         //        require(nullSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended));
 
-        // Deduce the concerned balance amount
-        int256 balanceAmount = _tradeIntendedBalanceAmount(trade, wallet);
+        // Deduce the concerned trade party
+        TradeTypesLib.TradeParty memory party = _tradeParty(trade, wallet);
 
-        // Require that balance amount is not less than stage amount
-        require(balanceAmount >= stageAmount);
+        // Require that intended balance amount is not less than stage amount
+        require(party.balances.intended.current >= stageAmount);
 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
-            wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.intended,
+            wallet, party.nonce, stageAmount, party.balances.intended.current.sub(stageAmount), trade.currencies.intended,
             trade.blockNumber, balanceReward, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }
@@ -416,36 +416,24 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         // TODO Resolve dependency between DSC and NSC
         //        require(nullSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate));
 
-        // Deduce the concerned balance amount
-        int256 balanceAmount = _tradeConjugateBalanceAmount(trade, wallet);
+        // Deduce the concerned trade party
+        TradeTypesLib.TradeParty memory party = _tradeParty(trade, wallet);
 
-        // Require that balance amount is not less than stage amount
-        require(balanceAmount >= stageAmount);
+        // Require that conjugate balance amount is not less than stage amount
+        require(party.balances.conjugate.current >= stageAmount);
 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
-            wallet, stageAmount, balanceAmount.sub(stageAmount), trade.currencies.conjugate,
+            wallet, party.nonce, stageAmount, party.balances.conjugate.current.sub(stageAmount), trade.currencies.conjugate,
             trade.blockNumber, balanceReward, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }
 
-    function _tradeIntendedBalanceAmount(TradeTypesLib.Trade trade, address wallet)
+    function _tradeParty(TradeTypesLib.Trade trade, address wallet)
     private
     view
-    returns (int256)
+    returns (TradeTypesLib.TradeParty)
     {
-        return validator.isTradeBuyer(trade, wallet) ?
-        trade.buyer.balances.intended.current :
-        trade.seller.balances.intended.current;
-    }
-
-    function _tradeConjugateBalanceAmount(TradeTypesLib.Trade trade, address wallet)
-    private
-    view
-    returns (int256)
-    {
-        return validator.isTradeBuyer(trade, wallet) ?
-        trade.buyer.balances.conjugate.current :
-        trade.seller.balances.conjugate.current;
+        return validator.isTradeBuyer(trade, wallet) ? trade.buyer : trade.seller;
     }
 }

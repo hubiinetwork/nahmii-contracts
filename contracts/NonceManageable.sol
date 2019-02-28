@@ -11,6 +11,7 @@ pragma solidity ^0.4.25;
 import {Ownable} from "./Ownable.sol";
 import {NonceManager} from "./NonceManager.sol";
 
+// TODO Remove?
 /**
  * @title NonceManageable
  * @notice An ownable that has a nonce manager property

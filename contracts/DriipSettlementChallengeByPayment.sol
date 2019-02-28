@@ -365,22 +365,22 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         //        require(nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
         // Deduce the concerned balance amount
-        int256 balanceAmount = _paymentBalanceAmount(payment, wallet);
+        (uint256 nonce, int256 balanceAmount) = _paymentPartyProperties(payment, wallet);
 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
-            wallet, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.blockNumber,
+            wallet, nonce, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.blockNumber,
             balanceReward, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
     }
 
-    function _paymentBalanceAmount(PaymentTypesLib.Payment payment, address wallet)
+    function _paymentPartyProperties(PaymentTypesLib.Payment payment, address wallet)
     private
     view
-    returns (int256)
+    returns (uint256, int256)
     {
         return validator.isPaymentSender(payment, wallet) ?
-        payment.sender.balances.current :
-        payment.recipient.balances.current;
+        (payment.sender.nonce, payment.sender.balances.current) :
+    (payment.recipient.nonce, payment.recipient.balances.current);
     }
 }

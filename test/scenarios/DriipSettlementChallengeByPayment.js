@@ -285,6 +285,7 @@ module.exports = (glob) => {
                     proposal.currency.ct.should.equal(payment.currency.ct);
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                     proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                     proposal.balanceReward.should.be.true;
                     proposal.challengedHash.should.equal(payment.seals.operator.hash);
                     proposal.challengedType.should.equal('payment');
@@ -363,6 +364,7 @@ module.exports = (glob) => {
                     proposal.currency.ct.should.equal(payment.currency.ct);
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                     proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                     proposal.balanceReward.should.be.false;
                     proposal.challengedHash.should.equal(payment.seals.operator.hash);
                     proposal.challengedType.should.equal('payment');

@@ -556,7 +556,7 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await DriipSettlementChallengeState.at(addressStorage.get('DriipSettlementChallengeState'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
-            await instance.setNonceManager(addressStorage.get('SettlementNonceManager'));
+            // await instance.setNonceManager(addressStorage.get('SettlementNonceManager'));
             await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), 'add_proposal');
             await instance.registerService(addressStorage.get('DriipSettlementChallengeByTrade'));

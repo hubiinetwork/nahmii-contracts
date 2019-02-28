@@ -12,6 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 
+// TODO Remove or add unit tests?
 /**
  * @title NonceManager
  * @notice Manager of nonce state
