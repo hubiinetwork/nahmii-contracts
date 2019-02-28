@@ -11,16 +11,16 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Challenge} from "./Challenge.sol";
-import {Validatable} from "./Validatable.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
+import {ValidatableV2} from "./ValidatableV2.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 
 /**
  * @title FraudChallengeByDuplicateDriipNonceOfTrades
  * @notice Where driips are challenged wrt fraud by duplicate drip nonce of trades
  */
-contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengable, Challenge, Validatable,
+contract FraudChallengeByDuplicateDriipNonceOfTrades is Ownable, FraudChallengable, ConfigurableOperational, ValidatableV2,
 SecurityBondable {
     //
     // Events
@@ -42,8 +42,8 @@ SecurityBondable {
     /// @param trade1 First trade with duplicate driip nonce
     /// @param trade2 Second trade with duplicate driip nonce
     function challenge(
-        NahmiiTypesLib.Trade trade1,
-        NahmiiTypesLib.Trade trade2
+        TradeTypesLib.Trade trade1,
+        TradeTypesLib.Trade trade2
     )
     public
     onlyOperationalModeNormal

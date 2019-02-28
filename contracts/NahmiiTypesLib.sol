@@ -12,18 +12,13 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 
 /**
  * @title     NahmiiTypesLib
- * @dev       Data types of order, trade, payment and more
+ * @dev       Data types of general nahmii character
  */
 library NahmiiTypesLib {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
-    enum LiquidityRole {Maker, Taker}
     enum CurrencyRole {Intended, Conjugate}
-    enum DriipType {Trade, Payment}
-    enum Intention {Buy, Sell}
-    enum TradePartyRole {Buyer, Seller}
-    enum PaymentPartyRole {Sender, Recipient}
     enum ChallengePhase {Dispute, Closed}
 
     //
@@ -33,7 +28,7 @@ library NahmiiTypesLib {
         uint256 originId;
         MonetaryTypesLib.Figure figure;
     }
-    
+
     struct IntendedConjugateCurrency {
         MonetaryTypesLib.Currency intended;
         MonetaryTypesLib.Currency conjugate;
@@ -73,12 +68,6 @@ library NahmiiTypesLib {
         bytes32 operator;
     }
 
-    struct TradeOrder {
-        int256 amount;
-        WalletOperatorHashes hashes;
-        CurrentPreviousInt256 residuals;
-    }
-
     struct Signature {
         bytes32 r;
         bytes32 s;
@@ -93,95 +82,5 @@ library NahmiiTypesLib {
     struct WalletOperatorSeal {
         Seal wallet;
         Seal operator;
-    }
-
-    struct TradeParty {
-        uint256 nonce;
-        address wallet;
-
-        uint256 rollingVolume;
-
-        LiquidityRole liquidityRole;
-
-        TradeOrder order;
-
-        IntendedConjugateCurrentPreviousInt256 balances;
-
-        SingleFigureTotalOriginFigures fees;
-    }
-
-    struct Trade {
-        uint256 nonce;
-
-        int256 amount;
-        IntendedConjugateCurrency currencies;
-        int256 rate;
-
-        TradeParty buyer;
-        TradeParty seller;
-
-        // Positive intended transfer is always in direction from seller to buyer
-        // Positive conjugate transfer is always in direction from buyer to seller
-        IntendedConjugateSingleTotalInt256 transfers;
-
-        Seal seal;
-        uint256 blockNumber;
-        uint256 operatorId;
-    }
-
-    struct PaymentSenderParty {
-        uint256 nonce;
-        address wallet;
-
-        CurrentPreviousInt256 balances;
-
-        SingleFigureTotalOriginFigures fees;
-    }
-
-    struct PaymentRecipientParty {
-        uint256 nonce;
-        address wallet;
-
-        CurrentPreviousInt256 balances;
-
-        TotalOriginFigures fees;
-    }
-
-    struct Payment {
-        uint256 nonce;
-
-        int256 amount;
-        MonetaryTypesLib.Currency currency;
-
-        PaymentSenderParty sender;
-        PaymentRecipientParty recipient;
-
-        // Positive transfer is always in direction from sender to recipient
-        SingleTotalInt256 transfers;
-
-        WalletOperatorSeal seals;
-        uint256 blockNumber;
-        uint256 operatorId;
-    }
-
-    struct OrderPlacement {
-        Intention intention;
-
-        int256 amount;
-        IntendedConjugateCurrency currencies;
-        int256 rate;
-
-        CurrentPreviousInt256 residuals;
-    }
-
-    struct Order {
-        uint256 nonce;
-        address wallet;
-
-        OrderPlacement placement;
-
-        WalletOperatorSeal seals;
-        uint256 blockNumber;
-        uint256 operatorId;
     }
 }

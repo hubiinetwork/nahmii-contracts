@@ -26,4 +26,9 @@ library MonetaryTypesLib {
         int256 amount;
         Currency currency;
     }
+
+    struct NoncedAmount {
+        uint256 nonce;
+        int256 amount;
+    }
 }

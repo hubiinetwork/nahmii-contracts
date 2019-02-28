@@ -12,6 +12,8 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "../Ownable.sol";
 import {SignerManageable} from "../SignerManageable.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "../PaymentTypesLib.sol";
+import {TradeTypesLib} from "../TradeTypesLib.sol";
 
 /**
  * @title MockedValidator
@@ -135,7 +137,7 @@ contract MockedValidator is Ownable, SignerManageable {
         orderWalletHash = genuine;
     }
 
-    function isGenuineOrderWalletHash(NahmiiTypesLib.Order)
+    function isGenuineOrderWalletHash(TradeTypesLib.Order)
     public
     view
     returns (bool)
@@ -149,7 +151,7 @@ contract MockedValidator is Ownable, SignerManageable {
         orderWalletSeal = genuine;
     }
 
-    function isGenuineOrderWalletSeal(NahmiiTypesLib.Order)
+    function isGenuineOrderWalletSeal(TradeTypesLib.Order)
     public
     view
     returns (bool)
@@ -163,7 +165,7 @@ contract MockedValidator is Ownable, SignerManageable {
         orderOperatorSeal = genuine;
     }
 
-    function isGenuineOrderOperatorSeal(NahmiiTypesLib.Order)
+    function isGenuineOrderOperatorSeal(TradeTypesLib.Order)
     public
     view
     returns (bool)
@@ -177,7 +179,7 @@ contract MockedValidator is Ownable, SignerManageable {
         orderSeals = genuine;
     }
 
-    function isGenuineOrderSeals(NahmiiTypesLib.Order)
+    function isGenuineOrderSeals(TradeTypesLib.Order)
     public
     view
     returns (bool)
@@ -191,7 +193,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeBuyerFeeOfFungible = genuine;
     }
 
-    function isGenuineTradeBuyerFeeOfFungible(NahmiiTypesLib.Trade)
+    function isGenuineTradeBuyerFeeOfFungible(TradeTypesLib.Trade)
     public
     view
     returns (bool)
@@ -205,7 +207,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeSellerFeeOfFungible = genuine;
     }
 
-    function isGenuineTradeSellerFeeOfFungible(NahmiiTypesLib.Trade)
+    function isGenuineTradeSellerFeeOfFungible(TradeTypesLib.Trade)
     public
     view
     returns (bool)
@@ -219,7 +221,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeBuyerGenuine = genuine;
     }
 
-    function isGenuineTradeBuyerOfFungible(NahmiiTypesLib.Trade)
+    function isGenuineTradeBuyerOfFungible(TradeTypesLib.Trade)
     public
     view
     returns (bool)
@@ -233,7 +235,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeSellerGenuine = genuine;
     }
 
-    function isGenuineTradeSellerOfFungible(NahmiiTypesLib.Trade)
+    function isGenuineTradeSellerOfFungible(TradeTypesLib.Trade)
     public
     view
     returns (bool)
@@ -248,10 +250,10 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     // TODO Redo trade seal management to prevent the need for the following pattern
-    // taken from DriipSettlementDispute.js:
+    // taken from DriipSettlementDisputeByTrade.js:
     //   await ethersValidator.isGenuineTradeSeal(trade, {gasLimit: 1e6});
-    //   await web3Validator.setGenuineTradeSeal(false);
-    function isGenuineTradeSeal(NahmiiTypesLib.Trade)
+    //   await ethersValidator.setGenuineTradeSeal(false);
+    function isGenuineTradeSeal(TradeTypesLib.Trade)
     public
     view
     returns (bool)
@@ -270,7 +272,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeParty = _tradeParty;
     }
 
-    function isTradeParty(NahmiiTypesLib.Trade, address)
+    function isTradeParty(TradeTypesLib.Trade, address)
     public
     view
     returns (bool)
@@ -284,7 +286,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeBuyer = _tradeBuyer;
     }
 
-    function isTradeBuyer(NahmiiTypesLib.Trade, address)
+    function isTradeBuyer(TradeTypesLib.Trade, address)
     public
     view
     returns (bool)
@@ -298,7 +300,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeSeller = _tradeSeller;
     }
 
-    function isTradeSeller(NahmiiTypesLib.Trade, address)
+    function isTradeSeller(TradeTypesLib.Trade, address)
     public
     view
     returns (bool)
@@ -312,7 +314,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeOrder = _tradeOrder;
     }
 
-    function isTradeOrder(NahmiiTypesLib.Trade, NahmiiTypesLib.Order)
+    function isTradeOrder(TradeTypesLib.Trade, TradeTypesLib.Order)
     public
     view
     returns (bool)
@@ -320,7 +322,7 @@ contract MockedValidator is Ownable, SignerManageable {
         return tradeOrder;
     }
 
-    function isTradeIntendedCurrencyNonFungible(NahmiiTypesLib.Trade)
+    function isTradeIntendedCurrencyNonFungible(TradeTypesLib.Trade)
     public
     view
     returns (bool)
@@ -334,7 +336,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeIntendedCurrencyNonFungible = nonFungible;
     }
 
-    function isTradeConjugateCurrencyNonFungible(NahmiiTypesLib.Trade)
+    function isTradeConjugateCurrencyNonFungible(TradeTypesLib.Trade)
     public
     view
     returns (bool)
@@ -354,7 +356,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentFeeOfFungible = genuine;
     }
 
-    function isGenuinePaymentFeeOfFungible(NahmiiTypesLib.Payment)
+    function isGenuinePaymentFeeOfFungible(PaymentTypesLib.Payment)
     public
     view
     returns (bool)
@@ -368,7 +370,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentSenderGenuine = genuine;
     }
 
-    function isGenuinePaymentSenderOfFungible(NahmiiTypesLib.Payment)
+    function isGenuinePaymentSenderOfFungible(PaymentTypesLib.Payment)
     public
     view
     returns (bool)
@@ -382,7 +384,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentRecipientGenuine = genuine;
     }
 
-    function isGenuinePaymentRecipientOfFungible(NahmiiTypesLib.Payment)
+    function isGenuinePaymentRecipientOfFungible(PaymentTypesLib.Payment)
     public
     view
     returns (bool)
@@ -396,7 +398,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentWalletHash = genuine;
     }
 
-    function isGenuinePaymentWalletHash(NahmiiTypesLib.Payment)
+    function isGenuinePaymentWalletHash(PaymentTypesLib.Payment)
     public
     view
     returns (bool)
@@ -410,7 +412,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentWalletSeal = genuine;
     }
 
-    function isGenuinePaymentWalletSeal(NahmiiTypesLib.Payment)
+    function isGenuinePaymentWalletSeal(PaymentTypesLib.Payment)
     public
     view
     returns (bool)
@@ -424,7 +426,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentOperatorSeal = genuine;
     }
 
-    function isGenuinePaymentOperatorSeal(NahmiiTypesLib.Payment)
+    function isGenuinePaymentOperatorSeal(PaymentTypesLib.Payment)
     public
     view
     returns (bool)
@@ -438,7 +440,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentSeals.push(genuine);
     }
 
-    function isGenuinePaymentSeals(NahmiiTypesLib.Payment)
+    function isGenuinePaymentSeals(PaymentTypesLib.Payment)
     public
     view
     returns (bool)
@@ -457,7 +459,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentParty = _paymentParty;
     }
 
-    function isPaymentParty(NahmiiTypesLib.Payment, address)
+    function isPaymentParty(PaymentTypesLib.Payment, address)
     public
     view
     returns (bool)
@@ -471,7 +473,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentSender = _paymentSender;
     }
 
-    function isPaymentSender(NahmiiTypesLib.Payment, address)
+    function isPaymentSender(PaymentTypesLib.Payment, address)
     public
     view
     returns (bool)
@@ -485,7 +487,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentRecipient = _paymentRecipient;
     }
 
-    function isPaymentRecipient(NahmiiTypesLib.Payment, address)
+    function isPaymentRecipient(PaymentTypesLib.Payment, address)
     public
     view
     returns (bool)
@@ -493,7 +495,7 @@ contract MockedValidator is Ownable, SignerManageable {
         return paymentRecipient;
     }
 
-    function isPaymentCurrencyNonFungible(NahmiiTypesLib.Payment)
+    function isPaymentCurrencyNonFungible(PaymentTypesLib.Payment)
     public
     view
     returns (bool)
@@ -514,10 +516,10 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isSuccessiveTradesPartyNonces(
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole,
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole,
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole
     )
     public
     view
@@ -533,11 +535,11 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isGenuineSuccessiveTradesBalances(
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole,
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole,
         NahmiiTypesLib.CurrencyRole,
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole,
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole,
         NahmiiTypesLib.CurrencyRole
     )
     public
@@ -554,10 +556,10 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isGenuineSuccessiveTradesTotalFees(
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole,
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole,
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole
     )
     public
     view
@@ -573,10 +575,10 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isSuccessivePaymentsPartyNonces(
-        NahmiiTypesLib.Payment,
-        NahmiiTypesLib.PaymentPartyRole,
-        NahmiiTypesLib.Payment,
-        NahmiiTypesLib.PaymentPartyRole
+        PaymentTypesLib.Payment,
+        PaymentTypesLib.PaymentPartyRole,
+        PaymentTypesLib.Payment,
+        PaymentTypesLib.PaymentPartyRole
     )
     public
     view
@@ -592,10 +594,10 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isGenuineSuccessivePaymentsBalances(
-        NahmiiTypesLib.Payment,
-        NahmiiTypesLib.PaymentPartyRole,
-        NahmiiTypesLib.Payment,
-        NahmiiTypesLib.PaymentPartyRole
+        PaymentTypesLib.Payment,
+        PaymentTypesLib.PaymentPartyRole,
+        PaymentTypesLib.Payment,
+        PaymentTypesLib.PaymentPartyRole
     )
     public
     view
@@ -611,8 +613,8 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isGenuineSuccessivePaymentsTotalFees(
-        NahmiiTypesLib.Payment,
-        NahmiiTypesLib.Payment
+        PaymentTypesLib.Payment,
+        PaymentTypesLib.Payment
     )
     public
     view
@@ -628,10 +630,10 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isSuccessiveTradePaymentPartyNonces(
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole,
-        NahmiiTypesLib.Payment,
-        NahmiiTypesLib.PaymentPartyRole
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole,
+        PaymentTypesLib.Payment,
+        PaymentTypesLib.PaymentPartyRole
     )
     public
     view
@@ -647,11 +649,11 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isGenuineSuccessiveTradePaymentBalances(
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole,
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole,
         NahmiiTypesLib.CurrencyRole,
-        NahmiiTypesLib.Payment,
-        NahmiiTypesLib.PaymentPartyRole
+        PaymentTypesLib.Payment,
+        PaymentTypesLib.PaymentPartyRole
     )
     public
     view
@@ -667,9 +669,9 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isGenuineSuccessiveTradePaymentTotalFees(
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole,
-        NahmiiTypesLib.Payment
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole,
+        PaymentTypesLib.Payment
     )
     public
     view
@@ -685,10 +687,10 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isSuccessivePaymentTradePartyNonces(
-        NahmiiTypesLib.Payment,
-        NahmiiTypesLib.PaymentPartyRole,
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole
+        PaymentTypesLib.Payment,
+        PaymentTypesLib.PaymentPartyRole,
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole
     )
     public
     view
@@ -704,10 +706,10 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isGenuineSuccessivePaymentTradeBalances(
-        NahmiiTypesLib.Payment,
-        NahmiiTypesLib.PaymentPartyRole,
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole,
+        PaymentTypesLib.Payment,
+        PaymentTypesLib.PaymentPartyRole,
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole,
         NahmiiTypesLib.CurrencyRole
     )
     public
@@ -724,10 +726,10 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isGenuineSuccessivePaymentTradeTotalFees(
-        NahmiiTypesLib.Payment,
-        NahmiiTypesLib.PaymentPartyRole,
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole
+        PaymentTypesLib.Payment,
+        PaymentTypesLib.PaymentPartyRole,
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole
     )
     public
     view
@@ -743,9 +745,9 @@ contract MockedValidator is Ownable, SignerManageable {
     }
 
     function isGenuineSuccessiveTradeOrderResiduals(
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.Trade,
-        NahmiiTypesLib.TradePartyRole
+        TradeTypesLib.Trade,
+        TradeTypesLib.Trade,
+        TradeTypesLib.TradePartyRole
     )
     public
     view

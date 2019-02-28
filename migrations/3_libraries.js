@@ -15,10 +15,13 @@ const FungibleBalanceLib = artifacts.require('FungibleBalanceLib');
 const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
 const NonFungibleBalanceLib = artifacts.require('NonFungibleBalanceLib');
+const PaymentTypesLib = artifacts.require('PaymentTypesLib');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
-const SettlementTypesLib = artifacts.require('SettlementTypesLib');
+const SettlementChallengeTypesLib = artifacts.require('SettlementChallengeTypesLib');
+const DriipSettlementTypesLib = artifacts.require('DriipSettlementTypesLib');
 const Strings = artifacts.require('Strings');
+const TradeTypesLib = artifacts.require('TradeTypesLib');
 const TxHistoryLib = artifacts.require('TxHistoryLib');
 
 const path = require('path');
@@ -66,27 +69,40 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'MonetaryTypesLib', '', MonetaryTypesLib);
                 await execDeploy(ctl, 'SafeMathIntLib', '', SafeMathIntLib);
                 await execDeploy(ctl, 'SafeMathUintLib', '', SafeMathUintLib);
+                await execDeploy(ctl, 'DriipSettlementTypesLib', '', DriipSettlementTypesLib);
 
                 await deployer.link(ConstantsLib, [
                     BlockNumbDisdIntsLib
                 ]);
                 await deployer.link(MonetaryTypesLib, [
-                    BlockNumbFiguresLib, BlockNumbReferenceCurrenciesLib, CurrenciesLib, NahmiiTypesLib, SettlementTypesLib
+                    BlockNumbFiguresLib,
+                    BlockNumbReferenceCurrenciesLib,
+                    CurrenciesLib,
+                    NahmiiTypesLib,
+                    PaymentTypesLib,
+                    DriipSettlementTypesLib,
+                    TradeTypesLib
                 ]);
                 await deployer.link(SafeMathIntLib, [
-                    FungibleBalanceLib, BlockNumbDisdIntsLib, NonFungibleBalanceLib
+                    FungibleBalanceLib,
+                    BlockNumbDisdIntsLib,
+                    NonFungibleBalanceLib
                 ]);
                 await deployer.link(SafeMathUintLib, [
-                    FungibleBalanceLib, CurrenciesLib, NonFungibleBalanceLib
+                    FungibleBalanceLib,
+                    CurrenciesLib,
+                    NonFungibleBalanceLib
                 ]);
 
                 await execDeploy(ctl, 'BlockNumbDisdIntsLib', '', BlockNumbDisdIntsLib);
                 await execDeploy(ctl, 'BlockNumbFiguresLib', '', BlockNumbFiguresLib);
                 await execDeploy(ctl, 'BlockNumbReferenceCurrenciesLib', '', BlockNumbReferenceCurrenciesLib);
                 await execDeploy(ctl, 'CurrenciesLib', '', CurrenciesLib);
+                await execDeploy(ctl, 'SettlementChallengeTypesLib', '', SettlementChallengeTypesLib);
 
                 await deployer.link(CurrenciesLib, [
-                    FungibleBalanceLib, NonFungibleBalanceLib
+                    FungibleBalanceLib,
+                    NonFungibleBalanceLib
                 ]);
 
                 await execDeploy(ctl, 'FungibleBalanceLib', '', FungibleBalanceLib);
@@ -96,10 +112,12 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
 
                 await deployer.link(NahmiiTypesLib, [
-                    SettlementTypesLib
+                    PaymentTypesLib,
+                    TradeTypesLib
                 ]);
 
-                await execDeploy(ctl, 'SettlementTypesLib', '', SettlementTypesLib);
+                await execDeploy(ctl, 'PaymentTypesLib', '', PaymentTypesLib);
+                await execDeploy(ctl, 'TradeTypesLib', '', TradeTypesLib);
 
             } else if (network.startsWith('mainnet')) {
                 addressStorage.set('BlockNumbDisdIntsLib', '0x92caece328a4f746c18630c6289d74a5417185b2');

@@ -11,18 +11,18 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Challenge} from "./Challenge.sol";
-import {Validatable} from "./Validatable.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
+import {ValidatableV2} from "./ValidatableV2.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
 /**
  * @title FraudChallengeByTradeOrderResiduals
  * @notice Where driips are challenged wrt fraud by mismatch in trade order residuals
  */
-contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, Challenge, Validatable,
+contract FraudChallengeByTradeOrderResiduals is Ownable, FraudChallengable, ConfigurableOperational, ValidatableV2,
 SecurityBondable, WalletLockable {
     using SafeMathIntLib for int256;
 
@@ -47,8 +47,8 @@ SecurityBondable, WalletLockable {
     /// @param lastTrade Fraudulent trade candidate
     /// @param wallet The address of the concerned wallet
     function challenge(
-        NahmiiTypesLib.Trade firstTrade,
-        NahmiiTypesLib.Trade lastTrade,
+        TradeTypesLib.Trade firstTrade,
+        TradeTypesLib.Trade lastTrade,
         address wallet
     )
     public
@@ -60,14 +60,14 @@ SecurityBondable, WalletLockable {
         require(validator.isTradeParty(lastTrade, wallet));
 
         // Require that the wallet has the same party role in both trades
-        NahmiiTypesLib.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
-        NahmiiTypesLib.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
+        TradeTypesLib.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? TradeTypesLib.TradePartyRole.Buyer : TradeTypesLib.TradePartyRole.Seller);
+        TradeTypesLib.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? TradeTypesLib.TradePartyRole.Buyer : TradeTypesLib.TradePartyRole.Seller);
         require(firstTradePartyRole == lastTradePartyRole);
 
         // Require that the two trades's relevant wallet order hash (that excludes residual) are equal
-        if (NahmiiTypesLib.TradePartyRole.Buyer == firstTradePartyRole)
+        if (TradeTypesLib.TradePartyRole.Buyer == firstTradePartyRole)
             require(firstTrade.buyer.order.hashes.wallet == lastTrade.buyer.order.hashes.wallet);
-        else // NahmiiTypesLib.TradePartyRole.Seller == firstTradePartyRole
+        else // TradeTypesLib.TradePartyRole.Seller == firstTradePartyRole
             require(firstTrade.seller.order.hashes.wallet == lastTrade.seller.order.hashes.wallet);
 
         require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
@@ -105,25 +105,25 @@ SecurityBondable, WalletLockable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _tradeIntendedLockAmount(NahmiiTypesLib.Trade trade, NahmiiTypesLib.TradePartyRole tradePartyRole)
+    function _tradeIntendedLockAmount(TradeTypesLib.Trade trade, TradeTypesLib.TradePartyRole tradePartyRole)
     private
     pure
     returns (int256)
     {
-        if (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole)
+        if (TradeTypesLib.TradePartyRole.Buyer == tradePartyRole)
             return trade.buyer.balances.intended.current;
-        else // NahmiiTypesLib.TradePartyRole.Seller == tradePartyRole)
+        else // TradeTypesLib.TradePartyRole.Seller == tradePartyRole)
             return trade.seller.balances.intended.current;
     }
 
-    function _tradeConjugateLockAmount(NahmiiTypesLib.Trade trade, NahmiiTypesLib.TradePartyRole tradePartyRole)
+    function _tradeConjugateLockAmount(TradeTypesLib.Trade trade, TradeTypesLib.TradePartyRole tradePartyRole)
     private
     pure
     returns (int256)
     {
-        if (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole)
+        if (TradeTypesLib.TradePartyRole.Buyer == tradePartyRole)
             return trade.buyer.balances.conjugate.current;
-        else // NahmiiTypesLib.TradePartyRole.Seller == tradePartyRole)
+        else // TradeTypesLib.TradePartyRole.Seller == tradePartyRole)
             return trade.seller.balances.conjugate.current;
     }
 }

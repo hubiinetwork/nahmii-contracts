@@ -11,18 +11,19 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Challenge} from "./Challenge.sol";
-import {Validatable} from "./Validatable.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
+import {ValidatableV2} from "./ValidatableV2.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
 /**
  * @title FraudChallengeBySuccessiveTrades
  * @notice Where driips are challenged wrt fraud by mismatch in successive trades
  */
-contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, Challenge, Validatable,
+contract FraudChallengeBySuccessiveTrades is Ownable, FraudChallengable, ConfigurableOperational, ValidatableV2,
 SecurityBondable, WalletLockable {
     using SafeMathIntLib for int256;
 
@@ -49,8 +50,8 @@ SecurityBondable, WalletLockable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function challenge(
-        NahmiiTypesLib.Trade firstTrade,
-        NahmiiTypesLib.Trade lastTrade,
+        TradeTypesLib.Trade firstTrade,
+        TradeTypesLib.Trade lastTrade,
         address wallet,
         address currencyCt,
         uint256 currencyId
@@ -71,8 +72,8 @@ SecurityBondable, WalletLockable {
             (currencyCt == lastTrade.currencies.conjugate.ct && currencyId == lastTrade.currencies.conjugate.id)
         );
 
-        NahmiiTypesLib.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
-        NahmiiTypesLib.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? NahmiiTypesLib.TradePartyRole.Buyer : NahmiiTypesLib.TradePartyRole.Seller);
+        TradeTypesLib.TradePartyRole firstTradePartyRole = (wallet == firstTrade.buyer.wallet ? TradeTypesLib.TradePartyRole.Buyer : TradeTypesLib.TradePartyRole.Seller);
+        TradeTypesLib.TradePartyRole lastTradePartyRole = (wallet == lastTrade.buyer.wallet ? TradeTypesLib.TradePartyRole.Buyer : TradeTypesLib.TradePartyRole.Seller);
 
         require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
@@ -110,18 +111,18 @@ SecurityBondable, WalletLockable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _tradeLockAmount(NahmiiTypesLib.Trade trade, NahmiiTypesLib.TradePartyRole tradePartyRole,
+    function _tradeLockAmount(TradeTypesLib.Trade trade, TradeTypesLib.TradePartyRole tradePartyRole,
         NahmiiTypesLib.CurrencyRole currencyRole)
     private
     pure
     returns (int256)
     {
-        if (NahmiiTypesLib.TradePartyRole.Buyer == tradePartyRole)
+        if (TradeTypesLib.TradePartyRole.Buyer == tradePartyRole)
             if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
                 return trade.buyer.balances.intended.current;
             else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole
                 return trade.buyer.balances.conjugate.current;
-        else // NahmiiTypesLib.TradePartyRole.Seller == tradePartyRole)
+        else // TradeTypesLib.TradePartyRole.Seller == tradePartyRole)
             if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
                 return trade.seller.balances.intended.current;
             else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole

@@ -2,10 +2,11 @@ const chai = require('chai');
 const {Wallet, utils, Contract} = require('ethers');
 const {util: {cryptography}} = require('omphalos-commons');
 const mocks = require('../mocks');
-const Hasher = artifacts.require('Hasher');
+const PaymentHasher = artifacts.require('PaymentHasher');
+const TradeHasher = artifacts.require('TradeHasher');
 const Configuration = artifacts.require('Configuration');
 const SignerManager = artifacts.require('SignerManager');
-const Validator = artifacts.require('Validator');
+const Validator = artifacts.require('ValidatorV2');
 
 chai.should();
 
@@ -13,7 +14,8 @@ module.exports = function (glob) {
     describe('Validator', () => {
         let provider;
         let blockNumberAhead;
-        let web3Hasher, ethersHasher;
+        let web3PaymentHasher, ethersPaymentHasher;
+        let web3TradeHasher, ethersTradeHasher;
         let web3Configuration, ethersConfiguration;
         let web3SignerManager, ethersSignerManager;
         let web3Validator, ethersValidator;
@@ -22,23 +24,26 @@ module.exports = function (glob) {
         before(async () => {
             provider = glob.signer_owner.provider;
 
-            web3Hasher = await Hasher.new(glob.owner);
-            ethersHasher = new Contract(web3Hasher.address, Hasher.abi, glob.signer_owner);
+            web3PaymentHasher = await PaymentHasher.new(glob.owner);
+            ethersPaymentHasher = new Contract(web3PaymentHasher.address, PaymentHasher.abi, glob.signer_owner);
+            web3TradeHasher = await TradeHasher.new(glob.owner);
+            ethersTradeHasher = new Contract(web3TradeHasher.address, TradeHasher.abi, glob.signer_owner);
             web3Configuration = await Configuration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, Configuration.abi, glob.signer_owner);
             web3SignerManager = await SignerManager.new(glob.owner);
             ethersSignerManager = new Contract(web3SignerManager.address, SignerManager.abi, glob.signer_owner);
 
-            web3Validator = await Validator.new(glob.owner, web3SignerManager.address);
-            ethersValidator = new Contract(web3Validator.address, Validator.abi, glob.signer_owner);
-
-            await ethersValidator.setConfiguration(ethersConfiguration.address);
-            await ethersValidator.setHasher(ethersHasher.address);
-
             partsPer = utils.bigNumberify(1e18.toString());
         });
 
         beforeEach(async () => {
+            web3Validator = await Validator.new(glob.owner, web3SignerManager.address);
+            ethersValidator = new Contract(web3Validator.address, Validator.abi, glob.signer_owner);
+
+            await ethersValidator.setConfiguration(ethersConfiguration.address);
+            await ethersValidator.setPaymentHasher(ethersPaymentHasher.address);
+            await ethersValidator.setTradeHasher(ethersTradeHasher.address);
+
             blockNumberAhead = await provider.getBlockNumber() + 15;
         });
 
@@ -217,14 +222,14 @@ module.exports = function (glob) {
             });
         });
 
-        describe('hasher()', () => {
+        describe('paymentHasher()', () => {
             it('should equal value initialized', async () => {
-                const hasher = await ethersValidator.hasher();
-                hasher.should.equal(utils.getAddress(ethersHasher.address));
+                const paymentHasher = await ethersValidator.paymentHasher();
+                paymentHasher.should.equal(utils.getAddress(ethersPaymentHasher.address));
             })
         });
 
-        describe('setHasher()', () => {
+        describe('setPaymentHasher()', () => {
             let address;
 
             before(() => {
@@ -232,28 +237,53 @@ module.exports = function (glob) {
             });
 
             describe('if called with owner as sender', () => {
-                let hasher;
-
-                beforeEach(async () => {
-                    hasher = await web3Validator.hasher.call();
-                });
-
-                afterEach(async () => {
-                    await web3Validator.setHasher(hasher);
-                });
-
                 it('should set new value and emit event', async () => {
-                    const result = await web3Validator.setHasher(address);
+                    const result = await web3Validator.setPaymentHasher(address);
+
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetHasherEvent');
-                    const hasher = await web3Validator.hasher();
-                    utils.getAddress(hasher).should.equal(utils.getAddress(address));
+                    result.logs[0].event.should.equal('SetPaymentHasherEvent');
+
+                    (await ethersValidator.paymentHasher())
+                        .should.equal(utils.getAddress(address));
                 });
             });
 
             describe('if called with sender that is not owner', () => {
                 it('should revert', async () => {
-                    web3Validator.setHasher(address, {from: glob.user_a}).should.be.rejected;
+                    web3Validator.setPaymentHasher(address, {from: glob.user_a}).should.be.rejected;
+                });
+            });
+        });
+
+        describe('tradeHasher()', () => {
+            it('should equal value initialized', async () => {
+                const tradeHasher = await ethersValidator.tradeHasher();
+                tradeHasher.should.equal(utils.getAddress(ethersTradeHasher.address));
+            })
+        });
+
+        describe('setTradeHasher()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called with owner as sender', () => {
+                it('should set new value and emit event', async () => {
+                    const result = await web3Validator.setTradeHasher(address);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetTradeHasherEvent');
+
+                    (await ethersValidator.tradeHasher())
+                        .should.equal(utils.getAddress(address));
+                });
+            });
+
+            describe('if called with sender that is not owner', () => {
+                it('should revert', async () => {
+                    web3Validator.setTradeHasher(address, {from: glob.user_a}).should.be.rejected;
                 });
             });
         });

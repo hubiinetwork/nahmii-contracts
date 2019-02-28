@@ -11,16 +11,17 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {Challenge} from "./Challenge.sol";
-import {Validatable} from "./Validatable.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
+import {ValidatableV2} from "./ValidatableV2.sol";
 import {Ownable} from "./Ownable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 
 /**
  * @title CancelOrdersChallenge
  * @notice Where orders are cancelled and cancellations challenged
  */
-contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
+contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV2 {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -112,7 +113,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
 
     /// @notice Cancel orders of msg.sender
     /// @param orders The orders to cancel
-    function cancelOrders(NahmiiTypesLib.Order[] orders)
+    function cancelOrders(TradeTypesLib.Order[] orders)
     public
     onlyOperationalModeNormal
     {
@@ -136,7 +137,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     /// @notice Challenge cancelled order
     /// @param trade The trade that challenges a cancelled order
     /// @param wallet The address of the concerned wallet
-    function challenge(NahmiiTypesLib.Trade trade, address wallet)
+    function challenge(TradeTypesLib.Trade trade, address wallet)
     public
     onlyOperationalModeNormal
     onlySealedTrade(trade)
@@ -173,7 +174,7 @@ contract CancelOrdersChallenge is Ownable, Challenge, Validatable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _orderOperatorHashes(NahmiiTypesLib.Order[] orders)
+    function _orderOperatorHashes(TradeTypesLib.Order[] orders)
     private
     pure
     returns (bytes32[])

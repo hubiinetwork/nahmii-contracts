@@ -9,17 +9,16 @@
 pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
-import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
+import {TradeTypesLib} from "../TradeTypesLib.sol";
 
 /**
- * @title MockedDriipSettlementDispute
- * @notice Mocked implementation of driip settlement dispute contract
+ * @title MockedDriipSettlementDisputeByTrade
+ * @notice Mocked implementation of driip settlement dispute by trade contract
  */
-contract MockedDriipSettlementDispute {
+contract MockedDriipSettlementDisputeByTrade {
     uint256 public _challengeByOrderCount;
     uint256 public _unchallengeOrderCandidateByTradeCount;
     uint256 public _challengeByTradeCount;
-    uint256 public _challengeByPaymentCount;
 
     function _reset()
     public
@@ -27,31 +26,24 @@ contract MockedDriipSettlementDispute {
         _challengeByOrderCount = 0;
         _unchallengeOrderCandidateByTradeCount = 0;
         _challengeByTradeCount = 0;
-        _challengeByPaymentCount = 0;
     }
 
-    function challengeByOrder(NahmiiTypesLib.Order, address)
+    function challengeByOrder(TradeTypesLib.Order, address)
     public
     {
         _challengeByOrderCount++;
     }
 
-    function unchallengeOrderCandidateByTrade(NahmiiTypesLib.Order, NahmiiTypesLib.Trade,
+    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order, TradeTypesLib.Trade,
         address)
     public
     {
         _unchallengeOrderCandidateByTradeCount++;
     }
 
-    function challengeByTrade(address, NahmiiTypesLib.Trade, address)
+    function challengeByTrade(address, TradeTypesLib.Trade, address)
     public
     {
         _challengeByTradeCount++;
-    }
-
-    function challengeByPayment(address, NahmiiTypesLib.Payment, address)
-    public
-    {
-        _challengeByPaymentCount++;
     }
 }

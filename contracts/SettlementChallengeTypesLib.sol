@@ -10,19 +10,16 @@ pragma solidity ^0.4.25;
 pragma experimental ABIEncoderV2;
 
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
 /**
- * @title     SettlementTypesLib
- * @dev       Types for settlements
+ * @title     SettlementChallengeTypesLib
+ * @dev       Types for settlement challenges
  */
-library SettlementTypesLib {
+library SettlementChallengeTypesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     enum Status {Qualified, Disqualified}
-    enum CandidateType {None, Order, Trade, Payment}
-    enum SettlementRole {Origin, Target}
 
     struct Proposal {
         address wallet;
@@ -43,9 +40,9 @@ library SettlementTypesLib {
         // Balances after amounts have been staged
         int256 targetBalanceAmount;
 
-        // Driip info
-        bytes32 driipHash;
-        NahmiiTypesLib.DriipType driipType;
+        // Challenged info
+        string challengedType;
+        bytes32 challengedHash;
 
         // True if reward is from wallet balance
         bool balanceReward;
@@ -60,20 +57,7 @@ library SettlementTypesLib {
         uint256 blockNumber;
 
         // Candidate info
+        string candidateType;
         bytes32 candidateHash;
-        CandidateType candidateType;
-    }
-
-    struct SettlementParty {
-        uint256 nonce;
-        address wallet;
-        bool done;
-    }
-
-    struct Settlement {
-        uint256 nonce;
-        NahmiiTypesLib.DriipType driipType;
-        SettlementParty origin;
-        SettlementParty target;
     }
 }

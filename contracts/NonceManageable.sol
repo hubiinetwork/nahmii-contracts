@@ -9,47 +9,45 @@
 pragma solidity ^0.4.25;
 
 import {Ownable} from "./Ownable.sol";
-import {Hasher} from "./Hasher.sol";
+import {NonceManager} from "./NonceManager.sol";
 
 /**
- * @title Hashable
- * @notice An ownable that has a hasher property
+ * @title NonceManageable
+ * @notice An ownable that has a nonce manager property
  */
-contract Hashable is Ownable {
+contract NonceManageable is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Hasher public hasher;
+    NonceManager public nonceManager;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetHasherEvent(Hasher oldHasher, Hasher newHasher);
+    event SetNonceManagerEvent(NonceManager oldNonceManager, NonceManager newNonceManager);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Set the hasher contract
-    /// @param newHasher The (address of) Hasher contract instance
-    function setHasher(Hasher newHasher)
-    public
+    /// @notice Set the client fund contract
+    /// @param newNonceManager The (address of) NonceManager contract instance
+    function setNonceManager(NonceManager newNonceManager) public
     onlyDeployer
-    notNullAddress(newHasher)
-    notSameAddresses(newHasher, hasher)
+    notNullAddress(newNonceManager)
     {
-        //set new hasher
-        Hasher oldHasher = hasher;
-        hasher = newHasher;
+        // Update field
+        NonceManager oldNonceManager = nonceManager;
+        nonceManager = newNonceManager;
 
         // Emit event
-        emit SetHasherEvent(oldHasher, newHasher);
+        emit SetNonceManagerEvent(oldNonceManager, newNonceManager);
     }
 
     //
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
-    modifier hasherInitialized() {
-        require(hasher != address(0));
+    modifier nonceManagerInitialized() {
+        require(nonceManager != address(0));
         _;
     }
 }

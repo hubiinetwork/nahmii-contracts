@@ -11,17 +11,17 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Challenge} from "./Challenge.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 
 /**
  * @title FraudChallengeByPayment
  * @notice Where driips are challenged wrt fraud by mismatch in single trade property values
  */
-contract FraudChallengeByPayment is Ownable, FraudChallengable, Challenge, Validatable,
+contract FraudChallengeByPayment is Ownable, FraudChallengable, ConfigurableOperational, Validatable,
 SecurityBondable, WalletLockable {
     //
     // Events
@@ -40,7 +40,7 @@ SecurityBondable, WalletLockable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a payment candidate in continuous Fraud Challenge (FC)
     /// @param payment Fraudulent payment candidate
-    function challenge(NahmiiTypesLib.Payment payment)
+    function challenge(PaymentTypesLib.Payment payment)
     public
     onlyOperationalModeNormal
     onlyOperatorSealedPayment(payment)
