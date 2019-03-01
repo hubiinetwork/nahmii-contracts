@@ -17,6 +17,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDisputeByPayment} from "./NullSettlementDisputeByPayment.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
+import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
@@ -34,6 +35,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     // -----------------------------------------------------------------------------------------------------------------
     NullSettlementDisputeByPayment public nullSettlementDisputeByPayment;
     NullSettlementChallengeState public nullSettlementChallengeState;
+    DriipSettlementState public driipSettlementState;
 
     //
     // Events
@@ -42,6 +44,8 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         NullSettlementDisputeByPayment newNullSettlementDisputeByPayment);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
+    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
+        DriipSettlementState newDriipSettlementState);
     event StartChallengeEvent(address wallet, int256 amount, address stageCurrencyCt,
         uint stageCurrencyId);
     event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount,
@@ -78,6 +82,18 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
         emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
+    }
+
+    /// @notice Set the driip settlement state contract
+    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
+    function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
+    public
+    onlyDeployer
+    notNullAddress(newDriipSettlementState)
+    {
+        DriipSettlementState oldDriipSettlementState = driipSettlementState;
+        driipSettlementState = newDriipSettlementState;
+        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
     }
 
     /// @notice Start settlement challenge
@@ -318,9 +334,12 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
             wallet, currency
         );
 
+        // Obtain highest settled wallet nonce
+        uint256 nonce = driipSettlementState.maxNonceByWalletAndCurrency(wallet, currency);
+
         // Add proposal, including assurance that there is no overlap with active proposal
         nullSettlementChallengeState.addProposal(
-            wallet, stageAmount, activeBalanceAmount.sub(stageAmount), currency,
+            wallet, nonce, stageAmount, activeBalanceAmount.sub(stageAmount), currency,
             activeBalanceBlockNumber, balanceReward
         );
     }

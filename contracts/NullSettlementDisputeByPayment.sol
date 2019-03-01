@@ -84,13 +84,12 @@ FraudChallengable, Servable {
         // Require that proposal has not expired
         require(!nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
-        // TODO Replace by wallet nonce
-        // Require that payment's block number is not earlier than proposal's block number or its current
-        // disqualification block number
-        require(payment.blockNumber >= nullSettlementChallengeState.proposalBlockNumber(
+        // Require that payment party's nonce is strictly greater than proposal's nonce and its current
+        // disqualification nonce
+        require(payment.sender.nonce >= nullSettlementChallengeState.proposalNonce(
             wallet, payment.currency
         ));
-        require(payment.blockNumber >= nullSettlementChallengeState.proposalDisqualificationBlockNumber(
+        require(payment.sender.nonce >= nullSettlementChallengeState.proposalDisqualificationNonce(
             wallet, payment.currency
         ));
 
@@ -106,7 +105,7 @@ FraudChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallengeState.disqualifyProposal(
             wallet, payment.currency, challenger, payment.blockNumber,
-            payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
+            payment.sender.nonce, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
 
         // Emit event

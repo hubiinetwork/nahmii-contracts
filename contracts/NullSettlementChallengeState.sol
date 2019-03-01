@@ -12,7 +12,6 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 import {Configurable} from "./Configurable.sol";
-import {NonceManageable} from "./NonceManageable.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -24,7 +23,7 @@ import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
  * @title NullSettlementChallengeState
  * @notice Where null settlements challenge state is managed
  */
-contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceManageable, BalanceTrackable {
+contract NullSettlementChallengeState is Ownable, Servable, Configurable, BalanceTrackable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -44,12 +43,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event AddProposalEvent(uint256 nonce, address wallet, int256 stageAmount, int256 targetBalanceAmount,
+    event AddProposalEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward);
-    event DisqualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
-        address challengerWallet, bytes32 candidateHash, string candidateType);
-    event QualifyProposalEvent(address challengedWallet, MonetaryTypesLib.Currency currency,
-        address challengerWallet, bytes32 candidateHash, string candidateType);
+    event DisqualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
+        address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateType);
 
     //
     // Constructor
@@ -72,14 +69,14 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
 
     /// @notice Add proposal
     /// @param wallet The address of the concerned challenged wallet
+    /// @param nonce The wallet nonce
     /// @param stageAmount The proposal stage amount
     /// @param targetBalanceAmount The proposal target balance amount
     /// @param currency The concerned currency
     /// @param blockNumber The proposal block number
     /// @param balanceReward The candidate balance reward
-    function addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber,
-        bool balanceReward)
+    function addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward)
     public
     onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
     {
@@ -88,13 +85,13 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
 
         // Add proposal
         SettlementChallengeTypesLib.Proposal storage proposal = _addProposal(
-            wallet, stageAmount, targetBalanceAmount,
+            wallet, nonce, stageAmount, targetBalanceAmount,
             currency, blockNumber, balanceReward
         );
 
         // Emit event
         emit AddProposalEvent(
-            proposal.nonce, wallet, stageAmount, targetBalanceAmount, currency,
+            wallet, nonce, stageAmount, targetBalanceAmount, currency,
             blockNumber, balanceReward
         );
     }
@@ -105,10 +102,11 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
     /// @param currency The concerned currency
     /// @param challengerWallet The address of the concerned challenger wallet
     /// @param blockNumber The disqualification block number
+    /// @param candidateNonce The candidate nonce
     /// @param candidateHash The candidate hash
     /// @param candidateType The candidate type
     function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
-        uint256 blockNumber, bytes32 candidateHash, string candidateType)
+        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string candidateType)
     public
     onlyEnabledServiceAction(DISQUALIFY_PROPOSAL_ACTION)
     {
@@ -120,13 +118,15 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         proposals[index - 1].status = SettlementChallengeTypesLib.Status.Disqualified;
         proposals[index - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[index - 1].disqualification.challenger = challengerWallet;
+        proposals[index - 1].disqualification.nonce = candidateNonce;
         proposals[index - 1].disqualification.blockNumber = blockNumber;
         proposals[index - 1].disqualification.candidateHash = candidateHash;
         proposals[index - 1].disqualification.candidateType = candidateType;
 
         // Emit event
         emit DisqualifyProposalEvent(
-            challengedWallet, currency, challengerWallet, candidateHash, candidateType
+            challengedWallet, proposals[index - 1].nonce, currency, challengerWallet,
+            candidateNonce, candidateHash, candidateType
         );
     }
 
@@ -148,10 +148,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         );
     }
 
-    /// @notice Get the challenge nonce of the given wallet
+    /// @notice Get the settlement proposal challenge nonce of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The challenge nonce
+    /// @return The settlement proposal nonce
     function proposalNonce(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
@@ -162,7 +162,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].nonce;
     }
 
-    /// @notice Get the settlement proposal block number of the given wallet
+    /// @notice Get the settlement proposal block number of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal block number
@@ -176,10 +176,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].blockNumber;
     }
 
-    /// @notice Get the settlement proposal end time of the given wallet
+    /// @notice Get the settlement proposal expiration time of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The settlement proposal end time
+    /// @return The settlement proposal expiration time
     function proposalExpirationTime(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
@@ -190,10 +190,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].expirationTime;
     }
 
-    /// @notice Get the challenge status of the given wallet
+    /// @notice Get the settlement proposal status of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The challenge status
+    /// @return The settlement proposal status
     function proposalStatus(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
@@ -232,10 +232,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].targetBalanceAmount;
     }
 
-    /// @notice Get the balance reward of the given wallet's settlement proposal
+    /// @notice Get the settlement proposal balance reward of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The balance reward of the settlement proposal
+    /// @return The settlement proposal balance reward
     function proposalBalanceReward(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
@@ -246,10 +246,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].balanceReward;
     }
 
-    /// @notice Get the disqualification challenger of the given wallet and currency
+    /// @notice Get the settlement proposal disqualification challenger of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The challenger of the settlement disqualification
+    /// @return The settlement proposal disqualification challenger
     function proposalDisqualificationChallenger(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
@@ -260,10 +260,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].disqualification.challenger;
     }
 
-    /// @notice Get the disqualification block number of the given wallet and currency
+    /// @notice Get the settlement proposal disqualification block number of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The block number of the settlement disqualification
+    /// @return The settlement proposal disqualification block number
     function proposalDisqualificationBlockNumber(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
@@ -274,10 +274,24 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].disqualification.blockNumber;
     }
 
-    /// @notice Get the disqualification candidate hash of the given wallet and currency
+    /// @notice Get the settlement proposal disqualification nonce of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The candidate hash of the settlement disqualification
+    /// @return The settlement proposal disqualification nonce
+    function proposalDisqualificationNonce(address wallet, MonetaryTypesLib.Currency currency)
+    public
+    view
+    returns (uint256)
+    {
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+        require(0 != index);
+        return proposals[index - 1].disqualification.nonce;
+    }
+
+    /// @notice Get the settlement proposal disqualification candidate hash of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currency The concerned currency
+    /// @return The settlement proposal disqualification candidate hash
     function proposalDisqualificationCandidateHash(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
@@ -288,10 +302,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
         return proposals[index - 1].disqualification.candidateHash;
     }
 
-    /// @notice Get the disqualification candidate type of the given wallet and currency
+    /// @notice Get the settlement proposal disqualification candidate type of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The candidate type of the settlement disqualification
+    /// @return The settlement proposal disqualification candidate type
     function proposalDisqualificationCandidateType(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
@@ -305,7 +319,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
+    function _addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward)
     private
     returns (SettlementChallengeTypesLib.Proposal storage)
@@ -319,7 +333,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, NonceM
 
         // Populate proposal
         proposals[proposals.length - 1].wallet = wallet;
-        proposals[proposals.length - 1].nonce = nonceManager.incrementNonce();
+        proposals[proposals.length - 1].nonce = nonce;
         proposals[proposals.length - 1].blockNumber = blockNumber;
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[proposals.length - 1].status = SettlementChallengeTypesLib.Status.Qualified;
