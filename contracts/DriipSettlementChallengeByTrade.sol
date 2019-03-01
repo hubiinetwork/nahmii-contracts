@@ -47,9 +47,9 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
-    event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
+    event StartChallengeEvent(address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
-    event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
+    event StartChallengeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
 
     //
@@ -112,7 +112,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         _startChallengeFromTrade(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
 
         // Emit event
-        emit StartChallengeFromTradeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
     }
 
     /// @notice Start settlement challenge on trade by proxy
@@ -129,7 +129,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         _startChallengeFromTrade(wallet, trade, intendedStageAmount, conjugateStageAmount, false);
 
         // Emit event
-        emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired

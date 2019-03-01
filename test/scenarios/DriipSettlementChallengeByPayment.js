@@ -266,7 +266,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentEvent'].topics
+                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeEvent'].topics
                     };
                 });
 
@@ -345,7 +345,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentByProxyEvent'].topics
+                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeByProxyEvent'].topics
                     };
                 });
 

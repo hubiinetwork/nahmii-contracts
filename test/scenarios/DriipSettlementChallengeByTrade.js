@@ -270,7 +270,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeEvent'].topics
+                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeEvent'].topics
                     };
                 });
 
@@ -366,7 +366,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeByProxyEvent'].topics
+                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeByProxyEvent'].topics
                     };
                 });
 

@@ -47,8 +47,8 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     //    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
     //        NullSettlementChallengeState newNullSettlementChallengeState);
-    event StartChallengeFromPaymentEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
-    event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
+    event StartChallengeEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
+    event StartChallengeByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
         int256 stageAmount);
 
     //
@@ -109,7 +109,7 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         _startChallengeFromPayment(msg.sender, payment, stageAmount, true);
 
         // Emit event
-        emit StartChallengeFromPaymentEvent(msg.sender, payment.seals.operator.hash, stageAmount);
+        emit StartChallengeEvent(msg.sender, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Start settlement challenge on payment
@@ -124,7 +124,7 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         _startChallengeFromPayment(wallet, payment, stageAmount, false);
 
         // Emit event
-        emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
+        emit StartChallengeByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
