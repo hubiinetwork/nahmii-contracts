@@ -123,7 +123,7 @@ FraudChallengable, Servable {
         address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
-        if (driipSettlementChallengeState.proposalBalanceReward(wallet, currency))
+        if (driipSettlementChallengeState.proposalWalletInitiated(wallet, currency))
             _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else

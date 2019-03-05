@@ -51,6 +51,8 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         int256 intendedStageAmount, int256 conjugateStageAmount);
     event StartChallengeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
+    event StopChallengeEvent(address wallet, address currencyCt, uint256 currencyId);
+    event StopChallengeByProxyEvent(address proxy, address wallet, address currencyCt, uint256 currencyId);
 
     //
     // Constructor
@@ -130,6 +132,34 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
 
         // Emit event
         emit StartChallengeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
+    }
+
+    /// @notice Stop settlement challenge
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function stopChallenge(address currencyCt, uint256 currencyId)
+    public
+    {
+        // Stop challenge
+        _stopChallenge(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true);
+
+        // Emit event
+        emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
+    }
+
+    /// @notice Stop settlement challenge
+    /// @param wallet The concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function stopChallengeByProxy(address wallet, address currencyCt, uint256 currencyId)
+    public
+    onlyOperator
+    {
+        // Stop challenge
+        _stopChallenge(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false);
+
+        // Emit event
+        emit StopChallengeByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
@@ -272,12 +302,12 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The balance reward of the settlement proposal
-    function proposalBalanceReward(address wallet, address currencyCt, uint256 currencyId)
+    function proposalWalletInitiated(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (bool)
     {
-        return driipSettlementChallengeState.proposalBalanceReward(
+        return driipSettlementChallengeState.proposalWalletInitiated(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -374,7 +404,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function _startChallengeFromTrade(address wallet, TradeTypesLib.Trade trade,
-        int256 intendedStageAmount, int256 conjugateStageAmount, bool balanceReward)
+        int256 intendedStageAmount, int256 conjugateStageAmount, bool walletInitiated)
     private
     onlySealedTrade(trade)
     {
@@ -385,11 +415,18 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         require(validator.isTradeParty(trade, wallet));
 
         // Create proposals
-        _addIntendedProposalFromTrade(wallet, trade, intendedStageAmount, balanceReward);
-        _addConjugateProposalFromTrade(wallet, trade, conjugateStageAmount, balanceReward);
+        _addIntendedProposalFromTrade(wallet, trade, intendedStageAmount, walletInitiated);
+        _addConjugateProposalFromTrade(wallet, trade, conjugateStageAmount, walletInitiated);
     }
 
-    function _addIntendedProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
+    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    private
+    {
+        // Stop challenge
+        driipSettlementChallengeState.removeProposal(wallet, currency, walletTerminated);
+    }
+
+    function _addIntendedProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool walletInitiated)
     private
     {
         // Require that there is no ongoing overlapping null settlement challenge
@@ -405,11 +442,11 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
             wallet, party.nonce, stageAmount, party.balances.intended.current.sub(stageAmount), trade.currencies.intended,
-            trade.blockNumber, balanceReward, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
+            trade.blockNumber, walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }
 
-    function _addConjugateProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool balanceReward)
+    function _addConjugateProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool walletInitiated)
     private
     {
         // Require that there is no ongoing overlapping null settlement challenge
@@ -425,7 +462,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
             wallet, party.nonce, stageAmount, party.balances.conjugate.current.sub(stageAmount), trade.currencies.conjugate,
-            trade.blockNumber, balanceReward, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
+            trade.blockNumber, walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }
 

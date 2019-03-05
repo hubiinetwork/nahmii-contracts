@@ -483,7 +483,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalBalanceReward(true);
+                    await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                 });
 
                 it('should disqualify proposal and reward new challenger by locking challenged wallet', async () => {
@@ -534,7 +534,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalBalanceReward(true);
+                    await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -1104,7 +1104,7 @@ module.exports = (glob) => {
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
-                    await ethersDriipSettlementChallengeState._setProposalBalanceReward(true);
+                    await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                     await ethersDriipSettlementChallengeState._setProposalDisqualificationCandidateHash(
                         order.seals.operator.hash, {gasLimit: 1e6}
                     );
@@ -1166,7 +1166,7 @@ module.exports = (glob) => {
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
-                    await ethersDriipSettlementChallengeState._setProposalBalanceReward(false);
+                    await ethersDriipSettlementChallengeState._setProposalWalletInitiated(false);
                     await ethersDriipSettlementChallengeState._setProposalDisqualificationCandidateHash(
                         order.seals.operator.hash, {gasLimit: 1e6}
                     );
@@ -1420,7 +1420,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalBalanceReward(true);
+                    await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                 });
 
                 it('should disqualify proposal and reward new challenger by locking challenged wallet', async () => {
@@ -1471,7 +1471,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalBalanceReward(true);
+                    await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
