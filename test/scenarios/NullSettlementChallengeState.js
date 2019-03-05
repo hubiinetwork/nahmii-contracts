@@ -14,7 +14,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe.only('NullSettlementChallengeState', () => {
+    describe('NullSettlementChallengeState', () => {
         let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
         let web3Configuration, ethersConfiguration;
         let provider;

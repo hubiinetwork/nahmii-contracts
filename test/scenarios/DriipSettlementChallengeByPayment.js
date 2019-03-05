@@ -19,7 +19,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe.only('DriipSettlementChallengeByPayment', () => {
+    describe('DriipSettlementChallengeByPayment', () => {
         let web3DriipSettlementChallengeByPayment, ethersDriipSettlementChallengeByPayment;
         let web3SignerManager;
         let web3Configuration, ethersConfiguration;
@@ -266,7 +266,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeEvent'].topics
+                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentEvent'].topics
                     };
                 });
 
@@ -345,7 +345,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeByProxyEvent'].topics
+                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentByProxyEvent'].topics
                     };
                 });
 

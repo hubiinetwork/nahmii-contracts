@@ -20,7 +20,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe.only('NullSettlementChallengeByTrade', () => {
+    describe('NullSettlementChallengeByTrade', () => {
         let web3NullSettlementChallengeByTrade, ethersNullSettlementChallengeByTrade;
         let web3SignerManager;
         let web3Configuration, ethersConfiguration;

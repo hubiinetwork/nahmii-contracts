@@ -19,7 +19,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe.only('DriipSettlementChallengeByTrade', () => {
+    describe('DriipSettlementChallengeByTrade', () => {
         let web3DriipSettlementChallengeByTrade, ethersDriipSettlementChallengeByTrade;
         let web3SignerManager;
         let web3Configuration, ethersConfiguration;
@@ -270,7 +270,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeEvent'].topics
+                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeEvent'].topics
                     };
                 });
 
@@ -366,7 +366,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeByProxyEvent'].topics
+                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeByProxyEvent'].topics
                     };
                 });
 

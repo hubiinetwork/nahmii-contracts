@@ -47,8 +47,8 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     //    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
     //        NullSettlementChallengeState newNullSettlementChallengeState);
-    event StartChallengeEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
-    event StartChallengeByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
+    event StartChallengeFromPaymentEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
+    event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
         int256 stageAmount);
     event StopChallengeEvent(address wallet, address currencyCt, uint256 currencyId);
     event StopChallengeByProxyEvent(address proxy, address wallet, address currencyCt, uint256 currencyId);
@@ -111,7 +111,7 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         _startChallengeFromPayment(msg.sender, payment, stageAmount, true);
 
         // Emit event
-        emit StartChallengeEvent(msg.sender, payment.seals.operator.hash, stageAmount);
+        emit StartChallengeFromPaymentEvent(msg.sender, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Start settlement challenge on payment
@@ -126,7 +126,7 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         _startChallengeFromPayment(wallet, payment, stageAmount, false);
 
         // Emit event
-        emit StartChallengeByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
+        emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Stop settlement challenge

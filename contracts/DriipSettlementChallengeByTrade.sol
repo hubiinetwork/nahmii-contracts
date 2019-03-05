@@ -47,9 +47,9 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
-    event StartChallengeEvent(address wallet, bytes32 tradeHash,
+    event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
-    event StartChallengeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
+    event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
     event StopChallengeEvent(address wallet, address currencyCt, uint256 currencyId);
     event StopChallengeByProxyEvent(address proxy, address wallet, address currencyCt, uint256 currencyId);
@@ -114,7 +114,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         _startChallengeFromTrade(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
 
         // Emit event
-        emit StartChallengeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeFromTradeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
     }
 
     /// @notice Start settlement challenge on trade by proxy
@@ -131,7 +131,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         _startChallengeFromTrade(wallet, trade, intendedStageAmount, conjugateStageAmount, false);
 
         // Emit event
-        emit StartChallengeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
     }
 
     /// @notice Stop settlement challenge
