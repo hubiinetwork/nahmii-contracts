@@ -50,6 +50,8 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         uint stageCurrencyId);
     event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount,
         address stageCurrencyCt, uint stageCurrencyId);
+    event StopChallengeEvent(address wallet, address currencyCt, uint256 currencyId);
+    event StopChallengeByProxyEvent(address proxy, address wallet, address currencyCt, uint256 currencyId);
 
     //
     // Constructor
@@ -127,6 +129,34 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
 
         // Emit event
         emit StartChallengeByProxyEvent(msg.sender, wallet, amount, currencyCt, currencyId);
+    }
+
+    /// @notice Stop settlement challenge
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function stopChallenge(address currencyCt, uint256 currencyId)
+    public
+    {
+        // Stop challenge
+        _stopChallenge(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true);
+
+        // Emit event
+        emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
+    }
+
+    /// @notice Stop settlement challenge
+    /// @param wallet The concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function stopChallengeByProxy(address wallet, address currencyCt, uint256 currencyId)
+    public
+    onlyOperator
+    {
+        // Stop challenge
+        _stopChallenge(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false);
+
+        // Emit event
+        emit StopChallengeByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
@@ -239,12 +269,12 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The balance reward of the settlement proposal
-    function proposalBalanceReward(address wallet, address currencyCt, uint256 currencyId)
+    function proposalWalletInitiated(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (bool)
     {
-        return nullSettlementChallengeState.proposalBalanceReward(
+        return nullSettlementChallengeState.proposalWalletInitiated(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -323,7 +353,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function _startChallenge(address wallet, int256 stageAmount, MonetaryTypesLib.Currency currency,
-        bool balanceReward)
+        bool walletInitiated)
     private
     {
         // Require that current block number is beyond the earliest settlement challenge block number
@@ -340,8 +370,15 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Add proposal, including assurance that there is no overlap with active proposal
         nullSettlementChallengeState.addProposal(
             wallet, nonce, stageAmount, activeBalanceAmount.sub(stageAmount), currency,
-            activeBalanceBlockNumber, balanceReward
+            activeBalanceBlockNumber, walletInitiated
         );
+    }
+
+    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    private
+    {
+        // Stop challenge
+        nullSettlementChallengeState.removeProposal(wallet, currency, walletTerminated);
     }
 
     function _activeBalanceLogEntry(address wallet,  MonetaryTypesLib.Currency currency)
