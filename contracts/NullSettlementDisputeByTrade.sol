@@ -274,7 +274,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
-        if (nullSettlementChallengeState.proposalBalanceReward(wallet, currency))
+        if (nullSettlementChallengeState.proposalWalletInitiated(wallet, currency))
             _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else

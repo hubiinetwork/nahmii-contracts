@@ -45,7 +45,7 @@ library SettlementChallengeTypesLib {
         bytes32 challengedHash;
 
         // True if reward is from wallet balance
-        bool balanceReward;
+        bool walletInitiated;
 
         // Disqualification
         Disqualification disqualification;

@@ -30,7 +30,7 @@ contract MockedNullSettlementChallengeState {
     }
 
     function addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward)
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated)
     public
     {
         uint256 index = _proposals.length++;
@@ -41,7 +41,17 @@ contract MockedNullSettlementChallengeState {
         _proposals[index].targetBalanceAmount = targetBalanceAmount;
         _proposals[index].currency = currency;
         _proposals[index].blockNumber = blockNumber;
-        _proposals[index].balanceReward = balanceReward;
+        _proposals[index].walletInitiated = walletInitiated;
+    }
+
+    function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    public
+    {
+        uint256 index = _addProposalIfNone();
+
+        _proposals[index].wallet = challengedWallet;
+        _proposals[index].currency = currency;
+        _proposals[index].walletInitiated = walletTerminated;
     }
 
     function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
@@ -164,19 +174,19 @@ contract MockedNullSettlementChallengeState {
         _proposals[index].targetBalanceAmount = _proposalTargetBalanceAmount;
     }
 
-    function proposalBalanceReward(address, MonetaryTypesLib.Currency)
+    function proposalWalletInitiated(address, MonetaryTypesLib.Currency)
     public
     view
     returns (bool)
     {
-        return _proposals[_proposals.length - 1].balanceReward;
+        return _proposals[_proposals.length - 1].walletInitiated;
     }
 
-    function _setProposalBalanceReward(bool _proposalBalanceReward)
+    function _setProposalWalletInitiated(bool _proposalWalletInitiated)
     public
     {
         uint256 index = _addProposalIfNone();
-        _proposals[index].balanceReward = _proposalBalanceReward;
+        _proposals[index].walletInitiated = _proposalWalletInitiated;
     }
 
     function proposalDisqualificationChallenger(address, MonetaryTypesLib.Currency)

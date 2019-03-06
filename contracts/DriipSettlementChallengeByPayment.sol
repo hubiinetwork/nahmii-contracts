@@ -47,9 +47,11 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     //    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
     //        NullSettlementChallengeState newNullSettlementChallengeState);
-    event StartChallengeEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
-    event StartChallengeByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
+    event StartChallengeFromPaymentEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
+    event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
         int256 stageAmount);
+    event StopChallengeEvent(address wallet, address currencyCt, uint256 currencyId);
+    event StopChallengeByProxyEvent(address proxy, address wallet, address currencyCt, uint256 currencyId);
 
     //
     // Constructor
@@ -109,7 +111,7 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         _startChallengeFromPayment(msg.sender, payment, stageAmount, true);
 
         // Emit event
-        emit StartChallengeEvent(msg.sender, payment.seals.operator.hash, stageAmount);
+        emit StartChallengeFromPaymentEvent(msg.sender, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Start settlement challenge on payment
@@ -124,7 +126,35 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         _startChallengeFromPayment(wallet, payment, stageAmount, false);
 
         // Emit event
-        emit StartChallengeByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
+        emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
+    }
+
+    /// @notice Stop settlement challenge
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function stopChallenge(address currencyCt, uint256 currencyId)
+    public
+    {
+        // Stop challenge
+        _stopChallenge(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true);
+
+        // Emit event
+        emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
+    }
+
+    /// @notice Stop settlement challenge
+    /// @param wallet The concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    function stopChallengeByProxy(address wallet, address currencyCt, uint256 currencyId)
+    public
+    onlyOperator
+    {
+        // Stop challenge
+        _stopChallenge(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false);
+
+        // Emit event
+        emit StopChallengeByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
@@ -267,12 +297,12 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The balance reward of the settlement proposal
-    function proposalBalanceReward(address wallet, address currencyCt, uint256 currencyId)
+    function proposalWalletInitiated(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (bool)
     {
-        return driipSettlementChallengeState.proposalBalanceReward(
+        return driipSettlementChallengeState.proposalWalletInitiated(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -350,7 +380,7 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function _startChallengeFromPayment(address wallet, PaymentTypesLib.Payment payment,
-        int256 stageAmount, bool balanceReward)
+        int256 stageAmount, bool walletInitiated)
     private
     onlySealedPayment(payment)
     {
@@ -370,8 +400,15 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
             wallet, nonce, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.blockNumber,
-            balanceReward, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
+            walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
+    }
+
+    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    private
+    {
+        // Stop challenge
+        driipSettlementChallengeState.removeProposal(wallet, currency, walletTerminated);
     }
 
     function _paymentPartyProperties(PaymentTypesLib.Payment payment, address wallet)

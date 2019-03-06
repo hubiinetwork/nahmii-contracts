@@ -179,7 +179,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         );
 
         // Unlock wallet's balances or deprive challenger
-        if (driipSettlementChallengeState.proposalBalanceReward(order.wallet, currency))
+        if (driipSettlementChallengeState.proposalWalletInitiated(order.wallet, currency))
             walletLocker.unlockFungibleByProxy(order.wallet, challenger, currency.ct, currency.id);
         else
             securityBond.depriveAbsolute(challenger, currency.ct, currency.id);
@@ -352,7 +352,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
-        if (driipSettlementChallengeState.proposalBalanceReward(wallet, currency))
+        if (driipSettlementChallengeState.proposalWalletInitiated(wallet, currency))
             _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else

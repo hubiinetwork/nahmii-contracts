@@ -31,6 +31,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
     string constant public ADD_PROPOSAL_ACTION = "add_proposal";
+    string constant public CANCEL_PROPOSAL_ACTION = "cancel_proposal";
     string constant public DISQUALIFY_PROPOSAL_ACTION = "disqualify_proposal";
 
     //
@@ -38,13 +39,13 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     // -----------------------------------------------------------------------------------------------------------------
     SettlementChallengeTypesLib.Proposal[] public proposals;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public proposalIndexByWalletCurrency;
-    mapping(address => uint256[]) public proposalIndicesByWallet;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event AddProposalEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward);
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated);
+    event RemoveProposalEvent(address challengedWallet, uint256 nonce, MonetaryTypesLib.Currency currency);
     event DisqualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
         address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateType);
 
@@ -74,9 +75,9 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     /// @param targetBalanceAmount The proposal target balance amount
     /// @param currency The concerned currency
     /// @param blockNumber The proposal block number
-    /// @param balanceReward The candidate balance reward
+    /// @param walletInitiated True if reward from candidate balance
     function addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward)
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated)
     public
     onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
     {
@@ -84,16 +85,45 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         require(hasProposalExpired(wallet, currency));
 
         // Add proposal
-        SettlementChallengeTypesLib.Proposal storage proposal = _addProposal(
+        _addProposal(
             wallet, nonce, stageAmount, targetBalanceAmount,
-            currency, blockNumber, balanceReward
+            currency, blockNumber, walletInitiated
         );
 
         // Emit event
         emit AddProposalEvent(
             wallet, nonce, stageAmount, targetBalanceAmount, currency,
-            blockNumber, balanceReward
+            blockNumber, walletInitiated
         );
+    }
+
+    /// @notice Remove a proposal
+    /// @param challengedWallet The address of the concerned challenged wallet
+    /// @param currency The concerned currency
+    /// @param walletTerminated True if wallet terminated
+    function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    public
+    onlyEnabledServiceAction(CANCEL_PROPOSAL_ACTION)
+    {
+        // Get the proposal index
+        uint256 index = proposalIndexByWalletCurrency[challengedWallet][currency.ct][currency.id];
+
+        // Return gracefully if there is no proposal to cancel
+        if (0 == index)
+            return;
+
+        // Require that role that initialized (wallet or operator) can only cancel its own proposal
+        require(walletTerminated == proposals[index - 1].walletInitiated);
+
+        // Emit event
+        emit RemoveProposalEvent(challengedWallet, proposals[index - 1].nonce, currency);
+
+        // Remove the proposal
+        if (index < proposals.length) {
+            proposals[index - 1] = proposals[proposals.length - 1];
+            proposalIndexByWalletCurrency[proposals[index - 1].wallet][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = index;
+        }
+        proposals.length--;
     }
 
     /// @notice Disqualify a proposal
@@ -236,14 +266,14 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal balance reward
-    function proposalBalanceReward(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalWalletInitiated(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (bool)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].balanceReward;
+        return proposals[index - 1].walletInitiated;
     }
 
     /// @notice Get the settlement proposal disqualification challenger of the given wallet and currency
@@ -320,7 +350,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function _addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward)
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated)
     private
     returns (SettlementChallengeTypesLib.Proposal storage)
     {
@@ -340,11 +370,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         proposals[proposals.length - 1].currency = currency;
         proposals[proposals.length - 1].stageAmount = stageAmount;
         proposals[proposals.length - 1].targetBalanceAmount = targetBalanceAmount;
-        proposals[proposals.length - 1].balanceReward = balanceReward;
+        proposals[proposals.length - 1].walletInitiated = walletInitiated;
 
         // Store proposal index
         proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = proposals.length;
-        proposalIndicesByWallet[wallet].push(proposals.length);
 
         return proposals[proposals.length - 1];
     }

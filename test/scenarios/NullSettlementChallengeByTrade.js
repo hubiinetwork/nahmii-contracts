@@ -274,7 +274,7 @@ module.exports = (glob) => {
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.blockNumber._bn.should.eq.BN(1);
                     proposal.nonce._bn.should.eq.BN(20);
-                    proposal.balanceReward.should.be.true;
+                    proposal.walletInitiated.should.be.true;
                     proposal.challengedHash.should.equal(mocks.hash0);
                     proposal.challengedType.should.be.a('string').that.is.empty;
                 });
@@ -334,10 +334,66 @@ module.exports = (glob) => {
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.blockNumber._bn.should.eq.BN(1);
                     proposal.nonce._bn.should.eq.BN(20);
-                    proposal.balanceReward.should.be.false;
+                    proposal.walletInitiated.should.be.false;
                     proposal.challengedHash.should.equal(mocks.hash0);
                     proposal.challengedType.should.be.a('string').that.is.empty;
                 });
+            });
+        });
+
+        describe('stopChallenge()', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: ethersNullSettlementChallengeByTrade.interface.events['StopChallengeEvent'].topics
+                };
+            });
+
+            it('should stop challenge successfully', async () => {
+                await ethersNullSettlementChallengeByTrade.stopChallenge(
+                    mocks.address1, 10, {gasLimit: 1e6}
+                );
+
+                const logs = await provider.getLogs(filter);
+                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                const proposal = await ethersNullSettlementChallengeState._proposals(0);
+                proposal.wallet.should.equal(utils.getAddress(glob.owner));
+                proposal.currency.ct.should.equal(mocks.address1);
+                proposal.currency.id._bn.should.eq.BN(10);
+                proposal.walletInitiated.should.be.true;
+            });
+        });
+
+        describe('stopChallengeByProxy()', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: ethersNullSettlementChallengeByTrade.interface.events['StopChallengeByProxyEvent'].topics
+                };
+            });
+
+            it('should stop challenge successfully', async () => {
+                await ethersNullSettlementChallengeByTrade.stopChallengeByProxy(
+                    glob.user_a, mocks.address1, 10, {gasLimit: 1e6}
+                );
+
+                const logs = await provider.getLogs(filter);
+                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                const proposal = await ethersNullSettlementChallengeState._proposals(0);
+                proposal.wallet.should.equal(utils.getAddress(glob.user_a));
+                proposal.currency.ct.should.equal(mocks.address1);
+                proposal.currency.id._bn.should.eq.BN(10);
+                proposal.walletInitiated.should.be.false;
             });
         });
 
@@ -425,14 +481,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalBalanceReward()', () => {
+        describe('proposalWalletInitiated()', () => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersNullSettlementChallengeState._setProposalBalanceReward(true);
+                await ethersNullSettlementChallengeState._setProposalWalletInitiated(true);
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersNullSettlementChallengeByTrade.proposalBalanceReward(glob.owner, mocks.address0, 0))
+                (await ethersNullSettlementChallengeByTrade.proposalWalletInitiated(glob.owner, mocks.address0, 0))
                     .should.be.true;
             });
         });

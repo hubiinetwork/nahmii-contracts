@@ -270,7 +270,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeEvent'].topics
+                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeEvent'].topics
                     };
                 });
 
@@ -291,7 +291,7 @@ module.exports = (glob) => {
                     intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
                     intendedProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     intendedProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
-                    intendedProposal.balanceReward.should.be.true;
+                    intendedProposal.walletInitiated.should.be.true;
                     intendedProposal.challengedHash.should.equal(trade.seal.hash);
                     intendedProposal.challengedType.should.equal('trade');
 
@@ -303,7 +303,7 @@ module.exports = (glob) => {
                     conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                     conjugateProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     conjugateProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
-                    conjugateProposal.balanceReward.should.be.true;
+                    conjugateProposal.walletInitiated.should.be.true;
                     conjugateProposal.challengedHash.should.equal(trade.seal.hash);
                     conjugateProposal.challengedType.should.equal('trade');
                 });
@@ -366,7 +366,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeByProxyEvent'].topics
+                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeByProxyEvent'].topics
                     };
                 });
 
@@ -387,7 +387,7 @@ module.exports = (glob) => {
                     intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
                     intendedProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     intendedProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
-                    intendedProposal.balanceReward.should.be.false;
+                    intendedProposal.walletInitiated.should.be.false;
                     intendedProposal.challengedHash.should.equal(trade.seal.hash);
                     intendedProposal.challengedType.should.equal('trade');
 
@@ -399,10 +399,70 @@ module.exports = (glob) => {
                     conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                     conjugateProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     conjugateProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
-                    conjugateProposal.balanceReward.should.be.false;
+                    conjugateProposal.walletInitiated.should.be.false;
                     conjugateProposal.challengedHash.should.equal(trade.seal.hash);
                     conjugateProposal.challengedType.should.equal('trade');
                 });
+            });
+        });
+
+        describe('stopChallenge()', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersValidator._reset({gasLimit: 4e6});
+                await ethersWalletLocker._reset();
+                await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
+
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: ethersDriipSettlementChallengeByTrade.interface.events['StopChallengeEvent'].topics
+                };
+            });
+
+            it('should stop challenge successfully', async () => {
+                await ethersDriipSettlementChallengeByTrade.stopChallenge(
+                    mocks.address1, 10, {gasLimit: 1e6}
+                );
+
+                const logs = await provider.getLogs(filter);
+                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                proposal.wallet.should.equal(utils.getAddress(glob.owner));
+                proposal.currency.ct.should.equal(mocks.address1);
+                proposal.currency.id._bn.should.eq.BN(10);
+                proposal.walletInitiated.should.be.true;
+            });
+        });
+
+        describe('stopChallengeByProxy()', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersValidator._reset({gasLimit: 4e6});
+                await ethersWalletLocker._reset();
+                await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
+
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: ethersDriipSettlementChallengeByTrade.interface.events['StopChallengeByProxyEvent'].topics
+                };
+            });
+
+            it('should stop challenge successfully', async () => {
+                await ethersDriipSettlementChallengeByTrade.stopChallengeByProxy(
+                    glob.user_a, mocks.address1, 10, {gasLimit: 1e6}
+                );
+
+                const logs = await provider.getLogs(filter);
+                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                proposal.wallet.should.equal(utils.getAddress(glob.user_a));
+                proposal.currency.ct.should.equal(mocks.address1);
+                proposal.currency.id._bn.should.eq.BN(10);
+                proposal.walletInitiated.should.be.false;
             });
         });
 
@@ -514,14 +574,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalBalanceReward()', () => {
+        describe('proposalWalletInitiated()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementChallengeState._setProposalBalanceReward(true);
+                await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByTrade.proposalBalanceReward(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalWalletInitiated(glob.owner, mocks.address0, 0))
                     .should.be.true;
             });
         });

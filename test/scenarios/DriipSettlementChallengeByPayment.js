@@ -266,7 +266,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeEvent'].topics
+                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentEvent'].topics
                     };
                 });
 
@@ -286,7 +286,7 @@ module.exports = (glob) => {
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                     proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
                     proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
-                    proposal.balanceReward.should.be.true;
+                    proposal.walletInitiated.should.be.true;
                     proposal.challengedHash.should.equal(payment.seals.operator.hash);
                     proposal.challengedType.should.equal('payment');
                 });
@@ -345,7 +345,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeByProxyEvent'].topics
+                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentByProxyEvent'].topics
                     };
                 });
 
@@ -365,10 +365,70 @@ module.exports = (glob) => {
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                     proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
                     proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
-                    proposal.balanceReward.should.be.false;
+                    proposal.walletInitiated.should.be.false;
                     proposal.challengedHash.should.equal(payment.seals.operator.hash);
                     proposal.challengedType.should.equal('payment');
                 });
+            });
+        });
+
+        describe('stopChallenge()', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersValidator._reset({gasLimit: 4e6});
+                await ethersWalletLocker._reset();
+                await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
+
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: ethersDriipSettlementChallengeByPayment.interface.events['StopChallengeEvent'].topics
+                };
+            });
+
+            it('should stop challenge successfully', async () => {
+                await ethersDriipSettlementChallengeByPayment.stopChallenge(
+                    mocks.address1, 10, {gasLimit: 1e6}
+                );
+
+                const logs = await provider.getLogs(filter);
+                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                proposal.wallet.should.equal(utils.getAddress(glob.owner));
+                proposal.currency.ct.should.equal(mocks.address1);
+                proposal.currency.id._bn.should.eq.BN(10);
+                proposal.walletInitiated.should.be.true;
+            });
+        });
+
+        describe('stopChallengeByProxy()', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersValidator._reset({gasLimit: 4e6});
+                await ethersWalletLocker._reset();
+                await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
+
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: ethersDriipSettlementChallengeByPayment.interface.events['StopChallengeByProxyEvent'].topics
+                };
+            });
+
+            it('should stop challenge successfully', async () => {
+                await ethersDriipSettlementChallengeByPayment.stopChallengeByProxy(
+                    glob.user_a, mocks.address1, 10, {gasLimit: 1e6}
+                );
+
+                const logs = await provider.getLogs(filter);
+                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                proposal.wallet.should.equal(utils.getAddress(glob.user_a));
+                proposal.currency.ct.should.equal(mocks.address1);
+                proposal.currency.id._bn.should.eq.BN(10);
+                proposal.walletInitiated.should.be.false;
             });
         });
 
@@ -480,14 +540,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalBalanceReward()', () => {
+        describe('proposalWalletInitiated()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementChallengeState._setProposalBalanceReward(true);
+                await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalBalanceReward(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByPayment.proposalWalletInitiated(glob.owner, mocks.address0, 0))
                     .should.be.true;
             });
         });
