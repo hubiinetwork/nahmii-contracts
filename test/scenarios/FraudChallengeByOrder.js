@@ -286,17 +286,13 @@ module.exports = (glob) => {
         });
 
         describe('challenge()', () => {
-            let order, overrideOptions, filter;
-
-            before(async () => {
-                overrideOptions = {gasLimit: 2e6};
-            });
+            let order, filter;
 
             beforeEach(async () => {
-                await ethersConfiguration._reset(overrideOptions);
-                await ethersFraudChallenge._reset(overrideOptions);
-                await ethersValidator._reset(overrideOptions);
-                await ethersSecurityBond._reset(overrideOptions);
+                await ethersConfiguration._reset({gasLimit: 1e6});
+                await ethersFraudChallenge._reset({gasLimit: 1e6});
+                await ethersValidator._reset({gasLimit: 1e6});
+                await ethersSecurityBond._reset({gasLimit: 1e6});
 
                 order = await mocks.mockOrder(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
 
@@ -311,7 +307,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByOrder.challenge(order, {gasLimit: 3e6}).should.be.rejected;
                 });
             });
 
@@ -321,7 +317,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByOrder.challenge(order, {gasLimit: 3e6}).should.be.rejected;
                 });
             });
 
@@ -331,13 +327,13 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByOrder.challenge(order, {gasLimit: 3e6}).should.be.rejected;
                 });
             });
 
             describe('if order is genuine', () => {
                 it('should revert', async () => {
-                    return ethersFraudChallengeByOrder.challenge(order, overrideOptions).should.be.rejected;
+                    return ethersFraudChallengeByOrder.challenge(order, {gasLimit: 3e6}).should.be.rejected;
                 });
             });
 
@@ -347,7 +343,7 @@ module.exports = (glob) => {
                 });
 
                 it('should set operational mode exit, store fraudulent order and reward in security bond', async () => {
-                    await ethersFraudChallengeByOrder.challenge(order, overrideOptions);
+                    await ethersFraudChallengeByOrder.challenge(order, {gasLimit: 3e6});
 
                     (await ethersConfiguration.isOperationalModeExit()).should.be.true;
 
