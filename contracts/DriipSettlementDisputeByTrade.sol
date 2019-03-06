@@ -95,13 +95,12 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Require that proposal has not expired
         require(!driipSettlementChallengeState.hasProposalExpired(order.wallet, currency));
 
-        // TODO Replace by wallet nonce
-        // Require that payment's block number is not earlier than proposal's block number or its current
-        // disqualification block number
-        require(order.blockNumber >= driipSettlementChallengeState.proposalBlockNumber(
+        // Require that orders's nonce is strictly greater than proposal's nonce and its current
+        // disqualification nonce
+        require(order.nonce > driipSettlementChallengeState.proposalNonce(
             order.wallet, currency
         ));
-        require(order.blockNumber >= driipSettlementChallengeState.proposalDisqualificationBlockNumber(
+        require(order.nonce > driipSettlementChallengeState.proposalDisqualificationNonce(
             order.wallet, currency
         ));
 
@@ -121,7 +120,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
             order.wallet, currency, challenger, order.blockNumber,
-            order.seals.operator.hash, TradeTypesLib.ORDER_TYPE()
+            order.nonce, order.seals.operator.hash, TradeTypesLib.ORDER_TYPE()
         );
 
         // Emit event
@@ -224,13 +223,15 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Require that proposal has not expired
         require(!driipSettlementChallengeState.hasProposalExpired(wallet, currency));
 
-        // TODO Replace by wallet nonce
-        // Require that payment's block number is not earlier than proposal's block number or its current
-        // disqualification block number
-        require(trade.blockNumber >= driipSettlementChallengeState.proposalBlockNumber(
+        // Get the relevant nonce
+        uint256 nonce = _tradeNonce(trade, wallet);
+
+        // Require that trade party's nonce is strictly greater than proposal's nonce and its current
+        // disqualification nonce
+        require(nonce > driipSettlementChallengeState.proposalNonce(
             wallet, currency
         ));
-        require(trade.blockNumber >= driipSettlementChallengeState.proposalDisqualificationBlockNumber(
+        require(nonce > driipSettlementChallengeState.proposalDisqualificationNonce(
             wallet, currency
         ));
 
@@ -246,7 +247,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
             wallet, currency, challenger, trade.blockNumber,
-            trade.seal.hash, TradeTypesLib.TRADE_TYPE()
+            nonce, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
 
         // Emit event
@@ -305,6 +306,19 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         return validator.isTradeBuyer(trade, wallet) ?
         trade.currencies.conjugate :
         trade.currencies.intended;
+    }
+
+    // Get the candidate trade nonce
+    // Wallet is buyer in (candidate) trade -> Buyer's nonce
+    // Wallet is seller in (candidate) trade -> Seller's nonce
+    function _tradeNonce(TradeTypesLib.Trade trade, address wallet)
+    private
+    view
+    returns (uint256)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        trade.buyer.nonce :
+        trade.seller.nonce;
     }
 
     // Get the candidate trade transfer amount

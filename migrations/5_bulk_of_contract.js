@@ -55,7 +55,6 @@ const MockedDriipSettlementDisputeByTrade = artifacts.require('MockedDriipSettle
 const MockedValidator = artifacts.require('MockedValidator');
 const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
-const NonceManager = artifacts.require('NonceManager');
 const NonFungibleBalanceLib = artifacts.require('NonFungibleBalanceLib');
 const NullSettlement = artifacts.require('NullSettlement');
 const NullSettlementChallengeByPayment = artifacts.require('NullSettlementChallengeByPayment');
@@ -491,7 +490,6 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfTrades', '', FraudChallengeByDuplicateDriipNonceOfTrades);
             await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfPayments', '', FraudChallengeByDuplicateDriipNonceOfPayments);
             await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfTradeAndPayment', '', FraudChallengeByDuplicateDriipNonceOfTradeAndPayment);
-            await execDeploy(ctl, 'NonceManager', 'SettlementNonceManager', NonceManager);
             await execDeploy(ctl, 'NullSettlement', '', NullSettlement);
             await execDeploy(ctl, 'NullSettlementChallengeByPayment', '', NullSettlementChallengeByPayment);
             await execDeploy(ctl, 'NullSettlementChallengeByTrade', '', NullSettlementChallengeByTrade);
@@ -556,7 +554,6 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await DriipSettlementChallengeState.at(addressStorage.get('DriipSettlementChallengeState'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
-            await instance.setNonceManager(addressStorage.get('SettlementNonceManager'));
             await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), 'add_proposal');
             await instance.registerService(addressStorage.get('DriipSettlementChallengeByTrade'));
@@ -642,15 +639,8 @@ module.exports = (deployer, network, accounts) => {
             await instance.setRevenueFund(addressStorage.get('TradesRevenueFund'));
             await instance.setPartnerFund(addressStorage.get('PartnerFund'));
 
-            instance = await NonceManager.at(addressStorage.get('SettlementNonceManager'));
-            await instance.registerService(addressStorage.get('DriipSettlementChallengeState'));
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeState'), 'increment_nonce');
-            await instance.registerService(addressStorage.get('NullSettlementChallengeState'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeState'), 'increment_nonce');
-
             instance = await NullSettlementChallengeState.at(addressStorage.get('NullSettlementChallengeState'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
-            await instance.setNonceManager(addressStorage.get('SettlementNonceManager'));
             await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             await instance.registerService(addressStorage.get('NullSettlementChallengeByPayment'));
             await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), 'add_proposal');
@@ -667,6 +657,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             await instance.setNullSettlementDisputeByPayment(addressStorage.get('NullSettlementDisputeByPayment'));
             await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+            await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
 
             instance = await NullSettlementChallengeByTrade.at(addressStorage.get('NullSettlementChallengeByTrade'));
             await instance.setConfiguration(addressStorage.get('Configuration'));

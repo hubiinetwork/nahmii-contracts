@@ -54,6 +54,7 @@ library SettlementChallengeTypesLib {
     struct Disqualification {
         // Challenger
         address challenger;
+        uint256 nonce;
         uint256 blockNumber;
 
         // Candidate info

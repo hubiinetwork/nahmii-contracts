@@ -7,7 +7,6 @@ const {Wallet, Contract, utils} = require('ethers');
 const {sleep} = require('../../scripts/common/helpers');
 const mocks = require('../mocks');
 const DriipSettlementChallengeState = artifacts.require('DriipSettlementChallengeState');
-const NonceManager = artifacts.require('NonceManager');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 
 chai.use(sinonChai);
@@ -19,7 +18,6 @@ module.exports = (glob) => {
     describe('DriipSettlementChallengeState', () => {
         let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
         let web3Configuration, ethersConfiguration;
-        let web3NonceManager, ethersNonceManager;
         let provider;
 
         before(async () => {
@@ -27,9 +25,6 @@ module.exports = (glob) => {
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-
-            web3NonceManager = await NonceManager.new(glob.owner);
-            ethersNonceManager = new Contract(web3NonceManager.address, NonceManager.abi, glob.signer_owner);
         });
 
         beforeEach(async () => {
@@ -37,10 +32,6 @@ module.exports = (glob) => {
             ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, DriipSettlementChallengeState.abi, glob.signer_owner);
 
             await ethersDriipSettlementChallengeState.setConfiguration(ethersConfiguration.address);
-            await ethersDriipSettlementChallengeState.setNonceManager(ethersNonceManager.address);
-
-            await web3NonceManager.registerService(web3DriipSettlementChallengeState.address);
-            await web3NonceManager.enableServiceAction(web3DriipSettlementChallengeState.address, await web3NonceManager.INCREMENT_NONCE_ACTION.call());
 
             await ethersConfiguration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 1e4);
         });
@@ -86,40 +77,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('nonceManager()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersDriipSettlementChallengeState.nonceManager())
-                    .should.equal(utils.getAddress(ethersNonceManager.address));
-            });
-        });
-
-        describe('setNonceManager()', () => {
-            let address;
-
-            before(() => {
-                address = Wallet.createRandom().address;
-            });
-
-            describe('if called by non-deployer', () => {
-                it('should revert', async () => {
-                    web3DriipSettlementChallengeState.setNonceManager(address, {from: glob.user_a})
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called by deployer', () => {
-                it('should set new value and emit event', async () => {
-                    const result = await web3DriipSettlementChallengeState.setNonceManager(address);
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetNonceManagerEvent');
-
-                    (await ethersDriipSettlementChallengeState.nonceManager())
-                        .should.equal(address);
-                });
-            });
-        });
-
         describe('proposals()', () => {
             it('should return default values', async () => {
                 ethersDriipSettlementChallengeState.proposals(0)
@@ -146,7 +103,7 @@ module.exports = (glob) => {
             describe('if not enabled service action', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -169,7 +126,7 @@ module.exports = (glob) => {
 
                 it('successfully add proposal', async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
 
@@ -202,14 +159,14 @@ module.exports = (glob) => {
                     );
 
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -228,7 +185,7 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.disqualifyProposal(
                         glob.user_a, {ct: mocks.address0, id: 0}, glob.user_b,
-                        30, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
+                        30, 2, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
             });
@@ -243,7 +200,7 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.disqualifyProposal(
                         glob.user_a, {ct: mocks.address0, id: 0}, glob.user_b,
-                        30, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
+                        30, 2, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
             });
@@ -257,7 +214,7 @@ module.exports = (glob) => {
                     );
 
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
 
@@ -272,7 +229,7 @@ module.exports = (glob) => {
                 it('successfully disqualify proposal', async () => {
                     await ethersDriipSettlementChallengeState.disqualifyProposal(
                         glob.user_a, {ct: mocks.address0, id: 0}, glob.user_b,
-                        30, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
+                        30, 2, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
                     );
 
                     const logs = await provider.getLogs(filter);
@@ -285,6 +242,7 @@ module.exports = (glob) => {
                     proposal.expirationTime._bn.should.eq.BN(utils.bigNumberify(1e4).add(block.timestamp)._bn);
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_b));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(30);
+                    proposal.disqualification.nonce._bn.should.eq.BN(2);
                     proposal.disqualification.candidateHash.should.equal(mocks.hash2);
                     proposal.disqualification.candidateType.should.equal('some_candidate_type');
                 });
@@ -333,13 +291,13 @@ module.exports = (glob) => {
                     );
 
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
 
                     await ethersDriipSettlementChallengeState.disqualifyProposal(
                         glob.user_a, {ct: mocks.address0, id: 0}, glob.user_b,
-                        30, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
+                        30, 2, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
                     );
 
                     await sleep(1500);
@@ -393,7 +351,7 @@ module.exports = (glob) => {
                     await web3Configuration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 0);
 
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -409,7 +367,7 @@ module.exports = (glob) => {
             describe('if settlement challenge is ongoing for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -443,7 +401,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -452,7 +410,7 @@ module.exports = (glob) => {
                     (await ethersDriipSettlementChallengeState.proposalNonce(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
-                    }))._bn.should.eq.BN((await ethersNonceManager.nonce())._bn);
+                    }))._bn.should.eq.BN(1);
                 });
             });
         });
@@ -477,7 +435,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -513,7 +471,7 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
 
@@ -549,7 +507,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -583,7 +541,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -617,7 +575,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -651,7 +609,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -685,7 +643,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -719,7 +677,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -756,7 +714,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
@@ -772,13 +730,13 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
 
                     await ethersDriipSettlementChallengeState.disqualifyProposal(
                         glob.user_a, {ct: mocks.address0, id: 0}, glob.user_b,
-                        30, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
+                        30, 2, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
                     );
                 });
 
@@ -787,6 +745,64 @@ module.exports = (glob) => {
                         ct: mocks.address0,
                         id: 0
                     })).should.equal(utils.getAddress(glob.user_b));
+                });
+            });
+        });
+
+        describe('proposalDisqualificationNonce()', () => {
+            beforeEach(async () => {
+                await ethersDriipSettlementChallengeState.registerService(glob.owner);
+                await ethersDriipSettlementChallengeState.enableServiceAction(
+                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                );
+                await ethersDriipSettlementChallengeState.enableServiceAction(
+                    glob.owner, await ethersDriipSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                );
+            });
+
+            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeState.proposalDisqualificationNonce(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    }).should.be.rejected;
+                });
+            });
+
+            describe('if settlement challenge proposal has not been disqualified', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.addProposal(
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
+                    );
+                });
+
+                it('should successfully return default proposal disqualification block number', async () => {
+                    (await ethersDriipSettlementChallengeState.proposalDisqualificationNonce(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    }))._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('if settlement challenge proposal has been disqualified', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.addProposal(
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState.disqualifyProposal(
+                        glob.user_a, {ct: mocks.address0, id: 0}, glob.user_b,
+                        30, 2, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
+                    );
+                });
+
+                it('should successfully return set proposal disqualification nonce', async () => {
+                    (await ethersDriipSettlementChallengeState.proposalDisqualificationNonce(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    }))._bn.should.eq.BN(2);
                 });
             });
         });
@@ -814,12 +830,12 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
 
-                it('should successfully return proposal disqualification challenger', async () => {
+                it('should successfully return default proposal disqualification block number', async () => {
                     (await ethersDriipSettlementChallengeState.proposalDisqualificationBlockNumber(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
@@ -830,17 +846,17 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
 
                     await ethersDriipSettlementChallengeState.disqualifyProposal(
                         glob.user_a, {ct: mocks.address0, id: 0}, glob.user_b,
-                        30, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
+                        30, 2, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
                     );
                 });
 
-                it('should successfully return proposal disqualification block number', async () => {
+                it('should successfully return set proposal disqualification block number', async () => {
                     (await ethersDriipSettlementChallengeState.proposalDisqualificationBlockNumber(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
@@ -872,12 +888,12 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
 
-                it('should successfully return proposal disqualification challenger', async () => {
+                it('should successfully return default proposal disqualification candidate hash', async () => {
                     (await ethersDriipSettlementChallengeState.proposalDisqualificationCandidateHash(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
@@ -888,17 +904,17 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
 
                     await ethersDriipSettlementChallengeState.disqualifyProposal(
                         glob.user_a, {ct: mocks.address0, id: 0}, glob.user_b,
-                        30, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
+                        30, 2, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
                     );
                 });
 
-                it('should successfully return proposal disqualification candidate hash', async () => {
+                it('should successfully return set proposal disqualification candidate hash', async () => {
                     (await ethersDriipSettlementChallengeState.proposalDisqualificationCandidateHash(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
@@ -930,12 +946,12 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
                 });
 
-                it('should successfully return proposal disqualification challenger', async () => {
+                it('should successfully return default proposal disqualification candidate type', async () => {
                     (await ethersDriipSettlementChallengeState.proposalDisqualificationCandidateType(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
@@ -946,17 +962,17 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
                     );
 
                     await ethersDriipSettlementChallengeState.disqualifyProposal(
                         glob.user_a, {ct: mocks.address0, id: 0}, glob.user_b,
-                        30, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
+                        30, 2, mocks.hash2, 'some_candidate_type', {gasLimit: 1e6}
                     );
                 });
 
-                it('should successfully return proposal disqualification candidate type', async () => {
+                it('should successfully return set proposal disqualification candidate type', async () => {
                     (await ethersDriipSettlementChallengeState.proposalDisqualificationCandidateType(glob.user_a, {
                         ct: mocks.address0,
                         id: 0

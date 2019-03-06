@@ -374,7 +374,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on payment whose block number is less than the proposal block number', () => {
+            describe('if called on payment whose nonce is less than the proposal nonce', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
                     await ethersNullSettlementDisputeByPayment.enableServiceAction(
@@ -382,8 +382,8 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await ethersNullSettlementChallengeState._setProposalBlockNumber(
-                        payment.blockNumber.add(10)
+                    await ethersNullSettlementChallengeState._setProposalNonce(
+                        payment.sender.nonce.add(10)
                     );
                 });
 
@@ -394,7 +394,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on payment whose block number is less than the proposal disqualification block number', () => {
+            describe('if called on payment whose nonce is less than the proposal disqualification nonce', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
                     await ethersNullSettlementDisputeByPayment.enableServiceAction(
@@ -402,8 +402,8 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await ethersNullSettlementChallengeState._setProposalDisqualificationBlockNumber(
-                        payment.blockNumber.add(10)
+                    await ethersNullSettlementChallengeState._setProposalDisqualificationNonce(
+                        payment.sender.nonce.add(10)
                     );
                 });
 
@@ -460,6 +460,7 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                     proposal.disqualification.candidateHash.should.equal(payment.seals.operator.hash);
                     proposal.disqualification.candidateType.should.equal('payment');
 
@@ -516,6 +517,7 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                     proposal.disqualification.candidateHash.should.equal(payment.seals.operator.hash);
                     proposal.disqualification.candidateType.should.equal('payment');
 
@@ -572,6 +574,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(payment.seals.operator.hash);
                         proposal.disqualification.candidateType.should.equal('payment');
 
@@ -622,6 +625,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(payment.seals.operator.hash);
                         proposal.disqualification.candidateType.should.equal('payment');
 
@@ -689,6 +693,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(payment.seals.operator.hash);
                         proposal.disqualification.candidateType.should.equal('payment');
 
@@ -742,6 +747,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(payment.seals.operator.hash);
                         proposal.disqualification.candidateType.should.equal('payment');
 

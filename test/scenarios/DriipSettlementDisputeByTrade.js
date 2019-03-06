@@ -415,7 +415,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on order whose block number is less than the proposal block number', () => {
+            describe('if called with order whose nonce is less than the proposal nonce', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
                     await ethersDriipSettlementDisputeByTrade.enableServiceAction(
@@ -423,8 +423,8 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalBlockNumber(
-                        order.blockNumber.add(10)
+                    await ethersDriipSettlementChallengeState._setProposalNonce(
+                        order.nonce.add(10)
                     );
                 });
 
@@ -435,7 +435,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on order whose block number is less than the proposal disqualification block number', () => {
+            describe('if called with order whose nonce is less than the proposal disqualification nonce', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
                     await ethersDriipSettlementDisputeByTrade.enableServiceAction(
@@ -443,8 +443,8 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalDisqualificationBlockNumber(
-                        order.blockNumber.add(10)
+                    await ethersDriipSettlementChallengeState._setProposalDisqualificationNonce(
+                        order.nonce.add(10)
                     );
                 });
 
@@ -455,7 +455,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on order whose amount is less than the proposal target balance amount', () => {
+            describe('if called with order whose amount is less than the proposal target balance amount', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
                     await ethersDriipSettlementDisputeByTrade.enableServiceAction(
@@ -501,6 +501,7 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
+                    proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
                     proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
                     proposal.disqualification.candidateType.should.equal('order');
 
@@ -557,6 +558,7 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
+                    proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
                     proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
                     proposal.disqualification.candidateType.should.equal('order');
 
@@ -614,6 +616,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
                         proposal.disqualification.candidateType.should.equal('order');
 
@@ -665,6 +668,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
                         proposal.disqualification.candidateType.should.equal('order');
 
@@ -733,6 +737,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
                         proposal.disqualification.candidateType.should.equal('order');
 
@@ -787,6 +792,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
                         proposal.disqualification.candidateType.should.equal('order');
 
@@ -1346,7 +1352,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on trade whose block number is less than the proposal block number', () => {
+            describe('if called with trade whose nonce is less than the proposal nonce', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
                     await ethersDriipSettlementDisputeByTrade.enableServiceAction(
@@ -1354,8 +1360,8 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalBlockNumber(
-                        trade.blockNumber.add(10)
+                    await ethersDriipSettlementChallengeState._setProposalNonce(
+                        trade.buyer.nonce.add(10)
                     );
                 });
 
@@ -1366,7 +1372,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on trade whose block number is less than the proposal disqualification block number', () => {
+            describe('if called with trade whose nonce is less than the proposal disqualification nonce', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
                     await ethersDriipSettlementDisputeByTrade.enableServiceAction(
@@ -1374,8 +1380,8 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState._setProposalDisqualificationBlockNumber(
-                        trade.blockNumber.add(10)
+                    await ethersDriipSettlementChallengeState._setProposalDisqualificationNonce(
+                        trade.buyer.nonce.add(10)
                     );
                 });
 
@@ -1386,7 +1392,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on trade whose single transfer amount is less than the proposal target balance amount', () => {
+            describe('if called with trade whose single transfer amount is less than the proposal target balance amount', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
                     await ethersDriipSettlementDisputeByTrade.enableServiceAction(
@@ -1432,6 +1438,7 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
                     proposal.disqualification.candidateType.should.equal('trade');
 
@@ -1488,6 +1495,7 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
                     proposal.disqualification.candidateType.should.equal('trade');
 
@@ -1544,6 +1552,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
                         proposal.disqualification.candidateType.should.equal('trade');
 
@@ -1594,6 +1603,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
                         proposal.disqualification.candidateType.should.equal('trade');
 
@@ -1661,6 +1671,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
                         proposal.disqualification.candidateType.should.equal('trade');
 
@@ -1714,6 +1725,7 @@ module.exports = (glob) => {
                         proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                        proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                         proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
                         proposal.disqualification.candidateType.should.equal('trade');
 

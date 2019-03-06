@@ -47,8 +47,8 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     //    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
     //        NullSettlementChallengeState newNullSettlementChallengeState);
-    event StartChallengeFromPaymentEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
-    event StartChallengeFromPaymentByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
+    event StartChallengeEvent(address wallet, bytes32 paymentHash, int256 stageAmount);
+    event StartChallengeByProxyEvent(address proxy, address wallet, bytes32 paymentHash,
         int256 stageAmount);
 
     //
@@ -109,7 +109,7 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         _startChallengeFromPayment(msg.sender, payment, stageAmount, true);
 
         // Emit event
-        emit StartChallengeFromPaymentEvent(msg.sender, payment.seals.operator.hash, stageAmount);
+        emit StartChallengeEvent(msg.sender, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Start settlement challenge on payment
@@ -124,7 +124,7 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         _startChallengeFromPayment(wallet, payment, stageAmount, false);
 
         // Emit event
-        emit StartChallengeFromPaymentByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
+        emit StartChallengeByProxyEvent(msg.sender, wallet, payment.seals.operator.hash, stageAmount);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
@@ -365,22 +365,22 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         //        require(nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
         // Deduce the concerned balance amount
-        int256 balanceAmount = _paymentBalanceAmount(payment, wallet);
+        (uint256 nonce, int256 balanceAmount) = _paymentPartyProperties(payment, wallet);
 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
-            wallet, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.blockNumber,
+            wallet, nonce, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.blockNumber,
             balanceReward, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
     }
 
-    function _paymentBalanceAmount(PaymentTypesLib.Payment payment, address wallet)
+    function _paymentPartyProperties(PaymentTypesLib.Payment payment, address wallet)
     private
     view
-    returns (int256)
+    returns (uint256, int256)
     {
         return validator.isPaymentSender(payment, wallet) ?
-        payment.sender.balances.current :
-        payment.recipient.balances.current;
+        (payment.sender.nonce, payment.sender.balances.current) :
+    (payment.recipient.nonce, payment.recipient.balances.current);
     }
 }

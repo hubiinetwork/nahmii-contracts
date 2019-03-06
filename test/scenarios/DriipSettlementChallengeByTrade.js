@@ -270,7 +270,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeEvent'].topics
+                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeEvent'].topics
                     };
                 });
 
@@ -290,6 +290,7 @@ module.exports = (glob) => {
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
                     intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
                     intendedProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    intendedProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     intendedProposal.balanceReward.should.be.true;
                     intendedProposal.challengedHash.should.equal(trade.seal.hash);
                     intendedProposal.challengedType.should.equal('trade');
@@ -301,6 +302,7 @@ module.exports = (glob) => {
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
                     conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                     conjugateProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    conjugateProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     conjugateProposal.balanceReward.should.be.true;
                     conjugateProposal.challengedHash.should.equal(trade.seal.hash);
                     conjugateProposal.challengedType.should.equal('trade');
@@ -364,7 +366,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeByProxyEvent'].topics
+                        topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeByProxyEvent'].topics
                     };
                 });
 
@@ -384,6 +386,7 @@ module.exports = (glob) => {
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
                     intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
                     intendedProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    intendedProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     intendedProposal.balanceReward.should.be.false;
                     intendedProposal.challengedHash.should.equal(trade.seal.hash);
                     intendedProposal.challengedType.should.equal('trade');
@@ -395,6 +398,7 @@ module.exports = (glob) => {
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
                     conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                     conjugateProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    conjugateProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     conjugateProposal.balanceReward.should.be.false;
                     conjugateProposal.challengedHash.should.equal(trade.seal.hash);
                     conjugateProposal.challengedType.should.equal('trade');

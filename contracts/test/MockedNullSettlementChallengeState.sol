@@ -29,13 +29,14 @@ contract MockedNullSettlementChallengeState {
         delete _proposalExpired;
     }
 
-    function addProposal(address wallet, int256 stageAmount, int256 targetBalanceAmount,
+    function addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool balanceReward)
     public
     {
         uint256 index = _proposals.length++;
 
         _proposals[index].wallet = wallet;
+        _proposals[index].nonce = nonce;
         _proposals[index].stageAmount = stageAmount;
         _proposals[index].targetBalanceAmount = targetBalanceAmount;
         _proposals[index].currency = currency;
@@ -43,17 +44,18 @@ contract MockedNullSettlementChallengeState {
         _proposals[index].balanceReward = balanceReward;
     }
 
-    function disqualifyProposal(address wallet, MonetaryTypesLib.Currency currency, address challengerWallet,
-        uint256 blockNumber, bytes32 candidateHash, string candidateType)
+    function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
+        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string candidateType)
     public
     {
         uint256 index = _addProposalIfNone();
 
-        _proposals[index].wallet = wallet;
+        _proposals[index].wallet = challengedWallet;
         _proposals[index].currency = currency;
         _proposals[index].status = SettlementChallengeTypesLib.Status.Disqualified;
         _proposals[index].disqualification.challenger = challengerWallet;
         _proposals[index].disqualification.blockNumber = blockNumber;
+        _proposals[index].disqualification.nonce = candidateNonce;
         _proposals[index].disqualification.candidateHash = candidateHash;
         _proposals[index].disqualification.candidateType = candidateType;
     }
@@ -190,6 +192,21 @@ contract MockedNullSettlementChallengeState {
     {
         uint256 index = _addProposalIfNone();
         _proposals[index].disqualification.challenger = _proposalDisqualificationChallenger;
+    }
+
+    function proposalDisqualificationNonce(address, MonetaryTypesLib.Currency)
+    public
+    view
+    returns (uint256)
+    {
+        return _proposals[_proposals.length - 1].disqualification.nonce;
+    }
+
+    function _setProposalDisqualificationNonce(uint256 _proposalDisqualificationNonce)
+    public
+    {
+        uint256 index = _addProposalIfNone();
+        _proposals[index].disqualification.nonce = _proposalDisqualificationNonce;
     }
 
     function proposalDisqualificationBlockNumber(address, MonetaryTypesLib.Currency)

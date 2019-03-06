@@ -340,14 +340,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe.skip('partnerFund()', () => {
+        describe('partnerFund()', () => {
             it('should equal value initialized', async () => {
                 (await ethersDriipSettlementByTrade.partnerFund())
-                    .should.equal(utils.getAddress(ethersPartnerFund.address));
+                    .should.equal(mocks.address0);
             });
         });
 
-        describe.skip('setPartnerFund()', () => {
+        describe('setPartnerFund()', () => {
             let address;
 
             before(() => {
