@@ -56,13 +56,13 @@ SecurityBondable, WalletLockable {
         (bool genuineSenderAndFee, bool genuineRecipient) =
         validator.isPaymentCurrencyNonFungible(payment) ?
         (
-            validator.isGenuinePaymentSenderOfNonFungible(payment) && validator.isGenuinePaymentFeeOfNonFungible(payment),
-            validator.isGenuinePaymentRecipientOfNonFungible(payment)
+        validator.isGenuinePaymentSenderOfNonFungible(payment) && validator.isGenuinePaymentFeeOfNonFungible(payment),
+        validator.isGenuinePaymentRecipientOfNonFungible(payment)
         ) :
         (
-            validator.isGenuinePaymentSenderOfFungible(payment) && validator.isGenuinePaymentFeeOfFungible(payment),
-            validator.isGenuinePaymentRecipientOfFungible(payment)
-        );
+        validator.isGenuinePaymentSenderOfFungible(payment) && validator.isGenuinePaymentFeeOfFungible(payment),
+    validator.isGenuinePaymentRecipientOfFungible(payment)
+    );
 
         // Require existence of fraud signal
         require(!(genuineWalletSignature && genuineSenderAndFee && genuineRecipient));
@@ -79,13 +79,15 @@ SecurityBondable, WalletLockable {
         // Lock amount of size equivalent to payment amount of sender
         if (!genuineSenderAndFee)
             walletLocker.lockFungibleByProxy(
-                payment.sender.wallet, msg.sender, payment.sender.balances.current, payment.currency.ct, payment.currency.id
+                payment.sender.wallet, msg.sender, payment.sender.balances.current,
+                payment.currency.ct, payment.currency.id, 0
             );
 
         // Lock amount of size equivalent to payment amount of recipient
         if (!genuineRecipient)
             walletLocker.lockFungibleByProxy(
-                payment.recipient.wallet, msg.sender, payment.recipient.balances.current, payment.currency.ct, payment.currency.id
+                payment.recipient.wallet, msg.sender, payment.recipient.balances.current,
+                payment.currency.ct, payment.currency.id, 0
             );
 
         // Emit event

@@ -366,6 +366,7 @@ module.exports = (glob) => {
                     intendedLock.amount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedLock.currencyCt.should.equal(trade.currencies.intended.ct);
                     intendedLock.currencyId._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                    intendedLock.visibleTimeout._bn.should.eq.BN(0);
 
                     const conjugateLock = await ethersWalletLocker.fungibleLocks(1);
                     conjugateLock.lockedWallet.should.equal(trade.buyer.wallet);
@@ -373,6 +374,7 @@ module.exports = (glob) => {
                     conjugateLock.amount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateLock.currencyCt.should.equal(trade.currencies.conjugate.ct);
                     conjugateLock.currencyId._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                    conjugateLock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
@@ -400,6 +402,7 @@ module.exports = (glob) => {
                     intendedLock.amount._bn.should.eq.BN(trade.seller.balances.intended.current._bn);
                     intendedLock.currencyCt.should.equal(trade.currencies.intended.ct);
                     intendedLock.currencyId._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                    intendedLock.visibleTimeout._bn.should.eq.BN(0);
 
                     const conjugateLock = await ethersWalletLocker.fungibleLocks(1);
                     conjugateLock.lockedWallet.should.equal(trade.seller.wallet);
@@ -407,6 +410,7 @@ module.exports = (glob) => {
                     conjugateLock.amount._bn.should.eq.BN(trade.seller.balances.conjugate.current._bn);
                     conjugateLock.currencyCt.should.equal(trade.currencies.conjugate.ct);
                     conjugateLock.currencyId._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                    conjugateLock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
@@ -431,6 +435,7 @@ module.exports = (glob) => {
                     intendedLock.amount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedLock.currencyCt.should.equal(trade.currencies.intended.ct);
                     intendedLock.currencyId._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                    intendedLock.visibleTimeout._bn.should.eq.BN(0);
 
                     const conjugateLock = await ethersWalletLocker.fungibleLocks(1);
                     conjugateLock.lockedWallet.should.equal(trade.buyer.wallet);
@@ -438,6 +443,7 @@ module.exports = (glob) => {
                     conjugateLock.amount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateLock.currencyCt.should.equal(trade.currencies.conjugate.ct);
                     conjugateLock.currencyId._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                    conjugateLock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
@@ -462,6 +468,7 @@ module.exports = (glob) => {
                     intendedLock.amount._bn.should.eq.BN(trade.seller.balances.intended.current._bn);
                     intendedLock.currencyCt.should.equal(trade.currencies.intended.ct);
                     intendedLock.currencyId._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                    intendedLock.visibleTimeout._bn.should.eq.BN(0);
 
                     const conjugateLock = await ethersWalletLocker.fungibleLocks(1);
                     conjugateLock.lockedWallet.should.equal(trade.seller.wallet);
@@ -469,6 +476,7 @@ module.exports = (glob) => {
                     conjugateLock.amount._bn.should.eq.BN(trade.seller.balances.conjugate.current._bn);
                     conjugateLock.currencyCt.should.equal(trade.currencies.conjugate.ct);
                     conjugateLock.currencyId._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                    conjugateLock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });

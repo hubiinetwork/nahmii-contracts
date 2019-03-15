@@ -48,6 +48,7 @@ module.exports = (glob) => {
 
             await web3Configuration.setOperatorSettlementStakeFraction(web3.eth.blockNumber + 1, 5e17);
             await web3Configuration.setOperatorSettlementStake(web3.eth.blockNumber + 1, 1e16, mocks.address0, 0);
+            await web3Configuration.setSettlementChallengeTimeout(web3.eth.blockNumber + 1, 1000);
         });
 
         beforeEach(async () => {
@@ -476,6 +477,7 @@ module.exports = (glob) => {
                     lock.amount._bn.should.eq.BN(payment.sender.balances.current._bn);
                     lock.currencyCt.should.equal(payment.currency.ct);
                     lock.currencyId._bn.should.eq.BN(payment.currency.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(1000);
 
                     (await ethersSecurityBond._absoluteDeprivalsCount())
                         ._bn.should.eq.BN(0);
@@ -537,6 +539,7 @@ module.exports = (glob) => {
                     lock.amount._bn.should.eq.BN(payment.sender.balances.current._bn);
                     lock.currencyCt.should.equal(payment.currency.ct);
                     lock.currencyId._bn.should.eq.BN(payment.currency.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(1000);
 
                     (await ethersSecurityBond._absoluteDeprivalsCount())
                         ._bn.should.eq.BN(0);

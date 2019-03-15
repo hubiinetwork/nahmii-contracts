@@ -72,20 +72,24 @@ SecurityBondable, WalletLockable {
         // Lock amount of size equivalent to trade intended and conjugate amounts of buyer
         if (!genuineBuyerAndFee) {
             walletLocker.lockFungibleByProxy(
-                trade.buyer.wallet, msg.sender, trade.buyer.balances.intended.current, trade.currencies.intended.ct, trade.currencies.intended.id
+                trade.buyer.wallet, msg.sender, trade.buyer.balances.intended.current,
+                trade.currencies.intended.ct, trade.currencies.intended.id, 0
             );
             walletLocker.lockFungibleByProxy(
-                trade.buyer.wallet, msg.sender, trade.buyer.balances.conjugate.current, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                trade.buyer.wallet, msg.sender, trade.buyer.balances.conjugate.current,
+                trade.currencies.conjugate.ct, trade.currencies.conjugate.id, 0
             );
         }
 
         // Lock amount of size equivalent to trade intended and conjugate amounts of seller
         if (!genuineSellerAndFee) {
             walletLocker.lockFungibleByProxy(
-                trade.seller.wallet, msg.sender, trade.seller.balances.intended.current, trade.currencies.intended.ct, trade.currencies.intended.id
+                trade.seller.wallet, msg.sender, trade.seller.balances.intended.current,
+                trade.currencies.intended.ct, trade.currencies.intended.id, 0
             );
             walletLocker.lockFungibleByProxy(
-                trade.seller.wallet, msg.sender, trade.seller.balances.conjugate.current, trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                trade.seller.wallet, msg.sender, trade.seller.balances.conjugate.current,
+                trade.currencies.conjugate.ct, trade.currencies.conjugate.id, 0
             );
         }
 

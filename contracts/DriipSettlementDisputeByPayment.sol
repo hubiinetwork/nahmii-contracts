@@ -101,7 +101,7 @@ FraudChallengable, Servable {
         ));
 
         // Reward challenger
-        _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger, 0);
+        _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger);
 
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
@@ -120,14 +120,14 @@ FraudChallengable, Servable {
     // -----------------------------------------------------------------------------------------------------------------
     // Lock wallet's balances or reward challenger by stake fraction
     function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
-        address challenger, uint256 unlockTimeoutInSeconds)
+        address challenger)
     private
     {
         if (driipSettlementChallengeState.proposalWalletInitiated(wallet, currency))
             _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else
-            _settleSecurityBondReward(wallet, walletAmount, currency, challenger, unlockTimeoutInSeconds);
+            _settleSecurityBondReward(wallet, walletAmount, currency, challenger);
     }
 
     function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
@@ -147,7 +147,9 @@ FraudChallengable, Servable {
             );
 
         // Lock wallet for new challenger
-        walletLocker.lockFungibleByProxy(wallet, challenger, walletAmount, currency.ct, currency.id);
+        walletLocker.lockFungibleByProxy(
+            wallet, challenger, walletAmount, currency.ct, currency.id, configuration.settlementChallengeTimeout()
+        );
     }
 
     // Settle the two-component reward from security bond.
@@ -156,7 +158,7 @@ FraudChallengable, Servable {
     //    min(walletAmount, fraction of SecurityBond's deposited balance)
     // both amounts for the given currency
     function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
-        address challenger, uint256 unlockTimeoutInSeconds)
+        address challenger)
     private
     {
         // Deprive existing challenger of reward if previously locked
@@ -173,15 +175,17 @@ FraudChallengable, Servable {
         // Reward the flat component
         MonetaryTypesLib.Figure memory flatReward = _flatReward();
         securityBond.rewardAbsolute(
-            challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, unlockTimeoutInSeconds
+            challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, 0
         );
 
         // Reward the progressive component
         int256 progressiveRewardAmount = walletAmount.clampMax(
-            securityBond.depositedFractionalBalance(currency.ct, currency.id, configuration.operatorSettlementStakeFraction())
+            securityBond.depositedFractionalBalance(
+                currency.ct, currency.id, configuration.operatorSettlementStakeFraction()
+            )
         );
         securityBond.rewardAbsolute(
-            challenger, progressiveRewardAmount, currency.ct, currency.id, unlockTimeoutInSeconds
+            challenger, progressiveRewardAmount, currency.ct, currency.id, 0
         );
     }
 

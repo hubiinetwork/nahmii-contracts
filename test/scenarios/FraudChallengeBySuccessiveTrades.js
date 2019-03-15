@@ -484,6 +484,7 @@ module.exports = (glob) => {
                     lock.amount._bn.should.eq.BN(lastTrade.buyer.balances.intended.current._bn);
                     lock.currencyCt.should.equal(lastTrade.currencies.intended.ct);
                     lock.currencyId._bn.should.eq.BN(lastTrade.currencies.intended.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
@@ -510,6 +511,7 @@ module.exports = (glob) => {
                     lock.amount._bn.should.eq.BN(lastTrade.buyer.balances.intended.current._bn);
                     lock.currencyCt.should.equal(lastTrade.currencies.intended.ct);
                     lock.currencyId._bn.should.eq.BN(lastTrade.currencies.intended.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });

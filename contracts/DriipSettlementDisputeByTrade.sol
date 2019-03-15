@@ -376,7 +376,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
             );
 
         // Lock wallet for new challenger
-        walletLocker.lockFungibleByProxy(wallet, challenger, walletAmount, currency.ct, currency.id);
+        walletLocker.lockFungibleByProxy(
+            wallet, challenger, walletAmount, currency.ct, currency.id, configuration.settlementChallengeTimeout()
+        );
     }
 
     // Settle the two-component reward from security bond.
@@ -407,7 +409,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
 
         // Reward the progressive component
         int256 progressiveRewardAmount = walletAmount.clampMax(
-            securityBond.depositedFractionalBalance(currency.ct, currency.id, configuration.operatorSettlementStakeFraction())
+            securityBond.depositedFractionalBalance(
+                currency.ct, currency.id, configuration.operatorSettlementStakeFraction()
+            )
         );
         securityBond.rewardAbsolute(
             challenger, progressiveRewardAmount, currency.ct, currency.id, unlockTimeoutInSeconds

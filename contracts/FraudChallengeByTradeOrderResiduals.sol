@@ -88,12 +88,12 @@ SecurityBondable, WalletLockable {
         walletLocker.lockFungibleByProxy(
             wallet, msg.sender,
             _tradeIntendedLockAmount(lastTrade, lastTradePartyRole),
-            lastTrade.currencies.intended.ct, lastTrade.currencies.intended.id
+            lastTrade.currencies.intended.ct, lastTrade.currencies.intended.id, 0
         );
         walletLocker.lockFungibleByProxy(
             wallet, msg.sender,
             _tradeConjugateLockAmount(lastTrade, lastTradePartyRole),
-            lastTrade.currencies.conjugate.ct, lastTrade.currencies.conjugate.id
+            lastTrade.currencies.conjugate.ct, lastTrade.currencies.conjugate.id, 0
         );
 
         // Emit event

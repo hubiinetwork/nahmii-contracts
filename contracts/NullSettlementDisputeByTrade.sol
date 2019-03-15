@@ -107,7 +107,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
 
         // Reward challenger
         // TODO Need balance as part of order to replace transfer amount (_orderTransferAmount(order)) in call below
-        _settleRewards(order.wallet, _orderTransferAmount(order), currency, challenger, 0);
+        _settleRewards(order.wallet, _orderTransferAmount(order), currency, challenger);
 
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallengeState.disqualifyProposal(
@@ -165,7 +165,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         ));
 
         // Reward challenger
-        _settleRewards(wallet, _tradeBalanceAmount(trade, wallet), currency, challenger, 0);
+        _settleRewards(wallet, _tradeBalanceAmount(trade, wallet), currency, challenger);
 
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallengeState.disqualifyProposal(
@@ -271,14 +271,14 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     }
 
     function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
-        address challenger, uint256 unlockTimeoutInSeconds)
+        address challenger)
     private
     {
         if (nullSettlementChallengeState.proposalWalletInitiated(wallet, currency))
             _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else
-            _settleSecurityBondReward(wallet, walletAmount, currency, challenger, unlockTimeoutInSeconds);
+            _settleSecurityBondReward(wallet, walletAmount, currency, challenger);
     }
 
     function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
@@ -298,7 +298,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
             );
 
         // Lock wallet for new challenger
-        walletLocker.lockFungibleByProxy(wallet, challenger, walletAmount, currency.ct, currency.id);
+        walletLocker.lockFungibleByProxy(
+            wallet, challenger, walletAmount, currency.ct, currency.id, configuration.settlementChallengeTimeout()
+        );
     }
 
     // Settle the two-component reward from security bond.
@@ -307,7 +309,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     //    min(walletAmount, fraction of SecurityBond's deposited balance)
     // both amounts for the given currency
     function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
-        address challenger, uint256 unlockTimeoutInSeconds)
+        address challenger)
     private
     {
         // Deprive existing challenger of reward if previously locked
@@ -324,15 +326,17 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Reward the flat component
         MonetaryTypesLib.Figure memory flatReward = _flatReward();
         securityBond.rewardAbsolute(
-            challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, unlockTimeoutInSeconds
+            challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, 0
         );
 
         // Reward the progressive component
         int256 progressiveRewardAmount = walletAmount.clampMax(
-            securityBond.depositedFractionalBalance(currency.ct, currency.id, configuration.operatorSettlementStakeFraction())
+            securityBond.depositedFractionalBalance(
+                currency.ct, currency.id, configuration.operatorSettlementStakeFraction()
+            )
         );
         securityBond.rewardAbsolute(
-            challenger, progressiveRewardAmount, currency.ct, currency.id, unlockTimeoutInSeconds
+            challenger, progressiveRewardAmount, currency.ct, currency.id, 0
         );
     }
 
