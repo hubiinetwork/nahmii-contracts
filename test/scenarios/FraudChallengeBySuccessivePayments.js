@@ -449,6 +449,7 @@ module.exports = (glob) => {
                     lock.amount._bn.should.eq.BN(lastPayment.sender.balances.current._bn);
                     lock.currencyCt.should.equal(lastPayment.currency.ct);
                     lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter))
                         .should.have.lengthOf(1);
@@ -475,6 +476,7 @@ module.exports = (glob) => {
                     lock.amount._bn.should.eq.BN(lastPayment.recipient.balances.current._bn);
                     lock.currencyCt.should.equal(lastPayment.currency.ct);
                     lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter))
                         .should.have.lengthOf(1);
@@ -501,6 +503,7 @@ module.exports = (glob) => {
                     lock.amount._bn.should.eq.BN(lastPayment.sender.balances.current._bn);
                     lock.currencyCt.should.equal(lastPayment.currency.ct);
                     lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter))
                         .should.have.lengthOf(1);
@@ -527,6 +530,7 @@ module.exports = (glob) => {
                     lock.amount._bn.should.eq.BN(lastPayment.recipient.balances.current._bn);
                     lock.currencyCt.should.equal(lastPayment.currency.ct);
                     lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter))
                         .should.have.lengthOf(1);

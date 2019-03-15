@@ -96,7 +96,7 @@ SecurityBondable, WalletLockable {
         walletLocker.lockFungibleByProxy(
             wallet, msg.sender,
             _tradeLockAmount(trade, tradePartyRole, tradeCurrencyRole),
-            currencyCt, currencyId
+            currencyCt, currencyId, 0
         );
 
         emit ChallengeByTradeSucceedingPaymentEvent(

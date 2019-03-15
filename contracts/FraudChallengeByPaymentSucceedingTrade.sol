@@ -76,8 +76,8 @@ SecurityBondable, WalletLockable {
 
         // Require existence of fraud signal
         require(!(
-            (validator.isGenuineSuccessiveTradePaymentBalances(trade, tradePartyRole, tradeCurrencyRole, payment, paymentPartyRole)) &&
-            (validator.isGenuineSuccessiveTradePaymentTotalFees(trade, tradePartyRole, payment))
+        (validator.isGenuineSuccessiveTradePaymentBalances(trade, tradePartyRole, tradeCurrencyRole, payment, paymentPartyRole)) &&
+        (validator.isGenuineSuccessiveTradePaymentTotalFees(trade, tradePartyRole, payment))
         ));
 
         // Toggle operational mode exit
@@ -93,7 +93,7 @@ SecurityBondable, WalletLockable {
         walletLocker.lockFungibleByProxy(
             wallet, msg.sender,
             _paymentLockAmount(payment, paymentPartyRole),
-            payment.currency.ct, payment.currency.id
+            payment.currency.ct, payment.currency.id, 0
         );
 
         // Emit event

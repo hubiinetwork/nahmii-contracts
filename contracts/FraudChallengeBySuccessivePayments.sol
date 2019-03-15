@@ -84,7 +84,7 @@ SecurityBondable, WalletLockable {
         walletLocker.lockFungibleByProxy(
             wallet, msg.sender,
             PaymentTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances.current : lastPayment.recipient.balances.current,
-            lastPayment.currency.ct, lastPayment.currency.id
+            lastPayment.currency.ct, lastPayment.currency.id, 0
         );
 
         emit ChallengeBySuccessivePaymentsEvent(

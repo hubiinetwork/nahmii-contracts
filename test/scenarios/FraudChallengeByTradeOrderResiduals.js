@@ -545,6 +545,7 @@ module.exports = (glob) => {
                     intendedLock.amount._bn.should.eq.BN(lastTrade.buyer.balances.intended.current._bn);
                     intendedLock.currencyCt.should.equal(lastTrade.currencies.intended.ct);
                     intendedLock.currencyId._bn.should.eq.BN(lastTrade.currencies.intended.id._bn);
+                    intendedLock.visibleTimeout._bn.should.eq.BN(0);
 
                     const conjugateLock = await ethersWalletLocker.fungibleLocks(1);
                     conjugateLock.lockedWallet.should.equal(utils.getAddress(lastTrade.buyer.wallet));
@@ -552,6 +553,7 @@ module.exports = (glob) => {
                     conjugateLock.amount._bn.should.eq.BN(lastTrade.buyer.balances.conjugate.current._bn);
                     conjugateLock.currencyCt.should.equal(lastTrade.currencies.conjugate.ct);
                     conjugateLock.currencyId._bn.should.eq.BN(lastTrade.currencies.conjugate.id._bn);
+                    conjugateLock.visibleTimeout._bn.should.eq.BN(0);
 
                     (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
