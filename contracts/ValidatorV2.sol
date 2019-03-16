@@ -454,12 +454,12 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
 
-    // TODO Update according to implementation in Validator
     function isGenuineSuccessivePaymentsBalances(
         PaymentTypesLib.Payment firstPayment,
         PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole,
         PaymentTypesLib.Payment lastPayment,
-        PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole
+        PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole,
+        int256 delta
     )
     public
     pure
@@ -468,7 +468,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         NahmiiTypesLib.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (PaymentTypesLib.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.balances : firstPayment.recipient.balances);
         NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (PaymentTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances : lastPayment.recipient.balances);
 
-        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
+        return lastCurrentPreviousBalances.previous.add(delta) == firstCurrentPreviousBalances.current;
     }
 
     function isGenuineSuccessiveTradePaymentBalances(

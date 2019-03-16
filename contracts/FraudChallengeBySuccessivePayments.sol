@@ -19,6 +19,8 @@ import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
+import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
  * @title FraudChallengeBySuccessivePayments
@@ -27,6 +29,7 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, ConfigurableOperational, Validatable,
 SecurityBondable, WalletLockable, BalanceTrackable {
     using SafeMathIntLib for int256;
+    using BalanceTrackerLib for BalanceTracker;
 
     //
     // Events
@@ -70,8 +73,9 @@ SecurityBondable, WalletLockable, BalanceTrackable {
 
         require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
-        int256 deltaActiveBalance = _getDeltaActiveBalance(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole, wallet);
-        //        int256 deltaActiveBalance = _getDeltaActiveBalance(wallet, firstPayment.currency, firstPayment.blockNumber, lastPayment.blockNumber);
+        int256 deltaActiveBalance = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
+            wallet, firstPayment.currency, firstPayment.blockNumber, lastPayment.blockNumber
+        );
 
         // Require existence of fraud signal
         require(!(
@@ -103,53 +107,4 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _getDeltaActiveBalance(
-        PaymentTypesLib.Payment firstPayment,
-        PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole,
-        PaymentTypesLib.Payment lastPayment,
-        PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole,
-        address wallet
-    )
-    private
-    view
-    returns (int256) {
-        uint firstBlockNumber = PaymentTypesLib.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.onChainBlockNumber : firstPayment.recipient.onChainBlockNumber;
-        uint lastBlockNumber = PaymentTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.onChainBlockNumber : lastPayment.recipient.onChainBlockNumber;
-
-        return _getActiveBalance(wallet, lastPayment.currency, lastBlockNumber).sub(
-            _getActiveBalance(wallet, firstPayment.currency, firstBlockNumber)
-        );
-    }
-
-    //    function _getDeltaActiveBalance(
-    //        address wallet,
-    //        MonetaryTypesLib.Currency currency,
-    //        uint256 firstBlockNumber,
-    //        uint256 lastBlockNumber
-    //    )
-    //    private
-    //    view
-    //    returns (int256) {
-    //        return _getActiveBalance(wallet, currency, lastBlockNumber).sub(_getActiveBalance(wallet, currency, firstBlockNumber));
-    //    }
-    //
-    function _getActiveBalance(
-        address wallet,
-        MonetaryTypesLib.Currency currency,
-        uint256 blockNumber
-    )
-    private
-    view
-    returns (int256) {
-        // Get log record amount of deposited and settled balances
-        (int256 depositedAmount,) = balanceTracker.fungibleRecordByBlockNumber(
-            wallet, balanceTracker.depositedBalanceType(), currency.ct, currency.id, blockNumber
-        );
-        (int256 settledAmount,) = balanceTracker.fungibleRecordByBlockNumber(
-            wallet, balanceTracker.settledBalanceType(), currency.ct, currency.id, blockNumber
-        );
-
-        // Return the sum of deposited and settled balances
-        return depositedAmount.add(settledAmount);
-    }
 }

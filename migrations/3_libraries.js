@@ -4,6 +4,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
+const BalanceTrackerLib = artifacts.require('BalanceTrackerLib');
 const BlockNumbDisdIntsLib = artifacts.require('BlockNumbDisdIntsLib');
 const BlockNumbFiguresLib = artifacts.require('BlockNumbFiguresLib');
 const BlockNumbIntsLib = artifacts.require('BlockNumbIntsLib');
@@ -11,6 +12,7 @@ const BlockNumbReferenceCurrenciesLib = artifacts.require('BlockNumbReferenceCur
 const BlockNumbUintsLib = artifacts.require('BlockNumbUintsLib');
 const ConstantsLib = artifacts.require('ConstantsLib');
 const CurrenciesLib = artifacts.require('CurrenciesLib');
+const DriipSettlementTypesLib = artifacts.require('DriipSettlementTypesLib');
 const FungibleBalanceLib = artifacts.require('FungibleBalanceLib');
 const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
@@ -19,7 +21,6 @@ const PaymentTypesLib = artifacts.require('PaymentTypesLib');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SettlementChallengeTypesLib = artifacts.require('SettlementChallengeTypesLib');
-const DriipSettlementTypesLib = artifacts.require('DriipSettlementTypesLib');
 const Strings = artifacts.require('Strings');
 const TradeTypesLib = artifacts.require('TradeTypesLib');
 const TxHistoryLib = artifacts.require('TxHistoryLib');
@@ -72,25 +73,29 @@ module.exports = (deployer, network, accounts) => {
                     BlockNumbDisdIntsLib
                 ]);
                 await deployer.link(MonetaryTypesLib, [
+                    BalanceTrackerLib,
                     BlockNumbFiguresLib,
                     BlockNumbReferenceCurrenciesLib,
                     CurrenciesLib,
+                    DriipSettlementTypesLib,
                     NahmiiTypesLib,
                     PaymentTypesLib,
-                    DriipSettlementTypesLib,
                     TradeTypesLib
                 ]);
                 await deployer.link(SafeMathIntLib, [
-                    FungibleBalanceLib,
+                    BalanceTrackerLib,
                     BlockNumbDisdIntsLib,
+                    FungibleBalanceLib,
                     NonFungibleBalanceLib
                 ]);
                 await deployer.link(SafeMathUintLib, [
-                    FungibleBalanceLib,
+                    BalanceTrackerLib,
                     CurrenciesLib,
+                    FungibleBalanceLib,
                     NonFungibleBalanceLib
                 ]);
 
+                await execDeploy(ctl, 'BalanceTrackerLib', '', BalanceTrackerLib);
                 await execDeploy(ctl, 'BlockNumbDisdIntsLib', '', BlockNumbDisdIntsLib);
                 await execDeploy(ctl, 'BlockNumbFiguresLib', '', BlockNumbFiguresLib);
                 await execDeploy(ctl, 'BlockNumbReferenceCurrenciesLib', '', BlockNumbReferenceCurrenciesLib);

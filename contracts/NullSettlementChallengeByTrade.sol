@@ -11,6 +11,7 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {ConfigurableOperational} from "./ConfigurableOperational.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -21,6 +22,7 @@ import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
+import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
  * @title NullSettlementChallengeByTrade
@@ -29,6 +31,7 @@ import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, BalanceTrackable, WalletLockable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using BalanceTrackerLib for BalanceTracker;
 
     //
     // Variables
@@ -369,7 +372,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
         require(block.number >= configuration.earliestSettlementBlockNumber());
 
         // Get the last logged active balance amount and block number
-        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = _activeBalanceLogEntry(
+        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = balanceTracker.fungibleActiveRecord(
             wallet, currency
         );
 
@@ -388,25 +391,5 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     {
         // Stop challenge
         nullSettlementChallengeState.removeProposal(wallet, currency, walletTerminated);
-    }
-
-    function _activeBalanceLogEntry(address wallet, MonetaryTypesLib.Currency currency)
-    private
-    view
-    returns (int256 amount, uint256 blockNumber)
-    {
-        // Get last log record of deposited and settled balances
-        (int256 depositedAmount, uint256 depositedBlockNumber) = balanceTracker.lastFungibleRecord(
-            wallet, balanceTracker.depositedBalanceType(), currency.ct, currency.id
-        );
-        (int256 settledAmount, uint256 settledBlockNumber) = balanceTracker.lastFungibleRecord(
-            wallet, balanceTracker.settledBalanceType(), currency.ct, currency.id
-        );
-
-        // Set amount as the sum of deposited and settled
-        amount = depositedAmount.add(settledAmount);
-
-        // Set block number as the latest of deposited and settled
-        blockNumber = depositedBlockNumber > settledBlockNumber ? depositedBlockNumber : settledBlockNumber;
     }
 }
