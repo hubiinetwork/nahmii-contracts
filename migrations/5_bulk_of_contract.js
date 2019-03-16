@@ -285,6 +285,7 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
+                FraudChallengeBySuccessivePayments,
                 FraudChallengeBySuccessiveTrades,
                 FraudChallengeByTrade,
                 FraudChallengeByTradeOrderResiduals,

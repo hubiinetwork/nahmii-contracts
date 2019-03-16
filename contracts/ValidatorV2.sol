@@ -454,6 +454,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
     }
 
+    // TODO Update according to implementation in Validator
     function isGenuineSuccessivePaymentsBalances(
         PaymentTypesLib.Payment firstPayment,
         PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole,
