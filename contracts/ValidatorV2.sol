@@ -439,7 +439,8 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         NahmiiTypesLib.CurrencyRole firstTradeCurrencyRole,
         TradeTypesLib.Trade lastTrade,
         TradeTypesLib.TradePartyRole lastTradePartyRole,
-        NahmiiTypesLib.CurrencyRole lastTradeCurrencyRole
+        NahmiiTypesLib.CurrencyRole lastTradeCurrencyRole,
+        int256 delta
     )
     public
     pure
@@ -451,7 +452,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 memory lastIntendedConjugateCurrentPreviousBalances = (TradeTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.balances : lastTrade.seller.balances);
         NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (NahmiiTypesLib.CurrencyRole.Intended == lastTradeCurrencyRole ? lastIntendedConjugateCurrentPreviousBalances.intended : lastIntendedConjugateCurrentPreviousBalances.conjugate);
 
-        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
+        return lastCurrentPreviousBalances.previous.add(delta) == firstCurrentPreviousBalances.current;
     }
 
     function isGenuineSuccessivePaymentsBalances(
@@ -638,6 +639,30 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         trade.seller.order.hashes.operator == order.seals.operator.hash);
     }
 
+    function isTradeIntendedCurrency(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
+    public
+    pure
+    returns (bool)
+    {
+        return currency.ct == trade.currencies.intended.ct && currency.id == trade.currencies.intended.id;
+    }
+
+    function isTradeConjugateCurrency(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
+    public
+    pure
+    returns (bool)
+    {
+        return currency.ct == trade.currencies.conjugate.ct && currency.id == trade.currencies.conjugate.id;
+    }
+
+    function isTradeCurrency(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
+    public
+    pure
+    returns (bool)
+    {
+        return isTradeIntendedCurrency(trade, currency) || isTradeConjugateCurrency(trade, currency);
+    }
+
     function isTradeIntendedCurrencyNonFungible(TradeTypesLib.Trade trade)
     public
     pure
@@ -678,6 +703,14 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     returns (bool)
     {
         return wallet == payment.recipient.wallet;
+    }
+
+    function isPaymentCurrency(PaymentTypesLib.Payment payment, MonetaryTypesLib.Currency currency)
+    public
+    pure
+    returns (bool)
+    {
+        return currency.ct == payment.currency.ct && currency.id == payment.currency.id;
     }
 
     function isPaymentCurrencyNonFungible(PaymentTypesLib.Payment payment)
