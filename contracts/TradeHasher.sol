@@ -103,12 +103,13 @@ contract TradeHasher is Ownable {
     {
         bytes32 rootHash = hashTradePartyRoot(tradeParty);
         bytes32 orderHash = hashTradeOrder(tradeParty.order);
+        bytes32 lastSyncsHash = hashIntendedConjugateUint256(tradeParty.lastSyncs);
         bytes32 balancesHash = hashIntendedConjugateCurrentPreviousInt256(tradeParty.balances);
         bytes32 singleFeeHash = hashFigure(tradeParty.fees.single);
         bytes32 totalFeesHash = hashOriginFigures(tradeParty.fees.total);
 
         return keccak256(abi.encodePacked(
-                rootHash, orderHash, balancesHash, singleFeeHash, totalFeesHash
+                rootHash, orderHash, lastSyncsHash, balancesHash, singleFeeHash, totalFeesHash
             ));
     }
 
@@ -162,6 +163,18 @@ contract TradeHasher is Ownable {
         return keccak256(abi.encodePacked(
                 currentPreviousInt256.current,
                 currentPreviousInt256.previous
+            ));
+    }
+
+    function hashIntendedConjugateUint256(
+        NahmiiTypesLib.IntendedConjugateUint256 intendedConjugateUint256)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(
+                intendedConjugateUint256.intended,
+                intendedConjugateUint256.conjugate
             ));
     }
 

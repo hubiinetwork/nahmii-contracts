@@ -77,6 +77,10 @@ exports.mockTrade = async (operator, params) => {
         buyer: {
             wallet: Wallet.createRandom().address,
             nonce: utils.bigNumberify(1),
+            lastSyncs: {
+                intended: utils.bigNumberify(10),
+                conjugate: utils.bigNumberify(20)
+            },
             rollingVolume: utils.bigNumberify(0),
             liquidityRole: exports.liquidityRoles.indexOf('Maker'),
             order: {
@@ -125,6 +129,10 @@ exports.mockTrade = async (operator, params) => {
         seller: {
             wallet: Wallet.createRandom().address,
             nonce: utils.bigNumberify(1),
+            lastSyncs: {
+                intended: utils.bigNumberify(10),
+                conjugate: utils.bigNumberify(20)
+            },
             rollingVolume: utils.bigNumberify(0),
             liquidityRole: exports.liquidityRoles.indexOf('Taker'),
             order: {
@@ -203,6 +211,7 @@ exports.mockPayment = async (operator, params) => {
         sender: {
             wallet: senderWallet.address,
             nonce: utils.bigNumberify(1),
+            lastSync: utils.bigNumberify(10),
             balances: {
                 current: utils.parseUnits('9399.8', 18),
                 previous: utils.parseUnits('9500', 18)
@@ -232,6 +241,7 @@ exports.mockPayment = async (operator, params) => {
         recipient: {
             wallet: recipientWallet.address,
             nonce: utils.bigNumberify(1),
+            lastSync: utils.bigNumberify(10),
             balances: {
                 current: utils.parseUnits('19700', 18),
                 previous: utils.parseUnits('19600', 18)
@@ -410,6 +420,7 @@ exports.hashTradeParty = (tradeParty) => {
         tradeParty.order.residuals.current,
         tradeParty.order.residuals.previous
     );
+    const lastSyncsHash = exports.hashLastSyncs(tradeParty.lastSyncs);
     const balancesHash = cryptography.hash(
         tradeParty.balances.intended.current,
         tradeParty.balances.intended.previous,
@@ -419,7 +430,7 @@ exports.hashTradeParty = (tradeParty) => {
     const singleFeeHash = exports.hashFigure(tradeParty.fees.single);
     const totalFeesHash = exports.hashOriginFigures(tradeParty.fees.total);
 
-    return cryptography.hash(rootHash, orderHash, balancesHash, singleFeeHash, totalFeesHash);
+    return cryptography.hash(rootHash, orderHash, lastSyncsHash, balancesHash, singleFeeHash, totalFeesHash);
 };
 
 exports.hashPaymentAsWallet = (payment) => {
@@ -455,6 +466,7 @@ exports.hashPaymentAsOperator = (payment) => {
 
 exports.hashPaymentSenderPartyAsOperator = (sender) => {
     const rootHash = cryptography.hash(sender.nonce);
+    const lastSyncHash = cryptography.hash(sender.lastSync);
     const balancesHash = cryptography.hash(
         sender.balances.current,
         sender.balances.previous
@@ -462,18 +474,19 @@ exports.hashPaymentSenderPartyAsOperator = (sender) => {
     const singleFeeHash = exports.hashFigure(sender.fees.single);
     const totalFeesHash = exports.hashOriginFigures(sender.fees.total);
 
-    return cryptography.hash(rootHash, balancesHash, singleFeeHash, totalFeesHash);
+    return cryptography.hash(rootHash, lastSyncHash, balancesHash, singleFeeHash, totalFeesHash);
 };
 
 exports.hashPaymentRecipientPartyAsOperator = (recipient) => {
     const rootHash = cryptography.hash(recipient.nonce);
+    const lastSyncHash = cryptography.hash(recipient.lastSync);
     const balancesHash = cryptography.hash(
         recipient.balances.current,
         recipient.balances.previous
     );
     const totalFeesHash = exports.hashOriginFigures(recipient.fees.total);
 
-    return cryptography.hash(rootHash, balancesHash, totalFeesHash);
+    return cryptography.hash(rootHash, lastSyncHash, balancesHash, totalFeesHash);
 };
 
 exports.hashSignature = (signature) => {
@@ -482,6 +495,10 @@ exports.hashSignature = (signature) => {
         signature.r,
         signature.s
     );
+};
+
+exports.hashLastSyncs = (lastSyncs) => {
+    return cryptography.hash(lastSyncs.intended, lastSyncs.conjugate);
 };
 
 exports.hashFigure = (figure) => {

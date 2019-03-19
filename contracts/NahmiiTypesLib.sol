@@ -29,6 +29,11 @@ library NahmiiTypesLib {
         MonetaryTypesLib.Figure figure;
     }
 
+    struct IntendedConjugateUint256 {
+        uint256 intended;
+        uint256 conjugate;
+    }
+
     struct IntendedConjugateCurrency {
         MonetaryTypesLib.Currency intended;
         MonetaryTypesLib.Currency conjugate;

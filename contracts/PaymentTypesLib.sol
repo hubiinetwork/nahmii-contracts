@@ -28,6 +28,8 @@ library PaymentTypesLib {
         uint256 nonce;
         address wallet;
 
+        uint256 lastSync;
+
         NahmiiTypesLib.CurrentPreviousInt256 balances;
 
         NahmiiTypesLib.SingleFigureTotalOriginFigures fees;
@@ -36,6 +38,8 @@ library PaymentTypesLib {
     struct PaymentRecipientParty {
         uint256 nonce;
         address wallet;
+
+        uint256 lastSync;
 
         NahmiiTypesLib.CurrentPreviousInt256 balances;
 

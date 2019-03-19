@@ -98,5 +98,6 @@ contract('Unit tests', function () {
     require('./scenarios/TokenHolderRevenueFund')(glob);
     require('./scenarios/TradeHasher')(glob);
     require('./scenarios/Validator')(glob);
+    require('./scenarios/ValidatorV2')(glob);
     require('./scenarios/WalletLocker')(glob);
 });

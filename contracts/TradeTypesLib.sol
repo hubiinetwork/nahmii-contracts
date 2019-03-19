@@ -63,6 +63,8 @@ library TradeTypesLib {
 
         TradeOrder order;
 
+        NahmiiTypesLib.IntendedConjugateUint256 lastSyncs;
+
         NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 balances;
 
         NahmiiTypesLib.SingleFigureTotalOriginFigures fees;

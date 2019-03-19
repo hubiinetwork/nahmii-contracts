@@ -75,12 +75,13 @@ contract PaymentHasher is Ownable {
     returns (bytes32)
     {
         bytes32 rootHash = hashUint256(paymentSenderParty.nonce);
+        bytes32 lastSyncHash = hashUint256(paymentSenderParty.lastSync);
         bytes32 balancesHash = hashCurrentPreviousInt256(paymentSenderParty.balances);
         bytes32 singleFeeHash = hashFigure(paymentSenderParty.fees.single);
         bytes32 totalFeesHash = hashOriginFigures(paymentSenderParty.fees.total);
 
         return keccak256(abi.encodePacked(
-                rootHash, balancesHash, singleFeeHash, totalFeesHash
+                rootHash, lastSyncHash, balancesHash, singleFeeHash, totalFeesHash
             ));
     }
 
@@ -91,11 +92,12 @@ contract PaymentHasher is Ownable {
     returns (bytes32)
     {
         bytes32 rootHash = hashUint256(paymentRecipientParty.nonce);
+        bytes32 lastSyncHash = hashUint256(paymentRecipientParty.lastSync);
         bytes32 balancesHash = hashCurrentPreviousInt256(paymentRecipientParty.balances);
         bytes32 totalFeesHash = hashOriginFigures(paymentRecipientParty.fees.total);
 
         return keccak256(abi.encodePacked(
-                rootHash, balancesHash, totalFeesHash
+                rootHash, lastSyncHash, balancesHash, totalFeesHash
             ));
     }
 
