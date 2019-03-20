@@ -567,10 +567,11 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await DriipSettlementChallengeByPayment.at(addressStorage.get('DriipSettlementChallengeByPayment'));
             await instance.setValidator(addressStorage.get('Validator'));
+            await instance.setConfiguration(addressStorage.get('Configuration'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             await instance.setDriipSettlementDisputeByPayment(addressStorage.get('DriipSettlementDisputeByPayment'));
             await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
-            // await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+            await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
 
             instance = await DriipSettlementChallengeByTrade.at(addressStorage.get('DriipSettlementChallengeByTrade'));
             await instance.setValidator(addressStorage.get('ValidatorV2'));
@@ -624,6 +625,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setConfiguration(addressStorage.get('Configuration'));
             await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
             await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
             await instance.setRevenueFund(addressStorage.get('PaymentsRevenueFund'));
             await instance.setPartnerFund(addressStorage.get('PartnerFund'));
@@ -692,7 +694,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setCommunityVote(addressStorage.get('CommunityVote'));
             await instance.registerService(addressStorage.get('NullSettlement'));
             await instance.enableServiceAction(addressStorage.get('NullSettlement'), 'set_max_null_nonce');
-            await instance.enableServiceAction(addressStorage.get('NullSettlement'), 'set_max_null_nonce_wallet_currency');
+            await instance.enableServiceAction(addressStorage.get('NullSettlement'), 'set_max_nonce_wallet_currency');
 
             instance = await NullSettlement.at(addressStorage.get('NullSettlement'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
