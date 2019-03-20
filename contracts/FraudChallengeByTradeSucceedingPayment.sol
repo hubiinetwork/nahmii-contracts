@@ -13,20 +13,25 @@ import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {ValidatableV2} from "./ValidatableV2.sol";
-import {WalletLockable} from "./WalletLockable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
+import {WalletLockable} from "./WalletLockable.sol";
+import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
+import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
  * @title FraudChallengeByTradeSucceedingPayment
  * @notice Where driips are challenged wrt fraud by mismatch in trade succeeding payment
  */
 contract FraudChallengeByTradeSucceedingPayment is Ownable, FraudChallengable, ConfigurableOperational, ValidatableV2,
-SecurityBondable, WalletLockable {
+SecurityBondable, WalletLockable, BalanceTrackable {
     using SafeMathIntLib for int256;
+    using BalanceTrackerLib for BalanceTracker;
 
     //
     // Events
@@ -62,25 +67,28 @@ SecurityBondable, WalletLockable {
     onlySealedPayment(payment)
     onlySealedTrade(trade)
     {
-        require(validator.isTradeParty(trade, wallet));
         require(validator.isPaymentParty(payment, wallet));
-        require(currencyCt == payment.currency.ct && currencyId == payment.currency.id);
-        require(
-            (currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id) ||
-            (currencyCt == trade.currencies.conjugate.ct && currencyId == trade.currencies.conjugate.id)
-        );
+        require(validator.isTradeParty(trade, wallet));
 
-        PaymentTypesLib.PaymentPartyRole paymentPartyRole = (wallet == payment.sender.wallet ? PaymentTypesLib.PaymentPartyRole.Sender : PaymentTypesLib.PaymentPartyRole.Recipient);
-        TradeTypesLib.TradePartyRole tradePartyRole = (wallet == trade.buyer.wallet ? TradeTypesLib.TradePartyRole.Buyer : TradeTypesLib.TradePartyRole.Seller);
+        require(validator.isPaymentCurrency(payment, MonetaryTypesLib.Currency(currencyCt, currencyId)));
+        require(validator.isTradeCurrency(trade, MonetaryTypesLib.Currency(currencyCt, currencyId)));
+
+        (
+        PaymentTypesLib.PaymentPartyRole paymentPartyRole,
+        TradeTypesLib.TradePartyRole tradePartyRole,
+        NahmiiTypesLib.CurrencyRole tradeCurrencyRole,
+        int256 deltaActiveBalance
+        )
+        = _rolesAndDeltaActiveBalance(payment, trade, wallet, MonetaryTypesLib.Currency(currencyCt, currencyId));
 
         require(validator.isSuccessivePaymentTradePartyNonces(payment, paymentPartyRole, trade, tradePartyRole));
 
-        NahmiiTypesLib.CurrencyRole tradeCurrencyRole = (currencyCt == trade.currencies.intended.ct && currencyId == trade.currencies.intended.id ? NahmiiTypesLib.CurrencyRole.Intended : NahmiiTypesLib.CurrencyRole.Conjugate);
-
         // Require existence of fraud signal
         require(!(
-            (validator.isGenuineSuccessivePaymentTradeBalances(payment, paymentPartyRole, trade, tradePartyRole, tradeCurrencyRole)) &&
-            (validator.isGenuineSuccessivePaymentTradeTotalFees(payment, paymentPartyRole, trade, tradePartyRole))
+        validator.isGenuineSuccessivePaymentTradeBalances(
+            payment, paymentPartyRole, trade, tradePartyRole, tradeCurrencyRole, deltaActiveBalance
+        ) &&
+        validator.isGenuineSuccessivePaymentTradeTotalFees(payment, paymentPartyRole, trade, tradePartyRole)
         ));
 
         // Toggle operational mode exit
@@ -107,6 +115,55 @@ SecurityBondable, WalletLockable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
+    function _rolesAndDeltaActiveBalance(PaymentTypesLib.Payment payment, TradeTypesLib.Trade trade, address wallet,
+        MonetaryTypesLib.Currency currency)
+    private
+    view
+    returns (
+        PaymentTypesLib.PaymentPartyRole paymentPartyRole, TradeTypesLib.TradePartyRole tradePartyRole,
+        NahmiiTypesLib.CurrencyRole tradeCurrencyRole, int256 deltaActiveBalance
+    )
+    {
+        paymentPartyRole = _paymentPartyRole(payment, wallet);
+        tradePartyRole = _tradePartyRole(trade, wallet);
+
+        tradeCurrencyRole = _tradeCurrencyRole(trade, currency);
+
+        deltaActiveBalance = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
+            wallet, currency, payment.blockNumber, trade.blockNumber
+        );
+    }
+
+    function _paymentPartyRole(PaymentTypesLib.Payment payment, address wallet)
+    private
+    view
+    returns (PaymentTypesLib.PaymentPartyRole)
+    {
+        return validator.isPaymentSender(payment, wallet) ?
+        PaymentTypesLib.PaymentPartyRole.Sender :
+        PaymentTypesLib.PaymentPartyRole.Recipient;
+    }
+
+    function _tradePartyRole(TradeTypesLib.Trade trade, address wallet)
+    private
+    view
+    returns (TradeTypesLib.TradePartyRole)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        TradeTypesLib.TradePartyRole.Buyer :
+        TradeTypesLib.TradePartyRole.Seller;
+    }
+
+    function _tradeCurrencyRole(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
+    private
+    view
+    returns (NahmiiTypesLib.CurrencyRole)
+    {
+        return validator.isTradeIntendedCurrency(trade, currency) ?
+        NahmiiTypesLib.CurrencyRole.Intended :
+        NahmiiTypesLib.CurrencyRole.Conjugate;
+    }
+
     function _tradeLockAmount(TradeTypesLib.Trade trade, TradeTypesLib.TradePartyRole tradePartyRole,
         NahmiiTypesLib.CurrencyRole currencyRole)
     private

@@ -10,6 +10,7 @@ const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 const MockedWalletLocker = artifacts.require('MockedWalletLocker');
+const MockedBalanceTracker = artifacts.require('MockedBalanceTracker');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -26,13 +27,10 @@ module.exports = (glob) => {
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
         let web3WalletLocker, ethersWalletLocker;
-        let blockNumber0, blockNumber10, blockNumber20;
+        let web3BalanceTracker, ethersBalanceTracker;
 
         before(async () => {
             provider = glob.signer_owner.provider;
-
-            web3FraudChallengeByPaymentSucceedingTrade = await FraudChallengeByPaymentSucceedingTrade.new(glob.owner);
-            ethersFraudChallengeByPaymentSucceedingTrade = new Contract(web3FraudChallengeByPaymentSucceedingTrade.address, FraudChallengeByPaymentSucceedingTrade.abi, glob.signer_owner);
 
             web3SignerManager = await SignerManager.new(glob.owner);
 
@@ -46,28 +44,30 @@ module.exports = (glob) => {
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
             web3WalletLocker = await MockedWalletLocker.new();
             ethersWalletLocker = new Contract(web3WalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
+            web3BalanceTracker = await MockedBalanceTracker.new();
+            ethersBalanceTracker = new Contract(web3BalanceTracker.address, MockedBalanceTracker.abi, glob.signer_owner);
+
+            await ethersConfiguration.registerService(glob.owner);
+            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
+
+            await web3Configuration.setFraudStakeFraction(web3.eth.blockNumber + 1, 5e17);
+        });
+
+        beforeEach(async () => {
+            web3FraudChallengeByPaymentSucceedingTrade = await FraudChallengeByPaymentSucceedingTrade.new(glob.owner);
+            ethersFraudChallengeByPaymentSucceedingTrade = new Contract(web3FraudChallengeByPaymentSucceedingTrade.address, FraudChallengeByPaymentSucceedingTrade.abi, glob.signer_owner);
 
             await ethersFraudChallengeByPaymentSucceedingTrade.setFraudChallenge(ethersFraudChallenge.address);
             await ethersFraudChallengeByPaymentSucceedingTrade.setConfiguration(ethersConfiguration.address);
             await ethersFraudChallengeByPaymentSucceedingTrade.setValidator(ethersValidator.address);
             await ethersFraudChallengeByPaymentSucceedingTrade.setSecurityBond(ethersSecurityBond.address);
             await ethersFraudChallengeByPaymentSucceedingTrade.setWalletLocker(ethersWalletLocker.address);
-
-            await ethersConfiguration.registerService(glob.owner);
-            await ethersConfiguration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
+            await ethersFraudChallengeByPaymentSucceedingTrade.setBalanceTracker(ethersBalanceTracker.address);
 
             await ethersConfiguration.registerService(ethersFraudChallengeByPaymentSucceedingTrade.address);
             await ethersConfiguration.enableServiceAction(
                 ethersFraudChallengeByPaymentSucceedingTrade.address, 'operational_mode', {gasLimit: 1e6}
             );
-
-            await web3Configuration.setFraudStakeFraction(web3.eth.blockNumber + 1, 5e17);
-        });
-
-        beforeEach(async () => {
-            blockNumber0 = await provider.getBlockNumber();
-            blockNumber10 = blockNumber0 + 10;
-            blockNumber20 = blockNumber0 + 20;
         });
 
         describe('constructor', () => {
@@ -289,28 +289,25 @@ module.exports = (glob) => {
         });
 
         describe('challenge()', () => {
-            let trade, payment, overrideOptions, filter;
-
-            before(async () => {
-                overrideOptions = {gasLimit: 2e6};
-            });
+            let trade, payment, filter;
 
             beforeEach(async () => {
-                await ethersConfiguration._reset(overrideOptions);
-                await ethersFraudChallenge._reset(overrideOptions);
-                await ethersValidator._reset(overrideOptions);
-                await ethersSecurityBond._reset(overrideOptions);
-                await ethersWalletLocker._reset(overrideOptions);
+                await ethersConfiguration._reset({gasLimit: 2e6});
+                await ethersFraudChallenge._reset({gasLimit: 2e6});
+                await ethersValidator._reset({gasLimit: 2e6});
+                await ethersSecurityBond._reset({gasLimit: 2e6});
+                await ethersWalletLocker._reset({gasLimit: 2e6});
+                await ethersBalanceTracker._reset({gasLimit: 2e6});
 
                 trade = await mocks.mockTrade(glob.owner, {
                     buyer: {wallet: glob.user_a},
                     seller: {wallet: glob.user_b},
-                    blockNumber: utils.bigNumberify(blockNumber10)
+                    blockNumber: utils.bigNumberify((await provider.getBlockNumber()) + 10)
                 });
                 payment = await mocks.mockPayment(glob.owner, {
                     sender: {wallet: glob.user_a},
                     recipient: {wallet: glob.user_b},
-                    blockNumber: utils.bigNumberify(blockNumber20)
+                    blockNumber: utils.bigNumberify((await provider.getBlockNumber()) + 20)
                 });
 
                 filter = await fromBlockTopicsFilter(
@@ -326,7 +323,7 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
+                        trade.currencies.intended.id, {gasLimit: 2e6}
                     ).should.be.rejected;
                 });
             });
@@ -339,7 +336,7 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
+                        trade.currencies.intended.id, {gasLimit: 2e6}
                     ).should.be.rejected;
                 });
             });
@@ -352,90 +349,59 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
+                        trade.currencies.intended.id, {gasLimit: 2e6}
                     ).should.be.rejected;
                 });
             });
 
             describe('if wallet is not party in trade', () => {
                 beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner, {
-                        blockNumber: utils.bigNumberify(blockNumber10)
-                    });
+                    await ethersValidator.setTradeParty(false);
                 });
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, payment.sender.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
+                        trade.currencies.intended.id, {gasLimit: 2e6}
                     ).should.be.rejected;
                 });
             });
 
             describe('if wallet is not party in payment', () => {
                 beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner, {
-                        blockNumber: utils.bigNumberify(blockNumber20)
-                    });
+                    await ethersValidator.setPaymentParty(false);
                 });
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
+                        trade.currencies.intended.id, {gasLimit: 2e6}
                     ).should.be.rejected;
                 });
             });
 
             describe('if currency is not in trade', () => {
                 beforeEach(async () => {
-                    trade = await mocks.mockTrade(glob.owner, {
-                        buyer: {
-                            wallet: glob.user_a
-                        },
-                        seller: {
-                            wallet: glob.user_b
-                        },
-                        currencies: {
-                            intended: {
-                                ct: Wallet.createRandom().address
-                            },
-                            conjugate: {
-                                ct: Wallet.createRandom().address
-                            },
-                        },
-                        blockNumber: utils.bigNumberify(blockNumber10)
-                    });
+                    await ethersValidator.setTradeCurrency(false);
                 });
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, payment.currency.ct,
-                        payment.currency.id, overrideOptions
+                        payment.currency.id, {gasLimit: 2e6}
                     ).should.be.rejected;
                 });
             });
 
             describe('if currency is not in payment', () => {
                 beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner, {
-                        sender: {
-                            wallet: glob.user_a
-                        },
-                        recipient: {
-                            wallet: glob.user_b
-                        },
-                        currency: {
-                            ct: Wallet.createRandom().address
-                        },
-                        blockNumber: utils.bigNumberify(blockNumber20)
-                    });
+                    await ethersValidator.setPaymentCurrency(false);
                 });
 
                 it('should revert', async () => {
                     return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
+                        trade.currencies.intended.id, {gasLimit: 2e6}
                     ).should.be.rejected;
                 });
             });
@@ -448,7 +414,7 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
+                        trade.currencies.intended.id, {gasLimit: 2e6}
                     ).should.be.rejected;
                 });
             });
@@ -457,12 +423,12 @@ module.exports = (glob) => {
                 it('should revert', async () => {
                     return ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
+                        trade.currencies.intended.id, {gasLimit: 2e6}
                     ).should.be.rejected;
                 });
             });
 
-            describe('if not genuine successive balances in payment sender', () => {
+            describe('if not genuine successive balances', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineSuccessiveTradePaymentBalances(false);
                 });
@@ -470,7 +436,7 @@ module.exports = (glob) => {
                 it('should set operational mode exit, store fraudulent payment and reward', async () => {
                     await ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
+                        trade.currencies.intended.id, {gasLimit: 2e6}
                     );
 
                     (await ethersConfiguration.isOperationalModeExit()).should.be.true;
@@ -493,38 +459,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if not genuine successive balances in payment recipient', () => {
-                beforeEach(async () => {
-                    await ethersValidator.setGenuineSuccessiveTradePaymentBalances(false);
-                });
-
-                it('should set operational mode exit, store fraudulent payment and reward', async () => {
-                    await ethersFraudChallengeByPaymentSucceedingTrade.challenge(
-                        trade, payment, trade.seller.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
-                    );
-
-                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
-
-                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
-
-                    const reward = await ethersSecurityBond.fractionalRewards(0);
-                    reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.fraction._bn.should.eq.BN(5e17.toString());
-
-                    const lock = await ethersWalletLocker.fungibleLocks(0);
-                    lock.lockedWallet.should.equal(utils.getAddress(trade.seller.wallet));
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    lock.amount._bn.should.eq.BN(payment.recipient.balances.current._bn);
-                    lock.currencyCt.should.equal(payment.currency.ct);
-                    lock.currencyId._bn.should.eq.BN(payment.currency.id._bn);
-                    lock.visibleTimeout._bn.should.eq.BN(0);
-
-                    (await provider.getLogs(filter)).should.have.lengthOf(1);
-                });
-            });
-
-            describe('if not genuine successive total fees in payment sender', () => {
+            describe('if not genuine successive total fees', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineSuccessiveTradePaymentTotalFees(false);
                 });
@@ -532,7 +467,7 @@ module.exports = (glob) => {
                 it('should set operational mode exit, store fraudulent payment and reward', async () => {
                     await ethersFraudChallengeByPaymentSucceedingTrade.challenge(
                         trade, payment, trade.buyer.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
+                        trade.currencies.intended.id, {gasLimit: 2e6}
                     );
 
                     (await ethersConfiguration.isOperationalModeExit()).should.be.true;
@@ -547,37 +482,6 @@ module.exports = (glob) => {
                     lock.lockedWallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     lock.amount._bn.should.eq.BN(payment.sender.balances.current._bn);
-                    lock.currencyCt.should.equal(payment.currency.ct);
-                    lock.currencyId._bn.should.eq.BN(payment.currency.id._bn);
-                    lock.visibleTimeout._bn.should.eq.BN(0);
-
-                    (await provider.getLogs(filter)).should.have.lengthOf(1);
-                });
-            });
-
-            describe('if not genuine successive total fees in payment recipient', () => {
-                beforeEach(async () => {
-                    await ethersValidator.setGenuineSuccessiveTradePaymentTotalFees(false);
-                });
-
-                it('should set operational mode exit, store fraudulent payment and reward', async () => {
-                    await ethersFraudChallengeByPaymentSucceedingTrade.challenge(
-                        trade, payment, trade.seller.wallet, trade.currencies.intended.ct,
-                        trade.currencies.intended.id, overrideOptions
-                    );
-
-                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
-
-                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
-
-                    const reward = await ethersSecurityBond.fractionalRewards(0);
-                    reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.fraction._bn.should.eq.BN(5e17.toString());
-
-                    const lock = await ethersWalletLocker.fungibleLocks(0);
-                    lock.lockedWallet.should.equal(utils.getAddress(trade.seller.wallet));
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    lock.amount._bn.should.eq.BN(payment.recipient.balances.current._bn);
                     lock.currencyCt.should.equal(payment.currency.ct);
                     lock.currencyId._bn.should.eq.BN(payment.currency.id._bn);
                     lock.visibleTimeout._bn.should.eq.BN(0);

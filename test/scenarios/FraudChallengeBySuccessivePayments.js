@@ -415,7 +415,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if not genuine successive payments\' balances in sender', () => {
+            describe('if not genuine successive payments\' balances', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineSuccessivePaymentsBalances(false);
                 });
@@ -442,34 +442,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if not genuine successive payments\' balances in recipient', () => {
-                beforeEach(async () => {
-                    await ethersValidator.setGenuineSuccessivePaymentsBalances(false);
-                });
-
-                it('should set operational mode exit, store fraudulent payment and reward', async () => {
-                    await ethersFraudChallengeBySuccessivePayments.challenge(
-                        firstPayment, lastPayment, firstPayment.recipient.wallet, {gasLimit: 2e6}
-                    );
-
-                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
-
-                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
-
-                    const lock = await ethersWalletLocker.fungibleLocks(0);
-                    lock.lockedWallet.should.equal(utils.getAddress(firstPayment.recipient.wallet));
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    lock.amount._bn.should.eq.BN(lastPayment.recipient.balances.current._bn);
-                    lock.currencyCt.should.equal(lastPayment.currency.ct);
-                    lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
-                    lock.visibleTimeout._bn.should.eq.BN(0);
-
-                    (await provider.getLogs(filter))
-                        .should.have.lengthOf(1);
-                });
-            });
-
-            describe('if not genuine successive payments\' total fees in sender', () => {
+            describe('if not genuine successive payments\' total fees', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineSuccessivePaymentsTotalFees(false);
                 });
@@ -487,33 +460,6 @@ module.exports = (glob) => {
                     lock.lockedWallet.should.equal(utils.getAddress(firstPayment.sender.wallet));
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
                     lock.amount._bn.should.eq.BN(lastPayment.sender.balances.current._bn);
-                    lock.currencyCt.should.equal(lastPayment.currency.ct);
-                    lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
-                    lock.visibleTimeout._bn.should.eq.BN(0);
-
-                    (await provider.getLogs(filter))
-                        .should.have.lengthOf(1);
-                });
-            });
-
-            describe('if not genuine successive payments\' total fees in recipient', () => {
-                beforeEach(async () => {
-                    await ethersValidator.setGenuineSuccessivePaymentsTotalFees(false);
-                });
-
-                it('should set operational mode exit, store fraudulent payment and reward', async () => {
-                    await ethersFraudChallengeBySuccessivePayments.challenge(
-                        firstPayment, lastPayment, firstPayment.recipient.wallet, {gasLimit: 2e6}
-                    );
-
-                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
-
-                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
-
-                    const lock = await ethersWalletLocker.fungibleLocks(0);
-                    lock.lockedWallet.should.equal(utils.getAddress(firstPayment.recipient.wallet));
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    lock.amount._bn.should.eq.BN(lastPayment.recipient.balances.current._bn);
                     lock.currencyCt.should.equal(lastPayment.currency.ct);
                     lock.currencyId._bn.should.eq.BN(lastPayment.currency.id._bn);
                     lock.visibleTimeout._bn.should.eq.BN(0);

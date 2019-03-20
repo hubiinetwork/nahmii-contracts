@@ -146,8 +146,10 @@ module.exports = (deployer, network, accounts) => {
             TxHistoryLib.address = addressStorage.get('TxHistoryLib');
 
             await deployer.link(BalanceTrackerLib, [
+                FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments,
                 FraudChallengeBySuccessiveTrades,
+                FraudChallengeByTradeSucceedingPayment,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade
             ]);
@@ -200,8 +202,10 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
+                FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessiveTrades,
                 FraudChallengeBySuccessivePayments,
+                FraudChallengeByTradeSucceedingPayment,
                 MockedBeneficiary,
                 MockedClientFund,
                 NullSettlement,
@@ -295,6 +299,7 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
+                FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments,
                 FraudChallengeBySuccessiveTrades,
                 FraudChallengeByTrade,
@@ -327,8 +332,10 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
+                FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments,
                 FraudChallengeBySuccessiveTrades,
+                FraudChallengeByTradeSucceedingPayment,
                 NullSettlement,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade,
