@@ -63,10 +63,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     {
         require(validator.isPaymentParty(firstPayment, wallet));
         require(validator.isPaymentParty(lastPayment, wallet));
-        require(
-            firstPayment.currency.ct == lastPayment.currency.ct &&
-            firstPayment.currency.id == lastPayment.currency.id
-        );
+        require(validator.isPaymentCurrency(firstPayment, lastPayment.currency));
 
         PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? PaymentTypesLib.PaymentPartyRole.Sender : PaymentTypesLib.PaymentPartyRole.Recipient);
         PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? PaymentTypesLib.PaymentPartyRole.Sender : PaymentTypesLib.PaymentPartyRole.Recipient);

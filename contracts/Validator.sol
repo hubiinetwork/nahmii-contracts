@@ -239,6 +239,14 @@ contract Validator is Ownable, SignerManageable, Configurable, PaymentHashable {
         return wallet == payment.recipient.wallet;
     }
 
+    function isPaymentCurrency(PaymentTypesLib.Payment payment, MonetaryTypesLib.Currency currency)
+    public
+    pure
+    returns (bool)
+    {
+        return currency.ct == payment.currency.ct && currency.id == payment.currency.id;
+    }
+
     function isPaymentCurrencyNonFungible(PaymentTypesLib.Payment payment)
     public
     pure

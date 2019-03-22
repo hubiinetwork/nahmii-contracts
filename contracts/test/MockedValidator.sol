@@ -12,6 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "../Ownable.sol";
 import {SignerManageable} from "../SignerManageable.sol";
 import {NahmiiTypesLib} from "../NahmiiTypesLib.sol";
+import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {PaymentTypesLib} from "../PaymentTypesLib.sol";
 import {TradeTypesLib} from "../TradeTypesLib.sol";
 
@@ -36,6 +37,9 @@ contract MockedValidator is Ownable, SignerManageable {
     bool tradeBuyer;
     bool tradeSeller;
     bool tradeOrder;
+    bool tradeCurrency;
+    bool tradeIntendedCurrency;
+    bool tradeConjugateCurrency;
     bool tradeIntendedCurrencyNonFungible;
     bool tradeConjugateCurrencyNonFungible;
     bool paymentFeeOfFungible;
@@ -48,6 +52,7 @@ contract MockedValidator is Ownable, SignerManageable {
     bool paymentParty;
     bool paymentSender;
     bool paymentRecipient;
+    bool paymentCurrency;
     bool paymentCurrencyNonFungible;
     bool successiveTradesPartyNonces;
     bool successiveTradesBalances;
@@ -98,6 +103,9 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeBuyer = true;
         tradeSeller = true;
         tradeOrder = true;
+        tradeCurrency = true;
+        tradeIntendedCurrency = true;
+        tradeConjugateCurrency = true;
         tradeIntendedCurrencyNonFungible = false;
         tradeConjugateCurrencyNonFungible = false;
         paymentFeeOfFungible = true;
@@ -111,6 +119,7 @@ contract MockedValidator is Ownable, SignerManageable {
         paymentParty = true;
         paymentSender = true;
         paymentRecipient = true;
+        paymentCurrency = true;
         paymentCurrencyNonFungible = false;
         successiveTradesPartyNonces = true;
         successiveTradesBalances = true;
@@ -322,6 +331,48 @@ contract MockedValidator is Ownable, SignerManageable {
         return tradeOrder;
     }
 
+    function isTradeCurrency(TradeTypesLib.Trade, MonetaryTypesLib.Currency)
+    public
+    view
+    returns (bool)
+    {
+        return tradeCurrency;
+    }
+
+    function setTradeCurrency(bool _tradeCurrency)
+    public
+    {
+        tradeCurrency = _tradeCurrency;
+    }
+
+    function isTradeIntendedCurrency(TradeTypesLib.Trade , MonetaryTypesLib.Currency )
+    public
+    view
+    returns (bool)
+    {
+        return tradeIntendedCurrency;
+    }
+
+    function setTradeIntendedCurrency(bool _tradeIntendedCurrency)
+    public
+    {
+        tradeIntendedCurrency = _tradeIntendedCurrency;
+    }
+
+    function isTradeConjugateCurrency(TradeTypesLib.Trade , MonetaryTypesLib.Currency )
+    public
+    view
+    returns (bool)
+    {
+        return tradeConjugateCurrency;
+    }
+
+    function setTradeConjugateCurrency(bool _tradeConjugateCurrency)
+    public
+    {
+        tradeConjugateCurrency = _tradeConjugateCurrency;
+    }
+
     function isTradeIntendedCurrencyNonFungible(TradeTypesLib.Trade)
     public
     view
@@ -495,6 +546,20 @@ contract MockedValidator is Ownable, SignerManageable {
         return paymentRecipient;
     }
 
+    function isPaymentCurrency(PaymentTypesLib.Payment, MonetaryTypesLib.Currency)
+    public
+    view
+    returns (bool)
+    {
+        return paymentCurrency;
+    }
+
+    function setPaymentCurrency(bool _paymentCurrency)
+    public
+    {
+        paymentCurrency = _paymentCurrency;
+    }
+
     function isPaymentCurrencyNonFungible(PaymentTypesLib.Payment)
     public
     view
@@ -540,7 +605,8 @@ contract MockedValidator is Ownable, SignerManageable {
         NahmiiTypesLib.CurrencyRole,
         TradeTypesLib.Trade,
         TradeTypesLib.TradePartyRole,
-        NahmiiTypesLib.CurrencyRole
+        NahmiiTypesLib.CurrencyRole,
+        int256
     )
     public
     view

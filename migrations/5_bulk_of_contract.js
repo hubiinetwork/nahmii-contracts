@@ -147,6 +147,7 @@ module.exports = (deployer, network, accounts) => {
 
             await deployer.link(BalanceTrackerLib, [
                 FraudChallengeBySuccessivePayments,
+                FraudChallengeBySuccessiveTrades,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade
             ]);
@@ -199,6 +200,8 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
+                FraudChallengeBySuccessiveTrades,
+                FraudChallengeBySuccessivePayments,
                 MockedBeneficiary,
                 MockedClientFund,
                 NullSettlement,
@@ -325,6 +328,7 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
                 FraudChallengeBySuccessivePayments,
+                FraudChallengeBySuccessiveTrades,
                 NullSettlement,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade,
