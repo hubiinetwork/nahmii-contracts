@@ -6,6 +6,7 @@
 
 const AccrualBenefactor = artifacts.require('AccrualBenefactor');
 const BalanceTracker = artifacts.require('BalanceTracker');
+const BalanceTrackerLib = artifacts.require('BalanceTrackerLib');
 const BlockNumbDisdIntsLib = artifacts.require('BlockNumbDisdIntsLib');
 const BlockNumbFiguresLib = artifacts.require('BlockNumbFiguresLib');
 const BlockNumbIntsLib = artifacts.require('BlockNumbIntsLib');
@@ -123,6 +124,7 @@ module.exports = (deployer, network, accounts) => {
                 deployerAccount: deployerAccount
             };
 
+            BalanceTrackerLib.address = addressStorage.get('BalanceTrackerLib');
             BlockNumbDisdIntsLib.address = addressStorage.get('BlockNumbDisdIntsLib');
             BlockNumbFiguresLib.address = addressStorage.get('BlockNumbFiguresLib');
             BlockNumbIntsLib.address = addressStorage.get('BlockNumbIntsLib');
@@ -130,19 +132,24 @@ module.exports = (deployer, network, accounts) => {
             BlockNumbUintsLib.address = addressStorage.get('BlockNumbUintsLib');
             ConstantsLib.address = addressStorage.get('ConstantsLib');
             CurrenciesLib.address = addressStorage.get('CurrenciesLib');
+            DriipSettlementTypesLib.address = addressStorage.get('DriipSettlementTypesLib');
             FungibleBalanceLib.address = addressStorage.get('FungibleBalanceLib');
             MonetaryTypesLib.address = addressStorage.get('MonetaryTypesLib');
             NahmiiTypesLib.address = addressStorage.get('NahmiiTypesLib');
+            NonFungibleBalanceLib.address = addressStorage.get('NonFungibleBalanceLib');
             PaymentTypesLib.address = addressStorage.get('PaymentTypesLib');
             TradeTypesLib.address = addressStorage.get('TradeTypesLib');
-            NonFungibleBalanceLib.address = addressStorage.get('NonFungibleBalanceLib');
             SafeMathIntLib.address = addressStorage.get('SafeMathIntLib');
             SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
             SettlementChallengeTypesLib.address = addressStorage.get('SettlementChallengeTypesLib');
-            DriipSettlementTypesLib.address = addressStorage.get('DriipSettlementTypesLib');
             Strings.address = addressStorage.get('Strings');
             TxHistoryLib.address = addressStorage.get('TxHistoryLib');
 
+            await deployer.link(BalanceTrackerLib, [
+                FraudChallengeBySuccessivePayments,
+                NullSettlementChallengeByPayment,
+                NullSettlementChallengeByTrade
+            ]);
             await deployer.link(BlockNumbDisdIntsLib, [
                 Configuration
             ]);
@@ -285,6 +292,7 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
+                FraudChallengeBySuccessivePayments,
                 FraudChallengeBySuccessiveTrades,
                 FraudChallengeByTrade,
                 FraudChallengeByTradeOrderResiduals,
@@ -316,6 +324,7 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
+                FraudChallengeBySuccessivePayments,
                 NullSettlement,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade,

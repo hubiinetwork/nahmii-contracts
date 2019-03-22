@@ -23,7 +23,7 @@ contract MockedBalanceTracker {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
-    struct LogEntry {
+    struct FungibleRecord {
         int256 amount;
         uint256 blockNumber;
     }
@@ -35,13 +35,13 @@ contract MockedBalanceTracker {
     bytes32 public settledBalanceType;
     bytes32 public stagedBalanceType;
 
-    mapping(bytes32 => uint256) private _logSizeByType;
-    bytes32[] private _logSizeTypes;
-    mapping(bytes32 => bool) private _logSizeTypeSetByType;
+    mapping(bytes32 => uint256) private _fungibleRecordsCountByType;
+    bytes32[] private _fungibleRecordsCountTypes;
+    mapping(bytes32 => bool) private _fungibleRecordsCountSet;
 
-    mapping(bytes32 => LogEntry) private _lastLogByType;
-    bytes32[] private _lastLogTypes;
-    mapping(bytes32 => bool) private _lastLogTypeSetByType;
+    mapping(bytes32 => FungibleRecord) private fungibleRecordByType;
+    bytes32[] private _fungibleRecordTypes;
+    mapping(bytes32 => bool) private _fungibleRecordTypeSet;
 
     //
     // Constructor
@@ -61,15 +61,23 @@ contract MockedBalanceTracker {
     public
     {
         uint256 i;
-        for (i = 0; i < _logSizeTypes.length; i++)
-            _logSizeByType[_logSizeTypes[i]] = 0;
-        _logSizeTypes.length = 0;
+        for (i = 0; i < _fungibleRecordsCountTypes.length; i++)
+            _fungibleRecordsCountByType[_fungibleRecordsCountTypes[i]] = 0;
+        _fungibleRecordsCountTypes.length = 0;
 
-        for (i = 0; i < _lastLogTypes.length; i++) {
-            _lastLogByType[_lastLogTypes[i]].amount = 0;
-            _lastLogByType[_lastLogTypes[i]].blockNumber = 0;
+        for (i = 0; i < _fungibleRecordTypes.length; i++)
+            delete fungibleRecordByType[_fungibleRecordTypes[i]];
+        _fungibleRecordTypes.length = 0;
+    }
+
+    function _setFungibleRecordsCount(bytes32 _type, uint256 size)
+    public
+    {
+        _fungibleRecordsCountByType[_type] = size;
+        if (!_fungibleRecordsCountSet[_type]) {
+            _fungibleRecordsCountSet[_type] = true;
+            _fungibleRecordsCountTypes.push(_type);
         }
-        _lastLogTypes.length = 0;
     }
 
     function fungibleRecordsCount(address, bytes32 _type, address, uint256)
@@ -77,37 +85,35 @@ contract MockedBalanceTracker {
     view
     returns (uint256)
     {
-        return _logSizeByType[_type];
+        return _fungibleRecordsCountByType[_type];
     }
 
-    function _setLogSize(bytes32 _type, uint256 size)
+    function _setFungibleRecord(bytes32 _type, int256 amount, uint256 blockNumber)
     public
     {
-        _logSizeByType[_type] = size;
-        if (!_logSizeTypeSetByType[_type]) {
-            _logSizeTypeSetByType[_type] = true;
-            _logSizeTypes.push(_type);
+        fungibleRecordByType[_type].amount = amount;
+        fungibleRecordByType[_type].blockNumber = blockNumber;
+
+        if (!_fungibleRecordTypeSet[_type]) {
+            _fungibleRecordTypeSet[_type] = true;
+            _fungibleRecordTypes.push(_type);
         }
     }
 
-    function lastFungibleRecord(address, bytes32 _type, address, uint256)
+    function fungibleRecordByBlockNumber(address, bytes32 _type, address, uint256, uint256)
     public
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        amount = _lastLogByType[_type].amount;
-        blockNumber = _lastLogByType[_type].blockNumber;
+        amount = fungibleRecordByType[_type].amount;
+        blockNumber = fungibleRecordByType[_type].blockNumber;
     }
 
-    function _setLastLog(bytes32 _type, int256 amount, uint256 blockNumber)
+    function lastFungibleRecord(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
     public
+    view
+    returns (int256 amount, uint256 blockNumber)
     {
-        _lastLogByType[_type].amount = amount;
-        _lastLogByType[_type].blockNumber = blockNumber;
-
-        if (!_lastLogTypeSetByType[_type]) {
-            _lastLogTypeSetByType[_type] = true;
-            _lastLogTypes.push(_type);
-        }
+        return fungibleRecordByBlockNumber(wallet, _type, currencyCt, currencyId, 0);
     }
 }

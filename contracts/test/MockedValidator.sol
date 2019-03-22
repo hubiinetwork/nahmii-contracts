@@ -597,7 +597,8 @@ contract MockedValidator is Ownable, SignerManageable {
         PaymentTypesLib.Payment,
         PaymentTypesLib.PaymentPartyRole,
         PaymentTypesLib.Payment,
-        PaymentTypesLib.PaymentPartyRole
+        PaymentTypesLib.PaymentPartyRole,
+        int256
     )
     public
     view

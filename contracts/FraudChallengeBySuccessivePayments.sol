@@ -15,14 +15,22 @@ import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
+import {BalanceTrackable} from "./BalanceTrackable.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
+import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
  * @title FraudChallengeBySuccessivePayments
  * @notice Where driips are challenged wrt fraud by mismatch in successive payments
  */
 contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, ConfigurableOperational, Validatable,
-SecurityBondable, WalletLockable {
+SecurityBondable, WalletLockable, BalanceTrackable {
+    using SafeMathIntLib for int256;
+    using BalanceTrackerLib for BalanceTracker;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -65,10 +73,14 @@ SecurityBondable, WalletLockable {
 
         require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
+        int256 deltaActiveBalance = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
+            wallet, firstPayment.currency, firstPayment.blockNumber, lastPayment.blockNumber
+        );
+
         // Require existence of fraud signal
         require(!(
-            (validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole)) &&
-            (validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment))
+        (validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole, deltaActiveBalance)) &&
+        (validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment))
         ));
 
         // Toggle operational mode exit
@@ -91,4 +103,8 @@ SecurityBondable, WalletLockable {
             firstPayment.seals.operator.hash, lastPayment.seals.operator.hash, msg.sender, wallet
         );
     }
+
+    //
+    // Private functions
+    // -----------------------------------------------------------------------------------------------------------------
 }
