@@ -345,7 +345,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeCurrency = _tradeCurrency;
     }
 
-    function isTradeIntendedCurrency(TradeTypesLib.Trade , MonetaryTypesLib.Currency )
+    function isTradeIntendedCurrency(TradeTypesLib.Trade, MonetaryTypesLib.Currency)
     public
     view
     returns (bool)
@@ -359,7 +359,7 @@ contract MockedValidator is Ownable, SignerManageable {
         tradeIntendedCurrency = _tradeIntendedCurrency;
     }
 
-    function isTradeConjugateCurrency(TradeTypesLib.Trade , MonetaryTypesLib.Currency )
+    function isTradeConjugateCurrency(TradeTypesLib.Trade, MonetaryTypesLib.Currency)
     public
     view
     returns (bool)
@@ -720,7 +720,8 @@ contract MockedValidator is Ownable, SignerManageable {
         TradeTypesLib.TradePartyRole,
         NahmiiTypesLib.CurrencyRole,
         PaymentTypesLib.Payment,
-        PaymentTypesLib.PaymentPartyRole
+        PaymentTypesLib.PaymentPartyRole,
+        int256
     )
     public
     view
@@ -777,7 +778,8 @@ contract MockedValidator is Ownable, SignerManageable {
         PaymentTypesLib.PaymentPartyRole,
         TradeTypesLib.Trade,
         TradeTypesLib.TradePartyRole,
-        NahmiiTypesLib.CurrencyRole
+        NahmiiTypesLib.CurrencyRole,
+        int256
     )
     public
     view

@@ -477,7 +477,8 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         TradeTypesLib.TradePartyRole tradePartyRole,
         NahmiiTypesLib.CurrencyRole tradeCurrencyRole,
         PaymentTypesLib.Payment payment,
-        PaymentTypesLib.PaymentPartyRole paymentPartyRole
+        PaymentTypesLib.PaymentPartyRole paymentPartyRole,
+        int256 delta
     )
     public
     pure
@@ -488,7 +489,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
 
         NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (PaymentTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
 
-        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
+        return lastCurrentPreviousBalances.previous.add(delta) == firstCurrentPreviousBalances.current;
     }
 
     function isGenuineSuccessivePaymentTradeBalances(
@@ -496,7 +497,8 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         PaymentTypesLib.PaymentPartyRole paymentPartyRole,
         TradeTypesLib.Trade trade,
         TradeTypesLib.TradePartyRole tradePartyRole,
-        NahmiiTypesLib.CurrencyRole tradeCurrencyRole
+        NahmiiTypesLib.CurrencyRole tradeCurrencyRole,
+        int256 delta
     )
     public
     pure
@@ -507,7 +509,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (TradeTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
         NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (NahmiiTypesLib.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
-        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current;
+        return lastCurrentPreviousBalances.previous.add(delta) == firstCurrentPreviousBalances.current;
     }
 
     function isGenuineSuccessiveTradesTotalFees(

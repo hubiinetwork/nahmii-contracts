@@ -18,6 +18,7 @@ library NahmiiTypesLib {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
+    // TODO Move CurrencyRole to TradeTypesLib
     enum CurrencyRole {Intended, Conjugate}
     enum ChallengePhase {Dispute, Closed}
 

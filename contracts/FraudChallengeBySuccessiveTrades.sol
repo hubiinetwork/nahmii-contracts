@@ -73,18 +73,20 @@ SecurityBondable, WalletLockable, BalanceTrackable {
         require(validator.isTradeCurrency(lastTrade, MonetaryTypesLib.Currency(currencyCt, currencyId)));
 
         (
-        TradeTypesLib.TradePartyRole firstTradePartyRole, TradeTypesLib.TradePartyRole lastTradePartyRole,
-        NahmiiTypesLib.CurrencyRole firstTradeCurrencyRole, NahmiiTypesLib.CurrencyRole lastTradeCurrencyRole,
+        TradeTypesLib.TradePartyRole firstTradePartyRole,
+        TradeTypesLib.TradePartyRole lastTradePartyRole,
+        NahmiiTypesLib.CurrencyRole firstTradeCurrencyRole,
+        NahmiiTypesLib.CurrencyRole lastTradeCurrencyRole,
         int256 deltaActiveBalance
         )
-        = _rolesAndDeltaBalance(firstTrade, lastTrade, wallet, MonetaryTypesLib.Currency(currencyCt, currencyId));
+        = _rolesAndDeltaActiveBalance(firstTrade, lastTrade, wallet, MonetaryTypesLib.Currency(currencyCt, currencyId));
 
         require(validator.isSuccessiveTradesPartyNonces(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole));
 
         // Require existence of fraud signal
         require(!(
-        (validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstTradeCurrencyRole, lastTrade, lastTradePartyRole, lastTradeCurrencyRole, deltaActiveBalance)) &&
-        (validator.isGenuineSuccessiveTradesTotalFees(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole))
+        validator.isGenuineSuccessiveTradesBalances(firstTrade, firstTradePartyRole, firstTradeCurrencyRole, lastTrade, lastTradePartyRole, lastTradeCurrencyRole, deltaActiveBalance) &&
+        validator.isGenuineSuccessiveTradesTotalFees(firstTrade, firstTradePartyRole, lastTrade, lastTradePartyRole)
         ));
 
         // Toggle operational mode exit
@@ -112,7 +114,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _rolesAndDeltaBalance(TradeTypesLib.Trade firstTrade, TradeTypesLib.Trade lastTrade, address wallet,
+    function _rolesAndDeltaActiveBalance(TradeTypesLib.Trade firstTrade, TradeTypesLib.Trade lastTrade, address wallet,
         MonetaryTypesLib.Currency currency)
     private
     view
@@ -138,7 +140,9 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     view
     returns (TradeTypesLib.TradePartyRole)
     {
-        return (validator.isTradeBuyer(trade, wallet) ? TradeTypesLib.TradePartyRole.Buyer : TradeTypesLib.TradePartyRole.Seller);
+        return validator.isTradeBuyer(trade, wallet) ?
+        TradeTypesLib.TradePartyRole.Buyer :
+        TradeTypesLib.TradePartyRole.Seller;
     }
 
     function _tradeCurrencyRole(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
@@ -146,7 +150,9 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     view
     returns (NahmiiTypesLib.CurrencyRole)
     {
-        return (validator.isTradeIntendedCurrency(trade, currency) ? NahmiiTypesLib.CurrencyRole.Intended : NahmiiTypesLib.CurrencyRole.Conjugate);
+        return validator.isTradeIntendedCurrency(trade, currency) ?
+        NahmiiTypesLib.CurrencyRole.Intended :
+        NahmiiTypesLib.CurrencyRole.Conjugate;
     }
 
     function _tradeCurrency(TradeTypesLib.Trade trade, NahmiiTypesLib.CurrencyRole currencyRole)

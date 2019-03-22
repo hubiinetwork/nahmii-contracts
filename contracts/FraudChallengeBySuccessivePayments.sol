@@ -63,10 +63,11 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     {
         require(validator.isPaymentParty(firstPayment, wallet));
         require(validator.isPaymentParty(lastPayment, wallet));
+
         require(validator.isPaymentCurrency(firstPayment, lastPayment.currency));
 
-        PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? PaymentTypesLib.PaymentPartyRole.Sender : PaymentTypesLib.PaymentPartyRole.Recipient);
-        PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? PaymentTypesLib.PaymentPartyRole.Sender : PaymentTypesLib.PaymentPartyRole.Recipient);
+        PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole = _paymentPartyRole(firstPayment, wallet);
+        PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole = _paymentPartyRole(lastPayment, wallet);
 
         require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
@@ -76,8 +77,8 @@ SecurityBondable, WalletLockable, BalanceTrackable {
 
         // Require existence of fraud signal
         require(!(
-        (validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole, deltaActiveBalance)) &&
-        (validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment))
+        validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole, deltaActiveBalance) &&
+        validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment)
         ));
 
         // Toggle operational mode exit
@@ -104,4 +105,13 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
+    function _paymentPartyRole(PaymentTypesLib.Payment payment, address wallet)
+    private
+    view
+    returns (PaymentTypesLib.PaymentPartyRole)
+    {
+        return validator.isPaymentSender(payment, wallet) ?
+        PaymentTypesLib.PaymentPartyRole.Sender :
+        PaymentTypesLib.PaymentPartyRole.Recipient;
+    }
 }

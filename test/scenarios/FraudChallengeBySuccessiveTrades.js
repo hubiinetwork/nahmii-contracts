@@ -358,31 +358,14 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if wallet is not party in first trade', () => {
+            describe('if wallet is not party in a trade', () => {
                 beforeEach(async () => {
-                    firstTrade = await mocks.mockTrade(glob.owner, {
-                        blockNumber: utils.bigNumberify((await provider.getBlockNumber()) + 10)
-                    });
+                    await ethersValidator.setTradeParty(false);
                 });
 
                 it('should revert', async () => {
                     return ethersFraudChallengeBySuccessiveTrades.challenge(
                         firstTrade, lastTrade, lastTrade.buyer.wallet, firstTrade.currencies.intended.ct,
-                        firstTrade.currencies.intended.id, {gasLimit: 2e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if wallet is not party in last trade', () => {
-                beforeEach(async () => {
-                    lastTrade = await mocks.mockTrade(glob.owner, {
-                        blockNumber: utils.bigNumberify((await provider.getBlockNumber()) + 20)
-                    });
-                });
-
-                it('should revert', async () => {
-                    return ethersFraudChallengeBySuccessiveTrades.challenge(
-                        firstTrade, lastTrade, firstTrade.buyer.wallet, firstTrade.currencies.intended.ct,
                         firstTrade.currencies.intended.id, {gasLimit: 2e6}
                     ).should.be.rejected;
                 });
