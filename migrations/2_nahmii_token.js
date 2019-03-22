@@ -16,7 +16,7 @@ const AddressStorage = require('../scripts/common/address_storage.js');
 module.exports = (deployer, network, accounts) => {
     deployer.then(async () => {
         let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
-        let ownerAccount;
+        let deployerAccount;
 
         await addressStorage.load();
 
@@ -24,15 +24,12 @@ module.exports = (deployer, network, accounts) => {
         //     addressStorage.clear();
 
         if (helpers.isTestNetwork(network))
-            ownerAccount = accounts[0];
+            deployerAccount = accounts[0];
 
         else {
-            ownerAccount = helpers.getOwnerAccountFromArgs();
+            deployerAccount = helpers.parseDeployerArg();
 
-            if (web3.eth.personal)
-                web3.eth.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
-            else
-                web3.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
+            helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
         }
 
         try {
@@ -41,7 +38,7 @@ module.exports = (deployer, network, accounts) => {
                     deployer,
                     deployFilters: helpers.getFiltersFromArgs(),
                     addressStorage,
-                    ownerAccount
+                    deployerAccount
                 };
 
                 await execDeploy(ctl, 'SafeMath', '', SafeMath);
@@ -51,7 +48,7 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
 
                 if (!helpers.isTestNetwork(network)) {
-                    console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
+                    console.log(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
                     // await instance.disableMinting();
                     console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
                 }
@@ -60,15 +57,11 @@ module.exports = (deployer, network, accounts) => {
                 addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
 
         } finally {
-            if (!helpers.isTestNetwork(network)) {
-                if (web3.eth.personal)
-                    web3.eth.personal.lockAccount(ownerAccount);
-                else
-                    web3.personal.lockAccount(ownerAccount);
-            }
+            if (!helpers.isTestNetwork(network))
+                helpers.lockAddress(web3, deployerAccount);
         }
 
-        console.log(`Saving addresses in ${__filename}...`);
+        console.log(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();
     });
 };
@@ -77,7 +70,7 @@ async function execDeploy(ctl, contractName, instanceName, contract) {
     let address = ctl.addressStorage.get(instanceName || contractName);
 
     if (!address || shouldDeploy(contractName, ctl.deployFilters)) {
-        let instance = await ctl.deployer.deploy(contract, {from: ctl.ownerAccount});
+        let instance = await ctl.deployer.deploy(contract, {from: ctl.deployerAccount});
 
         ctl.addressStorage.set(instanceName || contractName, instance.address);
     }

@@ -11,17 +11,13 @@ const helpers = require('./helpers.js');
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = async (callback) => {
-    let ownerAccount;
+    let deployerAccount;
 
     const testNetwork = false;
-    ownerAccount = helpers.getOwnerAccountFromArgs();
+    deployerAccount = helpers.parseDeployerArg();
 
-    if (!testNetwork) {
-        if (web3.eth.personal)
-            web3.eth.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
-        else
-            web3.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
-    }
+    if (!testNetwork)
+        helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
 
     try {
 
@@ -32,21 +28,12 @@ module.exports = async (callback) => {
         console.log(`Balance of token holder: ${(await instance.balanceOf('0x630FAEe42B6D418C909958C9590235F082c88136')).toString()}`);
     }
     catch (err) {
-        if (!testNetwork) {
-            if (web3.eth.personal)
-                web3.eth.personal.lockAccount(ownerAccount);
-            else
-                web3.personal.lockAccount(ownerAccount);
-        }
+        if (!testNetwork)
+            helpers.lockAddress(web3, deployerAccount);
         callback();
         throw err;
     }
 
-    if (!testNetwork) {
-        if (web3.eth.personal)
-            web3.eth.personal.lockAccount(ownerAccount);
-        else
-            web3.personal.lockAccount(ownerAccount);
-        callback();
-    }
+    if (!testNetwork)
+        helpers.lockAddress(web3, deployerAccount);
 };

@@ -98,7 +98,7 @@ module.exports = (deployer, network, accounts) => {
 
     deployer.then(async () => {
         let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
-        let ownerAccount;
+        let deployerAccount;
         let instance;
 
         await addressStorage.load();
@@ -107,15 +107,12 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.clear();
 
         if (helpers.isTestNetwork(network))
-            ownerAccount = accounts[0];
+            deployerAccount = accounts[0];
 
         else {
-            ownerAccount = helpers.getOwnerAccountFromArgs();
+            deployerAccount = helpers.parseDeployerArg();
 
-            if (web3.eth.personal)
-                web3.eth.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
-            else
-                web3.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
+            helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
         }
 
         try {
@@ -123,7 +120,7 @@ module.exports = (deployer, network, accounts) => {
                 deployer: deployer,
                 deployFilters: helpers.getFiltersFromArgs(),
                 addressStorage: addressStorage,
-                ownerAccount: ownerAccount
+                deployerAccount: deployerAccount
             };
 
             BlockNumbDisdIntsLib.address = addressStorage.get('BlockNumbDisdIntsLib');
@@ -439,8 +436,8 @@ module.exports = (deployer, network, accounts) => {
                 }
 
                 instance = await TransferControllerManager.at(addressStorage.get('TransferControllerManager'));
-                await instance.registerTransferController('ERC20', addressStorage.get('ERC20TransferController'), {from: ownerAccount});
-                await instance.registerTransferController('ERC721', addressStorage.get('ERC721TransferController'), {from: ownerAccount});
+                await instance.registerTransferController('ERC20', addressStorage.get('ERC20TransferController'), {from: deployerAccount});
+                await instance.registerTransferController('ERC721', addressStorage.get('ERC721TransferController'), {from: deployerAccount});
 
                 instance = await BalanceTracker.at(addressStorage.get('BalanceTracker'));
                 await instance.registerService(addressStorage.get('ClientFund'));
@@ -873,15 +870,11 @@ module.exports = (deployer, network, accounts) => {
             await instance.authorizeInitialService(addressStorage.get('NullSettlementDisputeByTrade'));
 
         } finally {
-            if (!helpers.isTestNetwork(network)) {
-                if (web3.eth.personal)
-                    web3.eth.personal.lockAccount(ownerAccount);
-                else
-                    web3.personal.lockAccount(ownerAccount);
-            }
+            if (!helpers.isTestNetwork(network))
+                helpers.lockAddress(web3, deployerAccount);
         }
 
-        console.log(`Saving addresses in ${__filename}...`);
+        console.log(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();
     });
 };
@@ -895,10 +888,10 @@ async function execDeploy(ctl, contractName, instanceName, contract, usesAccessM
         if (usesAccessManager) {
             let signerManager = ctl.addressStorage.get('SignerManager');
 
-            instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, signerManager, {from: ctl.ownerAccount});
+            instance = await ctl.deployer.deploy(contract, ctl.deployerAccount, signerManager, {from: ctl.deployerAccount});
 
         } else
-            instance = await ctl.deployer.deploy(contract, ctl.ownerAccount, {from: ctl.ownerAccount});
+            instance = await ctl.deployer.deploy(contract, ctl.deployerAccount, {from: ctl.deployerAccount});
 
         ctl.addressStorage.set(instanceName || contractName, instance.address);
     }
