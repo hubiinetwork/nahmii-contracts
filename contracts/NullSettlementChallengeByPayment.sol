@@ -49,12 +49,12 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         NullSettlementChallengeState newNullSettlementChallengeState);
     event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
         DriipSettlementState newDriipSettlementState);
-    event StartChallengeEvent(address wallet, int256 amount, address stageCurrencyCt,
-        uint stageCurrencyId);
-    event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount,
-        address stageCurrencyCt, uint stageCurrencyId);
+    event StartChallengeEvent(address wallet, int256 amount, address currencyCt,
+        uint currencyId);
+    event StartChallengeByProxyEvent(address wallet, int256 amount,
+        address currencyCt, uint currencyId, address proxy);
     event StopChallengeEvent(address wallet, address currencyCt, uint256 currencyId);
-    event StopChallengeByProxyEvent(address proxy, address wallet, address currencyCt, uint256 currencyId);
+    event StopChallengeByProxyEvent(address wallet, address currencyCt, uint256 currencyId, address proxy);
 
     //
     // Constructor
@@ -131,7 +131,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         _startChallenge(wallet, amount, MonetaryTypesLib.Currency(currencyCt, currencyId), false);
 
         // Emit event
-        emit StartChallengeByProxyEvent(msg.sender, wallet, amount, currencyCt, currencyId);
+        emit StartChallengeByProxyEvent(wallet, amount, currencyCt, currencyId, msg.sender);
     }
 
     /// @notice Stop settlement challenge
@@ -159,7 +159,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         _stopChallenge(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false);
 
         // Emit event
-        emit StopChallengeByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
+        emit StopChallengeByProxyEvent(wallet, currencyCt, currencyId, msg.sender);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
