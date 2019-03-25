@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {Validatable} from "./Validatable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
+import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDisputeByPayment} from "./DriipSettlementDisputeByPayment.sol";
@@ -22,14 +23,18 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
+import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
  * @title DriipSettlementChallengeByPayment
  * @notice Where driip settlements pertaining to payments are started and disputed
  */
-contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, Validatable, WalletLockable {
+contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, Validatable, WalletLockable,
+BalanceTrackable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using BalanceTrackerLib for BalanceTracker;
 
     //
     // Variables
@@ -135,9 +140,9 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         // Emit event
         emit StartChallengeFromPaymentByProxyEvent(
             wallet,
-            driipSettlementChallengeState.proposalNonce(msg.sender, payment.currency),
+            driipSettlementChallengeState.proposalNonce(wallet, payment.currency),
             stageAmount,
-            driipSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, payment.currency),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, payment.currency),
             payment.currency.ct, payment.currency.id, msg.sender
         );
     }
@@ -407,11 +412,14 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
         require(nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
         // Deduce the concerned balance amount
-        (uint256 nonce, int256 balanceAmount) = _paymentPartyProperties(payment, wallet);
+        (uint256 nonce, int256 cumRelTransfer) = _paymentPartyProperties(payment, wallet);
+
+        // Obtain the current active balance amount
+        int256 balanceAmount = balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency);
 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
-            wallet, nonce, stageAmount, balanceAmount.sub(stageAmount), payment.currency, payment.blockNumber,
+            wallet, nonce, stageAmount, balanceAmount.sub(cumRelTransfer.add(stageAmount)), payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
     }
@@ -428,8 +436,12 @@ contract DriipSettlementChallengeByPayment is Ownable, ConfigurableOperational, 
     view
     returns (uint256, int256)
     {
+        // Obtain the active balance amount at the payment block
+        int256 balanceAmountAtPaymentBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(wallet, payment.currency, payment.blockNumber);
+
+        // Return wallet nonce and cumulative relative transfer
         return validator.isPaymentSender(payment, wallet) ?
-        (payment.sender.nonce, payment.sender.balances.current) :
-    (payment.recipient.nonce, payment.recipient.balances.current);
+        (payment.sender.nonce, balanceAmountAtPaymentBlock.sub(payment.sender.balances.current)) :
+    (payment.recipient.nonce, balanceAmountAtPaymentBlock.sub(payment.recipient.balances.current));
     }
 }

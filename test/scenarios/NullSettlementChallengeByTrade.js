@@ -288,8 +288,8 @@ module.exports = (glob) => {
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
                 await ethersDriipSettlementState._reset({gasLimit: 1e6});
 
-                await ethersBalanceTracker._setFungibleRecordsCount(depositedBalanceType, 1);
-                await ethersBalanceTracker._setFungibleRecord(depositedBalanceType, 10, 1);
+                await ethersBalanceTracker._setFungibleRecordsCount(depositedBalanceType, 1, {gasLimit: 1e6});
+                await ethersBalanceTracker._setFungibleRecord(depositedBalanceType, 10, 1, {gasLimit: 1e6});
 
                 await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
                     mocks.address1, {ct: mocks.address0, id: 0}, 20

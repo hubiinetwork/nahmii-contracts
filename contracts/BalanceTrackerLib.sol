@@ -18,8 +18,8 @@ library BalanceTrackerLib {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
-    function fungibleActiveRecordByBlockNumber(BalanceTracker self, address wallet, MonetaryTypesLib.Currency currency,
-        uint256 _blockNumber)
+    function fungibleActiveRecordByBlockNumber(BalanceTracker self, address wallet,
+        MonetaryTypesLib.Currency currency, uint256 _blockNumber)
     internal
     view
     returns (int256 amount, uint256 blockNumber)
@@ -37,8 +37,8 @@ library BalanceTrackerLib {
         blockNumber = depositedBlockNumber.clampMin(settledBlockNumber);
     }
 
-    function fungibleActiveBalanceAmountByBlockNumber(BalanceTracker self, address wallet, MonetaryTypesLib.Currency currency,
-        uint256 blockNumber)
+    function fungibleActiveBalanceAmountByBlockNumber(BalanceTracker self, address wallet,
+        MonetaryTypesLib.Currency currency, uint256 blockNumber)
     internal
     view
     returns (int256)
@@ -47,8 +47,8 @@ library BalanceTrackerLib {
         return amount;
     }
 
-    function fungibleActiveDeltaBalanceAmountByBlockNumbers(BalanceTracker self, address wallet, MonetaryTypesLib.Currency currency,
-        uint256 fromBlockNumber, uint256 toBlockNumber)
+    function fungibleActiveDeltaBalanceAmountByBlockNumbers(BalanceTracker self, address wallet,
+        MonetaryTypesLib.Currency currency, uint256 fromBlockNumber, uint256 toBlockNumber)
     internal
     view
     returns (int256)
@@ -57,7 +57,8 @@ library BalanceTrackerLib {
         fungibleActiveBalanceAmountByBlockNumber(self, wallet, currency, fromBlockNumber);
     }
 
-    function fungibleActiveRecord(BalanceTracker self, address wallet, MonetaryTypesLib.Currency currency)
+    function fungibleActiveRecord(BalanceTracker self, address wallet,
+        MonetaryTypesLib.Currency currency)
     internal
     view
     returns (int256 amount, uint256 blockNumber)
@@ -80,7 +81,8 @@ library BalanceTrackerLib {
     view
     returns (int256)
     {
-        (int256 amount,) = fungibleActiveRecord(self, wallet, currency);
-        return amount;
+        return self.get(wallet, self.depositedBalanceType(), currency.ct, currency.id).add(
+            self.get(wallet, self.settledBalanceType(), currency.ct, currency.id)
+        );
     }
 }
