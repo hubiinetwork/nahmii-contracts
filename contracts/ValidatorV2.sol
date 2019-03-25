@@ -452,7 +452,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 memory lastIntendedConjugateCurrentPreviousBalances = (TradeTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.balances : lastTrade.seller.balances);
         NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (NahmiiTypesLib.CurrencyRole.Intended == lastTradeCurrencyRole ? lastIntendedConjugateCurrentPreviousBalances.intended : lastIntendedConjugateCurrentPreviousBalances.conjugate);
 
-        return lastCurrentPreviousBalances.previous.add(delta) == firstCurrentPreviousBalances.current;
+        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current.add(delta);
     }
 
     function isGenuineSuccessivePaymentsBalances(
@@ -469,7 +469,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         NahmiiTypesLib.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (PaymentTypesLib.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.balances : firstPayment.recipient.balances);
         NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (PaymentTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances : lastPayment.recipient.balances);
 
-        return lastCurrentPreviousBalances.previous.add(delta) == firstCurrentPreviousBalances.current;
+        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current.add(delta);
     }
 
     function isGenuineSuccessiveTradePaymentBalances(
@@ -489,7 +489,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
 
         NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (PaymentTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
 
-        return lastCurrentPreviousBalances.previous.add(delta) == firstCurrentPreviousBalances.current;
+        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current.add(delta);
     }
 
     function isGenuineSuccessivePaymentTradeBalances(
@@ -509,7 +509,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (TradeTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
         NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (NahmiiTypesLib.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
-        return lastCurrentPreviousBalances.previous.add(delta) == firstCurrentPreviousBalances.current;
+        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current.add(delta);
     }
 
     function isGenuineSuccessiveTradesTotalFees(

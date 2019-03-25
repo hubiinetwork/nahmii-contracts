@@ -199,7 +199,7 @@ contract Validator is Ownable, SignerManageable, Configurable, PaymentHashable {
         NahmiiTypesLib.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (PaymentTypesLib.PaymentPartyRole.Sender == firstPaymentPartyRole ? firstPayment.sender.balances : firstPayment.recipient.balances);
         NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (PaymentTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances : lastPayment.recipient.balances);
 
-        return lastCurrentPreviousBalances.previous.add(delta) == firstCurrentPreviousBalances.current;
+        return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current.add(delta);
     }
 
     function isGenuineSuccessivePaymentsTotalFees(
