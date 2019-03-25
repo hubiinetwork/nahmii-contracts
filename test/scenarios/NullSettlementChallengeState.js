@@ -193,7 +193,7 @@ module.exports = (glob) => {
             describe('if no proposal has been added', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementChallengeState.enableServiceAction(
-                        glob.owner, await ethersNullSettlementChallengeState.CANCEL_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                        glob.owner, await ethersNullSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
                     filter = {
@@ -215,7 +215,7 @@ module.exports = (glob) => {
             describe('if cancelling proposal initiated by the conjugate role', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementChallengeState.enableServiceAction(
-                        glob.owner, await ethersNullSettlementChallengeState.CANCEL_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                        glob.owner, await ethersNullSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
                     await ethersNullSettlementChallengeState.addProposal(
@@ -234,7 +234,7 @@ module.exports = (glob) => {
             describe('if within operational constraints', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementChallengeState.enableServiceAction(
-                        glob.owner, await ethersNullSettlementChallengeState.CANCEL_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                        glob.owner, await ethersNullSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
                     await ethersNullSettlementChallengeState.addProposal(

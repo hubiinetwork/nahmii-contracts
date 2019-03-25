@@ -31,7 +31,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
     string constant public ADD_PROPOSAL_ACTION = "add_proposal";
-    string constant public CANCEL_PROPOSAL_ACTION = "cancel_proposal";
+    string constant public REMOVE_PROPOSAL_ACTION = "remove_proposal";
     string constant public DISQUALIFY_PROPOSAL_ACTION = "disqualify_proposal";
 
     //
@@ -103,7 +103,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     /// @param walletTerminated True if wallet terminated
     function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
     public
-    onlyEnabledServiceAction(CANCEL_PROPOSAL_ACTION)
+    onlyEnabledServiceAction(REMOVE_PROPOSAL_ACTION)
     {
         // Get the proposal index
         uint256 index = proposalIndexByWalletCurrency[challengedWallet][currency.ct][currency.id];
@@ -352,7 +352,6 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     function _addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated)
     private
-    returns (SettlementChallengeTypesLib.Proposal storage)
     {
         // Require that stage and target balance amounts are positive
         require(stageAmount.isPositiveInt256());
@@ -374,8 +373,6 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
 
         // Store proposal index
         proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = proposals.length;
-
-        return proposals[proposals.length - 1];
     }
 
     function _activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId)
