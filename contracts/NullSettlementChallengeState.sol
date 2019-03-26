@@ -47,7 +47,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated);
     event RemoveProposalEvent(address challengedWallet, uint256 nonce, MonetaryTypesLib.Currency currency);
     event DisqualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
-        address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateType);
+        address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateKind);
 
     //
     // Constructor
@@ -131,9 +131,9 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     /// @param blockNumber The disqualification block number
     /// @param candidateNonce The candidate nonce
     /// @param candidateHash The candidate hash
-    /// @param candidateType The candidate type
+    /// @param candidateKind The candidate kind
     function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
-        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string candidateType)
+        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string candidateKind)
     public
     onlyEnabledServiceAction(DISQUALIFY_PROPOSAL_ACTION)
     {
@@ -147,13 +147,13 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         proposals[index - 1].disqualification.challenger = challengerWallet;
         proposals[index - 1].disqualification.nonce = candidateNonce;
         proposals[index - 1].disqualification.blockNumber = blockNumber;
-        proposals[index - 1].disqualification.candidateHash = candidateHash;
-        proposals[index - 1].disqualification.candidateType = candidateType;
+        proposals[index - 1].disqualification.candidate.hash = candidateHash;
+        proposals[index - 1].disqualification.candidate.kind = candidateKind;
 
         // Emit event
         emit DisqualifyProposalEvent(
             challengedWallet, proposals[index - 1].nonce, currency, challengerWallet,
-            candidateNonce, candidateHash, candidateType
+            candidateNonce, candidateHash, candidateKind
         );
     }
 
@@ -242,7 +242,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].stageAmount;
+        return proposals[index - 1].amounts.stage;
     }
 
     /// @notice Get the settlement proposal target balance amount of the given wallet and currency
@@ -256,7 +256,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].targetBalanceAmount;
+        return proposals[index - 1].amounts.targetBalance;
     }
 
     /// @notice Get the settlement proposal balance reward of the given wallet and currency
@@ -326,21 +326,21 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].disqualification.candidateHash;
+        return proposals[index - 1].disqualification.candidate.hash;
     }
 
-    /// @notice Get the settlement proposal disqualification candidate type of the given wallet and currency
+    /// @notice Get the settlement proposal disqualification candidate kind of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The settlement proposal disqualification candidate type
-    function proposalDisqualificationCandidateType(address wallet, MonetaryTypesLib.Currency currency)
+    /// @return The settlement proposal disqualification candidate kind
+    function proposalDisqualificationCandidateKind(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (string)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].disqualification.candidateType;
+        return proposals[index - 1].disqualification.candidate.kind;
     }
 
     //
@@ -364,8 +364,8 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[proposals.length - 1].status = SettlementChallengeTypesLib.Status.Qualified;
         proposals[proposals.length - 1].currency = currency;
-        proposals[proposals.length - 1].stageAmount = stageAmount;
-        proposals[proposals.length - 1].targetBalanceAmount = targetBalanceAmount;
+        proposals[proposals.length - 1].amounts.stage = stageAmount;
+        proposals[proposals.length - 1].amounts.targetBalance = targetBalanceAmount;
         proposals[proposals.length - 1].walletInitiated = walletInitiated;
 
         // Store proposal index

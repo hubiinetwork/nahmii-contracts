@@ -330,17 +330,17 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
     }
 
-    /// @notice Get the disqualification candidate type of the given wallet and currency
+    /// @notice Get the disqualification candidate kind of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The candidate type of the settlement disqualification
-    function proposalDisqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
+    /// @return The candidate kind of the settlement disqualification
+    function proposalDisqualificationCandidateKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (string)
     {
-        return nullSettlementChallengeState.proposalDisqualificationCandidateType(
+        return nullSettlementChallengeState.proposalDisqualificationCandidateKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }

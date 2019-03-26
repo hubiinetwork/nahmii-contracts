@@ -502,8 +502,8 @@ module.exports = (glob) => {
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
                     proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                    proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
-                    proposal.disqualification.candidateType.should.equal('order');
+                    proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
+                    proposal.disqualification.candidate.kind.should.equal('order');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(0);
@@ -559,8 +559,8 @@ module.exports = (glob) => {
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
                     proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                    proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
-                    proposal.disqualification.candidateType.should.equal('order');
+                    proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
+                    proposal.disqualification.candidate.kind.should.equal('order');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -617,8 +617,8 @@ module.exports = (glob) => {
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
                         proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                        proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
-                        proposal.disqualification.candidateType.should.equal('order');
+                        proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
+                        proposal.disqualification.candidate.kind.should.equal('order');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -669,8 +669,8 @@ module.exports = (glob) => {
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
                         proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                        proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
-                        proposal.disqualification.candidateType.should.equal('order');
+                        proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
+                        proposal.disqualification.candidate.kind.should.equal('order');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -738,8 +738,8 @@ module.exports = (glob) => {
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
                         proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                        proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
-                        proposal.disqualification.candidateType.should.equal('order');
+                        proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
+                        proposal.disqualification.candidate.kind.should.equal('order');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -793,8 +793,8 @@ module.exports = (glob) => {
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
                         proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                        proposal.disqualification.candidateHash.should.equal(order.seals.operator.hash);
-                        proposal.disqualification.candidateType.should.equal('order');
+                        proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
+                        proposal.disqualification.candidate.kind.should.equal('order');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -1055,8 +1055,8 @@ module.exports = (glob) => {
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
-                    proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
-                    proposal.disqualification.candidateType.should.equal('trade');
+                    proposal.disqualification.candidate.hash.should.equal(trade.seal.hash);
+                    proposal.disqualification.candidate.kind.should.equal('trade');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(0);
@@ -1112,8 +1112,8 @@ module.exports = (glob) => {
                     proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                     proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
-                    proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
-                    proposal.disqualification.candidateType.should.equal('trade');
+                    proposal.disqualification.candidate.hash.should.equal(trade.seal.hash);
+                    proposal.disqualification.candidate.kind.should.equal('trade');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -1169,8 +1169,8 @@ module.exports = (glob) => {
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                         proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
-                        proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
-                        proposal.disqualification.candidateType.should.equal('trade');
+                        proposal.disqualification.candidate.hash.should.equal(trade.seal.hash);
+                        proposal.disqualification.candidate.kind.should.equal('trade');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -1220,8 +1220,8 @@ module.exports = (glob) => {
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                         proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
-                        proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
-                        proposal.disqualification.candidateType.should.equal('trade');
+                        proposal.disqualification.candidate.hash.should.equal(trade.seal.hash);
+                        proposal.disqualification.candidate.kind.should.equal('trade');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -1288,8 +1288,8 @@ module.exports = (glob) => {
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                         proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
-                        proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
-                        proposal.disqualification.candidateType.should.equal('trade');
+                        proposal.disqualification.candidate.hash.should.equal(trade.seal.hash);
+                        proposal.disqualification.candidate.kind.should.equal('trade');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -1342,8 +1342,8 @@ module.exports = (glob) => {
                         proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
                         proposal.disqualification.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                         proposal.disqualification.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
-                        proposal.disqualification.candidateHash.should.equal(trade.seal.hash);
-                        proposal.disqualification.candidateType.should.equal('trade');
+                        proposal.disqualification.candidate.hash.should.equal(trade.seal.hash);
+                        proposal.disqualification.candidate.kind.should.equal('trade');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);

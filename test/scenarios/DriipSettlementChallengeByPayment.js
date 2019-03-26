@@ -368,15 +368,15 @@ module.exports = (glob) => {
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                    proposal.stageAmount._bn.should.eq.BN(payment.sender.balances.current._bn);
-                    proposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    proposal.amounts.stage._bn.should.eq.BN(payment.sender.balances.current._bn);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(0);
                     proposal.currency.ct.should.equal(payment.currency.ct);
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                     proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
                     proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                     proposal.walletInitiated.should.be.true;
-                    proposal.challengedHash.should.equal(payment.seals.operator.hash);
-                    proposal.challengedType.should.equal('payment');
+                    proposal.challenged.hash.should.equal(payment.seals.operator.hash);
+                    proposal.challenged.kind.should.equal('payment');
                 });
             });
         });
@@ -491,15 +491,15 @@ module.exports = (glob) => {
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                    proposal.stageAmount._bn.should.eq.BN(payment.sender.balances.current._bn);
-                    proposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    proposal.amounts.stage._bn.should.eq.BN(payment.sender.balances.current._bn);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(0);
                     proposal.currency.ct.should.equal(payment.currency.ct);
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                     proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
                     proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                     proposal.walletInitiated.should.be.false;
-                    proposal.challengedHash.should.equal(payment.seals.operator.hash);
-                    proposal.challengedType.should.equal('payment');
+                    proposal.challenged.hash.should.equal(payment.seals.operator.hash);
+                    proposal.challenged.kind.should.equal('payment');
                 });
             });
         });
@@ -660,14 +660,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalChallengedType()', () => {
+        describe('proposalChallengedKind()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementChallengeState._setProposalChallengedType('payment');
+                await ethersDriipSettlementChallengeState._setProposalChallengedKind('payment');
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalChallengedType(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByPayment.proposalChallengedKind(glob.owner, mocks.address0, 0))
                     .should.equal('payment');
             });
         });
@@ -720,14 +720,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalDisqualificationCandidateType()', () => {
+        describe('proposalDisqualificationCandidateKind()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementChallengeState._setProposalDisqualificationCandidateType('payment');
+                await ethersDriipSettlementChallengeState._setProposalDisqualificationCandidateKind('payment');
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalDisqualificationCandidateType(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByPayment.proposalDisqualificationCandidateKind(glob.owner, mocks.address0, 0))
                     .should.equal('payment');
             });
         });

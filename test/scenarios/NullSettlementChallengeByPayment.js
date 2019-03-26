@@ -20,7 +20,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe.only('NullSettlementChallengeByPayment', () => {
+    describe('NullSettlementChallengeByPayment', () => {
         let web3NullSettlementChallengeByPayment, ethersNullSettlementChallengeByPayment;
         let web3SignerManager;
         let web3Configuration, ethersConfiguration;
@@ -286,15 +286,15 @@ module.exports = (glob) => {
 
                     const proposal = await ethersNullSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));
-                    proposal.stageAmount._bn.should.eq.BN(10);
-                    proposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    proposal.amounts.stage._bn.should.eq.BN(10);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(0);
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.blockNumber._bn.should.eq.BN(1);
                     proposal.nonce._bn.should.eq.BN(20);
                     proposal.walletInitiated.should.be.true;
-                    proposal.challengedHash.should.equal(mocks.hash0);
-                    proposal.challengedType.should.be.a('string').that.is.empty;
+                    proposal.challenged.hash.should.equal(mocks.hash0);
+                    proposal.challenged.kind.should.be.a('string').that.is.empty;
                 });
             });
         });
@@ -364,15 +364,15 @@ module.exports = (glob) => {
 
                     const proposal = await ethersNullSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));
-                    proposal.stageAmount._bn.should.eq.BN(10);
-                    proposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    proposal.amounts.stage._bn.should.eq.BN(10);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(0);
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.blockNumber._bn.should.eq.BN(1);
                     proposal.nonce._bn.should.eq.BN(20);
                     proposal.walletInitiated.should.be.false;
-                    proposal.challengedHash.should.equal(mocks.hash0);
-                    proposal.challengedType.should.be.a('string').that.is.empty;
+                    proposal.challenged.hash.should.equal(mocks.hash0);
+                    proposal.challenged.kind.should.be.a('string').that.is.empty;
                 });
             });
         });
@@ -565,14 +565,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalDisqualificationCandidateType()', () => {
+        describe('proposalDisqualificationCandidateKind()', () => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersNullSettlementChallengeState._setProposalDisqualificationCandidateType('payment');
+                await ethersNullSettlementChallengeState._setProposalDisqualificationCandidateKind('payment');
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersNullSettlementChallengeByPayment.proposalDisqualificationCandidateType(glob.owner, mocks.address0, 0))
+                (await ethersNullSettlementChallengeByPayment.proposalDisqualificationCandidateKind(glob.owner, mocks.address0, 0))
                     .should.equal('payment');
             });
         });

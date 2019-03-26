@@ -151,9 +151,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
             order.wallet, currency
         ));
 
-        // Require that candidate type is order
+        // Require that candidate kind is order
         require(
-            TradeTypesLib.ORDER_TYPE().compareTo(driipSettlementChallengeState.proposalDisqualificationCandidateType(
+            TradeTypesLib.ORDER_TYPE().compareTo(driipSettlementChallengeState.proposalDisqualificationCandidateKind(
                 order.wallet, currency
             ))
         );

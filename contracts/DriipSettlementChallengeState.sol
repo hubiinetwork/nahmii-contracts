@@ -46,12 +46,12 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     // -----------------------------------------------------------------------------------------------------------------
     event AddProposalEvent(address challengedWallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
-        bytes32 challengedHash, string challengedType);
+        bytes32 challengedHash, string challengedKind);
     event RemoveProposalEvent(address challengedWallet, uint256 nonce, MonetaryTypesLib.Currency currency);
     event DisqualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
-        address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateType);
+        address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateKind);
     event QualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
-        address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateType);
+        address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateKind);
 
     //
     // Constructor
@@ -81,23 +81,23 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param blockNumber The proposal block number
     /// @param walletInitiated True if reward from candidate balance
     /// @param challengedHash The candidate driip hash
-    /// @param challengedType The candidate driip type
+    /// @param challengedKind The candidate driip kind
     function addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
-        bytes32 challengedHash, string challengedType)
+        bytes32 challengedHash, string challengedKind)
     public
     onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
     {
         // Add proposal
         _addProposal(
             wallet, nonce, stageAmount, targetBalanceAmount, currency,
-            blockNumber, walletInitiated, challengedHash, challengedType
+            blockNumber, walletInitiated, challengedHash, challengedKind
         );
 
         // Emit event
         emit AddProposalEvent(
             wallet, nonce, stageAmount, targetBalanceAmount, currency,
-            blockNumber, walletInitiated, challengedHash, challengedType
+            blockNumber, walletInitiated, challengedHash, challengedKind
         );
     }
 
@@ -141,9 +141,9 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param blockNumber The disqualification block number
     /// @param candidateNonce The candidate nonce
     /// @param candidateHash The candidate hash
-    /// @param candidateType The candidate type
+    /// @param candidateKind The candidate kind
     function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
-        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string candidateType)
+        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string candidateKind)
     public
     onlyEnabledServiceAction(DISQUALIFY_PROPOSAL_ACTION)
     {
@@ -157,13 +157,13 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         proposals[index - 1].disqualification.challenger = challengerWallet;
         proposals[index - 1].disqualification.nonce = candidateNonce;
         proposals[index - 1].disqualification.blockNumber = blockNumber;
-        proposals[index - 1].disqualification.candidateHash = candidateHash;
-        proposals[index - 1].disqualification.candidateType = candidateType;
+        proposals[index - 1].disqualification.candidate.hash = candidateHash;
+        proposals[index - 1].disqualification.candidate.kind = candidateKind;
 
         // Emit event
         emit DisqualifyProposalEvent(
             challengedWallet, proposals[index - 1].nonce, currency, challengerWallet,
-            candidateNonce, candidateHash, candidateType
+            candidateNonce, candidateHash, candidateKind
         );
     }
 
@@ -183,8 +183,8 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
             wallet, proposals[index - 1].nonce, currency,
             proposals[index - 1].disqualification.challenger,
             proposals[index - 1].disqualification.nonce,
-            proposals[index - 1].disqualification.candidateHash,
-            proposals[index - 1].disqualification.candidateType
+            proposals[index - 1].disqualification.candidate.hash,
+            proposals[index - 1].disqualification.candidate.kind
         );
 
         // Update proposal
@@ -293,7 +293,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].stageAmount;
+        return proposals[index - 1].amounts.stage;
     }
 
     /// @notice Get the proposal target balance amount of the given wallet and currency
@@ -307,7 +307,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].targetBalanceAmount;
+        return proposals[index - 1].amounts.targetBalance;
     }
 
     /// @notice Get the proposal challenged hash of the given wallet and currency
@@ -321,21 +321,21 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].challengedHash;
+        return proposals[index - 1].challenged.hash;
     }
 
-    /// @notice Get the proposal challenged type of the given wallet and currency
+    /// @notice Get the proposal challenged kind of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The settlement proposal challenged type
-    function proposalChallengedType(address wallet, MonetaryTypesLib.Currency currency)
+    /// @return The settlement proposal challenged kind
+    function proposalChallengedKind(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (string)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].challengedType;
+        return proposals[index - 1].challenged.kind;
     }
 
     /// @notice Get the proposal balance reward of the given wallet and currency
@@ -405,21 +405,21 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].disqualification.candidateHash;
+        return proposals[index - 1].disqualification.candidate.hash;
     }
 
-    /// @notice Get the proposal disqualification candidate type of the given wallet and currency
+    /// @notice Get the proposal disqualification candidate kind of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The settlement proposal disqualification candidate type
-    function proposalDisqualificationCandidateType(address wallet, MonetaryTypesLib.Currency currency)
+    /// @return The settlement proposal disqualification candidate kind
+    function proposalDisqualificationCandidateKind(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (string)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].disqualification.candidateType;
+        return proposals[index - 1].disqualification.candidate.kind;
     }
 
     //
@@ -427,7 +427,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     // -----------------------------------------------------------------------------------------------------------------
     function _addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
-        bytes32 challengedHash, string challengedType)
+        bytes32 challengedHash, string challengedKind)
     private
     {
         // Require that there is no other proposal on the given wallet-nonce-currency triplet
@@ -447,11 +447,11 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[proposals.length - 1].status = SettlementChallengeTypesLib.Status.Qualified;
         proposals[proposals.length - 1].currency = currency;
-        proposals[proposals.length - 1].stageAmount = stageAmount;
-        proposals[proposals.length - 1].targetBalanceAmount = targetBalanceAmount;
+        proposals[proposals.length - 1].amounts.stage = stageAmount;
+        proposals[proposals.length - 1].amounts.targetBalance = targetBalanceAmount;
         proposals[proposals.length - 1].walletInitiated = walletInitiated;
-        proposals[proposals.length - 1].challengedHash = challengedHash;
-        proposals[proposals.length - 1].challengedType = challengedType;
+        proposals[proposals.length - 1].challenged.hash = challengedHash;
+        proposals[proposals.length - 1].challenged.kind = challengedKind;
 
         // Store proposal index
         proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = proposals.length;
