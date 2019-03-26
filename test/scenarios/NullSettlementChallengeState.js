@@ -150,26 +150,27 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('proposal has not expired', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementChallengeState.registerService(glob.owner);
-                    await ethersNullSettlementChallengeState.enableServiceAction(
-                        glob.owner, await ethersNullSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
-                        30, true, {gasLimit: 1e6}
-                    );
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
-                        30, true, {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
+            // TODO Remove
+            // describe('proposal has not expired', () => {
+            //     beforeEach(async () => {
+            //         await ethersNullSettlementChallengeState.registerService(glob.owner);
+            //         await ethersNullSettlementChallengeState.enableServiceAction(
+            //             glob.owner, await ethersNullSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+            //         );
+            //
+            //         await ethersNullSettlementChallengeState.addProposal(
+            //             glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+            //             30, true, {gasLimit: 1e6}
+            //         );
+            //     });
+            //
+            //     it('should revert', async () => {
+            //         ethersNullSettlementChallengeState.addProposal(
+            //             glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+            //             30, true, {gasLimit: 1e6}
+            //         ).should.be.rejected;
+            //     });
+            // });
         });
 
         describe('removeProposal()', () => {

@@ -20,7 +20,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = (glob) => {
-    describe('NullSettlementChallengeByPayment', () => {
+    describe.only('NullSettlementChallengeByPayment', () => {
         let web3NullSettlementChallengeByPayment, ethersNullSettlementChallengeByPayment;
         let web3SignerManager;
         let web3Configuration, ethersConfiguration;
@@ -248,10 +248,24 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if called with overlapping null settlement challenge', () => {
+                beforeEach(async () => {
+                    await web3NullSettlementChallengeState._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeByPayment.startChallenge(
+                        10, mocks.address0, 0, {gasLimit: 3e6}
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if within operational constraints', () => {
                 let filter;
 
                 beforeEach(async () => {
+                    await web3NullSettlementChallengeState._setProposalExpired(true);
+
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
                         topics: ethersNullSettlementChallengeByPayment.interface.events['StartChallengeEvent'].topics
@@ -265,6 +279,10 @@ module.exports = (glob) => {
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    // TODO Determine removal of completed settlement challenges
+                    // (await ethersNullSettlementChallengeState._removeProposalsCount())
+                    //     ._bn.should.eq.BN(1);
 
                     const proposal = await ethersNullSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));
@@ -308,10 +326,24 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if called with overlapping null settlement challenge', () => {
+                beforeEach(async () => {
+                    await web3NullSettlementChallengeState._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeByPayment.startChallengeByProxy(
+                        glob.owner, 10, mocks.address0, 0, {gasLimit: 3e6}
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if within operational constraints', () => {
                 let filter;
 
                 beforeEach(async () => {
+                    await web3NullSettlementChallengeState._setProposalExpired(true);
+
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
                         topics: ethersNullSettlementChallengeByPayment.interface.events['StartChallengeByProxyEvent'].topics
@@ -325,6 +357,10 @@ module.exports = (glob) => {
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    // TODO Determine removal of completed settlement challenges
+                    // (await ethersNullSettlementChallengeState._removeProposalsCount())
+                    //     ._bn.should.eq.BN(1);
 
                     const proposal = await ethersNullSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));

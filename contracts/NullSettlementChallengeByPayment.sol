@@ -111,6 +111,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Require that wallet is not locked
         require(!walletLocker.isLocked(msg.sender));
 
+        // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
         // Start challenge for wallet
@@ -133,6 +134,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     onlyOperator
     {
+        // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
         // Start challenge for wallet
@@ -373,6 +375,13 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     {
         // Require that current block number is beyond the earliest settlement challenge block number
         require(block.number >= configuration.earliestSettlementBlockNumber());
+
+        // Require that there is no ongoing overlapping null settlement challenge
+        require(nullSettlementChallengeState.hasProposalExpired(wallet, currency));
+
+        // TODO Determine removal of completed settlement challenges
+        // Stop challenge
+        //        nullSettlementChallengeState.removeProposal(wallet, currency, walletInitiated);
 
         // Get the last logged active balance amount and block number
         (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = balanceTracker.fungibleActiveRecord(
