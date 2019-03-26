@@ -88,9 +88,6 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     public
     onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
     {
-        // Require that wallet has no overlap with active proposal
-        require(hasProposalExpired(wallet, currency));
-
         // Add proposal
         _addProposal(
             wallet, nonce, stageAmount, targetBalanceAmount, currency,

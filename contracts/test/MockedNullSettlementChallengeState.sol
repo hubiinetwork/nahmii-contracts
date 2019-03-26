@@ -18,13 +18,16 @@ import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
  */
 contract MockedNullSettlementChallengeState {
 
+    uint256 public _addProposalsCount;
+    uint256 public _removeProposalsCount;
     SettlementChallengeTypesLib.Proposal[] public _proposals;
-
     bool public _proposalExpired;
 
     function _reset()
     public
     {
+        delete _addProposalsCount;
+        delete _removeProposalsCount;
         delete _proposals;
         delete _proposalExpired;
     }
@@ -42,6 +45,8 @@ contract MockedNullSettlementChallengeState {
         _proposals[index].currency = currency;
         _proposals[index].blockNumber = blockNumber;
         _proposals[index].walletInitiated = walletInitiated;
+
+        _addProposalsCount++;
     }
 
     function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
@@ -52,6 +57,8 @@ contract MockedNullSettlementChallengeState {
         _proposals[index].wallet = challengedWallet;
         _proposals[index].currency = currency;
         _proposals[index].walletInitiated = walletTerminated;
+
+        _removeProposalsCount++;
     }
 
     function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,

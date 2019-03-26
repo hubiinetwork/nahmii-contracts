@@ -306,6 +306,18 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if called with overlapping driip settlement challenge', () => {
+                beforeEach(async () => {
+                    await web3DriipSettlementChallengeState._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
+                        payment, payment.sender.balances.current
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if called with overlapping null settlement challenge', () => {
                 beforeEach(async () => {
                     await web3NullSettlementChallengeState._setProposalExpired(false);
@@ -322,6 +334,7 @@ module.exports = (glob) => {
                 let filter;
 
                 beforeEach(async () => {
+                    await web3DriipSettlementChallengeState._setProposalExpired(true);
                     await web3NullSettlementChallengeState._setProposalExpired(true);
 
                     await ethersBalanceTracker._set(
@@ -346,6 +359,12 @@ module.exports = (glob) => {
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    // TODO Determine removal of completed settlement challenges
+                    // (await ethersDriipSettlementChallengeState._removeProposalsCount())
+                    //     ._bn.should.eq.BN(1);
+                    // (await ethersNullSettlementChallengeState._removeProposalsCount())
+                    //     ._bn.should.eq.BN(1);
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
@@ -410,6 +429,18 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if called with overlapping driip settlement challenge', () => {
+                beforeEach(async () => {
+                    await web3DriipSettlementChallengeState._setProposalExpired(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
+                        payment, payment.sender.balances.current
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if called with overlapping null settlement challenge', () => {
                 beforeEach(async () => {
                     await web3NullSettlementChallengeState._setProposalExpired(false);
@@ -426,6 +457,7 @@ module.exports = (glob) => {
                 let filter;
 
                 beforeEach(async () => {
+                    await web3DriipSettlementChallengeState._setProposalExpired(true);
                     await web3NullSettlementChallengeState._setProposalExpired(true);
 
                     await ethersBalanceTracker._set(
@@ -450,6 +482,12 @@ module.exports = (glob) => {
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    // TODO Determine removal of completed settlement challenges
+                    // (await ethersDriipSettlementChallengeState._removeProposalsCount())
+                    //     ._bn.should.eq.BN(1);
+                    // (await ethersNullSettlementChallengeState._removeProposalsCount())
+                    //     ._bn.should.eq.BN(1);
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));

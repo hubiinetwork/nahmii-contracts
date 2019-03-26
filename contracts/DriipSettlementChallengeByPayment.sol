@@ -154,7 +154,9 @@ BalanceTrackable {
     public
     {
         // Stop challenge
-        _stopChallenge(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true);
+        driipSettlementChallengeState.removeProposal(
+            msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true
+        );
 
         // Emit event
         emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
@@ -169,7 +171,9 @@ BalanceTrackable {
     onlyOperator
     {
         // Stop challenge
-        _stopChallenge(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false);
+        driipSettlementChallengeState.removeProposal(
+            wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false
+        );
 
         // Emit event
         emit StopChallengeByProxyEvent(wallet, currencyCt, currencyId, msg.sender);
@@ -408,10 +412,18 @@ BalanceTrackable {
         // Require that given wallet is a payment party
         require(validator.isPaymentParty(payment, wallet));
 
+        // Require that there is no ongoing overlapping driip settlement challenge
+        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
+
         // Require that there is no ongoing overlapping null settlement challenge
         require(nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
-        // Deduce the concerned balance amount
+        // TODO Determine removal of completed settlement challenges
+        // Stop challenges
+        //        driipSettlementChallengeState.removeProposal(wallet, payment.currency, walletInitiated);
+        //        nullSettlementChallengeState.removeProposal(wallet, payment.currency, walletInitiated);
+
+        // Deduce the concerned nonce and cumulative relative transfer
         (uint256 nonce, int256 cumRelTransfer) = _paymentPartyProperties(payment, wallet);
 
         // Obtain the current active balance amount
@@ -422,13 +434,6 @@ BalanceTrackable {
             wallet, nonce, stageAmount, balanceAmount.sub(cumRelTransfer.add(stageAmount)), payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
-    }
-
-    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
-    private
-    {
-        // Stop challenge
-        driipSettlementChallengeState.removeProposal(wallet, currency, walletTerminated);
     }
 
     function _paymentPartyProperties(PaymentTypesLib.Payment payment, address wallet)
