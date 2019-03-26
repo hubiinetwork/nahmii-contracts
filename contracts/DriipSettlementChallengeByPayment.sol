@@ -424,14 +424,14 @@ BalanceTrackable {
         //        nullSettlementChallengeState.removeProposal(wallet, payment.currency, walletInitiated);
 
         // Deduce the concerned nonce and cumulative relative transfer
-        (uint256 nonce, int256 cumRelTransfer) = _paymentPartyProperties(payment, wallet);
-
-        // Obtain the current active balance amount
-        int256 balanceAmount = balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency);
+        (uint256 nonce, int256 cumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);
 
         // Add proposal, including assurance that there is no overlap with active proposal
+        // Target balance amount is calculated as current balance - cumulativeTransferAmount - stageAmount
         driipSettlementChallengeState.addProposal(
-            wallet, nonce, stageAmount, balanceAmount.sub(cumRelTransfer.add(stageAmount)), payment.currency, payment.blockNumber,
+            wallet, nonce, cumulativeTransferAmount, stageAmount,
+            balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency).sub(cumulativeTransferAmount.add(stageAmount)),
+            payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
     }

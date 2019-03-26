@@ -32,8 +32,8 @@ contract MockedDriipSettlementChallengeState {
         delete _proposalExpired;
     }
 
-    function addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
+    function addProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind)
     public
     {
@@ -41,6 +41,7 @@ contract MockedDriipSettlementChallengeState {
 
         _proposals[index].wallet = wallet;
         _proposals[index].nonce = nonce;
+        _proposals[index].amounts.cumulativeTransfer = cumulativeTransferAmount;
         _proposals[index].amounts.stage = stageAmount;
         _proposals[index].amounts.targetBalance = targetBalanceAmount;
         _proposals[index].currency = currency;
@@ -179,6 +180,21 @@ contract MockedDriipSettlementChallengeState {
     {
         uint256 index = _addProposalIfNone();
         _proposals[index].amounts.stage = _proposalStageAmount;
+    }
+
+    function proposalCumulativeTransferAmount(address, MonetaryTypesLib.Currency)
+    public
+    view
+    returns (int256)
+    {
+        return _proposals[_proposals.length - 1].amounts.cumulativeTransfer;
+    }
+
+    function _setProposalCumulativeTransferAmount(int256 _proposalCumulativeTransferAmount)
+    public
+    {
+        uint256 index = _addProposalIfNone();
+        _proposals[index].amounts.cumulativeTransfer = _proposalCumulativeTransferAmount;
     }
 
     function proposalTargetBalanceAmount(address, MonetaryTypesLib.Currency)

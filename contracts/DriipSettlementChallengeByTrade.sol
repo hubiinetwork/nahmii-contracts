@@ -440,7 +440,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
-            wallet, party.nonce, stageAmount, party.balances.intended.current.sub(stageAmount), trade.currencies.intended,
+            wallet, party.nonce, 0, stageAmount, party.balances.intended.current.sub(stageAmount), trade.currencies.intended,
             trade.blockNumber, walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }
@@ -459,7 +459,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
 
         // Add proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.addProposal(
-            wallet, party.nonce, stageAmount, party.balances.conjugate.current.sub(stageAmount), trade.currencies.conjugate,
+            wallet, party.nonce, 0, stageAmount, party.balances.conjugate.current.sub(stageAmount), trade.currencies.conjugate,
             trade.blockNumber, walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
         );
     }

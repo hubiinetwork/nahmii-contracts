@@ -102,7 +102,7 @@ module.exports = (glob) => {
             describe('if not enabled service action', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -125,7 +125,7 @@ module.exports = (glob) => {
 
                 it('successfully add proposal', async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 
@@ -142,8 +142,9 @@ module.exports = (glob) => {
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
-                    proposal.amounts.stage._bn.should.eq.BN(10);
-                    proposal.amounts.targetBalance._bn.should.eq.BN(20);
+                    proposal.amounts.cumulativeTransfer._bn.should.eq.BN(10);
+                    proposal.amounts.stage._bn.should.eq.BN(20);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(30);
                     proposal.walletInitiated.should.be.true;
                     proposal.challenged.hash.should.equal(mocks.hash1);
                     proposal.challenged.kind.should.equal('some_challenged_kind');
@@ -201,7 +202,7 @@ module.exports = (glob) => {
                     );
 
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -220,7 +221,7 @@ module.exports = (glob) => {
                     );
 
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 
@@ -285,7 +286,7 @@ module.exports = (glob) => {
                     );
 
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 
@@ -360,7 +361,7 @@ module.exports = (glob) => {
                     );
 
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 
@@ -419,7 +420,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -435,7 +436,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been removed', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 
@@ -475,7 +476,7 @@ module.exports = (glob) => {
                     await web3Configuration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 0);
 
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -491,7 +492,7 @@ module.exports = (glob) => {
             describe('if settlement challenge is ongoing for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -525,7 +526,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -559,7 +560,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -595,7 +596,7 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 
@@ -631,7 +632,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -641,6 +642,40 @@ module.exports = (glob) => {
                         ct: mocks.address0,
                         id: 0
                     })).should.equal(mocks.settlementStatuses.indexOf('Qualified'));
+                });
+            });
+        });
+
+        describe('proposalCumulativeTransferAmount()', () => {
+            beforeEach(async () => {
+                await ethersDriipSettlementChallengeState.registerService(glob.owner);
+                await ethersDriipSettlementChallengeState.enableServiceAction(
+                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                );
+            });
+
+            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeState.proposalCumulativeTransferAmount(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    }).should.be.rejected;
+                });
+            });
+
+            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.addProposal(
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
+                    );
+                });
+
+                it('should successfully return proposal stage balance amount', async () => {
+                    (await ethersDriipSettlementChallengeState.proposalCumulativeTransferAmount(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    }))._bn.should.eq.BN(10);
                 });
             });
         });
@@ -665,7 +700,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -674,7 +709,7 @@ module.exports = (glob) => {
                     (await ethersDriipSettlementChallengeState.proposalStageAmount(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
-                    }))._bn.should.eq.BN(10);
+                    }))._bn.should.eq.BN(20);
                 });
             });
         });
@@ -699,7 +734,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -708,7 +743,7 @@ module.exports = (glob) => {
                     (await ethersDriipSettlementChallengeState.proposalTargetBalanceAmount(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
-                    }))._bn.should.eq.BN(20);
+                    }))._bn.should.eq.BN(30);
                 });
             });
         });
@@ -733,7 +768,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -767,7 +802,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -801,7 +836,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been added for the wallet and currency', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -838,7 +873,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -854,7 +889,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 
@@ -896,7 +931,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -912,7 +947,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 
@@ -954,7 +989,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -970,7 +1005,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 
@@ -1012,7 +1047,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -1028,7 +1063,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 
@@ -1070,7 +1105,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
                 });
@@ -1086,7 +1121,7 @@ module.exports = (glob) => {
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
 

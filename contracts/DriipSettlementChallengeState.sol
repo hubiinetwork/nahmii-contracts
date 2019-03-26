@@ -75,6 +75,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @notice Add proposal
     /// @param wallet The address of the challenged wallet
     /// @param nonce The wallet nonce
+    /// @param cumulativeTransferAmount The proposal cumulative transfer amount
     /// @param stageAmount The proposal stage amount
     /// @param targetBalanceAmount The proposal target balance amount
     /// @param currency The concerned currency
@@ -82,16 +83,16 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param walletInitiated True if reward from candidate balance
     /// @param challengedHash The candidate driip hash
     /// @param challengedKind The candidate driip kind
-    function addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
+    function addProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind)
     public
     onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
     {
         // Add proposal
         _addProposal(
-            wallet, nonce, stageAmount, targetBalanceAmount, currency,
-            blockNumber, walletInitiated, challengedHash, challengedKind
+            wallet, nonce, cumulativeTransferAmount, stageAmount, targetBalanceAmount,
+            currency, blockNumber, walletInitiated, challengedHash, challengedKind
         );
 
         // Emit event
@@ -282,6 +283,20 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         return proposals[index - 1].status;
     }
 
+    /// @notice Get the proposal cumulative transfer amount of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currency The concerned currency
+    /// @return The settlement proposal cumulative transfer amount
+    function proposalCumulativeTransferAmount(address wallet, MonetaryTypesLib.Currency currency)
+    public
+    view
+    returns (int256)
+    {
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+        require(0 != index);
+        return proposals[index - 1].amounts.cumulativeTransfer;
+    }
+
     /// @notice Get the proposal stage amount of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
@@ -425,8 +440,8 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _addProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
+    function _addProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind)
     private
     {
@@ -447,6 +462,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[proposals.length - 1].status = SettlementChallengeTypesLib.Status.Qualified;
         proposals[proposals.length - 1].currency = currency;
+        proposals[proposals.length - 1].amounts.cumulativeTransfer = cumulativeTransferAmount;
         proposals[proposals.length - 1].amounts.stage = stageAmount;
         proposals[proposals.length - 1].amounts.targetBalance = targetBalanceAmount;
         proposals[proposals.length - 1].walletInitiated = walletInitiated;
