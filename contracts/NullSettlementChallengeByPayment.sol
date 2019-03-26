@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {ConfigurableOperational} from "./ConfigurableOperational.sol";
-import {BalanceTracker} from "./BalanceTracker.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -22,6 +21,7 @@ import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
 import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
@@ -155,7 +155,9 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     {
         // Stop challenge
-        _stopChallenge(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true);
+        nullSettlementChallengeState.removeProposal(
+            msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true
+        );
 
         // Emit event
         emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
@@ -170,7 +172,9 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     onlyOperator
     {
         // Stop challenge
-        _stopChallenge(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false);
+        nullSettlementChallengeState.removeProposal(
+            wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false
+        );
 
         // Emit event
         emit StopChallengeByProxyEvent(wallet, currencyCt, currencyId, msg.sender);
@@ -396,12 +400,5 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
             wallet, nonce, stageAmount, activeBalanceAmount.sub(stageAmount), currency,
             activeBalanceBlockNumber, walletInitiated
         );
-    }
-
-    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
-    private
-    {
-        // Stop challenge
-        nullSettlementChallengeState.removeProposal(wallet, currency, walletTerminated);
     }
 }
