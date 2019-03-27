@@ -397,7 +397,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('hasProposal()', () => {
+        describe('hasProposal(address,uint256,(address,uint256))', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
@@ -410,7 +410,7 @@ module.exports = (glob) => {
 
             describe('if no settlement challenge proposal has been added', () => {
                 it('should return false', async () => {
-                    (await ethersDriipSettlementChallengeState.hasProposal(glob.user_a, 1, {
+                    (await ethersDriipSettlementChallengeState['hasProposal(address,uint256,(address,uint256))'](glob.user_a, 1, {
                         ct: mocks.address0,
                         id: 0
                     })).should.be.false;
@@ -426,7 +426,7 @@ module.exports = (glob) => {
                 });
 
                 it('should return true', async () => {
-                    (await ethersDriipSettlementChallengeState.hasProposal(glob.user_a, 1, {
+                    (await ethersDriipSettlementChallengeState['hasProposal(address,uint256,(address,uint256))'](glob.user_a, 1, {
                         ct: mocks.address0,
                         id: 0
                     })).should.be.true;
@@ -446,7 +446,64 @@ module.exports = (glob) => {
                 });
 
                 it('should return false', async () => {
-                    (await ethersDriipSettlementChallengeState.hasProposal(glob.user_a, 1, {
+                    (await ethersDriipSettlementChallengeState['hasProposal(address,uint256,(address,uint256))'](glob.user_a, 1, {
+                        ct: mocks.address0,
+                        id: 0
+                    })).should.be.false;
+                });
+            });
+        });
+
+        describe('hasProposal(address,(address,uint256))', () => {
+            beforeEach(async () => {
+                await ethersDriipSettlementChallengeState.registerService(glob.owner);
+                await ethersDriipSettlementChallengeState.enableServiceAction(
+                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                );
+                await ethersDriipSettlementChallengeState.enableServiceAction(
+                    glob.owner, await ethersDriipSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                );
+            });
+
+            describe('if no settlement challenge proposal has been added', () => {
+                it('should return false', async () => {
+                    (await ethersDriipSettlementChallengeState['hasProposal(address,(address,uint256))'](glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    })).should.be.false;
+                });
+            });
+
+            describe('if settlement challenge proposal has been added', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.addProposal(
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
+                    );
+                });
+
+                it('should return true', async () => {
+                    (await ethersDriipSettlementChallengeState['hasProposal(address,(address,uint256))'](glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    })).should.be.true;
+                });
+            });
+
+            describe('if settlement challenge proposal has been removed', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.addProposal(
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState.removeProposal(
+                        glob.user_a, {ct: mocks.address0, id: 0}, true, {gasLimit: 1e6}
+                    );
+                });
+
+                it('should return false', async () => {
+                    (await ethersDriipSettlementChallengeState['hasProposal(address,(address,uint256))'](glob.user_a, {
                         ct: mocks.address0,
                         id: 0
                     })).should.be.false;

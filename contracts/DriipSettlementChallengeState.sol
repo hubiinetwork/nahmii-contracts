@@ -213,6 +213,19 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return true if proposal has expired, else false
+    function hasProposal(address wallet, MonetaryTypesLib.Currency currency)
+    public
+    view
+    returns (bool)
+    {
+        // 1-based index
+        return 0 != proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+    }
+
+    /// @notice Gauge whether the proposal for the given wallet and currency has expired
+    /// @param wallet The address of the concerned wallet
+    /// @param currency The concerned currency
+    /// @return true if proposal has expired, else false
     function hasProposalExpired(address wallet, MonetaryTypesLib.Currency currency)
     public
     view

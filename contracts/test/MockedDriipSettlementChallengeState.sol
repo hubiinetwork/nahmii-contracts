@@ -21,6 +21,7 @@ contract MockedDriipSettlementChallengeState {
     uint256 public _addProposalsCount;
     uint256 public _removeProposalsCount;
     SettlementChallengeTypesLib.Proposal[] public _proposals;
+    bool public _proposal;
     bool public _proposalExpired;
 
     function _reset()
@@ -29,6 +30,7 @@ contract MockedDriipSettlementChallengeState {
         delete _addProposalsCount;
         delete _removeProposalsCount;
         delete _proposals;
+        delete _proposal;
         delete _proposalExpired;
     }
 
@@ -91,6 +93,20 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].currency = currency;
         _proposals[index].status = SettlementChallengeTypesLib.Status.Qualified;
         delete _proposals[index].disqualification;
+    }
+
+    function hasProposal(address wallet, MonetaryTypesLib.Currency currency)
+    public
+    view
+    returns (bool)
+    {
+        return _proposal;
+    }
+
+    function _setProposal(bool proposal)
+    public
+    {
+        _proposal = proposal;
     }
 
     function hasProposalExpired(address, MonetaryTypesLib.Currency)
@@ -167,21 +183,6 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].status = _proposalStatus;
     }
 
-    function proposalStageAmount(address, MonetaryTypesLib.Currency)
-    public
-    view
-    returns (int256)
-    {
-        return _proposals[_proposals.length - 1].amounts.stage;
-    }
-
-    function _setProposalStageAmount(int256 _proposalStageAmount)
-    public
-    {
-        uint256 index = _addProposalIfNone();
-        _proposals[index].amounts.stage = _proposalStageAmount;
-    }
-
     function proposalCumulativeTransferAmount(address, MonetaryTypesLib.Currency)
     public
     view
@@ -195,6 +196,21 @@ contract MockedDriipSettlementChallengeState {
     {
         uint256 index = _addProposalIfNone();
         _proposals[index].amounts.cumulativeTransfer = _proposalCumulativeTransferAmount;
+    }
+
+    function proposalStageAmount(address, MonetaryTypesLib.Currency)
+    public
+    view
+    returns (int256)
+    {
+        return _proposals[_proposals.length - 1].amounts.stage;
+    }
+
+    function _setProposalStageAmount(int256 _proposalStageAmount)
+    public
+    {
+        uint256 index = _addProposalIfNone();
+        _proposals[index].amounts.stage = _proposalStageAmount;
     }
 
     function proposalTargetBalanceAmount(address, MonetaryTypesLib.Currency)
