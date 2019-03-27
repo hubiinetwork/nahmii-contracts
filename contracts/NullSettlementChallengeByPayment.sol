@@ -49,9 +49,9 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         NullSettlementChallengeState newNullSettlementChallengeState);
     event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
         DriipSettlementState newDriipSettlementState);
-    event StartChallengeEvent(address wallet, int256 amount, address currencyCt,
-        uint currencyId);
-    event StartChallengeByProxyEvent(address wallet, int256 amount,
+    event StartChallengeEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
+        address currencyCt, uint currencyId);
+    event StartChallengeByProxyEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
         address currencyCt, uint currencyId, address proxy);
     event StopChallengeEvent(address wallet, address currencyCt, uint256 currencyId);
     event StopChallengeByProxyEvent(address wallet, address currencyCt, uint256 currencyId, address proxy);
@@ -111,11 +111,17 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Require that wallet is not locked
         require(!walletLocker.isLocked(msg.sender));
 
+        MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
+
         // Start challenge for wallet
-        _startChallenge(msg.sender, amount, MonetaryTypesLib.Currency(currencyCt, currencyId), true);
+        _startChallenge(msg.sender, amount, currency, true);
 
         // Emit event
-        emit StartChallengeEvent(msg.sender, amount, currencyCt, currencyId);
+        emit StartChallengeEvent(
+            msg.sender, amount,
+            nullSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, currency),
+            currencyCt, currencyId
+        );
     }
 
     /// @notice Start settlement challenge for the given wallet
@@ -127,11 +133,17 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     onlyOperator
     {
+        MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
+
         // Start challenge for wallet
-        _startChallenge(wallet, amount, MonetaryTypesLib.Currency(currencyCt, currencyId), false);
+        _startChallenge(wallet, amount, currency, false);
 
         // Emit event
-        emit StartChallengeByProxyEvent(wallet, amount, currencyCt, currencyId, msg.sender);
+        emit StartChallengeByProxyEvent(
+            wallet, amount,
+            nullSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
+            currencyCt, currencyId, msg.sender
+        );
     }
 
     /// @notice Stop settlement challenge

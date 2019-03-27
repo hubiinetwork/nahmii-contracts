@@ -153,26 +153,27 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('proposal has not expired', () => {
-                beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.registerService(glob.owner);
-                    await ethersDriipSettlementChallengeState.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
-                    );
-
-                    await ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
-                        30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
-                    );
-                });
-
-                it('should revert', async () => {
-                    ethersDriipSettlementChallengeState.addProposal(
-                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
-                        30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
+            // TODO Remove
+            // describe('proposal has not expired', () => {
+            //     beforeEach(async () => {
+            //         await ethersDriipSettlementChallengeState.registerService(glob.owner);
+            //         await ethersDriipSettlementChallengeState.enableServiceAction(
+            //             glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+            //         );
+            //
+            //         await ethersDriipSettlementChallengeState.addProposal(
+            //             glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+            //             30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
+            //         );
+            //     });
+            //
+            //     it('should revert', async () => {
+            //         ethersDriipSettlementChallengeState.addProposal(
+            //             glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+            //             30, true, mocks.hash1, 'some_challenged_type', {gasLimit: 1e6}
+            //         ).should.be.rejected;
+            //     });
+            // });
         });
 
         describe('removeProposal()', () => {

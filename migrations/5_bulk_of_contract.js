@@ -146,6 +146,7 @@ module.exports = (deployer, network, accounts) => {
             TxHistoryLib.address = addressStorage.get('TxHistoryLib');
 
             await deployer.link(BalanceTrackerLib, [
+                DriipSettlementChallengeByPayment,
                 FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments,
                 FraudChallengeBySuccessiveTrades,
@@ -586,6 +587,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setValidator(addressStorage.get('Validator'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             await instance.setDriipSettlementDisputeByPayment(addressStorage.get('DriipSettlementDisputeByPayment'));
             await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
             await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
