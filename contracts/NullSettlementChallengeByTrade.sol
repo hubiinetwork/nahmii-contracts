@@ -18,7 +18,7 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDisputeByTrade} from "./NullSettlementDisputeByTrade.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
-import {DriipSettlementState} from "./DriipSettlementState.sol";
+import {NullSettlementState} from "./NullSettlementState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
@@ -38,7 +38,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     // -----------------------------------------------------------------------------------------------------------------
     NullSettlementDisputeByTrade public nullSettlementDisputeByTrade;
     NullSettlementChallengeState public nullSettlementChallengeState;
-    DriipSettlementState public driipSettlementState;
+    NullSettlementState public nullSettlementState;
 
     //
     // Events
@@ -47,8 +47,8 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
         NullSettlementDisputeByTrade newNullSettlementDisputeByTrade);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
-    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
-        DriipSettlementState newDriipSettlementState);
+    event SetNullSettlementStateEvent(NullSettlementState oldNullSettlementState,
+        NullSettlementState newNullSettlementState);
     event StartChallengeEvent(address wallet, int256 amount, address stageCurrencyCt,
         uint stageCurrencyId);
     event StartChallengeByProxyEvent(address proxy, address wallet, int256 amount,
@@ -90,15 +90,15 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     }
 
     /// @notice Set the driip settlement state contract
-    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
-    function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
+    /// @param newNullSettlementState The (address of) NullSettlementState contract instance
+    function setNullSettlementState(NullSettlementState newNullSettlementState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementState)
+    notNullAddress(newNullSettlementState)
     {
-        DriipSettlementState oldDriipSettlementState = driipSettlementState;
-        driipSettlementState = newDriipSettlementState;
-        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
+        NullSettlementState oldNullSettlementState = nullSettlementState;
+        nullSettlementState = newNullSettlementState;
+        emit SetNullSettlementStateEvent(oldNullSettlementState, nullSettlementState);
     }
 
     /// @notice Start settlement challenge
@@ -377,11 +377,11 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
         );
 
         // Obtain highest settled wallet nonce
-        uint256 nonce = driipSettlementState.maxNonceByWalletAndCurrency(wallet, currency);
+        uint256 nonce = nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency);
 
         // Add proposal, including assurance that there is no overlap with active proposal
         nullSettlementChallengeState.addProposal(
-            wallet, nonce, stageAmount, activeBalanceAmount.sub(stageAmount), currency,
+            wallet, nonce.add(1), stageAmount, activeBalanceAmount.sub(stageAmount), currency,
             activeBalanceBlockNumber, walletInitiated
         );
     }

@@ -9,7 +9,8 @@ const NullSettlementChallengeByPayment = artifacts.require('NullSettlementChalle
 const SignerManager = artifacts.require('SignerManager');
 const MockedNullSettlementDisputeByPayment = artifacts.require('MockedNullSettlementDisputeByPayment');
 const MockedNullSettlementChallengeState = artifacts.require('MockedNullSettlementChallengeState');
-const MockedDriipSettlementState = artifacts.require('MockedDriipSettlementState');
+const MockedNullSettlementState = artifacts.require('MockedNullSettlementState');
+const MockedDriipSettlementChallengeState = artifacts.require('MockedDriipSettlementChallengeState');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedWalletLocker = artifacts.require('MockedWalletLocker');
 const MockedBalanceTracker = artifacts.require('MockedBalanceTracker');
@@ -28,7 +29,8 @@ module.exports = (glob) => {
         let web3BalanceTracker, ethersBalanceTracker;
         let web3NullSettlementDisputeByPayment, ethersNullSettlementDisputeByPayment;
         let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
-        let web3DriipSettlementState, ethersDriipSettlementState;
+        let web3NullSettlementState, ethersNullSettlementState;
+        let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
         let provider;
         let depositedBalanceType;
 
@@ -41,8 +43,10 @@ module.exports = (glob) => {
             ethersNullSettlementDisputeByPayment = new Contract(web3NullSettlementDisputeByPayment.address, MockedNullSettlementDisputeByPayment.abi, glob.signer_owner);
             web3NullSettlementChallengeState = await MockedNullSettlementChallengeState.new();
             ethersNullSettlementChallengeState = new Contract(web3NullSettlementChallengeState.address, MockedNullSettlementChallengeState.abi, glob.signer_owner);
-            web3DriipSettlementState = await MockedDriipSettlementState.new();
-            ethersDriipSettlementState = new Contract(web3DriipSettlementState.address, MockedDriipSettlementState.abi, glob.signer_owner);
+            web3NullSettlementState = await MockedNullSettlementState.new();
+            ethersNullSettlementState = new Contract(web3NullSettlementState.address, MockedNullSettlementState.abi, glob.signer_owner);
+            web3DriipSettlementChallengeState = await MockedDriipSettlementChallengeState.new();
+            ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, MockedDriipSettlementChallengeState.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3WalletLocker = await MockedWalletLocker.new();
@@ -62,7 +66,8 @@ module.exports = (glob) => {
             await ethersNullSettlementChallengeByPayment.setBalanceTracker(ethersBalanceTracker.address);
             await ethersNullSettlementChallengeByPayment.setNullSettlementDisputeByPayment(ethersNullSettlementDisputeByPayment.address);
             await ethersNullSettlementChallengeByPayment.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
-            await ethersNullSettlementChallengeByPayment.setDriipSettlementState(ethersDriipSettlementState.address);
+            await ethersNullSettlementChallengeByPayment.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
+            await ethersNullSettlementChallengeByPayment.setNullSettlementState(ethersNullSettlementState.address);
 
             await ethersConfiguration.setEarliestSettlementBlockNumber(0);
         });
@@ -175,14 +180,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('driipSettlementState()', () => {
+        describe('nullSettlementState()', () => {
             it('should equal value initialized', async () => {
-                (await ethersNullSettlementChallengeByPayment.driipSettlementState())
-                    .should.equal(utils.getAddress(ethersDriipSettlementState.address));
+                (await ethersNullSettlementChallengeByPayment.nullSettlementState())
+                    .should.equal(utils.getAddress(ethersNullSettlementState.address));
             });
         });
 
-        describe('setDriipSettlementState()', () => {
+        describe('setNullSettlementState()', () => {
             let address;
 
             before(() => {
@@ -191,19 +196,19 @@ module.exports = (glob) => {
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3NullSettlementChallengeByPayment.setDriipSettlementState(address);
+                    const result = await web3NullSettlementChallengeByPayment.setNullSettlementState(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetDriipSettlementStateEvent');
+                    result.logs[0].event.should.equal('SetNullSettlementStateEvent');
 
-                    (await ethersNullSettlementChallengeByPayment.driipSettlementState())
+                    (await ethersNullSettlementChallengeByPayment.nullSettlementState())
                         .should.equal(address);
                 });
             });
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3NullSettlementChallengeByPayment.setDriipSettlementState(address, {from: glob.user_a})
+                    web3NullSettlementChallengeByPayment.setNullSettlementState(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -214,14 +219,8 @@ module.exports = (glob) => {
                 await ethersWalletLocker._reset();
                 await ethersBalanceTracker._reset({gasLimit: 1e6});
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementState._reset({gasLimit: 1e6});
-
-                await ethersBalanceTracker._setFungibleRecordsCount(depositedBalanceType, 1, {gasLimit: 1e6});
-                await ethersBalanceTracker._setFungibleRecord(depositedBalanceType, 10, 1, {gasLimit: 1e6});
-
-                await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
-                    mocks.address1, {ct: mocks.address0, id: 0}, 20
-                );
+                await ethersNullSettlementState._reset({gasLimit: 1e6});
+                await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
             });
 
             describe('if wallet is locked', () => {
@@ -264,7 +263,19 @@ module.exports = (glob) => {
                 let filter;
 
                 beforeEach(async () => {
-                    await web3NullSettlementChallengeState._setProposalExpired(true);
+                    await ethersNullSettlementChallengeState._setProposalExpired(true);
+
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), 100,
+                        1, {gasLimit: 1e6}
+                    );
+                    await ethersDriipSettlementChallengeState._setProposal(true);
+                    await ethersDriipSettlementChallengeState._setProposalCumulativeTransferAmount(30);
+                    await ethersDriipSettlementChallengeState._setProposalStageAmount(20);
+
+                    await ethersNullSettlementState.setMaxNonceByWalletAndCurrency(
+                        mocks.address1, {ct: mocks.address0, id: 0}, 20
+                    );
 
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
@@ -287,11 +298,11 @@ module.exports = (glob) => {
                     const proposal = await ethersNullSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));
                     proposal.amounts.stage._bn.should.eq.BN(10);
-                    proposal.amounts.targetBalance._bn.should.eq.BN(0);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(40);
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.blockNumber._bn.should.eq.BN(1);
-                    proposal.nonce._bn.should.eq.BN(20);
+                    proposal.nonce._bn.should.eq.BN(21);
                     proposal.walletInitiated.should.be.true;
                     proposal.challenged.hash.should.equal(mocks.hash0);
                     proposal.challenged.kind.should.be.a('string').that.is.empty;
@@ -304,14 +315,8 @@ module.exports = (glob) => {
                 await ethersWalletLocker._reset();
                 await ethersBalanceTracker._reset({gasLimit: 1e6});
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementState._reset({gasLimit: 1e6});
-
-                await ethersBalanceTracker._setFungibleRecordsCount(depositedBalanceType, 1, {gasLimit: 1e6});
-                await ethersBalanceTracker._setFungibleRecord(depositedBalanceType, 10, 1, {gasLimit: 1e6});
-
-                await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
-                    mocks.address1, {ct: mocks.address0, id: 0}, 20
-                );
+                await ethersNullSettlementState._reset({gasLimit: 1e6});
+                await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
             });
 
             describe('if current block number is below earliest settlement block number', () => {
@@ -344,6 +349,18 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3NullSettlementChallengeState._setProposalExpired(true);
 
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), 100,
+                        1, {gasLimit: 1e6}
+                    );
+                    await ethersDriipSettlementChallengeState._setProposal(true);
+                    await ethersDriipSettlementChallengeState._setProposalCumulativeTransferAmount(30);
+                    await ethersDriipSettlementChallengeState._setProposalStageAmount(20);
+
+                    await ethersNullSettlementState.setMaxNonceByWalletAndCurrency(
+                        mocks.address1, {ct: mocks.address0, id: 0}, 20
+                    );
+
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
                         topics: ethersNullSettlementChallengeByPayment.interface.events['StartChallengeByProxyEvent'].topics
@@ -365,11 +382,11 @@ module.exports = (glob) => {
                     const proposal = await ethersNullSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));
                     proposal.amounts.stage._bn.should.eq.BN(10);
-                    proposal.amounts.targetBalance._bn.should.eq.BN(0);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(40);
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.blockNumber._bn.should.eq.BN(1);
-                    proposal.nonce._bn.should.eq.BN(20);
+                    proposal.nonce._bn.should.eq.BN(21);
                     proposal.walletInitiated.should.be.false;
                     proposal.challenged.hash.should.equal(mocks.hash0);
                     proposal.challenged.kind.should.be.a('string').that.is.empty;

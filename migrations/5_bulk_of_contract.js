@@ -678,7 +678,8 @@ module.exports = (deployer, network, accounts) => {
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             await instance.setNullSettlementDisputeByPayment(addressStorage.get('NullSettlementDisputeByPayment'));
             await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
-            await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
+            await instance.setNullSettlementState(addressStorage.get('NullSettlementState'));
+            await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
 
             instance = await NullSettlementChallengeByTrade.at(addressStorage.get('NullSettlementChallengeByTrade'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -686,6 +687,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             await instance.setNullSettlementDisputeByTrade(addressStorage.get('NullSettlementDisputeByTrade'));
             await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+            await instance.setNullSettlementState(addressStorage.get('NullSettlementState'));
 
             instance = await NullSettlementDisputeByPayment.at(addressStorage.get('NullSettlementDisputeByPayment'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
