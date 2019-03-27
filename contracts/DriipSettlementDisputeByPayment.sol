@@ -14,6 +14,7 @@ import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
+import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Servable} from "./Servable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -23,15 +24,18 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
+import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
  * @title DriipSettlementDisputeByPayment
  * @notice The where payment related disputes of driip settlement challenge happens
  */
 contract DriipSettlementDisputeByPayment is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable,
-FraudChallengable, Servable {
+BalanceTrackable, FraudChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using BalanceTrackerLib for BalanceTracker;
 
     //
     // Constants
@@ -94,11 +98,8 @@ FraudChallengable, Servable {
             wallet, payment.currency
         ));
 
-        // Require that transfer amount is strictly greater than the proposal's target balance amount
-        // for the provided payment to be a valid challenge candidate.
-        require(payment.transfers.single > driipSettlementChallengeState.proposalTargetBalanceAmount(
-            wallet, payment.currency
-        ));
+        // Require overrun for this payment to be a valid challenge candidate
+        require(_overrun(wallet, payment));
 
         // Reward challenger
         _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger);
@@ -118,6 +119,39 @@ FraudChallengable, Servable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
+    function _overrun(address wallet, PaymentTypesLib.Payment payment)
+    private
+    view
+    returns (bool)
+    {
+        // Get the target balance amount from the proposal
+        int targetBalanceAmount = driipSettlementChallengeState.proposalTargetBalanceAmount(
+            wallet, payment.currency
+        );
+
+        // Get the change in active balance since the start of the challenge
+        int256 deltaBalanceSinceStart = balanceTracker.fungibleActiveBalanceAmount(
+            wallet, payment.currency
+        ).sub(
+            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+                wallet, payment.currency,
+                driipSettlementChallengeState.proposalBlockNumber(wallet, payment.currency)
+            )
+        );
+
+        // Get the cumulative transfer of the payment
+        int256 paymentCumulativeTransfer = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+            wallet, payment.currency, payment.blockNumber
+        ).sub(payment.sender.balances.current);
+
+        // Get the cumulative transfer of the proposal (i.e. of challenged payment)
+        int proposalCumulativeTransfer = driipSettlementChallengeState.proposalCumulativeTransferAmount(
+            wallet, payment.currency
+        );
+
+        return targetBalanceAmount.add(deltaBalanceSinceStart) < paymentCumulativeTransfer.sub(proposalCumulativeTransfer);
+    }
+
     // Lock wallet's balances or reward challenger by stake fraction
     function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
         address challenger)
