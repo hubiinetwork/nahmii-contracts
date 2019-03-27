@@ -540,6 +540,11 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), payment.sender.balances.current.mul(2),
+                        1, {gasLimit: 1e6}
+                    );
+
                     await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
@@ -600,6 +605,11 @@ module.exports = (glob) => {
                     await ethersDriipSettlementDisputeByPayment.enableServiceAction(
                         glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
+                    );
+
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), payment.sender.balances.current.mul(2),
+                        1, {gasLimit: 1e6}
                     );
                 });
 
@@ -712,6 +722,11 @@ module.exports = (glob) => {
                     await ethersDriipSettlementDisputeByPayment.enableServiceAction(
                         glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
+                    );
+
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), payment.sender.balances.current.mul(2),
+                        1, {gasLimit: 1e6}
                     );
 
                     await ethersDriipSettlementChallengeState._setProposalStatus(
