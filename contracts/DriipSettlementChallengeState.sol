@@ -44,10 +44,10 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event AddProposalEvent(address challengedWallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
+    event AddProposalEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind);
-    event RemoveProposalEvent(address challengedWallet, uint256 nonce, MonetaryTypesLib.Currency currency);
+    event RemoveProposalEvent(address wallet, uint256 nonce, MonetaryTypesLib.Currency currency);
     event DisqualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
         address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateKind);
     event QualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
@@ -73,7 +73,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     }
 
     /// @notice Add proposal
-    /// @param wallet The address of the challenged wallet
+    /// @param wallet The address of the concerned challenged wallet
     /// @param nonce The wallet nonce
     /// @param cumulativeTransferAmount The proposal cumulative transfer amount
     /// @param stageAmount The proposal stage amount
@@ -103,15 +103,15 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     }
 
     /// @notice Remove a proposal
-    /// @param challengedWallet The address of the concerned challenged wallet
+    /// @param wallet The address of the concerned challenged wallet
     /// @param currency The concerned currency
     /// @param walletTerminated True if wallet terminated
-    function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    function removeProposal(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
     public
     onlyEnabledServiceAction(REMOVE_PROPOSAL_ACTION)
     {
         // Get the proposal index
-        uint256 index = proposalIndexByWalletCurrency[challengedWallet][currency.ct][currency.id];
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
 
         // Return gracefully if there is no proposal to cancel
         if (0 == index)
@@ -121,9 +121,9 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         require(walletTerminated == proposals[index - 1].walletInitiated);
 
         // Emit event
-        emit RemoveProposalEvent(challengedWallet, proposals[index - 1].nonce, currency);
+        emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
 
-        // Remove the proposal
+        // Remove the proposal and clear references to it
         proposalIndexByWalletCurrency[proposals[index - 1].wallet][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = 0;
         proposalIndexByWalletNonceCurrency[proposals[index - 1].wallet][proposals[index - 1].nonce][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = 0;
         if (index < proposals.length) {

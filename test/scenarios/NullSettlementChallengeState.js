@@ -151,7 +151,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('removeProposal()', () => {
+        describe('removeProposal(address,(address,uint256))', () => {
             let filter;
 
             beforeEach(async () => {
@@ -163,7 +163,78 @@ module.exports = (glob) => {
 
             describe('if not enabled service action', () => {
                 it('should revert', async () => {
-                    ethersNullSettlementChallengeState.removeProposal(
+                    ethersNullSettlementChallengeState['removeProposal(address,(address,uint256))'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if no proposal has been added', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState.enableServiceAction(
+                        glob.owner, await ethersNullSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersNullSettlementChallengeState.interface.events['RemoveProposalEvent'].topics
+                    };
+                });
+
+                it('should return gracefully', async () => {
+                    await ethersNullSettlementChallengeState['removeProposal(address,(address,uint256))'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, {gasLimit: 1e6}
+                    );
+
+                    (await provider.getLogs(filter))
+                        .should.be.an('array').that.is.empty;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState.enableServiceAction(
+                        glob.owner, await ethersNullSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    );
+
+                    await ethersNullSettlementChallengeState.addProposal(
+                        glob.user_a, 1, 10, 20, {ct: mocks.address0, id: 0},
+                        30, true, {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersNullSettlementChallengeState.interface.events['RemoveProposalEvent'].topics
+                    };
+                });
+
+                it('successfully cancel proposal', async () => {
+                    await ethersNullSettlementChallengeState['removeProposal(address,(address,uint256))'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    (await ethersNullSettlementChallengeState.proposalsCount())
+                        ._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('removeProposal(address,(address,uint256),bool)', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersNullSettlementChallengeState.registerService(glob.owner);
+                await ethersNullSettlementChallengeState.enableServiceAction(
+                    glob.owner, await ethersNullSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                );
+            });
+
+            describe('if not enabled service action', () => {
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeState['removeProposal(address,(address,uint256),bool)'](
                         glob.user_a, {ct: mocks.address0, id: 0}, true, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -182,7 +253,7 @@ module.exports = (glob) => {
                 });
 
                 it('should return gracefully', async () => {
-                    await ethersNullSettlementChallengeState.removeProposal(
+                    await ethersNullSettlementChallengeState['removeProposal(address,(address,uint256),bool)'](
                         glob.user_a, {ct: mocks.address0, id: 0}, true, {gasLimit: 1e6}
                     );
 
@@ -204,7 +275,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlementChallengeState.removeProposal(
+                    ethersNullSettlementChallengeState['removeProposal(address,(address,uint256),bool)'](
                         glob.user_a, {ct: mocks.address0, id: 0}, false, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -228,7 +299,7 @@ module.exports = (glob) => {
                 });
 
                 it('successfully cancel proposal', async () => {
-                    await ethersNullSettlementChallengeState.removeProposal(
+                    await ethersNullSettlementChallengeState['removeProposal(address,(address,uint256),bool)'](
                         glob.user_a, {ct: mocks.address0, id: 0}, true, {gasLimit: 1e6}
                     );
 
