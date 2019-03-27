@@ -19,6 +19,7 @@ library TradeTypesLib {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
+    enum CurrencyRole {Intended, Conjugate}
     enum LiquidityRole {Maker, Taker}
     enum Intention {Buy, Sell}
     enum TradePartyRole {Buyer, Seller}
