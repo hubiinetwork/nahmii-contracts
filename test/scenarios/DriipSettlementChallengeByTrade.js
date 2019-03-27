@@ -340,27 +340,27 @@ module.exports = (glob) => {
 
                     const intendedProposal = await ethersDriipSettlementChallengeState._proposals(0);
                     intendedProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
-                    intendedProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
-                    intendedProposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    intendedProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
+                    intendedProposal.amounts.targetBalance._bn.should.eq.BN(0);
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
                     intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
                     intendedProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     intendedProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     intendedProposal.walletInitiated.should.be.true;
-                    intendedProposal.challengedHash.should.equal(trade.seal.hash);
-                    intendedProposal.challengedType.should.equal('trade');
+                    intendedProposal.challenged.hash.should.equal(trade.seal.hash);
+                    intendedProposal.challenged.kind.should.equal('trade');
 
                     const conjugateProposal = await ethersDriipSettlementChallengeState._proposals(1);
                     conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
-                    conjugateProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
-                    conjugateProposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    conjugateProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
+                    conjugateProposal.amounts.targetBalance._bn.should.eq.BN(0);
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
                     conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                     conjugateProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     conjugateProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     conjugateProposal.walletInitiated.should.be.true;
-                    conjugateProposal.challengedHash.should.equal(trade.seal.hash);
-                    conjugateProposal.challengedType.should.equal('trade');
+                    conjugateProposal.challenged.hash.should.equal(trade.seal.hash);
+                    conjugateProposal.challenged.kind.should.equal('trade');
                 });
             });
         });
@@ -452,27 +452,27 @@ module.exports = (glob) => {
 
                     const intendedProposal = await ethersDriipSettlementChallengeState._proposals(0);
                     intendedProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
-                    intendedProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
-                    intendedProposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    intendedProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
+                    intendedProposal.amounts.targetBalance._bn.should.eq.BN(0);
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
                     intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
                     intendedProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     intendedProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     intendedProposal.walletInitiated.should.be.false;
-                    intendedProposal.challengedHash.should.equal(trade.seal.hash);
-                    intendedProposal.challengedType.should.equal('trade');
+                    intendedProposal.challenged.hash.should.equal(trade.seal.hash);
+                    intendedProposal.challenged.kind.should.equal('trade');
 
                     const conjugateProposal = await ethersDriipSettlementChallengeState._proposals(1);
                     conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
-                    conjugateProposal.stageAmount._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
-                    conjugateProposal.targetBalanceAmount._bn.should.eq.BN(0);
+                    conjugateProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
+                    conjugateProposal.amounts.targetBalance._bn.should.eq.BN(0);
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
                     conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                     conjugateProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     conjugateProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     conjugateProposal.walletInitiated.should.be.false;
-                    conjugateProposal.challengedHash.should.equal(trade.seal.hash);
-                    conjugateProposal.challengedType.should.equal('trade');
+                    conjugateProposal.challenged.hash.should.equal(trade.seal.hash);
+                    conjugateProposal.challenged.kind.should.equal('trade');
                 });
             });
         });
@@ -633,14 +633,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalChallengedType()', () => {
+        describe('proposalChallengedKind()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementChallengeState._setProposalChallengedType('trade');
+                await ethersDriipSettlementChallengeState._setProposalChallengedKind('trade');
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByTrade.proposalChallengedType(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalChallengedKind(glob.owner, mocks.address0, 0))
                     .should.equal('trade');
             });
         });
@@ -693,14 +693,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalDisqualificationCandidateType()', () => {
+        describe('proposalDisqualificationCandidateKind()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementChallengeState._setProposalDisqualificationCandidateType('trade');
+                await ethersDriipSettlementChallengeState._setProposalDisqualificationCandidateKind('trade');
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByTrade.proposalDisqualificationCandidateType(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalDisqualificationCandidateKind(glob.owner, mocks.address0, 0))
                     .should.equal('trade');
             });
         });

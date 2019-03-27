@@ -31,18 +31,14 @@ library SettlementChallengeTypesLib {
         // Status
         Status status;
 
+        // Amounts
+        Amounts amounts;
+
         // Currency
         MonetaryTypesLib.Currency currency;
 
-        // Stage info
-        int256 stageAmount;
-
-        // Balances after amounts have been staged
-        int256 targetBalanceAmount;
-
-        // Challenged info
-        string challengedType;
-        bytes32 challengedHash;
+        // Info on challenged driip
+        Driip challenged;
 
         // True if reward is from wallet balance
         bool walletInitiated;
@@ -51,14 +47,32 @@ library SettlementChallengeTypesLib {
         Disqualification disqualification;
     }
 
+    struct Amounts {
+        // Cumulative (relative) transfer info
+        int256 cumulativeTransfer;
+
+        // Stage info
+        int256 stage;
+
+        // Balances after amounts have been staged
+        int256 targetBalance;
+    }
+
+    struct Driip {
+        // Kind ("payment", "trade", ...)
+        string kind;
+
+        // Hash (of operator)
+        bytes32 hash;
+    }
+
     struct Disqualification {
         // Challenger
         address challenger;
         uint256 nonce;
         uint256 blockNumber;
 
-        // Candidate info
-        string candidateType;
-        bytes32 candidateHash;
+        // Info on candidate driip
+        Driip candidate;
     }
 }

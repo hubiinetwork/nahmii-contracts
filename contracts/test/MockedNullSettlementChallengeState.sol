@@ -40,8 +40,8 @@ contract MockedNullSettlementChallengeState {
 
         _proposals[index].wallet = wallet;
         _proposals[index].nonce = nonce;
-        _proposals[index].stageAmount = stageAmount;
-        _proposals[index].targetBalanceAmount = targetBalanceAmount;
+        _proposals[index].amounts.stage = stageAmount;
+        _proposals[index].amounts.targetBalance = targetBalanceAmount;
         _proposals[index].currency = currency;
         _proposals[index].blockNumber = blockNumber;
         _proposals[index].walletInitiated = walletInitiated;
@@ -62,7 +62,7 @@ contract MockedNullSettlementChallengeState {
     }
 
     function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
-        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string candidateType)
+        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string candidateKind)
     public
     {
         uint256 index = _addProposalIfNone();
@@ -73,8 +73,8 @@ contract MockedNullSettlementChallengeState {
         _proposals[index].disqualification.challenger = challengerWallet;
         _proposals[index].disqualification.blockNumber = blockNumber;
         _proposals[index].disqualification.nonce = candidateNonce;
-        _proposals[index].disqualification.candidateHash = candidateHash;
-        _proposals[index].disqualification.candidateType = candidateType;
+        _proposals[index].disqualification.candidate.hash = candidateHash;
+        _proposals[index].disqualification.candidate.kind = candidateKind;
     }
 
     function hasProposalExpired(address, MonetaryTypesLib.Currency)
@@ -156,14 +156,14 @@ contract MockedNullSettlementChallengeState {
     view
     returns (int256)
     {
-        return _proposals[_proposals.length - 1].stageAmount;
+        return _proposals[_proposals.length - 1].amounts.stage;
     }
 
     function _setProposalStageAmount(int256 _proposalStageAmount)
     public
     {
         uint256 index = _addProposalIfNone();
-        _proposals[index].stageAmount = _proposalStageAmount;
+        _proposals[index].amounts.stage = _proposalStageAmount;
     }
 
     function proposalTargetBalanceAmount(address, MonetaryTypesLib.Currency)
@@ -171,14 +171,14 @@ contract MockedNullSettlementChallengeState {
     view
     returns (int256)
     {
-        return _proposals[_proposals.length - 1].targetBalanceAmount;
+        return _proposals[_proposals.length - 1].amounts.targetBalance;
     }
 
     function _setProposalTargetBalanceAmount(int256 _proposalTargetBalanceAmount)
     public
     {
         uint256 index = _addProposalIfNone();
-        _proposals[index].targetBalanceAmount = _proposalTargetBalanceAmount;
+        _proposals[index].amounts.targetBalance = _proposalTargetBalanceAmount;
     }
 
     function proposalWalletInitiated(address, MonetaryTypesLib.Currency)
@@ -246,29 +246,29 @@ contract MockedNullSettlementChallengeState {
     view
     returns (bytes32)
     {
-        return _proposals[_proposals.length - 1].disqualification.candidateHash;
+        return _proposals[_proposals.length - 1].disqualification.candidate.hash;
     }
 
     function _setProposalDisqualificationCandidateHash(bytes32 _proposalDisqualificationCandidateHash)
     public
     {
         uint256 index = _addProposalIfNone();
-        _proposals[index].disqualification.candidateHash = _proposalDisqualificationCandidateHash;
+        _proposals[index].disqualification.candidate.hash = _proposalDisqualificationCandidateHash;
     }
 
-    function proposalDisqualificationCandidateType(address, MonetaryTypesLib.Currency)
+    function proposalDisqualificationCandidateKind(address, MonetaryTypesLib.Currency)
     public
     view
     returns (string)
     {
-        return _proposals[_proposals.length - 1].disqualification.candidateType;
+        return _proposals[_proposals.length - 1].disqualification.candidate.kind;
     }
 
-    function _setProposalDisqualificationCandidateType(string _proposalDisqualificationCandidateType)
+    function _setProposalDisqualificationCandidateKind(string _proposalDisqualificationCandidateKind)
     public
     {
         uint256 index = _addProposalIfNone();
-        _proposals[index].disqualification.candidateType = _proposalDisqualificationCandidateType;
+        _proposals[index].disqualification.candidate.kind = _proposalDisqualificationCandidateKind;
     }
 
     function _addProposalIfNone()

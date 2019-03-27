@@ -304,12 +304,12 @@ BalanceTrackable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal driip type
-    function proposalChallengedType(address wallet, address currencyCt, uint256 currencyId)
+    function proposalChallengedKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (string)
     {
-        return driipSettlementChallengeState.proposalChallengedType(
+        return driipSettlementChallengeState.proposalChallengedKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -358,17 +358,17 @@ BalanceTrackable {
         );
     }
 
-    /// @notice Get the disqualification candidate type of the given wallet and currency
+    /// @notice Get the disqualification candidate kind of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The candidate type of the settlement disqualification
-    function proposalDisqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
+    /// @return The candidate kind of the settlement disqualification
+    function proposalDisqualificationCandidateKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (string)
     {
-        return driipSettlementChallengeState.proposalDisqualificationCandidateType(
+        return driipSettlementChallengeState.proposalDisqualificationCandidateKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -424,14 +424,14 @@ BalanceTrackable {
         //        nullSettlementChallengeState.removeProposal(wallet, payment.currency, walletInitiated);
 
         // Deduce the concerned nonce and cumulative relative transfer
-        (uint256 nonce, int256 cumRelTransfer) = _paymentPartyProperties(payment, wallet);
-
-        // Obtain the current active balance amount
-        int256 balanceAmount = balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency);
+        (uint256 nonce, int256 cumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);
 
         // Add proposal, including assurance that there is no overlap with active proposal
+        // Target balance amount is calculated as current balance - cumulativeTransferAmount - stageAmount
         driipSettlementChallengeState.addProposal(
-            wallet, nonce, stageAmount, balanceAmount.sub(cumRelTransfer.add(stageAmount)), payment.currency, payment.blockNumber,
+            wallet, nonce, cumulativeTransferAmount, stageAmount,
+            balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency).sub(cumulativeTransferAmount.add(stageAmount)),
+            payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
     }

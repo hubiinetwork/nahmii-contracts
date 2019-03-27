@@ -11,17 +11,18 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {ConfigurableOperational} from "./ConfigurableOperational.sol";
-import {BalanceTracker} from "./BalanceTracker.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDisputeByPayment} from "./NullSettlementDisputeByPayment.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
-import {DriipSettlementState} from "./DriipSettlementState.sol";
+import {NullSettlementState} from "./NullSettlementState.sol";
+import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
 import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
@@ -38,7 +39,8 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     // -----------------------------------------------------------------------------------------------------------------
     NullSettlementDisputeByPayment public nullSettlementDisputeByPayment;
     NullSettlementChallengeState public nullSettlementChallengeState;
-    DriipSettlementState public driipSettlementState;
+    NullSettlementState public nullSettlementState;
+    DriipSettlementChallengeState public driipSettlementChallengeState;
 
     //
     // Events
@@ -47,8 +49,10 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         NullSettlementDisputeByPayment newNullSettlementDisputeByPayment);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
-    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
-        DriipSettlementState newDriipSettlementState);
+    event SetNullSettlementStateEvent(NullSettlementState oldNullSettlementState,
+        NullSettlementState newNullSettlementState);
+    event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
+        DriipSettlementChallengeState newDriipSettlementChallengeState);
     event StartChallengeEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
         address currencyCt, uint currencyId);
     event StartChallengeByProxyEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
@@ -77,7 +81,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         emit SetNullSettlementDisputeByPaymentEvent(oldNullSettlementDisputeByPayment, nullSettlementDisputeByPayment);
     }
 
-    /// @notice Set the settlement challenge state contract
+    /// @notice Set the null settlement challenge state contract
     /// @param newNullSettlementChallengeState The (address of) NullSettlementChallengeState contract instance
     function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
     public
@@ -89,16 +93,28 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
     }
 
-    /// @notice Set the driip settlement state contract
-    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
-    function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
+    /// @notice Set the null settlement state contract
+    /// @param newNullSettlementState The (address of) NullSettlementState contract instance
+    function setNullSettlementState(NullSettlementState newNullSettlementState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementState)
+    notNullAddress(newNullSettlementState)
     {
-        DriipSettlementState oldDriipSettlementState = driipSettlementState;
-        driipSettlementState = newDriipSettlementState;
-        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
+        NullSettlementState oldNullSettlementState = nullSettlementState;
+        nullSettlementState = newNullSettlementState;
+        emit SetNullSettlementStateEvent(oldNullSettlementState, nullSettlementState);
+    }
+
+    /// @notice Set the driip settlement challenge state contract
+    /// @param newDriipSettlementChallengeState The (address of) DriipSettlementChallengeState contract instance
+    function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
+    public
+    onlyDeployer
+    notNullAddress(newDriipSettlementChallengeState)
+    {
+        DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
+        driipSettlementChallengeState = newDriipSettlementChallengeState;
+        emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
     }
 
     /// @notice Start settlement challenge
@@ -111,6 +127,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Require that wallet is not locked
         require(!walletLocker.isLocked(msg.sender));
 
+        // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
         // Start challenge for wallet
@@ -133,6 +150,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     onlyOperator
     {
+        // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
         // Start challenge for wallet
@@ -153,7 +171,9 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     {
         // Stop challenge
-        _stopChallenge(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true);
+        nullSettlementChallengeState.removeProposal(
+            msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true
+        );
 
         // Emit event
         emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
@@ -168,7 +188,9 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     onlyOperator
     {
         // Stop challenge
-        _stopChallenge(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false);
+        nullSettlementChallengeState.removeProposal(
+            wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false
+        );
 
         // Emit event
         emit StopChallengeByProxyEvent(wallet, currencyCt, currencyId, msg.sender);
@@ -324,17 +346,17 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
     }
 
-    /// @notice Get the disqualification candidate type of the given wallet and currency
+    /// @notice Get the disqualification candidate kind of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @return The candidate type of the settlement disqualification
-    function proposalDisqualificationCandidateType(address wallet, address currencyCt, uint256 currencyId)
+    /// @return The candidate kind of the settlement disqualification
+    function proposalDisqualificationCandidateKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (string)
     {
-        return nullSettlementChallengeState.proposalDisqualificationCandidateType(
+        return nullSettlementChallengeState.proposalDisqualificationCandidateKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
@@ -374,25 +396,50 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Require that current block number is beyond the earliest settlement challenge block number
         require(block.number >= configuration.earliestSettlementBlockNumber());
 
+        // Require that there is no ongoing overlapping null settlement challenge
+        require(nullSettlementChallengeState.hasProposalExpired(wallet, currency));
+
+        // TODO Determine removal of completed settlement challenges
+        // Stop challenge
+        //        nullSettlementChallengeState.removeProposal(wallet, currency, walletInitiated);
+
         // Get the last logged active balance amount and block number
-        (int256 activeBalanceAmount, uint256 activeBalanceBlockNumber) = balanceTracker.fungibleActiveRecord(
+        (
+        int256 activeBalanceAmount, uint256 activeBalanceBlockNumber,
+        int256 dscCumulativeTransferAmount, int256 dscStageAmount
+        ) = _externalProperties(
             wallet, currency
         );
 
         // Obtain highest settled wallet nonce
-        uint256 nonce = driipSettlementState.maxNonceByWalletAndCurrency(wallet, currency);
+        uint256 nonce = nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency);
 
         // Add proposal, including assurance that there is no overlap with active proposal
+        // Target balance amount is calculated as current balance - DSC cumulativeTransferAmount - DSC stage amount - NSC stageAmount
         nullSettlementChallengeState.addProposal(
-            wallet, nonce, stageAmount, activeBalanceAmount.sub(stageAmount), currency,
+            wallet, nonce.add(1), stageAmount,
+            activeBalanceAmount.sub(
+                dscCumulativeTransferAmount.add(dscStageAmount).add(stageAmount)
+            ),
+            currency,
             activeBalanceBlockNumber, walletInitiated
         );
     }
 
-    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    function _externalProperties(address wallet, MonetaryTypesLib.Currency currency)
     private
-    {
-        // Stop challenge
-        nullSettlementChallengeState.removeProposal(wallet, currency, walletTerminated);
+    view
+    returns (
+        int256 activeBalanceAmount, uint256 activeBalanceBlockNumber,
+        int256 dscCumulativeTransferAmount, int256 dscStageAmount
+    ) {
+        (activeBalanceAmount, activeBalanceBlockNumber) = balanceTracker.fungibleActiveRecord(
+            wallet, currency
+        );
+
+        if (driipSettlementChallengeState.hasProposal(wallet, currency)) {
+            dscCumulativeTransferAmount = driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, currency);
+            dscStageAmount = driipSettlementChallengeState.proposalStageAmount(wallet, currency);
+        }
     }
 }

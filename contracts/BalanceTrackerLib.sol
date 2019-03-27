@@ -57,6 +57,7 @@ library BalanceTrackerLib {
         fungibleActiveBalanceAmountByBlockNumber(self, wallet, currency, fromBlockNumber);
     }
 
+    // TODO Rename?
     function fungibleActiveRecord(BalanceTracker self, address wallet,
         MonetaryTypesLib.Currency currency)
     internal
@@ -76,6 +77,7 @@ library BalanceTrackerLib {
         blockNumber = depositedBlockNumber.clampMin(settledBlockNumber);
     }
 
+    // TODO Rename?
     function fungibleActiveBalanceAmount(BalanceTracker self, address wallet, MonetaryTypesLib.Currency currency)
     internal
     view
