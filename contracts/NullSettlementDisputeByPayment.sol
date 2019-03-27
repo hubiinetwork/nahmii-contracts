@@ -146,6 +146,7 @@ BalanceTrackable, FraudChallengable, Servable {
         return targetBalanceAmount.add(deltaBalanceSinceStart) < cumulativeTransfer;
     }
 
+    // Lock wallet's balances or reward challenger by stake fraction
     function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
         address challenger)
     private
