@@ -273,7 +273,7 @@ module.exports = (glob) => {
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.blockNumber._bn.should.eq.BN(1);
-                    proposal.nonce._bn.should.eq.BN(20);
+                    proposal.nonce._bn.should.eq.BN(21);
                     proposal.walletInitiated.should.be.true;
                     proposal.challenged.hash.should.equal(mocks.hash0);
                     proposal.challenged.kind.should.be.a('string').that.is.empty;
@@ -333,7 +333,7 @@ module.exports = (glob) => {
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.blockNumber._bn.should.eq.BN(1);
-                    proposal.nonce._bn.should.eq.BN(20);
+                    proposal.nonce._bn.should.eq.BN(21);
                     proposal.walletInitiated.should.be.false;
                     proposal.challenged.hash.should.equal(mocks.hash0);
                     proposal.challenged.kind.should.be.a('string').that.is.empty;
