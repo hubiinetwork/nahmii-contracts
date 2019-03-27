@@ -11,6 +11,7 @@ const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedValidator = artifacts.require('MockedValidator');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 const MockedWalletLocker = artifacts.require('MockedWalletLocker');
+const MockedBalanceTracker = artifacts.require('MockedBalanceTracker');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -24,6 +25,7 @@ module.exports = (glob) => {
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
         let web3WalletLocker, ethersWalletLocker;
+        let web3BalanceTracker, ethersBalanceTracker;
         let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
         let web3FraudChallenge, ethersFraudChallenge;
         let provider;
@@ -43,6 +45,8 @@ module.exports = (glob) => {
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
             web3WalletLocker = await MockedWalletLocker.new();
             ethersWalletLocker = new Contract(web3WalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
+            web3BalanceTracker = await MockedBalanceTracker.new();
+            ethersBalanceTracker = new Contract(web3BalanceTracker.address, MockedBalanceTracker.abi, glob.signer_owner);
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
 
@@ -59,6 +63,7 @@ module.exports = (glob) => {
             await ethersNullSettlementDisputeByPayment.setValidator(ethersValidator.address);
             await ethersNullSettlementDisputeByPayment.setSecurityBond(ethersSecurityBond.address);
             await ethersNullSettlementDisputeByPayment.setWalletLocker(ethersWalletLocker.address);
+            await ethersNullSettlementDisputeByPayment.setBalanceTracker(ethersBalanceTracker.address);
             await ethersNullSettlementDisputeByPayment.setFraudChallenge(ethersFraudChallenge.address);
             await ethersNullSettlementDisputeByPayment.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
         });
@@ -206,6 +211,40 @@ module.exports = (glob) => {
             });
         });
 
+        describe('balanceTracker()', () => {
+            it('should equal value initialized', async () => {
+                (await web3NullSettlementDisputeByPayment.balanceTracker.call())
+                    .should.equal(web3BalanceTracker.address);
+            });
+        });
+
+        describe('setBalanceTracker()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called by deployer', () => {
+                it('should set new value and emit event', async () => {
+                    const result = await web3NullSettlementDisputeByPayment.setBalanceTracker(address);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetBalanceTrackerEvent');
+
+                    (await ethersNullSettlementDisputeByPayment.balanceTracker())
+                        .should.equal(address);
+                });
+            });
+
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3NullSettlementDisputeByPayment.setBalanceTracker(address, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+        });
+
         describe('fraudChallenge()', () => {
             it('should equal value initialized', async () => {
                 (await web3NullSettlementDisputeByPayment.fraudChallenge.call())
@@ -283,6 +322,7 @@ module.exports = (glob) => {
                 await web3NullSettlementChallengeState._reset({gasLimit: 1e6});
                 await web3SecurityBond._reset();
                 await web3WalletLocker._reset();
+                await web3BalanceTracker._reset();
 
                 await ethersNullSettlementChallengeState._addProposalIfNone();
 
@@ -415,16 +455,12 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on payment whose single transfer amount is less than the proposal target balance amount', () => {
+            describe('if not causing overrun', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
                     await ethersNullSettlementDisputeByPayment.enableServiceAction(
                         glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(
-                        payment.transfers.single.mul(2)
                     );
                 });
 
@@ -435,12 +471,17 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with balance reward and proposal initially is qualified', () => {
+            describe('if causing overrun with balance reward and proposal initially qualified', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
                     await ethersNullSettlementDisputeByPayment.enableServiceAction(
                         glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
+                    );
+
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), payment.sender.balances.current.mul(2),
+                        1, {gasLimit: 1e6}
                     );
 
                     await ethersNullSettlementChallengeState._setProposalWalletInitiated(true);
@@ -487,12 +528,17 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with balance reward and proposal initially is disqualified', () => {
+            describe('if causing overrun with balance reward and proposal initially disqualified', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
                     await ethersNullSettlementDisputeByPayment.enableServiceAction(
                         glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
+                    );
+
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), payment.sender.balances.current.mul(2),
+                        1, {gasLimit: 1e6}
                     );
 
                     await ethersNullSettlementChallengeState._setProposalWalletInitiated(true);
@@ -549,12 +595,17 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with security bond reward and proposal initially is qualified', () => {
+            describe('if causing overrun with security bond reward and proposal initially qualified', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
                     await ethersNullSettlementDisputeByPayment.enableServiceAction(
                         glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
+                    );
+
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), payment.sender.balances.current.mul(2),
+                        1, {gasLimit: 1e6}
                     );
                 });
 
@@ -661,12 +712,17 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called with security bond reward and proposal initially is disqualified', () => {
+            describe('if causing overrun with security bond reward and proposal initially disqualified', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementDisputeByPayment.registerService(glob.owner);
                     await ethersNullSettlementDisputeByPayment.enableServiceAction(
                         glob.owner, await ethersNullSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
                         {gasLimit: 1e6}
+                    );
+
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), payment.sender.balances.current.mul(2),
+                        1, {gasLimit: 1e6}
                     );
 
                     await ethersNullSettlementChallengeState._setProposalStatus(
