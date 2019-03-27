@@ -602,10 +602,10 @@ contract MockedValidator is Ownable, SignerManageable {
     function isGenuineSuccessiveTradesBalances(
         TradeTypesLib.Trade,
         TradeTypesLib.TradePartyRole,
-        NahmiiTypesLib.CurrencyRole,
+        TradeTypesLib.CurrencyRole,
         TradeTypesLib.Trade,
         TradeTypesLib.TradePartyRole,
-        NahmiiTypesLib.CurrencyRole,
+        TradeTypesLib.CurrencyRole,
         int256
     )
     public
@@ -718,7 +718,7 @@ contract MockedValidator is Ownable, SignerManageable {
     function isGenuineSuccessiveTradePaymentBalances(
         TradeTypesLib.Trade,
         TradeTypesLib.TradePartyRole,
-        NahmiiTypesLib.CurrencyRole,
+        TradeTypesLib.CurrencyRole,
         PaymentTypesLib.Payment,
         PaymentTypesLib.PaymentPartyRole,
         int256
@@ -778,7 +778,7 @@ contract MockedValidator is Ownable, SignerManageable {
         PaymentTypesLib.PaymentPartyRole,
         TradeTypesLib.Trade,
         TradeTypesLib.TradePartyRole,
-        NahmiiTypesLib.CurrencyRole,
+        TradeTypesLib.CurrencyRole,
         int256
     )
     public

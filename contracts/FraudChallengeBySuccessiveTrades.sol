@@ -16,7 +16,6 @@ import {ValidatableV2} from "./ValidatableV2.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -75,8 +74,8 @@ SecurityBondable, WalletLockable, BalanceTrackable {
         (
         TradeTypesLib.TradePartyRole firstTradePartyRole,
         TradeTypesLib.TradePartyRole lastTradePartyRole,
-        NahmiiTypesLib.CurrencyRole firstTradeCurrencyRole,
-        NahmiiTypesLib.CurrencyRole lastTradeCurrencyRole,
+        TradeTypesLib.CurrencyRole firstTradeCurrencyRole,
+        TradeTypesLib.CurrencyRole lastTradeCurrencyRole,
         int256 deltaActiveBalance
         )
         = _rolesAndDeltaActiveBalance(firstTrade, lastTrade, wallet, MonetaryTypesLib.Currency(currencyCt, currencyId));
@@ -120,7 +119,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     view
     returns (
         TradeTypesLib.TradePartyRole firstTradePartyRole, TradeTypesLib.TradePartyRole lastTradePartyRole,
-        NahmiiTypesLib.CurrencyRole firstTradeCurrencyRole, NahmiiTypesLib.CurrencyRole lastTradeCurrencyRole,
+        TradeTypesLib.CurrencyRole firstTradeCurrencyRole, TradeTypesLib.CurrencyRole lastTradeCurrencyRole,
         int256 deltaActiveBalance
     )
     {
@@ -148,39 +147,39 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     function _tradeCurrencyRole(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
     private
     view
-    returns (NahmiiTypesLib.CurrencyRole)
+    returns (TradeTypesLib.CurrencyRole)
     {
         return validator.isTradeIntendedCurrency(trade, currency) ?
-        NahmiiTypesLib.CurrencyRole.Intended :
-        NahmiiTypesLib.CurrencyRole.Conjugate;
+        TradeTypesLib.CurrencyRole.Intended :
+        TradeTypesLib.CurrencyRole.Conjugate;
     }
 
-    function _tradeCurrency(TradeTypesLib.Trade trade, NahmiiTypesLib.CurrencyRole currencyRole)
+    function _tradeCurrency(TradeTypesLib.Trade trade, TradeTypesLib.CurrencyRole currencyRole)
     private
     pure
     returns (MonetaryTypesLib.Currency)
     {
-        if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
+        if (TradeTypesLib.CurrencyRole.Intended == currencyRole)
             return trade.currencies.intended;
-        else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole
+        else // TradeTypesLib.CurrencyRole.Conjugate == currencyRole
             return trade.currencies.conjugate;
     }
 
     function _tradeLockAmount(TradeTypesLib.Trade trade, TradeTypesLib.TradePartyRole tradePartyRole,
-        NahmiiTypesLib.CurrencyRole currencyRole)
+        TradeTypesLib.CurrencyRole currencyRole)
     private
     pure
     returns (int256)
     {
         if (TradeTypesLib.TradePartyRole.Buyer == tradePartyRole)
-            if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
+            if (TradeTypesLib.CurrencyRole.Intended == currencyRole)
                 return trade.buyer.balances.intended.current;
-            else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole
+            else // TradeTypesLib.CurrencyRole.Conjugate == currencyRole
                 return trade.buyer.balances.conjugate.current;
         else // TradeTypesLib.TradePartyRole.Seller == tradePartyRole)
-            if (NahmiiTypesLib.CurrencyRole.Intended == currencyRole)
+            if (TradeTypesLib.CurrencyRole.Intended == currencyRole)
                 return trade.seller.balances.intended.current;
-            else // NahmiiTypesLib.CurrencyRole.Conjugate == currencyRole
+            else // TradeTypesLib.CurrencyRole.Conjugate == currencyRole
                 return trade.seller.balances.conjugate.current;
     }
 }

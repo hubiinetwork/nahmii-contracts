@@ -152,7 +152,8 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeBySuccessiveTrades,
                 FraudChallengeByTradeSucceedingPayment,
                 NullSettlementChallengeByPayment,
-                NullSettlementChallengeByTrade
+                NullSettlementChallengeByTrade,
+                NullSettlementDisputeByPayment
             ]);
             await deployer.link(BlockNumbDisdIntsLib, [
                 Configuration
@@ -241,12 +242,9 @@ module.exports = (deployer, network, accounts) => {
                 // FraudChallengeByDuplicateDriipNonceOfTrades,
                 FraudChallengeByOrder,
                 FraudChallengeByPayment,
-                FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments,
-                FraudChallengeBySuccessiveTrades,
                 FraudChallengeByTrade,
                 FraudChallengeByTradeOrderResiduals,
-                FraudChallengeByTradeSucceedingPayment,
                 MockedCancelOrdersChallenge,
                 // MockedDriipSettlementChallenge,
                 // MockedNullSettlementChallenge,

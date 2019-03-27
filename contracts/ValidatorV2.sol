@@ -436,10 +436,10 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     function isGenuineSuccessiveTradesBalances(
         TradeTypesLib.Trade firstTrade,
         TradeTypesLib.TradePartyRole firstTradePartyRole,
-        NahmiiTypesLib.CurrencyRole firstTradeCurrencyRole,
+        TradeTypesLib.CurrencyRole firstTradeCurrencyRole,
         TradeTypesLib.Trade lastTrade,
         TradeTypesLib.TradePartyRole lastTradePartyRole,
-        NahmiiTypesLib.CurrencyRole lastTradeCurrencyRole,
+        TradeTypesLib.CurrencyRole lastTradeCurrencyRole,
         int256 delta
     )
     public
@@ -447,10 +447,10 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     returns (bool)
     {
         NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (TradeTypesLib.TradePartyRole.Buyer == firstTradePartyRole ? firstTrade.buyer.balances : firstTrade.seller.balances);
-        NahmiiTypesLib.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (NahmiiTypesLib.CurrencyRole.Intended == firstTradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+        NahmiiTypesLib.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (TradeTypesLib.CurrencyRole.Intended == firstTradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
         NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 memory lastIntendedConjugateCurrentPreviousBalances = (TradeTypesLib.TradePartyRole.Buyer == lastTradePartyRole ? lastTrade.buyer.balances : lastTrade.seller.balances);
-        NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (NahmiiTypesLib.CurrencyRole.Intended == lastTradeCurrencyRole ? lastIntendedConjugateCurrentPreviousBalances.intended : lastIntendedConjugateCurrentPreviousBalances.conjugate);
+        NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (TradeTypesLib.CurrencyRole.Intended == lastTradeCurrencyRole ? lastIntendedConjugateCurrentPreviousBalances.intended : lastIntendedConjugateCurrentPreviousBalances.conjugate);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current.add(delta);
     }
@@ -475,7 +475,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     function isGenuineSuccessiveTradePaymentBalances(
         TradeTypesLib.Trade trade,
         TradeTypesLib.TradePartyRole tradePartyRole,
-        NahmiiTypesLib.CurrencyRole tradeCurrencyRole,
+        TradeTypesLib.CurrencyRole tradeCurrencyRole,
         PaymentTypesLib.Payment payment,
         PaymentTypesLib.PaymentPartyRole paymentPartyRole,
         int256 delta
@@ -485,7 +485,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     returns (bool)
     {
         NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (TradeTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
-        NahmiiTypesLib.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (NahmiiTypesLib.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+        NahmiiTypesLib.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (TradeTypesLib.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
         NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (PaymentTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
 
@@ -497,7 +497,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         PaymentTypesLib.PaymentPartyRole paymentPartyRole,
         TradeTypesLib.Trade trade,
         TradeTypesLib.TradePartyRole tradePartyRole,
-        NahmiiTypesLib.CurrencyRole tradeCurrencyRole,
+        TradeTypesLib.CurrencyRole tradeCurrencyRole,
         int256 delta
     )
     public
@@ -507,7 +507,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         NahmiiTypesLib.CurrentPreviousInt256 memory firstCurrentPreviousBalances = (PaymentTypesLib.PaymentPartyRole.Sender == paymentPartyRole ? payment.sender.balances : payment.recipient.balances);
 
         NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 memory firstIntendedConjugateCurrentPreviousBalances = (TradeTypesLib.TradePartyRole.Buyer == tradePartyRole ? trade.buyer.balances : trade.seller.balances);
-        NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (NahmiiTypesLib.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
+        NahmiiTypesLib.CurrentPreviousInt256 memory lastCurrentPreviousBalances = (TradeTypesLib.CurrencyRole.Intended == tradeCurrencyRole ? firstIntendedConjugateCurrentPreviousBalances.intended : firstIntendedConjugateCurrentPreviousBalances.conjugate);
 
         return lastCurrentPreviousBalances.previous == firstCurrentPreviousBalances.current.add(delta);
     }

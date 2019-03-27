@@ -14,6 +14,7 @@ import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
+import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {Servable} from "./Servable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -22,15 +23,18 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
+import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
  * @title NullSettlementDisputeByPayment
  * @notice The where payment related disputes of null settlement challenge happens
  */
 contract NullSettlementDisputeByPayment is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable,
-FraudChallengable, Servable {
+BalanceTrackable, FraudChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using BalanceTrackerLib for BalanceTracker;
 
     //
     // Constants
@@ -86,18 +90,15 @@ FraudChallengable, Servable {
 
         // Require that payment party's nonce is strictly greater than proposal's nonce and its current
         // disqualification nonce
-        require(payment.sender.nonce >= nullSettlementChallengeState.proposalNonce(
+        require(payment.sender.nonce > nullSettlementChallengeState.proposalNonce(
             wallet, payment.currency
         ));
-        require(payment.sender.nonce >= nullSettlementChallengeState.proposalDisqualificationNonce(
+        require(payment.sender.nonce > nullSettlementChallengeState.proposalDisqualificationNonce(
             wallet, payment.currency
         ));
 
-        // Require that transfer amount is strictly greater than the proposal's target balance amount
-        // for this payment to be a valid challenge candidate
-        require(payment.transfers.single > nullSettlementChallengeState.proposalTargetBalanceAmount(
-            wallet, payment.currency
-        ));
+        // Require overrun for this payment to be a valid challenge candidate
+        require(_overrun(wallet, payment));
 
         // Reward challenger
         _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger);
@@ -117,6 +118,34 @@ FraudChallengable, Servable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
+    function _overrun(address wallet, PaymentTypesLib.Payment payment)
+    private
+    view
+    returns (bool)
+    {
+        // Get the target balance amount from the proposal
+        int targetBalanceAmount = nullSettlementChallengeState.proposalTargetBalanceAmount(
+            wallet, payment.currency
+        );
+
+        // Get the change in active balance since the start of the challenge
+        int256 deltaBalanceSinceStart = balanceTracker.fungibleActiveBalanceAmount(
+            wallet, payment.currency
+        ).sub(
+            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+                wallet, payment.currency,
+                nullSettlementChallengeState.proposalBlockNumber(wallet, payment.currency)
+            )
+        );
+
+        // Get the cumulative transfer of the payment
+        int256 cumulativeTransfer = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+            wallet, payment.currency, payment.blockNumber
+        ).sub(payment.sender.balances.current);
+
+        return targetBalanceAmount.add(deltaBalanceSinceStart) < cumulativeTransfer;
+    }
+
     function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
         address challenger)
     private

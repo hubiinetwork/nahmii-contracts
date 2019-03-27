@@ -16,7 +16,6 @@ import {ValidatableV2} from "./ValidatableV2.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -76,7 +75,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
         (
         TradeTypesLib.TradePartyRole tradePartyRole,
         PaymentTypesLib.PaymentPartyRole paymentPartyRole,
-        NahmiiTypesLib.CurrencyRole tradeCurrencyRole,
+        TradeTypesLib.CurrencyRole tradeCurrencyRole,
         int256 deltaActiveBalance
         )
         = _rolesAndDeltaActiveBalance(trade, payment, wallet, MonetaryTypesLib.Currency(currencyCt, currencyId));
@@ -122,7 +121,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     view
     returns (
         TradeTypesLib.TradePartyRole tradePartyRole, PaymentTypesLib.PaymentPartyRole paymentPartyRole,
-        NahmiiTypesLib.CurrencyRole tradeCurrencyRole, int256 deltaActiveBalance
+        TradeTypesLib.CurrencyRole tradeCurrencyRole, int256 deltaActiveBalance
     )
     {
         tradePartyRole = _tradePartyRole(trade, wallet);
@@ -148,11 +147,11 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     function _tradeCurrencyRole(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
     private
     view
-    returns (NahmiiTypesLib.CurrencyRole)
+    returns (TradeTypesLib.CurrencyRole)
     {
         return validator.isTradeIntendedCurrency(trade, currency) ?
-        NahmiiTypesLib.CurrencyRole.Intended :
-        NahmiiTypesLib.CurrencyRole.Conjugate;
+        TradeTypesLib.CurrencyRole.Intended :
+        TradeTypesLib.CurrencyRole.Conjugate;
     }
 
     function _paymentPartyRole(PaymentTypesLib.Payment payment, address wallet)
