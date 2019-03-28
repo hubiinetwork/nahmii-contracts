@@ -264,6 +264,9 @@ FraudChallengable, WalletLockable {
         if (address(0) != address(revenueFund))
             _stageFees(wallet, totalFees, revenueFund, walletNonce);
 
+        // Remove driip settlement challenge proposal
+        driipSettlementChallengeState.removeProposal(wallet, payment.currency);
+
         // If payment global nonce is beyond max driip nonce then update max driip nonce
         // TODO TBM when global nonce goes away
         if (payment.nonce > driipSettlementState.maxDriipNonce())

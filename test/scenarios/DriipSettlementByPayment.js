@@ -589,6 +589,14 @@ module.exports = (glob) => {
                                 payment.sender.wallet, payment.currency)
                         )._bn.should.eq.BN(payment.sender.nonce._bn);
 
+                        (await ethersDriipSettlementChallengeState._removeProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                        proposal.currency.ct.should.equal(payment.currency.ct);
+                        proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+
                         (await ethersDriipSettlementState.maxDriipNonce())
                             ._bn.should.eq.BN(payment.nonce._bn);
                     });
@@ -804,6 +812,14 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                 payment.sender.wallet, payment.currency)
                         )._bn.should.eq.BN(payment.sender.nonce._bn);
+
+                        (await ethersDriipSettlementChallengeState._removeProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                        proposal.currency.ct.should.equal(payment.currency.ct);
+                        proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
 
                         (await ethersDriipSettlementState.maxDriipNonce())
                             ._bn.should.eq.BN(payment.nonce._bn);
