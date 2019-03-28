@@ -153,10 +153,13 @@ BalanceTrackable {
     function stopChallenge(address currencyCt, uint256 currencyId)
     public
     {
-        // Stop challenge
-        driipSettlementChallengeState.removeProposal(
-            msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true
-        );
+        MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
+
+        // Stop driip settlement challenge
+        driipSettlementChallengeState.removeProposal(msg.sender, currency, true);
+
+        // Stop dependent null settlement challenge if existent
+        nullSettlementChallengeState.removeProposal(msg.sender, currency);
 
         // Emit event
         emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
@@ -170,10 +173,13 @@ BalanceTrackable {
     public
     onlyOperator
     {
-        // Stop challenge
-        driipSettlementChallengeState.removeProposal(
-            wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false
-        );
+        MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
+
+        // Stop driip settlement challenge
+        driipSettlementChallengeState.removeProposal(wallet, currency, false);
+
+        // Stop dependent null settlement challenge if existent
+        nullSettlementChallengeState.removeProposal(wallet, currency);
 
         // Emit event
         emit StopChallengeByProxyEvent(wallet, currencyCt, currencyId, msg.sender);
