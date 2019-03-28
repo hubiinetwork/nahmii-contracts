@@ -49,6 +49,17 @@ contract MockedNullSettlementChallengeState {
         _addProposalsCount++;
     }
 
+    function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency)
+    public
+    {
+        uint256 index = _addProposalIfNone();
+
+        _proposals[index].wallet = challengedWallet;
+        _proposals[index].currency = currency;
+
+        _removeProposalsCount++;
+    }
+
     function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
     public
     {

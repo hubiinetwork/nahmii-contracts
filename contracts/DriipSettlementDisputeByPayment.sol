@@ -24,6 +24,7 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
+import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 import {BalanceTracker} from "./BalanceTracker.sol";
 import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
@@ -46,12 +47,15 @@ BalanceTrackable, FraudChallengable, Servable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementChallengeState public driipSettlementChallengeState;
+    NullSettlementChallengeState public nullSettlementChallengeState;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
+    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
+        NullSettlementChallengeState newNullSettlementChallengeState);
     event ChallengeByPaymentEvent(address wallet, uint256 nonce, PaymentTypesLib.Payment payment,
         address challenger);
 
@@ -70,6 +74,17 @@ BalanceTrackable, FraudChallengable, Servable {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
         emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
+    }
+
+    /// @notice Set the null settlement state contract
+    /// @param newNullSettlementChallengeState The (address of) NullSettlementChallengeState contract instance
+    function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState) public
+    onlyDeployer
+    notNullAddress(newNullSettlementChallengeState)
+    {
+        NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
+        nullSettlementChallengeState = newNullSettlementChallengeState;
+        emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
     }
 
     /// @notice Challenge the driip settlement by providing payment candidate
@@ -109,6 +124,9 @@ BalanceTrackable, FraudChallengable, Servable {
             wallet, payment.currency, challenger, payment.blockNumber,
             payment.sender.nonce, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
         );
+
+        // Cancel dependent null settlement challenge if existent
+        nullSettlementChallengeState.removeProposal(wallet, payment.currency);
 
         // Emit event
         emit ChallengeByPaymentEvent(

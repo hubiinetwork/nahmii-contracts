@@ -6,6 +6,7 @@ const mocks = require('../mocks');
 const DriipSettlementDisputeByPayment = artifacts.require('DriipSettlementDisputeByPayment');
 const SignerManager = artifacts.require('SignerManager');
 const MockedDriipSettlementChallengeState = artifacts.require('MockedDriipSettlementChallengeState');
+const MockedNullSettlementChallengeState = artifacts.require('MockedNullSettlementChallengeState');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedValidator = artifacts.require('MockedValidator');
@@ -27,6 +28,7 @@ module.exports = (glob) => {
         let web3WalletLocker, ethersWalletLocker;
         let web3BalanceTracker, ethersBalanceTracker;
         let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
+        let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
         let web3FraudChallenge, ethersFraudChallenge;
         let provider;
 
@@ -37,6 +39,8 @@ module.exports = (glob) => {
 
             web3DriipSettlementChallengeState = await MockedDriipSettlementChallengeState.new(glob.owner);
             ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, MockedDriipSettlementChallengeState.abi, glob.signer_owner);
+            web3NullSettlementChallengeState = await MockedNullSettlementChallengeState.new(glob.owner);
+            ethersNullSettlementChallengeState = new Contract(web3NullSettlementChallengeState.address, MockedNullSettlementChallengeState.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
@@ -66,6 +70,7 @@ module.exports = (glob) => {
             await ethersDriipSettlementDisputeByPayment.setBalanceTracker(ethersBalanceTracker.address);
             await ethersDriipSettlementDisputeByPayment.setFraudChallenge(ethersFraudChallenge.address);
             await ethersDriipSettlementDisputeByPayment.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
+            await ethersDriipSettlementDisputeByPayment.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
         });
 
         describe('constructor', () => {
@@ -313,6 +318,40 @@ module.exports = (glob) => {
             });
         });
 
+        describe('nullSettlementChallengeState()', () => {
+            it('should equal value initialized', async () => {
+                (await web3DriipSettlementDisputeByPayment.nullSettlementChallengeState.call())
+                    .should.equal(web3NullSettlementChallengeState.address);
+            });
+        });
+
+        describe('setNullSettlementChallengeState()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called by deployer', () => {
+                it('should set new value and emit event', async () => {
+                    const result = await web3DriipSettlementDisputeByPayment.setNullSettlementChallengeState(address);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetNullSettlementChallengeStateEvent');
+
+                    (await ethersDriipSettlementDisputeByPayment.nullSettlementChallengeState())
+                        .should.equal(address);
+                });
+            });
+
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3DriipSettlementDisputeByPayment.setNullSettlementChallengeState(address, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+        });
+
         describe('challengeByPayment()', () => {
             let payment, filter;
 
@@ -320,6 +359,7 @@ module.exports = (glob) => {
                 await web3Validator._reset({gasLimit: 4e6});
                 await web3FraudChallenge._reset();
                 await web3DriipSettlementChallengeState._reset({gasLimit: 1e6});
+                await web3NullSettlementChallengeState._reset({gasLimit: 1e6});
                 await web3SecurityBond._reset();
                 await web3WalletLocker._reset();
                 await web3BalanceTracker._reset();
@@ -499,16 +539,16 @@ module.exports = (glob) => {
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    const proposal = await ethersDriipSettlementChallengeState._proposals(0);
-                    proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                    proposal.currency.ct.should.equal(payment.currency.ct);
-                    proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
-                    proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                    proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                    proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
-                    proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
-                    proposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
-                    proposal.disqualification.candidate.kind.should.equal('payment');
+                    const dscProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                    dscProposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                    dscProposal.currency.ct.should.equal(payment.currency.ct);
+                    dscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                    dscProposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
+                    dscProposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
+                    dscProposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    dscProposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                    dscProposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
+                    dscProposal.disqualification.candidate.kind.should.equal('payment');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(0);
@@ -529,6 +569,14 @@ module.exports = (glob) => {
 
                     (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
+
+                    (await ethersNullSettlementChallengeState._removeProposalsCount())
+                        ._bn.should.eq.BN(1);
+
+                    const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                    nscProposal.wallet.should.equal(payment.sender.wallet);
+                    nscProposal.currency.ct.should.equal(payment.currency.ct);
+                    nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                 });
             });
 
@@ -562,16 +610,16 @@ module.exports = (glob) => {
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    const proposal = await ethersDriipSettlementChallengeState._proposals(0);
-                    proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                    proposal.currency.ct.should.equal(payment.currency.ct);
-                    proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
-                    proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                    proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                    proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
-                    proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
-                    proposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
-                    proposal.disqualification.candidate.kind.should.equal('payment');
+                    const dscProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                    dscProposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                    dscProposal.currency.ct.should.equal(payment.currency.ct);
+                    dscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                    dscProposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
+                    dscProposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
+                    dscProposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    dscProposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                    dscProposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
+                    dscProposal.disqualification.candidate.kind.should.equal('payment');
 
                     (await ethersWalletLocker._unlockedWalletsCount())
                         ._bn.should.eq.BN(1);
@@ -596,6 +644,14 @@ module.exports = (glob) => {
 
                     (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
+
+                    (await ethersNullSettlementChallengeState._removeProposalsCount())
+                        ._bn.should.eq.BN(1);
+
+                    const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                    nscProposal.wallet.should.equal(payment.sender.wallet);
+                    nscProposal.currency.ct.should.equal(payment.currency.ct);
+                    nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                 });
             });
 
@@ -625,16 +681,16 @@ module.exports = (glob) => {
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                        const proposal = await ethersDriipSettlementChallengeState._proposals(0);
-                        proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                        proposal.currency.ct.should.equal(payment.currency.ct);
-                        proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
-                        proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                        proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
-                        proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
-                        proposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
-                        proposal.disqualification.candidate.kind.should.equal('payment');
+                        const dscProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        dscProposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                        dscProposal.currency.ct.should.equal(payment.currency.ct);
+                        dscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                        dscProposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
+                        dscProposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
+                        dscProposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                        dscProposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                        dscProposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
+                        dscProposal.disqualification.candidate.kind.should.equal('payment');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -661,6 +717,14 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(payment.currency.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
+
+                        (await ethersNullSettlementChallengeState._removeProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(payment.sender.wallet);
+                        nscProposal.currency.ct.should.equal(payment.currency.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                     });
                 });
 
@@ -676,16 +740,16 @@ module.exports = (glob) => {
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                        const proposal = await ethersDriipSettlementChallengeState._proposals(0);
-                        proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                        proposal.currency.ct.should.equal(payment.currency.ct);
-                        proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
-                        proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                        proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
-                        proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
-                        proposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
-                        proposal.disqualification.candidate.kind.should.equal('payment');
+                        const dscProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        dscProposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                        dscProposal.currency.ct.should.equal(payment.currency.ct);
+                        dscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                        dscProposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
+                        dscProposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
+                        dscProposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                        dscProposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                        dscProposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
+                        dscProposal.disqualification.candidate.kind.should.equal('payment');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -712,6 +776,14 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(payment.currency.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
+
+                        (await ethersNullSettlementChallengeState._removeProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(payment.sender.wallet);
+                        nscProposal.currency.ct.should.equal(payment.currency.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                     });
                 });
             });
@@ -749,16 +821,16 @@ module.exports = (glob) => {
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                        const proposal = await ethersDriipSettlementChallengeState._proposals(0);
-                        proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                        proposal.currency.ct.should.equal(payment.currency.ct);
-                        proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
-                        proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                        proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
-                        proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
-                        proposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
-                        proposal.disqualification.candidate.kind.should.equal('payment');
+                        const dscProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        dscProposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                        dscProposal.currency.ct.should.equal(payment.currency.ct);
+                        dscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                        dscProposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
+                        dscProposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
+                        dscProposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                        dscProposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                        dscProposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
+                        dscProposal.disqualification.candidate.kind.should.equal('payment');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -788,6 +860,14 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(payment.currency.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
+
+                        (await ethersNullSettlementChallengeState._removeProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(payment.sender.wallet);
+                        nscProposal.currency.ct.should.equal(payment.currency.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                     });
                 });
 
@@ -803,16 +883,16 @@ module.exports = (glob) => {
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                        const proposal = await ethersDriipSettlementChallengeState._proposals(0);
-                        proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                        proposal.currency.ct.should.equal(payment.currency.ct);
-                        proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
-                        proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                        proposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
-                        proposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
-                        proposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
-                        proposal.disqualification.candidate.kind.should.equal('payment');
+                        const dscProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        dscProposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                        dscProposal.currency.ct.should.equal(payment.currency.ct);
+                        dscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                        dscProposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
+                        dscProposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
+                        dscProposal.disqualification.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                        dscProposal.disqualification.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                        dscProposal.disqualification.candidate.hash.should.equal(payment.seals.operator.hash);
+                        dscProposal.disqualification.candidate.kind.should.equal('payment');
 
                         (await ethersWalletLocker._unlockedWalletsCount())
                             ._bn.should.eq.BN(0);
@@ -842,6 +922,14 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(payment.currency.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
+
+                        (await ethersNullSettlementChallengeState._removeProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(payment.sender.wallet);
+                        nscProposal.currency.ct.should.equal(payment.currency.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                     });
                 });
             });

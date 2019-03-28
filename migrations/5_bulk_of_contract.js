@@ -573,8 +573,10 @@ module.exports = (deployer, network, accounts) => {
             await instance.setConfiguration(addressStorage.get('Configuration'));
             await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), 'add_proposal');
+            await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), 'remove_proposal');
             await instance.registerService(addressStorage.get('DriipSettlementChallengeByTrade'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByTrade'), 'add_proposal');
+            await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByTrade'), 'remove_proposal');
             await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), 'disqualify_proposal');
             await instance.registerService(addressStorage.get('DriipSettlementDisputeByTrade'));
@@ -605,6 +607,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
             await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
+            await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
             await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), 'challenge_by_payment');
 
@@ -664,12 +667,16 @@ module.exports = (deployer, network, accounts) => {
             await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             await instance.registerService(addressStorage.get('NullSettlementChallengeByPayment'));
             await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), 'add_proposal');
+            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), 'remove_proposal');
             await instance.registerService(addressStorage.get('NullSettlementChallengeByTrade'));
             await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByTrade'), 'add_proposal');
+            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByTrade'), 'remove_proposal');
             await instance.registerService(addressStorage.get('NullSettlementDisputeByPayment'));
             await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByPayment'), 'disqualify_proposal');
             await instance.registerService(addressStorage.get('NullSettlementDisputeByTrade'));
             await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByTrade'), 'disqualify_proposal');
+            await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
+            await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), 'remove_proposal');
 
             instance = await NullSettlementChallengeByPayment.at(addressStorage.get('NullSettlementChallengeByPayment'));
             await instance.setConfiguration(addressStorage.get('Configuration'));

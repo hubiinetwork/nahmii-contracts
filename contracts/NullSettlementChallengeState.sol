@@ -45,7 +45,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     // -----------------------------------------------------------------------------------------------------------------
     event AddProposalEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated);
-    event RemoveProposalEvent(address challengedWallet, uint256 nonce, MonetaryTypesLib.Currency currency);
+    event RemoveProposalEvent(address wallet, uint256 nonce, MonetaryTypesLib.Currency currency);
     event DisqualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
         address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateKind);
 
@@ -95,15 +95,36 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     }
 
     /// @notice Remove a proposal
-    /// @param challengedWallet The address of the concerned challenged wallet
+    /// @param wallet The address of the concerned challenged wallet
     /// @param currency The concerned currency
-    /// @param walletTerminated True if wallet terminated
-    function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    function removeProposal(address wallet, MonetaryTypesLib.Currency currency)
     public
     onlyEnabledServiceAction(REMOVE_PROPOSAL_ACTION)
     {
         // Get the proposal index
-        uint256 index = proposalIndexByWalletCurrency[challengedWallet][currency.ct][currency.id];
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+
+        // Return gracefully if there is no proposal to cancel
+        if (0 == index)
+            return;
+
+        // Emit event
+        emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
+
+        // Remove proposal
+        _removeProposal(wallet, currency, index);
+    }
+
+    /// @notice Remove a proposal
+    /// @param wallet The address of the concerned challenged wallet
+    /// @param currency The concerned currency
+    /// @param walletTerminated True if wallet terminated
+    function removeProposal(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    public
+    onlyEnabledServiceAction(REMOVE_PROPOSAL_ACTION)
+    {
+        // Get the proposal index
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
 
         // Return gracefully if there is no proposal to cancel
         if (0 == index)
@@ -113,14 +134,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         require(walletTerminated == proposals[index - 1].walletInitiated);
 
         // Emit event
-        emit RemoveProposalEvent(challengedWallet, proposals[index - 1].nonce, currency);
+        emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
 
-        // Remove the proposal
-        if (index < proposals.length) {
-            proposals[index - 1] = proposals[proposals.length - 1];
-            proposalIndexByWalletCurrency[proposals[index - 1].wallet][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = index;
-        }
-        proposals.length--;
+        // Remove proposal
+        _removeProposal(wallet, currency, index);
     }
 
     /// @notice Disqualify a proposal
@@ -370,6 +387,19 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
 
         // Store proposal index
         proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = proposals.length;
+    }
+
+    function _removeProposal(address wallet, MonetaryTypesLib.Currency currency, uint256 index)
+    private
+    returns (bool)
+    {
+        // Remove the proposal and clear references to it
+        proposalIndexByWalletCurrency[proposals[index - 1].wallet][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = 0;
+        if (index < proposals.length) {
+            proposals[index - 1] = proposals[proposals.length - 1];
+            proposalIndexByWalletCurrency[proposals[index - 1].wallet][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = index;
+        }
+        proposals.length--;
     }
 
     function _activeBalanceLogEntry(address wallet, address currencyCt, uint256 currencyId)
