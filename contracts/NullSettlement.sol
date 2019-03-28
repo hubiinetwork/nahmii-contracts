@@ -16,6 +16,7 @@ import {CommunityVotable} from "./CommunityVotable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 import {NullSettlementState} from "./NullSettlementState.sol";
+import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {Beneficiary} from "./Beneficiary.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -35,6 +36,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     // -----------------------------------------------------------------------------------------------------------------
     NullSettlementChallengeState public nullSettlementChallengeState;
     NullSettlementState public nullSettlementState;
+    DriipSettlementChallengeState public driipSettlementChallengeState;
 
     //
     // Events
@@ -43,6 +45,8 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         NullSettlementChallengeState newNullSettlementChallengeState);
     event SetNullSettlementStateEvent(NullSettlementState oldNullSettlementState,
         NullSettlementState newNullSettlementState);
+    event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
+        DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SettleNullEvent(address wallet, address currencyCt, uint256 currencyId);
     event SettleNullByProxyEvent(address proxy, address wallet, address currencyCt,
         uint256 currencyId);
@@ -80,6 +84,18 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         emit SetNullSettlementStateEvent(oldNullSettlementState, nullSettlementState);
     }
 
+    /// @notice Set the driip settlement challenge state contract
+    /// @param newDriipSettlementChallengeState The (address of) DriipSettlementChallengeState contract instance
+    function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
+    public
+    onlyDeployer
+    notNullAddress(newDriipSettlementChallengeState)
+    {
+        DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
+        driipSettlementChallengeState = newDriipSettlementChallengeState;
+        emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
+    }
+
     /// @notice Settle null
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
@@ -114,15 +130,18 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     function _settleNull(address wallet, MonetaryTypesLib.Currency currency)
     private
     {
-        // Require that proposal has expired
+        // Require that there is no overlapping driip settlement challenge
+        require(!driipSettlementChallengeState.hasProposal(wallet, currency));
+
+        // Require that null settlement challenge proposal has expired
         require(nullSettlementChallengeState.hasProposalExpired(wallet, currency));
 
-        // Require that driip settlement challenge qualified
+        // Require that null settlement challenge qualified
         require(SettlementChallengeTypesLib.Status.Qualified == nullSettlementChallengeState.proposalStatus(
             wallet, currency
         ));
 
-        // Get proposal nonce
+        // Get null settlement challenge proposal nonce
         uint256 nonce = nullSettlementChallengeState.proposalNonce(wallet, currency);
 
         // Require that operational mode is normal and data is available, or that nonce is
@@ -145,6 +164,9 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
             ),
             currency.ct, currency.id, ""
         );
+
+        // Remove null settlement challenge proposal
+        nullSettlementChallengeState.removeProposal(wallet, currency);
 
         // If payment nonce is beyond max null settlement nonce then update max null nonce
         if (nonce > nullSettlementState.maxNullNonce())

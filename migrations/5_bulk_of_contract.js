@@ -675,6 +675,8 @@ module.exports = (deployer, network, accounts) => {
             await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByPayment'), 'disqualify_proposal');
             await instance.registerService(addressStorage.get('NullSettlementDisputeByTrade'));
             await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByTrade'), 'disqualify_proposal');
+            await instance.registerService(addressStorage.get('NullSettlement'));
+            await instance.enableServiceAction(addressStorage.get('NullSettlement'), 'remove_proposal');
             await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), 'remove_proposal');
 
@@ -729,6 +731,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setCommunityVote(addressStorage.get('CommunityVote'));
             await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
             await instance.setNullSettlementState(addressStorage.get('NullSettlementState'));
+            await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
 
             instance = await FraudChallenge.at(addressStorage.get('FraudChallenge'));
             await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
