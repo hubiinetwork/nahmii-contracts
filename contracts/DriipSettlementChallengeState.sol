@@ -105,6 +105,27 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @notice Remove a proposal
     /// @param wallet The address of the concerned challenged wallet
     /// @param currency The concerned currency
+    function removeProposal(address wallet, MonetaryTypesLib.Currency currency)
+    public
+    onlyEnabledServiceAction(REMOVE_PROPOSAL_ACTION)
+    {
+        // Get the proposal index
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+
+        // Return gracefully if there is no proposal to cancel
+        if (0 == index)
+            return;
+
+        // Emit event
+        emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
+
+        // Remove proposal
+        _removeProposal(wallet, currency, index);
+    }
+
+    /// @notice Remove a proposal
+    /// @param wallet The address of the concerned challenged wallet
+    /// @param currency The concerned currency
     /// @param walletTerminated True if wallet terminated
     function removeProposal(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
     public
@@ -123,15 +144,8 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         // Emit event
         emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
 
-        // Remove the proposal and clear references to it
-        proposalIndexByWalletCurrency[proposals[index - 1].wallet][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = 0;
-        proposalIndexByWalletNonceCurrency[proposals[index - 1].wallet][proposals[index - 1].nonce][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = 0;
-        if (index < proposals.length) {
-            proposals[index - 1] = proposals[proposals.length - 1];
-            proposalIndexByWalletCurrency[proposals[index - 1].wallet][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = index;
-            proposalIndexByWalletNonceCurrency[proposals[index - 1].wallet][proposals[index - 1].nonce][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = index;
-        }
-        proposals.length--;
+        // Remove proposal
+        _removeProposal(wallet, currency, index);
     }
 
     /// @notice Disqualify a proposal
@@ -485,5 +499,19 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         // Store proposal index
         proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = proposals.length;
         proposalIndexByWalletNonceCurrency[wallet][nonce][currency.ct][currency.id] = proposals.length;
+    }
+
+    function _removeProposal(address wallet, MonetaryTypesLib.Currency currency, uint256 index)
+    private
+    {
+        // Remove the proposal and clear references to it
+        proposalIndexByWalletCurrency[proposals[index - 1].wallet][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = 0;
+        proposalIndexByWalletNonceCurrency[proposals[index - 1].wallet][proposals[index - 1].nonce][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = 0;
+        if (index < proposals.length) {
+            proposals[index - 1] = proposals[proposals.length - 1];
+            proposalIndexByWalletCurrency[proposals[index - 1].wallet][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = index;
+            proposalIndexByWalletNonceCurrency[proposals[index - 1].wallet][proposals[index - 1].nonce][proposals[index - 1].currency.ct][proposals[index - 1].currency.id] = index;
+        }
+        proposals.length--;
     }
 }
