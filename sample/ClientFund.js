@@ -1,7 +1,3 @@
-const chai = require('chai');
-const chaiAsPromised = require('chai-as-promised');
-const BN = require('bn.js');
-const bnChai = require('bn-chai');
 const mocks = require('../test/mocks');
 const eventSampler = require('../scripts/common/event_sampler');
 const {Contract, providers: {Web3Provider}} = require('ethers');
@@ -12,10 +8,6 @@ const ClientFund = artifacts.require('ClientFund');
 const BalanceTracker = artifacts.require('BalanceTracker');
 const TransactionTracker = artifacts.require('TransactionTracker');
 const WalletLocker = artifacts.require('MockedWalletLocker');
-
-chai.use(chaiAsPromised);
-chai.use(bnChai(BN));
-chai.should();
 
 contract('ClientFund', accounts => {
     let operator, service, wallet;

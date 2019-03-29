@@ -335,6 +335,7 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     await web3DriipSettlementChallengeState._setProposalExpired(true);
+
                     await web3NullSettlementChallengeState._setProposalExpired(true);
 
                     await ethersBalanceTracker._set(
@@ -458,6 +459,7 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     await web3DriipSettlementChallengeState._setProposalExpired(true);
+
                     await web3NullSettlementChallengeState._setProposalExpired(true);
 
                     await ethersBalanceTracker._set(
@@ -513,6 +515,11 @@ module.exports = (glob) => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
 
+                await ethersDriipSettlementChallengeState._setProposalNonce(1);
+                await ethersDriipSettlementChallengeState._setProposalCumulativeTransferAmount(10);
+                await ethersDriipSettlementChallengeState._setProposalStageAmount(20);
+                await ethersDriipSettlementChallengeState._setProposalTargetBalanceAmount(30);
+
                 filter = {
                     fromBlock: await provider.getBlockNumber(),
                     topics: ethersDriipSettlementChallengeByPayment.interface.events['StopChallengeEvent'].topics
@@ -554,6 +561,11 @@ module.exports = (glob) => {
                 await ethersWalletLocker._reset();
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+
+                await ethersDriipSettlementChallengeState._setProposalNonce(1);
+                await ethersDriipSettlementChallengeState._setProposalCumulativeTransferAmount(10);
+                await ethersDriipSettlementChallengeState._setProposalStageAmount(20);
+                await ethersDriipSettlementChallengeState._setProposalTargetBalanceAmount(30);
 
                 filter = {
                     fromBlock: await provider.getBlockNumber(),

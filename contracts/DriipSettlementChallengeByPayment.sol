@@ -52,12 +52,14 @@ BalanceTrackable {
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
-    event StartChallengeFromPaymentEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        address currencyCt, uint256 currencyId);
-    event StartChallengeFromPaymentByProxyEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        address currencyCt, uint256 currencyId, address proxy);
-    event StopChallengeEvent(address wallet, address currencyCt, uint256 currencyId);
-    event StopChallengeByProxyEvent(address wallet, address currencyCt, uint256 currencyId, address proxy);
+    event StartChallengeFromPaymentEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, address currencyCt, uint256 currencyId);
+    event StartChallengeFromPaymentByProxyEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, address currencyCt, uint256 currencyId, address proxy);
+    event StopChallengeEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, address currencyCt, uint256 currencyId);
+    event StopChallengeByProxyEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, address currencyCt, uint256 currencyId, address proxy);
 
     //
     // Constructor
@@ -120,6 +122,7 @@ BalanceTrackable {
         emit StartChallengeFromPaymentEvent(
             msg.sender,
             driipSettlementChallengeState.proposalNonce(msg.sender, payment.currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(msg.sender, payment.currency),
             stageAmount,
             driipSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, payment.currency),
             payment.currency.ct, payment.currency.id
@@ -141,6 +144,7 @@ BalanceTrackable {
         emit StartChallengeFromPaymentByProxyEvent(
             wallet,
             driipSettlementChallengeState.proposalNonce(wallet, payment.currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, payment.currency),
             stageAmount,
             driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, payment.currency),
             payment.currency.ct, payment.currency.id, msg.sender
@@ -153,16 +157,24 @@ BalanceTrackable {
     function stopChallenge(address currencyCt, uint256 currencyId)
     public
     {
+        // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
+
+        // Emit event
+        emit StopChallengeEvent(
+            msg.sender,
+            driipSettlementChallengeState.proposalNonce(msg.sender, currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(msg.sender, currency),
+            driipSettlementChallengeState.proposalStageAmount(msg.sender, currency),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, currency),
+            currencyCt, currencyId
+        );
 
         // Stop driip settlement challenge
         driipSettlementChallengeState.removeProposal(msg.sender, currency, true);
 
         // Stop dependent null settlement challenge if existent
         nullSettlementChallengeState.removeProposal(msg.sender, currency);
-
-        // Emit event
-        emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
     }
 
     /// @notice Stop settlement challenge
@@ -173,16 +185,24 @@ BalanceTrackable {
     public
     onlyOperator
     {
+        // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
+
+        // Emit event
+        emit StopChallengeByProxyEvent(
+            wallet,
+            driipSettlementChallengeState.proposalNonce(wallet, currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, currency),
+            driipSettlementChallengeState.proposalStageAmount(wallet, currency),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
+            currencyCt, currencyId, msg.sender
+        );
 
         // Stop driip settlement challenge
         driipSettlementChallengeState.removeProposal(wallet, currency, false);
 
         // Stop dependent null settlement challenge if existent
         nullSettlementChallengeState.removeProposal(wallet, currency);
-
-        // Emit event
-        emit StopChallengeByProxyEvent(wallet, currencyCt, currencyId, msg.sender);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
