@@ -11,6 +11,7 @@ const TransferControllerManager = artifacts.require('TransferControllerManager')
 const ClientFund = artifacts.require('ClientFund');
 const BalanceTracker = artifacts.require('BalanceTracker');
 const TransactionTracker = artifacts.require('TransactionTracker');
+const WalletLocker = artifacts.require('MockedWalletLocker');
 
 chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
@@ -24,6 +25,7 @@ contract('ClientFund', accounts => {
     let web3ERC20, ethersERC20;
     let web3BalanceTracker, ethersBalanceTracker;
     let web3TransactionTracker, ethersTransactionTracker;
+    let web3WalletLocker, ethersWalletLocker;
     let web3ClientFund, ethersClientFund;
     let depositedBalanceType, settledBalanceType, stagedBalanceType;
     let depositTransactionType;
@@ -56,10 +58,13 @@ contract('ClientFund', accounts => {
         ethersBalanceTracker = new Contract(web3BalanceTracker.address, BalanceTracker.abi, operatorSigner);
         web3TransactionTracker = await TransactionTracker.new(operator);
         ethersTransactionTracker = new Contract(web3TransactionTracker.address, TransactionTracker.abi, operatorSigner);
+        web3WalletLocker = await WalletLocker.new();
+        ethersWalletLocker = new Contract(web3WalletLocker.address, WalletLocker.abi, operatorSigner);
 
         await web3ClientFund.setTransferControllerManager(web3TransferControllerManager.address);
         await web3ClientFund.setBalanceTracker(web3BalanceTracker.address);
         await web3ClientFund.setTransactionTracker(web3TransactionTracker.address);
+        await web3ClientFund.setWalletLocker(web3WalletLocker.address);
 
         await web3ClientFund.registerService(service);
         await web3ClientFund.authorizeInitialService(service);
@@ -146,6 +151,33 @@ contract('ClientFund', accounts => {
 
             eventSampler.write(
                 'ClientFund', 'UnstageEvent', (await provider.getLogs(filter)).shift()
+            );
+        });
+    });
+
+    describe('seizeBalances()', () => {
+        let filter;
+
+        beforeEach(async () => {
+            await web3ClientFund.receiveEthersTo(
+                wallet, '', {from: wallet, value: web3.toWei(1, 'ether'), gas: 1e6}
+            );
+
+            await web3WalletLocker._setLockedAmount(web3.toWei(1, 'ether'));
+
+            filter = {
+                fromBlock: await provider.getBlockNumber(),
+                topics: ethersClientFund.interface.events.SeizeBalancesEvent.topics
+            };
+        });
+
+        it('should emit SeizeBalancesEvent', async () => {
+            await web3ClientFund.seizeBalances(
+                wallet, mocks.address0, 0, '', {from: service, gasLimit: 1e6}
+            );
+
+            eventSampler.write(
+                'ClientFund', 'SeizeBalancesEvent', (await provider.getLogs(filter)).shift()
             );
         });
     });

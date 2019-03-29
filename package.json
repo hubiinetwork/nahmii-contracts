@@ -20,7 +20,7 @@
     "exec:script:ropsten": "truffle compile && truffle exec scripts/common/script_template.js --network ropsten-infura",
     "exec:add_signer": "truffle exec scripts/common/add_signer.js",
     "exec:release_nii_tokens:ropsten": "truffle exec scripts/common/release_nii_tokens.js --network ropsten-infura",
-    "sample:events": "concurrently --raw --success first --kill-others 'ganache-cli -l 8000000 -e 1000 >/dev/null' 'truffle compile && truffle test ./sample/events.js'",
+    "sample:events": "concurrently --raw --success first --kill-others 'ganache-cli -l 8000000 -e 1000 >/dev/null' 'truffle compile && truffle test ./sample/*.js'",
     "symlink:contract_abstractions": "npm run symlink:contract_abstractions_contracts && npm run symlink:contract_abstractions_events",
     "symlink:contract_abstractions_contracts": "rm -rf build/contracts && mkdir -p build && ln -vs $(pwd)/node_modules/nahmii-contract-abstractions/build/contracts build/contracts",
     "symlink:contract_abstractions_events": "rm -rf events && ln -vs $(pwd)/node_modules/nahmii-contract-abstractions/events events",
