@@ -269,6 +269,7 @@ module.exports = (glob) => {
                         await ethersBalanceTracker.depositedBalanceType(), 100,
                         1, {gasLimit: 1e6}
                     );
+
                     await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalCumulativeTransferAmount(30);
                     await ethersDriipSettlementChallengeState._setProposalStageAmount(20);
@@ -347,12 +348,13 @@ module.exports = (glob) => {
                 let filter;
 
                 beforeEach(async () => {
-                    await web3NullSettlementChallengeState._setProposalExpired(true);
+                    await ethersNullSettlementChallengeState._setProposalExpired(true);
 
                     await ethersBalanceTracker._setFungibleRecord(
                         await ethersBalanceTracker.depositedBalanceType(), 100,
                         1, {gasLimit: 1e6}
                     );
+
                     await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalCumulativeTransferAmount(30);
                     await ethersDriipSettlementChallengeState._setProposalStageAmount(20);
@@ -400,6 +402,10 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
 
+                await ethersNullSettlementChallengeState._setProposalNonce(1);
+                await ethersNullSettlementChallengeState._setProposalStageAmount(10);
+                await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(20);
+
                 filter = {
                     fromBlock: await provider.getBlockNumber(),
                     topics: ethersNullSettlementChallengeByPayment.interface.events['StopChallengeEvent'].topics
@@ -427,6 +433,10 @@ module.exports = (glob) => {
 
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+
+                await ethersNullSettlementChallengeState._setProposalNonce(1);
+                await ethersNullSettlementChallengeState._setProposalStageAmount(10);
+                await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(20);
 
                 filter = {
                     fromBlock: await provider.getBlockNumber(),
