@@ -120,7 +120,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
 
         // Remove proposal
-        _removeProposal(wallet, currency, index);
+        _removeProposal(index);
     }
 
     /// @notice Remove a proposal
@@ -145,7 +145,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
 
         // Remove proposal
-        _removeProposal(wallet, currency, index);
+        _removeProposal(index);
     }
 
     /// @notice Disqualify a proposal
@@ -501,7 +501,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         proposalIndexByWalletNonceCurrency[wallet][nonce][currency.ct][currency.id] = proposals.length;
     }
 
-    function _removeProposal(address wallet, MonetaryTypesLib.Currency currency, uint256 index)
+    function _removeProposal(uint256 index)
     private
     {
         // Remove the proposal and clear references to it

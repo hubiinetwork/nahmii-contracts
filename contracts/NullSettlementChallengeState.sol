@@ -112,7 +112,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
 
         // Remove proposal
-        _removeProposal(wallet, currency, index);
+        _removeProposal(index);
     }
 
     /// @notice Remove a proposal
@@ -137,7 +137,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
 
         // Remove proposal
-        _removeProposal(wallet, currency, index);
+        _removeProposal(index);
     }
 
     /// @notice Disqualify a proposal
@@ -389,7 +389,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = proposals.length;
     }
 
-    function _removeProposal(address wallet, MonetaryTypesLib.Currency currency, uint256 index)
+    function _removeProposal(uint256 index)
     private
     returns (bool)
     {
