@@ -511,6 +511,7 @@ module.exports = (glob) => {
                 await ethersValidator._reset({gasLimit: 4e6});
                 await ethersWalletLocker._reset();
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
+                await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
 
                 filter = {
                     fromBlock: await provider.getBlockNumber(),
@@ -526,11 +527,22 @@ module.exports = (glob) => {
                 const logs = await provider.getLogs(filter);
                 logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                const proposal = await ethersDriipSettlementChallengeState._proposals(0);
-                proposal.wallet.should.equal(utils.getAddress(glob.owner));
-                proposal.currency.ct.should.equal(mocks.address1);
-                proposal.currency.id._bn.should.eq.BN(10);
-                proposal.walletInitiated.should.be.true;
+                (await ethersDriipSettlementChallengeState._removeProposalsCount())
+                    ._bn.should.eq.BN(1);
+
+                const dscProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                dscProposal.wallet.should.equal(utils.getAddress(glob.owner));
+                dscProposal.currency.ct.should.equal(mocks.address1);
+                dscProposal.currency.id._bn.should.eq.BN(10);
+                dscProposal.walletInitiated.should.be.true;
+
+                (await ethersNullSettlementChallengeState._removeProposalsCount())
+                    ._bn.should.eq.BN(1);
+
+                const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                nscProposal.wallet.should.equal(utils.getAddress(glob.owner));
+                nscProposal.currency.ct.should.equal(mocks.address1);
+                nscProposal.currency.id._bn.should.eq.BN(10);
             });
         });
 
@@ -541,6 +553,7 @@ module.exports = (glob) => {
                 await ethersValidator._reset({gasLimit: 4e6});
                 await ethersWalletLocker._reset();
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
+                await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
 
                 filter = {
                     fromBlock: await provider.getBlockNumber(),
@@ -556,11 +569,22 @@ module.exports = (glob) => {
                 const logs = await provider.getLogs(filter);
                 logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                const proposal = await ethersDriipSettlementChallengeState._proposals(0);
-                proposal.wallet.should.equal(utils.getAddress(glob.user_a));
-                proposal.currency.ct.should.equal(mocks.address1);
-                proposal.currency.id._bn.should.eq.BN(10);
-                proposal.walletInitiated.should.be.false;
+                (await ethersDriipSettlementChallengeState._removeProposalsCount())
+                    ._bn.should.eq.BN(1);
+
+                const dscProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                dscProposal.wallet.should.equal(utils.getAddress(glob.user_a));
+                dscProposal.currency.ct.should.equal(mocks.address1);
+                dscProposal.currency.id._bn.should.eq.BN(10);
+                dscProposal.walletInitiated.should.be.false;
+
+                (await ethersNullSettlementChallengeState._removeProposalsCount())
+                    ._bn.should.eq.BN(1);
+
+                const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                nscProposal.wallet.should.equal(utils.getAddress(glob.user_a));
+                nscProposal.currency.ct.should.equal(mocks.address1);
+                nscProposal.currency.id._bn.should.eq.BN(10);
             });
         });
 
