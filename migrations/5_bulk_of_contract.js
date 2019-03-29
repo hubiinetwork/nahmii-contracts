@@ -574,6 +574,8 @@ module.exports = (deployer, network, accounts) => {
             await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), 'add_proposal');
             await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), 'remove_proposal');
+            await instance.registerService(addressStorage.get('DriipSettlementByPayment'));
+            await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), 'remove_proposal');
             await instance.registerService(addressStorage.get('DriipSettlementChallengeByTrade'));
             await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByTrade'), 'add_proposal');
             await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByTrade'), 'remove_proposal');
