@@ -582,7 +582,7 @@ module.exports = (glob) => {
                     ._bn.should.eq.BN(1);
 
                 const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
-                nscProposal.wallet.should.equal(utils.getAddress(glob.owner));
+                nscProposal.wallet.should.equal(utils.getAddress(glob.user_a));
                 nscProposal.currency.ct.should.equal(mocks.address1);
                 nscProposal.currency.id._bn.should.eq.BN(10);
             });
