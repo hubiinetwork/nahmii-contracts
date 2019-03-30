@@ -76,13 +76,13 @@ contract('DriipSettlementDisputeByPayment', (accounts) => {
         await ethersDriipSettlementDisputeByPayment.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
         await ethersDriipSettlementDisputeByPayment.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
 
-        await web3Validator._reset({gasLimit: 4e6});
-        await web3FraudChallenge._reset();
-        await web3DriipSettlementChallengeState._reset({gasLimit: 1e6});
-        await web3NullSettlementChallengeState._reset({gasLimit: 1e6});
-        await web3SecurityBond._reset();
-        await web3WalletLocker._reset();
-        await web3BalanceTracker._reset();
+        await ethersValidator._reset({gasLimit: 1e6});
+        await ethersFraudChallenge._reset();
+        await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
+        await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+        await ethersSecurityBond._reset();
+        await ethersWalletLocker._reset();
+        await ethersBalanceTracker._reset();
     });
 
     describe('challengeByPayment()', () => {

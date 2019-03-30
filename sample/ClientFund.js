@@ -127,7 +127,7 @@ contract('ClientFund', accounts => {
             );
 
             await web3ClientFund.stage(
-                wallet, web3.toWei(1, 'ether'), mocks.address0, 0, '', {from: service, gasLimit: 1e6}
+                wallet, web3.toWei(1, 'ether'), mocks.address0, 0, '', {from: service, gas: 1e6}
             );
 
             filter = {
@@ -138,7 +138,7 @@ contract('ClientFund', accounts => {
 
         it('should emit UnstageEvent', async () => {
             await web3ClientFund.unstage(
-                web3.toWei(1, 'ether'), mocks.address0, 0, '', {from: service, gasLimit: 1e6}
+                web3.toWei(1, 'ether'), mocks.address0, 0, '', {from: service, gas: 1e6}
             );
 
             eventSampler.write(
@@ -165,7 +165,7 @@ contract('ClientFund', accounts => {
 
         it('should emit SeizeBalancesEvent', async () => {
             await web3ClientFund.seizeBalances(
-                wallet, mocks.address0, 0, '', {from: service, gasLimit: 1e6}
+                wallet, mocks.address0, 0, '', {from: service, gas: 1e6}
             );
 
             eventSampler.write(

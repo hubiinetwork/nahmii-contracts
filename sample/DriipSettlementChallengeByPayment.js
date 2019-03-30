@@ -69,8 +69,8 @@ contract('DriipSettlementChallengeByPayment', (accounts) => {
         await ethersDriipSettlementChallengeByPayment.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
         await ethersDriipSettlementChallengeByPayment.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
 
-        await ethersValidator._reset({gasLimit: 4e6});
-        await ethersWalletLocker._reset({gasLimit: 4e6});
+        await ethersValidator._reset({gasLimit: 1e6});
+        await ethersWalletLocker._reset({gasLimit: 1e6});
         await ethersBalanceTracker._reset({gasLimit: 1e6});
         await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
         await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
