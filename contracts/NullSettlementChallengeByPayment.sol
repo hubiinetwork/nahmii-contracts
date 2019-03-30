@@ -53,12 +53,16 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         NullSettlementState newNullSettlementState);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
-    event StartChallengeEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
+    event StartChallengeEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         address currencyCt, uint currencyId);
-    event StartChallengeByProxyEvent(address wallet, int256 stageAmount, int256 targetBalanceAmount,
+    event StartChallengeByProxyEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         address currencyCt, uint currencyId, address proxy);
-    event StopChallengeEvent(address wallet, address currencyCt, uint256 currencyId);
-    event StopChallengeByProxyEvent(address wallet, address currencyCt, uint256 currencyId, address proxy);
+    event StopChallengeEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
+        address currencyCt, uint256 currencyId);
+    event StopChallengeByProxyEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
+        address currencyCt, uint256 currencyId, address proxy);
+    event ChallengeByPaymentEvent(address challengedWallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
+        address currencyCt, uint256 currencyId, address challengerWallet);
 
     //
     // Constructor
@@ -135,7 +139,9 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
 
         // Emit event
         emit StartChallengeEvent(
-            msg.sender, amount,
+            msg.sender,
+            nullSettlementChallengeState.proposalNonce(msg.sender, currency),
+            amount,
             nullSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, currency),
             currencyCt, currencyId
         );
@@ -158,7 +164,9 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
 
         // Emit event
         emit StartChallengeByProxyEvent(
-            wallet, amount,
+            wallet,
+            nullSettlementChallengeState.proposalNonce(wallet, currency),
+            amount,
             nullSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
             currencyCt, currencyId, msg.sender
         );
@@ -170,13 +178,22 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     function stopChallenge(address currencyCt, uint256 currencyId)
     public
     {
-        // Stop challenge
-        nullSettlementChallengeState.removeProposal(
-            msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true
-        );
+        // Define currency
+        MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
         // Emit event
-        emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
+        emit StopChallengeEvent(
+            msg.sender,
+            nullSettlementChallengeState.proposalNonce(msg.sender, currency),
+            nullSettlementChallengeState.proposalStageAmount(msg.sender, currency),
+            nullSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, currency),
+            currencyCt, currencyId
+        );
+
+        // Stop challenge
+        nullSettlementChallengeState.removeProposal(
+            msg.sender, currency, true
+        );
     }
 
     /// @notice Stop settlement challenge
@@ -187,13 +204,22 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     onlyOperator
     {
-        // Stop challenge
-        nullSettlementChallengeState.removeProposal(
-            wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false
-        );
+        // Define currency
+        MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
         // Emit event
-        emit StopChallengeByProxyEvent(wallet, currencyCt, currencyId, msg.sender);
+        emit StopChallengeByProxyEvent(
+            wallet,
+            nullSettlementChallengeState.proposalNonce(wallet, currency),
+            nullSettlementChallengeState.proposalStageAmount(wallet, currency),
+            nullSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
+            currencyCt, currencyId, msg.sender
+        );
+
+        // Stop challenge
+        nullSettlementChallengeState.removeProposal(
+            wallet, currency, false
+        );
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
@@ -383,7 +409,17 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     onlyOperationalModeNormal
     {
+        // Challenge by payment
         nullSettlementDisputeByPayment.challengeByPayment(wallet, payment, msg.sender);
+
+        // Emit event
+        emit ChallengeByPaymentEvent(
+            wallet,
+            nullSettlementChallengeState.proposalNonce(wallet, payment.currency),
+            nullSettlementChallengeState.proposalStageAmount(wallet, payment.currency),
+            nullSettlementChallengeState.proposalTargetBalanceAmount(wallet, payment.currency),
+            payment.currency.ct, payment.currency.id, msg.sender
+        );
     }
 
     //

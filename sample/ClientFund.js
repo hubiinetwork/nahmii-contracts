@@ -1,7 +1,3 @@
-const chai = require('chai');
-const chaiAsPromised = require('chai-as-promised');
-const BN = require('bn.js');
-const bnChai = require('bn-chai');
 const mocks = require('../test/mocks');
 const eventSampler = require('../scripts/common/event_sampler');
 const {Contract, providers: {Web3Provider}} = require('ethers');
@@ -11,10 +7,7 @@ const TransferControllerManager = artifacts.require('TransferControllerManager')
 const ClientFund = artifacts.require('ClientFund');
 const BalanceTracker = artifacts.require('BalanceTracker');
 const TransactionTracker = artifacts.require('TransactionTracker');
-
-chai.use(chaiAsPromised);
-chai.use(bnChai(BN));
-chai.should();
+const WalletLocker = artifacts.require('MockedWalletLocker');
 
 contract('ClientFund', accounts => {
     let operator, service, wallet;
@@ -24,6 +17,7 @@ contract('ClientFund', accounts => {
     let web3ERC20, ethersERC20;
     let web3BalanceTracker, ethersBalanceTracker;
     let web3TransactionTracker, ethersTransactionTracker;
+    let web3WalletLocker, ethersWalletLocker;
     let web3ClientFund, ethersClientFund;
     let depositedBalanceType, settledBalanceType, stagedBalanceType;
     let depositTransactionType;
@@ -56,10 +50,13 @@ contract('ClientFund', accounts => {
         ethersBalanceTracker = new Contract(web3BalanceTracker.address, BalanceTracker.abi, operatorSigner);
         web3TransactionTracker = await TransactionTracker.new(operator);
         ethersTransactionTracker = new Contract(web3TransactionTracker.address, TransactionTracker.abi, operatorSigner);
+        web3WalletLocker = await WalletLocker.new();
+        ethersWalletLocker = new Contract(web3WalletLocker.address, WalletLocker.abi, operatorSigner);
 
         await web3ClientFund.setTransferControllerManager(web3TransferControllerManager.address);
         await web3ClientFund.setBalanceTracker(web3BalanceTracker.address);
         await web3ClientFund.setTransactionTracker(web3TransactionTracker.address);
+        await web3ClientFund.setWalletLocker(web3WalletLocker.address);
 
         await web3ClientFund.registerService(service);
         await web3ClientFund.authorizeInitialService(service);
@@ -130,7 +127,7 @@ contract('ClientFund', accounts => {
             );
 
             await web3ClientFund.stage(
-                wallet, web3.toWei(1, 'ether'), mocks.address0, 0, '', {from: service, gasLimit: 1e6}
+                wallet, web3.toWei(1, 'ether'), mocks.address0, 0, '', {from: service, gas: 1e6}
             );
 
             filter = {
@@ -141,11 +138,38 @@ contract('ClientFund', accounts => {
 
         it('should emit UnstageEvent', async () => {
             await web3ClientFund.unstage(
-                web3.toWei(1, 'ether'), mocks.address0, 0, '', {from: service, gasLimit: 1e6}
+                web3.toWei(1, 'ether'), mocks.address0, 0, '', {from: service, gas: 1e6}
             );
 
             eventSampler.write(
                 'ClientFund', 'UnstageEvent', (await provider.getLogs(filter)).shift()
+            );
+        });
+    });
+
+    describe('seizeBalances()', () => {
+        let filter;
+
+        beforeEach(async () => {
+            await web3ClientFund.receiveEthersTo(
+                wallet, '', {from: wallet, value: web3.toWei(1, 'ether'), gas: 1e6}
+            );
+
+            await web3WalletLocker._setLockedAmount(web3.toWei(1, 'ether'));
+
+            filter = {
+                fromBlock: await provider.getBlockNumber(),
+                topics: ethersClientFund.interface.events.SeizeBalancesEvent.topics
+            };
+        });
+
+        it('should emit SeizeBalancesEvent', async () => {
+            await web3ClientFund.seizeBalances(
+                wallet, mocks.address0, 0, '', {from: service, gas: 1e6}
+            );
+
+            eventSampler.write(
+                'ClientFund', 'SeizeBalancesEvent', (await provider.getLogs(filter)).shift()
             );
         });
     });
