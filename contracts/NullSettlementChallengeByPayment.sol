@@ -61,6 +61,8 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         address currencyCt, uint256 currencyId);
     event StopChallengeByProxyEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         address currencyCt, uint256 currencyId, address proxy);
+    event ChallengeByPaymentEvent(address challengedWallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
+        address currencyCt, uint256 currencyId, address challengerWallet);
 
     //
     // Constructor
@@ -163,7 +165,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Emit event
         emit StartChallengeByProxyEvent(
             wallet,
-            nullSettlementChallengeState.proposalNonce(msg.sender, currency),
+            nullSettlementChallengeState.proposalNonce(wallet, currency),
             amount,
             nullSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
             currencyCt, currencyId, msg.sender
@@ -208,9 +210,9 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Emit event
         emit StopChallengeByProxyEvent(
             wallet,
-            nullSettlementChallengeState.proposalNonce(msg.sender, currency),
-            nullSettlementChallengeState.proposalStageAmount(msg.sender, currency),
-            nullSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, currency),
+            nullSettlementChallengeState.proposalNonce(wallet, currency),
+            nullSettlementChallengeState.proposalStageAmount(wallet, currency),
+            nullSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
             currencyCt, currencyId, msg.sender
         );
 
@@ -407,7 +409,17 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     onlyOperationalModeNormal
     {
+        // Challenge by payment
         nullSettlementDisputeByPayment.challengeByPayment(wallet, payment, msg.sender);
+
+        // Emit event
+        emit ChallengeByPaymentEvent(
+            wallet,
+            nullSettlementChallengeState.proposalNonce(wallet, payment.currency),
+            nullSettlementChallengeState.proposalStageAmount(wallet, payment.currency),
+            nullSettlementChallengeState.proposalTargetBalanceAmount(wallet, payment.currency),
+            payment.currency.ct, payment.currency.id, msg.sender
+        );
     }
 
     //

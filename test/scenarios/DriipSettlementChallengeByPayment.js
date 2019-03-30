@@ -769,15 +769,30 @@ module.exports = (glob) => {
         });
 
         describe('challengeByPayment()', () => {
-            let payment;
+            let payment, filter;
 
-            before(async () => {
-                await ethersDriipSettlementDisputeByPayment._reset();
+            beforeEach(async () => {
+                await ethersDriipSettlementDisputeByPayment._reset({gasLimit: 1e6});
+                await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
+
                 payment = await mocks.mockPayment(glob.owner);
+
+                await ethersDriipSettlementChallengeState._setProposalNonce(1);
+                await ethersDriipSettlementChallengeState._setProposalCumulativeTransferAmount(10);
+                await ethersDriipSettlementChallengeState._setProposalStageAmount(20);
+                await ethersDriipSettlementChallengeState._setProposalTargetBalanceAmount(30);
+
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: ethersDriipSettlementChallengeByPayment.interface.events['ChallengeByPaymentEvent'].topics
+                };
             });
 
             it('should call corresponding function in challenge dispute instance', async () => {
                 await ethersDriipSettlementChallengeByPayment.challengeByPayment(payment.sender.wallet, payment, {gasLimit: 2e6});
+
+                const logs = await provider.getLogs(filter);
+                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
                 (await ethersDriipSettlementDisputeByPayment._challengeByPaymentCount())
                     ._bn.should.eq.BN(1);

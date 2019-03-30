@@ -60,6 +60,8 @@ BalanceTrackable {
         int256 targetBalanceAmount, address currencyCt, uint256 currencyId);
     event StopChallengeByProxyEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
         int256 targetBalanceAmount, address currencyCt, uint256 currencyId, address proxy);
+    event ChallengeByPaymentEvent(address challengedWallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, address currencyCt, uint256 currencyId, address challengerWallet);
 
     //
     // Constructor
@@ -421,7 +423,18 @@ BalanceTrackable {
     public
     onlyOperationalModeNormal
     {
+        // Challenge by payment
         driipSettlementDisputeByPayment.challengeByPayment(wallet, payment, msg.sender);
+
+        // Emit event
+        emit ChallengeByPaymentEvent(
+            wallet,
+            driipSettlementChallengeState.proposalNonce(wallet, payment.currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, payment.currency),
+            driipSettlementChallengeState.proposalStageAmount(wallet, payment.currency),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, payment.currency),
+            payment.currency.ct, payment.currency.id, msg.sender
+        );
     }
 
     //
