@@ -576,7 +576,7 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
                         const settlement = await ethersDriipSettlementState.settlements(0);
-                        settlement.settledType.should.equal('payment');
+                        settlement.settledKind.should.equal('payment');
                         settlement.settledHash.should.equal(payment.seals.operator.hash);
                         settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                         settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
@@ -800,7 +800,7 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
                         const settlement = await ethersDriipSettlementState.settlements(0);
-                        settlement.settledType.should.equal('payment');
+                        settlement.settledKind.should.equal('payment');
                         settlement.settledHash.should.equal(payment.seals.operator.hash);
                         settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                         settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));

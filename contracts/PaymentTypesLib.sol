@@ -62,7 +62,7 @@ library PaymentTypesLib {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function PAYMENT_TYPE()
+    function PAYMENT_KIND()
     public
     pure
     returns (string)

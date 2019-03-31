@@ -120,13 +120,13 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
 
     /// @notice Initialize settlement, i.e. create one if no such settlement exists
     /// for the double pair of wallets and nonces
-    /// @param settledType The type of driip of the settlement
+    /// @param settledKind The kind of driip of the settlement
     /// @param settledHash The hash of driip of the settlement
     /// @param originWallet The address of the origin wallet
     /// @param originNonce The wallet nonce of the origin wallet
     /// @param targetWallet The address of the target wallet
     /// @param targetNonce The wallet nonce of the target wallet
-    function initSettlement(string settledType, bytes32 settledHash, address originWallet,
+    function initSettlement(string settledKind, bytes32 settledHash, address originWallet,
         uint256 originNonce, address targetWallet, uint256 targetNonce)
     public
     onlyEnabledServiceAction(INIT_SETTLEMENT_ACTION)
@@ -142,7 +142,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
             uint256 index = settlements.length - 1;
 
             // Update settlement
-            settlements[index].settledType = settledType;
+            settlements[index].settledKind = settledKind;
             settlements[index].settledHash = settledHash;
             settlements[index].origin.nonce = originNonce;
             settlements[index].origin.wallet = originWallet;

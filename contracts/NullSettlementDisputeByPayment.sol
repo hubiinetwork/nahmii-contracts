@@ -106,7 +106,7 @@ BalanceTrackable, FraudChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallengeState.disqualifyProposal(
             wallet, payment.currency, challenger, payment.blockNumber,
-            payment.sender.nonce, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
+            payment.sender.nonce, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
 
         // Emit event

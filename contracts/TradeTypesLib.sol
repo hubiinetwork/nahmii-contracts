@@ -91,7 +91,7 @@ library TradeTypesLib {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function TRADE_TYPE()
+    function TRADE_KIND()
     public
     pure
     returns (string)
@@ -99,7 +99,7 @@ library TradeTypesLib {
         return "trade";
     }
 
-    function ORDER_TYPE()
+    function ORDER_KIND()
     public
     pure
     returns (string)

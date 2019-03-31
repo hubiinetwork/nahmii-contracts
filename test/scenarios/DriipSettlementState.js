@@ -235,7 +235,7 @@ module.exports = (glob) => {
                         ._bn.should.eq.BN(1);
 
                     const settlement = await ethersDriipSettlementState.settlements(0);
-                    settlement.settledType.should.equal('payment');
+                    settlement.settledKind.should.equal('payment');
                     settlement.settledHash.should.equal(mocks.hash1);
                     settlement.origin.nonce._bn.should.eq.BN(1);
                     settlement.origin.wallet.should.equal(utils.getAddress(glob.user_a));

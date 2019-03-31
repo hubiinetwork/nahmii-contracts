@@ -33,12 +33,12 @@ contract MockedDriipSettlementState {
         delete _totalFee;
     }
 
-    function initSettlement(string settledType, bytes32 settledHash, address originWallet,
+    function initSettlement(string settledKind, bytes32 settledHash, address originWallet,
         uint256 originNonce, address targetWallet, uint256 targetNonce)
     public
     {
         uint256 index = _addSettlementIfNone();
-        settlements[index].settledType = settledType;
+        settlements[index].settledKind = settledKind;
         settlements[index].settledHash = settledHash;
         settlements[index].origin.nonce = originNonce;
         settlements[index].origin.wallet = originWallet;

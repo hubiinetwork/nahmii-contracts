@@ -471,7 +471,7 @@ BalanceTrackable {
             wallet, nonce, cumulativeTransferAmount, stageAmount,
             balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency).sub(cumulativeTransferAmount.add(stageAmount)),
             payment.currency, payment.blockNumber,
-            walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_TYPE()
+            walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
     }
 
