@@ -625,7 +625,7 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
                         const settlement = await ethersDriipSettlementState.settlements(0);
-                        settlement.settledType.should.equal('trade');
+                        settlement.settledKind.should.equal('trade');
                         settlement.settledHash.should.equal(trade.seal.hash);
                         settlement.origin.nonce._bn.should.eq.BN(trade.seller.nonce._bn);
                         settlement.origin.wallet.should.equal(utils.getAddress(trade.seller.wallet));
@@ -857,7 +857,7 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
                         const settlement = await ethersDriipSettlementState.settlements(0);
-                        settlement.settledType.should.equal('trade');
+                        settlement.settledKind.should.equal('trade');
                         settlement.settledHash.should.equal(trade.seal.hash);
                         settlement.origin.nonce._bn.should.eq.BN(trade.seller.nonce._bn);
                         settlement.origin.wallet.should.equal(utils.getAddress(trade.seller.wallet));

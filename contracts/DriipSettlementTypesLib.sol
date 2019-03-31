@@ -26,7 +26,7 @@ library DriipSettlementTypesLib {
     }
 
     struct Settlement {
-        string settledType;
+        string settledKind;
         bytes32 settledHash;
         SettlementParty origin;
         SettlementParty target;

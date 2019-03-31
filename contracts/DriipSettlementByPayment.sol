@@ -221,7 +221,7 @@ FraudChallengable, WalletLockable {
 
         // Init settlement, i.e. create one if no such settlement exists for the double pair of wallets and nonces
         driipSettlementState.initSettlement(
-            PaymentTypesLib.PAYMENT_TYPE(), payment.seals.operator.hash,
+            PaymentTypesLib.PAYMENT_KIND(), payment.seals.operator.hash,
             payment.sender.wallet, payment.sender.nonce,
             payment.recipient.wallet, payment.recipient.nonce
         );

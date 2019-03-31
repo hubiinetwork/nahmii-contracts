@@ -435,10 +435,6 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Require that there is no ongoing overlapping null settlement challenge
         require(nullSettlementChallengeState.hasProposalExpired(wallet, currency));
 
-        // TODO Determine removal of completed settlement challenges
-        // Stop challenge
-        //        nullSettlementChallengeState.removeProposal(wallet, currency, walletInitiated);
-
         // Get the last logged active balance amount and block number
         (
         int256 activeBalanceAmount, uint256 activeBalanceBlockNumber,

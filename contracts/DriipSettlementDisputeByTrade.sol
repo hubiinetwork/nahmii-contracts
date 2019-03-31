@@ -120,7 +120,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
             order.wallet, currency, challenger, order.blockNumber,
-            order.nonce, order.seals.operator.hash, TradeTypesLib.ORDER_TYPE()
+            order.nonce, order.seals.operator.hash, TradeTypesLib.ORDER_KIND()
         );
 
         // Emit event
@@ -153,7 +153,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
 
         // Require that candidate kind is order
         require(
-            TradeTypesLib.ORDER_TYPE().compareTo(driipSettlementChallengeState.proposalDisqualificationCandidateKind(
+            TradeTypesLib.ORDER_KIND().compareTo(driipSettlementChallengeState.proposalDisqualificationCandidateKind(
                 order.wallet, currency
             ))
         );
@@ -247,7 +247,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
             wallet, currency, challenger, trade.blockNumber,
-            nonce, trade.seal.hash, TradeTypesLib.TRADE_TYPE()
+            nonce, trade.seal.hash, TradeTypesLib.TRADE_KIND()
         );
 
         // Emit event
