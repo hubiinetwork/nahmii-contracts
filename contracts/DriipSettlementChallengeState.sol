@@ -44,14 +44,20 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event AddProposalEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
+    event AddProposalEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind);
-    event RemoveProposalEvent(address wallet, uint256 nonce, MonetaryTypesLib.Currency currency);
-    event DisqualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
-        address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateKind);
-    event QualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
-        address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateKind);
+    event RemoveProposalEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
+        bytes32 challengedHash, string challengedKind);
+    event DisqualifyProposalEvent(address challengedWallet, uint256 challengedNonce, int256 cumulativeTransferAmount,
+        int256 stageAmount, int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber,
+        bool walletInitiated, address challengerWallet, uint256 candidateNonce, bytes32 candidateHash,
+        string candidateKind);
+    event QualifyProposalEvent(address challengedWallet, uint256 challengedNonce, int256 cumulativeTransferAmount,
+        int256 stageAmount, int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber,
+        bool walletInitiated, address challengerWallet, uint256 candidateNonce, bytes32 candidateHash,
+        string candidateKind);
 
     //
     // Constructor
@@ -97,7 +103,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
 
         // Emit event
         emit AddProposalEvent(
-            wallet, nonce, stageAmount, targetBalanceAmount, currency,
+            wallet, nonce, cumulativeTransferAmount, stageAmount, targetBalanceAmount, currency,
             blockNumber, walletInitiated, challengedHash, challengedKind
         );
     }
@@ -117,7 +123,12 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
             return;
 
         // Emit event
-        emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
+        emit RemoveProposalEvent(
+            wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
+            proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance, currency,
+            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            proposals[index - 1].challenged.hash, proposals[index - 1].challenged.kind
+        );
 
         // Remove proposal
         _removeProposal(index);
@@ -142,7 +153,12 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         require(walletTerminated == proposals[index - 1].walletInitiated);
 
         // Emit event
-        emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
+        emit RemoveProposalEvent(
+            wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
+            proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance, currency,
+            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            proposals[index - 1].challenged.hash, proposals[index - 1].challenged.kind
+        );
 
         // Remove proposal
         _removeProposal(index);
@@ -177,8 +193,10 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
 
         // Emit event
         emit DisqualifyProposalEvent(
-            challengedWallet, proposals[index - 1].nonce, currency, challengerWallet,
-            candidateNonce, candidateHash, candidateKind
+            challengedWallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
+            proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance,
+            currency, proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            challengerWallet, candidateNonce, candidateHash, candidateKind
         );
     }
 
@@ -195,7 +213,9 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
 
         // Emit event
         emit QualifyProposalEvent(
-            wallet, proposals[index - 1].nonce, currency,
+            wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
+            proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance, currency,
+            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
             proposals[index - 1].disqualification.challenger,
             proposals[index - 1].disqualification.nonce,
             proposals[index - 1].disqualification.candidate.hash,

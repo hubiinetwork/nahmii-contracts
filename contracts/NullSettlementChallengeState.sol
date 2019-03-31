@@ -45,8 +45,10 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     // -----------------------------------------------------------------------------------------------------------------
     event AddProposalEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated);
-    event RemoveProposalEvent(address wallet, uint256 nonce, MonetaryTypesLib.Currency currency);
-    event DisqualifyProposalEvent(address challengedWallet, uint256 challengedNonce, MonetaryTypesLib.Currency currency,
+    event RemoveProposalEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
+        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated);
+    event DisqualifyProposalEvent(address challengedWallet, uint256 challangedNonce, int256 stageAmount,
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateKind);
 
     //
@@ -109,7 +111,11 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
             return;
 
         // Emit event
-        emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
+        emit RemoveProposalEvent(
+            wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.stage,
+            proposals[index - 1].amounts.targetBalance, currency,
+            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated
+        );
 
         // Remove proposal
         _removeProposal(index);
@@ -134,7 +140,11 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         require(walletTerminated == proposals[index - 1].walletInitiated);
 
         // Emit event
-        emit RemoveProposalEvent(wallet, proposals[index - 1].nonce, currency);
+        emit RemoveProposalEvent(
+            wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.stage,
+            proposals[index - 1].amounts.targetBalance, currency,
+            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated
+        );
 
         // Remove proposal
         _removeProposal(index);
@@ -169,8 +179,9 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
 
         // Emit event
         emit DisqualifyProposalEvent(
-            challengedWallet, proposals[index - 1].nonce, currency, challengerWallet,
-            candidateNonce, candidateHash, candidateKind
+            challengedWallet, proposals[index - 1].nonce, proposals[index - 1].amounts.stage,
+            proposals[index - 1].amounts.targetBalance, currency, proposals[index - 1].blockNumber,
+            proposals[index - 1].walletInitiated, challengerWallet, candidateNonce, candidateHash, candidateKind
         );
     }
 
