@@ -457,11 +457,6 @@ BalanceTrackable {
         // Require that there is no ongoing overlapping null settlement challenge
         require(nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
-        // TODO Determine removal of completed settlement challenges
-        // Stop challenges
-        //        driipSettlementChallengeState.removeProposal(wallet, payment.currency, walletInitiated);
-        //        nullSettlementChallengeState.removeProposal(wallet, payment.currency, walletInitiated);
-
         // Deduce the concerned nonce and cumulative relative transfer
         (uint256 nonce, int256 cumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);
 
