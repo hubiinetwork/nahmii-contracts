@@ -30,7 +30,10 @@ module.exports = (deployer, network, accounts) => {
         else {
             deployerAccount = helpers.parseDeployerArg();
 
-            await helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
+            if (web3.eth.personal)
+                await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 7200); //120 minutes
+            else
+                await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 7200); //120 minutes
         }
 
         debug(`deployerAccount: ${deployerAccount}`);
@@ -48,7 +51,7 @@ module.exports = (deployer, network, accounts) => {
 
                 await deployer.link(SafeMath, NahmiiToken);
 
-                await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+                const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
 
                 if (!helpers.isTestNetwork(network)) {
                     debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
@@ -61,7 +64,10 @@ module.exports = (deployer, network, accounts) => {
 
         } finally {
             if (!helpers.isTestNetwork(network))
-                helpers.lockAddress(web3, deployerAccount);
+                if (web3.eth.personal)
+                    await web3.eth.personal.lockAccount(deployerAccount);
+                else
+                    await web3.personal.lockAccount(deployerAccount);
         }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
@@ -71,12 +77,15 @@ module.exports = (deployer, network, accounts) => {
 
 async function execDeploy(ctl, contractName, instanceName, contract) {
     let address = ctl.addressStorage.get(instanceName || contractName);
+    let instance;
 
     if (!address || shouldDeploy(contractName, ctl.deployFilters)) {
-        let instance = await ctl.deployer.deploy(contract, {from: ctl.deployerAccount});
+        instance = await ctl.deployer.deploy(contract, {from: ctl.deployerAccount});
 
         ctl.addressStorage.set(instanceName || contractName, instance.address);
     }
+
+    return instance;
 }
 
 function shouldDeploy(contractName, deployFilters) {
