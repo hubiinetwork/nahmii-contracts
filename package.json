@@ -1,6 +1,6 @@
 {
   "name": "nahmii-contracts",
-  "version": "1.0.0-ropsten.9",
+  "version": "1.0.0-ropsten.10",
   "description": "Smart contracts for nahmii",
   "main": "truffle.js",
   "directories": {
