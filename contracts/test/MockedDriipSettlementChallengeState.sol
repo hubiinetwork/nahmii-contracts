@@ -106,7 +106,7 @@ contract MockedDriipSettlementChallengeState {
         delete _proposals[index].disqualification;
     }
 
-    function hasProposal(address wallet, MonetaryTypesLib.Currency currency)
+    function hasProposal(address, MonetaryTypesLib.Currency)
     public
     view
     returns (bool)

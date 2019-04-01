@@ -39,7 +39,7 @@ contract ERC721TransferController is TransferController {
     }
 
     /// @notice MUST be called with DELEGATECALL
-    function approve(address to, uint256 id, address currencyCt, uint256 currencyId)
+    function approve(address /*to*/, uint256 /*id*/, address /*currencyCt*/, uint256 currencyId)
     public
     {
         require(currencyId == 0);

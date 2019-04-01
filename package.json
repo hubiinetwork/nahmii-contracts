@@ -1,6 +1,6 @@
 {
   "name": "nahmii-contracts",
-  "version": "1.0.0-ropsten.9",
+  "version": "1.0.0-ropsten.10",
   "description": "Smart contracts for nahmii",
   "main": "truffle.js",
   "directories": {
@@ -9,6 +9,8 @@
   "scripts": {
     "build": "truffle compile",
     "build:all": "truffle compile --all",
+    "clean:contract_abstractions": "rm -f build/contracts/*",
+    "clean:events": "rm -f events/*",
     "deploy": "npm run deploy:test",
     "deploy:ci": "truffle migrate",
     "deploy:ganache": "truffle compile && truffle migrate --network ganache",
