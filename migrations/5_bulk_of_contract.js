@@ -114,7 +114,10 @@ module.exports = (deployer, network, accounts) => {
         else {
             deployerAccount = helpers.parseDeployerArg();
 
-            await helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
+            if (web3.eth.personal)
+                await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 7200); //120 minutes
+            else
+                await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 7200); //120 minutes
         }
 
         debug(`deployerAccount: ${deployerAccount}`);
