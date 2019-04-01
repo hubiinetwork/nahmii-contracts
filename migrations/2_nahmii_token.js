@@ -7,6 +7,7 @@
 const SafeMath = artifacts.require('SafeMath');
 const NahmiiToken = artifacts.require('NahmiiToken');
 
+const debug = require('debug')('2_nahmii_token');
 const path = require('path');
 const helpers = require('../scripts/common/helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');
@@ -29,8 +30,10 @@ module.exports = (deployer, network, accounts) => {
         else {
             deployerAccount = helpers.parseDeployerArg();
 
-            helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
+            await helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
         }
+
+        debug(`deployerAccount: ${deployerAccount}`);
 
         try {
             if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
@@ -48,9 +51,9 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
 
                 if (!helpers.isTestNetwork(network)) {
-                    console.log(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
+                    debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
                     // await instance.disableMinting();
-                    console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
+                    debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
                 }
 
             } else if (network.startsWith('mainnet'))
@@ -61,7 +64,7 @@ module.exports = (deployer, network, accounts) => {
                 helpers.lockAddress(web3, deployerAccount);
         }
 
-        console.log(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
+        debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();
     });
 };

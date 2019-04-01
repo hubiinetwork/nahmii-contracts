@@ -87,6 +87,7 @@ const Validator = artifacts.require('Validator');
 const ValidatorV2 = artifacts.require('ValidatorV2');
 const WalletLocker = artifacts.require('WalletLocker');
 
+const debug = require('debug')('5_bulk_of_contract');
 const path = require('path');
 const helpers = require('../scripts/common/helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');
@@ -113,8 +114,10 @@ module.exports = (deployer, network, accounts) => {
         else {
             deployerAccount = helpers.parseDeployerArg();
 
-            helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
+            await helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
         }
+
+        debug(`deployerAccount: ${deployerAccount}`);
 
         try {
             let ctl = {
@@ -909,7 +912,7 @@ module.exports = (deployer, network, accounts) => {
                 helpers.lockAddress(web3, deployerAccount);
         }
 
-        console.log(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
+        debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();
     });
 };
