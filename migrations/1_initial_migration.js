@@ -46,7 +46,10 @@ module.exports = (deployer, network, accounts) => {
 
         } finally {
             if (!helpers.isTestNetwork(network))
-                helpers.lockAddress(web3, deployerAccount);
+                if (web3.eth.personal)
+                    await web3.eth.personal.lockAccount(deployerAccount);
+                else
+                    await web3.personal.lockAccount(deployerAccount);
         }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);

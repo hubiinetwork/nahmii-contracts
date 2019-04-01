@@ -60,7 +60,7 @@ module.exports = (deployer, network, accounts) => {
 
                 await execDeploy(ctl, 'RevenueTokenManager', 'RevenueTokenManager', RevenueTokenManager);
 
-                // if (!helpers.isTestNetwork(network)) {
+                if (!helpers.isTestNetwork(network)) {
                     let instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
                     await instance.mint(addressStorage.get('RevenueTokenManager'), 120e24);
 
@@ -136,7 +136,7 @@ module.exports = (deployer, network, accounts) => {
                     debug(`Total locked amount: ${(await instance.totalLockedAmount()).toNumber()}`);
                     debug(`Releases count: ${(await instance.releasesCount()).toNumber()}`);
                     debug(`Executed releases count: ${(await instance.executedReleasesCount()).toNumber()}`);
-                // }
+                }
 
             } else if (network.startsWith('mainnet')) {
                 addressStorage.set('RevenueTokenManager', '0xe3f2158610b7145c04ae03a6356038ad2404a9a6');
@@ -144,7 +144,10 @@ module.exports = (deployer, network, accounts) => {
 
         } finally {
             if (!helpers.isTestNetwork(network))
-                helpers.lockAddress(web3, deployerAccount);
+                if (web3.eth.personal)
+                    await web3.eth.personal.lockAccount(deployerAccount);
+                else
+                    await web3.personal.lockAccount(deployerAccount);
         }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
@@ -154,10 +157,9 @@ module.exports = (deployer, network, accounts) => {
 
 async function execDeploy(ctl, contractName, instanceName, contract, usesAccessManager) {
     let address = ctl.addressStorage.get(instanceName || contractName);
+    let instance;
 
     if (!address || shouldDeploy(contractName, ctl.deployFilters)) {
-        let instance;
-
         if (usesAccessManager) {
             let signerManager = ctl.addressStorage.get('SignerManager');
 
@@ -168,6 +170,8 @@ async function execDeploy(ctl, contractName, instanceName, contract, usesAccessM
 
         ctl.addressStorage.set(instanceName || contractName, instance.address);
     }
+
+    return instance;
 }
 
 function shouldDeploy(contractName, deployFilters) {
