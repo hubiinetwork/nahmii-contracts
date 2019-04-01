@@ -55,7 +55,7 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'RevenueTokenManager', 'RevenueTokenManager', RevenueTokenManager);
 
                 if (!helpers.isTestNetwork(network)) {
-                    const instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
+                    let instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
                     await instance.mint(addressStorage.get('RevenueTokenManager'), 120e24);
 
                     while (0 == (await instance.balanceOf(addressStorage.get('RevenueTokenManager'))).toNumber()) {
@@ -107,7 +107,7 @@ module.exports = (deployer, network, accounts) => {
                         await helpers.sleep(60000);
                     }
 
-                    for (let i = 0; i < 15; i++)
+                    for (let i = 0; i < blockNumbers.length; i++)
                         await instance.release(i);
 
                     if (!helpers.isTestNetwork(network))
@@ -176,14 +176,10 @@ function shouldDeploy(contractName, deployFilters) {
 }
 
 function airdriipReleases() {
-    let date = new moment('15 Jan 2019 00:00:00 UT');
+    let date = new moment('30 Mar 2019 00:00:00 UT');
 
     const releases = [];
-    const blockNumbers = [
-        4828869, 4834113, 4841090, 4847145, 4852161, 4857914,
-        4864167, 4870652, 4876970, 4883180, 4889874, 4895788,
-        4901555, 4907444, 4913921, 4923471
-    ];
+    const blockNumbers = [5303042, 5309688, 5315799];
     for (let i = 0; i < 120; i++) {
         const release = {
             earliestReleaseTime: moment(date).subtract(1, 'hour').unix(),
