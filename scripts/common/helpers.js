@@ -37,12 +37,12 @@ exports.parseNetworkArg = () => {
 };
 
 exports.unlockAddress = (web3, address, password, timeoutInSecs) => {
-    const personal = web3.eth.personal || web.personal;
+    const personal = web3.eth.personal || web3.personal;
     personal.unlockAccount(address, password, timeoutInSecs);
 };
 
 exports.lockAddress = (web3, address) => {
-    const personal = web3.eth.personal || web.personal;
+    const personal = web3.eth.personal || web3.personal;
     personal.lockAccount(address);
 };
 
