@@ -5,20 +5,11 @@
  */
 
 const SignerManager = artifacts.require('SignerManager');
-
 const helpers = require('./helpers.js');
-const AddressStorage = require('./address_storage');
-
-// -----------------------------------------------------------------------------------------------------------------
 
 module.exports = async (callback) => {
 
     const network = helpers.parseNetworkArg();
-
-    const addressStorage = new AddressStorage(`${__dirname}/../../build/addresses.json`, network);
-    await addressStorage.load();
-
-    const testNetwork = false;
     const deployerAccount = helpers.parseDeployerArg();
     const signerAccount = helpers.parseAddressArg('signer');
 
@@ -26,7 +17,7 @@ module.exports = async (callback) => {
         helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
 
     try {
-        const instance = await SignerManager.at(addressStorage.get('SignerManager'));
+        const instance = await SignerManager.deployed();
 
         if (await instance.isSigner(signerAccount))
             console.log(`Signer ${signerAccount} is already registered with SignerManager at ${SignerManager.address}`);
@@ -42,7 +33,7 @@ module.exports = async (callback) => {
     } catch (err) {
         callback(err);
     } finally {
-        if (!testNetwork)
+        if (!helpers.isTestNetwork(network))
             helpers.lockAddress(web3, deployerAccount);
     }
 };
