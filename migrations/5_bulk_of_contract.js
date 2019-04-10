@@ -67,7 +67,7 @@ const NullSettlementState = artifacts.require('NullSettlementState');
 const PartnerFund = artifacts.require('PartnerFund');
 const PaymentHasher = artifacts.require('PaymentHasher');
 const PaymentTypesLib = artifacts.require('PaymentTypesLib');
-const RevenueFund = artifacts.require('RevenueFund');
+const RevenueFund1 = artifacts.require('RevenueFund1');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
@@ -181,7 +181,7 @@ module.exports = (deployer, network, accounts) => {
                 AccrualBenefactor,
                 Configuration,
                 MockedConfiguration,
-                RevenueFund,
+                RevenueFund1,
                 SecurityBond,
                 Validator,
                 ValidatorV2
@@ -190,14 +190,14 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(CurrenciesLib, [
                 BalanceTracker,
                 PartnerFund,
-                RevenueFund,
+                RevenueFund1,
                 SecurityBond,
                 TokenHolderRevenueFund
             ]);
             await deployer.link(FungibleBalanceLib, [
                 BalanceTracker,
                 PartnerFund,
-                RevenueFund,
+                RevenueFund1,
                 SecurityBond,
                 TokenHolderRevenueFund
             ]);
@@ -224,7 +224,7 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementState,
                 PartnerFund,
                 PaymentHasher,
-                RevenueFund,
+                RevenueFund1,
                 SecurityBond,
                 TokenHolderRevenueFund,
                 TradeHasher,
@@ -319,7 +319,7 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementDisputeByTrade,
                 NullSettlementState,
                 PartnerFund,
-                RevenueFund,
+                RevenueFund1,
                 SecurityBond,
                 TokenHolderRevenueFund,
                 Validator,
@@ -349,7 +349,7 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementDisputeByPayment,
                 NullSettlementDisputeByTrade,
                 NullSettlementState,
-                RevenueFund,
+                RevenueFund1,
                 RevenueTokenManager,
                 SecurityBond,
                 SignerManager,
@@ -414,7 +414,7 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(TxHistoryLib, [
                 ClientFund,
                 PartnerFund,
-                RevenueFund,
+                RevenueFund1,
                 SecurityBond,
                 TokenHolderRevenueFund
             ]);
@@ -521,8 +521,7 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'NullSettlementDisputeByTrade', '', NullSettlementDisputeByTrade);
             await execDeploy(ctl, 'NullSettlementState', '', NullSettlementState);
             await execDeploy(ctl, 'PaymentHasher', '', PaymentHasher);
-            await execDeploy(ctl, 'RevenueFund', 'TradesRevenueFund', RevenueFund);
-            await execDeploy(ctl, 'RevenueFund', 'PaymentsRevenueFund', RevenueFund);
+            await execDeploy(ctl, 'RevenueFund1', '', RevenueFund1);
             await execDeploy(ctl, 'SecurityBond', '', SecurityBond);
             await execDeploy(ctl, 'TokenHolderRevenueFund', '', TokenHolderRevenueFund);
             await execDeploy(ctl, 'TradeHasher', '', TradeHasher);
@@ -560,8 +559,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             await instance.freezeWalletLocker();
             await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
-            await instance.registerBeneficiary(addressStorage.get('PaymentsRevenueFund'));
-            await instance.registerBeneficiary(addressStorage.get('TradesRevenueFund'));
+            await instance.registerBeneficiary(addressStorage.get('RevenueFund1'));
             await instance.registerBeneficiary(addressStorage.get('PartnerFund'));
             await instance.registerService(addressStorage.get('DriipSettlementByPayment'));
             await instance.authorizeInitialService(addressStorage.get('DriipSettlementByPayment'));
@@ -656,7 +654,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
             await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
-            await instance.setRevenueFund(addressStorage.get('PaymentsRevenueFund'));
+            await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
             await instance.setPartnerFund(addressStorage.get('PartnerFund'));
 
             instance = await DriipSettlementByTrade.at(addressStorage.get('DriipSettlementByTrade'));
@@ -667,7 +665,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
-            await instance.setRevenueFund(addressStorage.get('TradesRevenueFund'));
+            await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
             await instance.setPartnerFund(addressStorage.get('PartnerFund'));
 
             instance = await NullSettlementChallengeState.at(addressStorage.get('NullSettlementChallengeState'));
@@ -851,12 +849,7 @@ module.exports = (deployer, network, accounts) => {
             instance = await PartnerFund.at(addressStorage.get('PartnerFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
 
-            instance = await RevenueFund.at(addressStorage.get('TradesRevenueFund'));
-            await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
-            await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
-
-            instance = await RevenueFund.at(addressStorage.get('PaymentsRevenueFund'));
+            instance = await RevenueFund1.at(addressStorage.get('RevenueFund1'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
             await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
@@ -892,10 +885,8 @@ module.exports = (deployer, network, accounts) => {
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
-            await instance.registerService(addressStorage.get('TradesRevenueFund'));
-            await instance.enableServiceAction(addressStorage.get('TradesRevenueFund'), 'close_accrual_period');
-            await instance.registerService(addressStorage.get('PaymentsRevenueFund'));
-            await instance.enableServiceAction(addressStorage.get('PaymentsRevenueFund'), 'close_accrual_period');
+            await instance.registerService(addressStorage.get('RevenueFund1'));
+            await instance.enableServiceAction(addressStorage.get('RevenueFund1'), 'close_accrual_period');
 
             instance = await Validator.at(addressStorage.get('Validator'));
             await instance.setPaymentHasher(addressStorage.get('PaymentHasher'));
