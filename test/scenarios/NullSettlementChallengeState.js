@@ -114,7 +114,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await ethersNullSettlementChallengeState.registerService(glob.owner);
                     await ethersNullSettlementChallengeState.enableServiceAction(
-                        glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                        glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
                     filter = {
@@ -158,7 +158,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -229,7 +229,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -319,7 +319,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -390,7 +390,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -478,7 +478,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -547,12 +547,11 @@ module.exports = (glob) => {
             });
         });
 
-        // TODO Add tests
         describe('hasProposal()', () => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -582,12 +581,11 @@ module.exports = (glob) => {
             });
         });
 
-        // TODO Add tests
         describe('hasProposalTerminated()', () => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -608,7 +606,7 @@ module.exports = (glob) => {
                     );
                 });
 
-                it('should revert', async () => {
+                it('should return false', async () => {
                     (await ethersNullSettlementChallengeState.hasProposalTerminated(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
@@ -632,7 +630,7 @@ module.exports = (glob) => {
                     );
                 });
 
-                it('should revert', async () => {
+                it('should return true', async () => {
                     (await ethersNullSettlementChallengeState.hasProposalTerminated(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
@@ -645,7 +643,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -697,7 +695,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -731,7 +729,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -765,7 +763,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -803,7 +801,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -837,7 +835,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -871,7 +869,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -905,7 +903,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -939,7 +937,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersNullSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersNullSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
@@ -997,7 +995,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersNullSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersNullSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
@@ -1055,7 +1053,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersNullSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersNullSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
@@ -1113,7 +1111,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState.registerService(glob.owner);
                 await ethersNullSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersNullSettlementChallengeState.INIT_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersNullSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersNullSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}

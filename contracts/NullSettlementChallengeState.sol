@@ -30,7 +30,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public INIT_PROPOSAL_ACTION = "init_proposal";
+    string constant public INITIATE_PROPOSAL_ACTION = "initiate_proposal";
     string constant public TERMINATE_PROPOSAL_ACTION = "terminate_proposal";
     string constant public REMOVE_PROPOSAL_ACTION = "remove_proposal";
     string constant public DISQUALIFY_PROPOSAL_ACTION = "disqualify_proposal";
@@ -84,7 +84,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     function initiateProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
         MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated)
     public
-    onlyEnabledServiceAction(INIT_PROPOSAL_ACTION)
+    onlyEnabledServiceAction(INITIATE_PROPOSAL_ACTION)
     {
         // Initiate proposal
         _initiateProposal(
@@ -124,7 +124,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         );
     }
 
-    /// @notice Deactivate a proposal
+    /// @notice Terminate a proposal
     /// @param wallet The address of the concerned challenged wallet
     /// @param currency The concerned currency
     /// @param walletTerminated True if wallet terminated

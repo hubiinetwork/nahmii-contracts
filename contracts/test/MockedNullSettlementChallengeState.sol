@@ -55,24 +55,24 @@ contract MockedNullSettlementChallengeState {
         _initiateProposalsCount++;
     }
 
-    function terminateProposal(address challengedWallet, MonetaryTypesLib.Currency currency)
+    function terminateProposal(address wallet, MonetaryTypesLib.Currency currency)
     public
     {
         uint256 index = _addProposalIfNone();
 
-        _proposals[index].wallet = challengedWallet;
+        _proposals[index].wallet = wallet;
         _proposals[index].currency = currency;
         _proposals[index].terminated = true;
 
         _terminateProposalsCount++;
     }
 
-    function terminateProposal(address challengedWallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    function terminateProposal(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
     public
     {
         uint256 index = _addProposalIfNone();
 
-        _proposals[index].wallet = challengedWallet;
+        _proposals[index].wallet = wallet;
         _proposals[index].currency = currency;
         _proposals[index].walletInitiated = walletTerminated;
         _proposals[index].terminated = true;
@@ -80,23 +80,23 @@ contract MockedNullSettlementChallengeState {
         _terminateProposalsCount++;
     }
 
-    function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency)
+    function removeProposal(address wallet, MonetaryTypesLib.Currency currency)
     public
     {
         uint256 index = _addProposalIfNone();
 
-        _proposals[index].wallet = challengedWallet;
+        _proposals[index].wallet = wallet;
         _proposals[index].currency = currency;
 
         _removeProposalsCount++;
     }
 
-    function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    function removeProposal(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
     public
     {
         uint256 index = _addProposalIfNone();
 
-        _proposals[index].wallet = challengedWallet;
+        _proposals[index].wallet = wallet;
         _proposals[index].currency = currency;
         _proposals[index].walletInitiated = walletTerminated;
 
