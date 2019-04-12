@@ -21,6 +21,7 @@ library SettlementChallengeTypesLib {
     // -----------------------------------------------------------------------------------------------------------------
     enum Status {Qualified, Disqualified}
 
+    // TODO Add property for start-of-settlement-challenge block number
     struct Proposal {
         address wallet;
         uint256 nonce;
@@ -40,8 +41,11 @@ library SettlementChallengeTypesLib {
         // Info on challenged driip
         Driip challenged;
 
-        // True if reward is from wallet balance
+        // True is equivalent to reward coming from wallet's balance
         bool walletInitiated;
+
+        // True if proposal has been terminated
+        bool terminated;
 
         // Disqualification
         Disqualification disqualification;
