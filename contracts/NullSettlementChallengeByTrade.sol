@@ -376,11 +376,13 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
             wallet, currency
         );
 
+        // TODO Update the calculation of nonce to the one from NullSettlementChallengeByPayment
+
         // Obtain highest settled wallet nonce
         uint256 nonce = nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency);
 
-        // Add proposal, including assurance that there is no overlap with active proposal
-        nullSettlementChallengeState.addProposal(
+        // Initiate proposal, including assurance that there is no overlap with active proposal
+        nullSettlementChallengeState.initiateProposal(
             wallet, nonce.add(1), stageAmount, activeBalanceAmount.sub(stageAmount), currency,
             activeBalanceBlockNumber, walletInitiated
         );
@@ -389,7 +391,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
     private
     {
-        // Stop challenge
-        nullSettlementChallengeState.removeProposal(wallet, currency, walletTerminated);
+        // Terminate proposal
+        nullSettlementChallengeState.terminateProposal(wallet, currency, walletTerminated);
     }
 }

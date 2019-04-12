@@ -17,7 +17,6 @@ import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {NullSettlementDisputeByPayment} from "./NullSettlementDisputeByPayment.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
-import {NullSettlementState} from "./NullSettlementState.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
@@ -39,7 +38,6 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     // -----------------------------------------------------------------------------------------------------------------
     NullSettlementDisputeByPayment public nullSettlementDisputeByPayment;
     NullSettlementChallengeState public nullSettlementChallengeState;
-    NullSettlementState public nullSettlementState;
     DriipSettlementChallengeState public driipSettlementChallengeState;
 
     //
@@ -49,8 +47,6 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         NullSettlementDisputeByPayment newNullSettlementDisputeByPayment);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
-    event SetNullSettlementStateEvent(NullSettlementState oldNullSettlementState,
-        NullSettlementState newNullSettlementState);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event StartChallengeEvent(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
@@ -95,18 +91,6 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
         emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
-    }
-
-    /// @notice Set the null settlement state contract
-    /// @param newNullSettlementState The (address of) NullSettlementState contract instance
-    function setNullSettlementState(NullSettlementState newNullSettlementState)
-    public
-    onlyDeployer
-    notNullAddress(newNullSettlementState)
-    {
-        NullSettlementState oldNullSettlementState = nullSettlementState;
-        nullSettlementState = newNullSettlementState;
-        emit SetNullSettlementStateEvent(oldNullSettlementState, nullSettlementState);
     }
 
     /// @notice Set the driip settlement challenge state contract
@@ -191,7 +175,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
 
         // Stop challenge
-        nullSettlementChallengeState.removeProposal(
+        nullSettlementChallengeState.terminateProposal(
             msg.sender, currency, true
         );
     }
@@ -217,8 +201,38 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
 
         // Stop challenge
-        nullSettlementChallengeState.removeProposal(
+        nullSettlementChallengeState.terminateProposal(
             wallet, currency, false
+        );
+    }
+
+    /// @notice Gauge whether the proposal for the given wallet and currency has been defined
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return true if proposal has been initiated, else false
+    function hasProposal(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (bool)
+    {
+        return nullSettlementChallengeState.hasProposal(
+            wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
+        );
+    }
+
+    /// @notice Gauge whether the proposal for the given wallet and currency has terminated
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return true if proposal has terminated, else false
+    function hasProposalTerminated(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (bool)
+    {
+        return nullSettlementChallengeState.hasProposalTerminated(
+            wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
 
@@ -433,23 +447,25 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         require(block.number >= configuration.earliestSettlementBlockNumber());
 
         // Require that there is no ongoing overlapping null settlement challenge
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, currency));
+        require(
+            !nullSettlementChallengeState.hasProposal(wallet, currency) ||
+        nullSettlementChallengeState.hasProposalExpired(wallet, currency)
+        );
 
-        // Get the last logged active balance amount and block number
+        // Get the last logged active balance amount and block number, properties of overlapping DSC
+        // and the baseline nonce
         (
         int256 activeBalanceAmount, uint256 activeBalanceBlockNumber,
-        int256 dscCumulativeTransferAmount, int256 dscStageAmount
+        int256 dscCumulativeTransferAmount, int256 dscStageAmount,
+        uint256 nonce
         ) = _externalProperties(
             wallet, currency
         );
 
-        // Obtain highest settled wallet nonce
-        uint256 nonce = nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency);
-
-        // Add proposal, including assurance that there is no overlap with active proposal
+        // Initiate proposal, including assurance that there is no overlap with active proposal
         // Target balance amount is calculated as current balance - DSC cumulativeTransferAmount - DSC stage amount - NSC stageAmount
-        nullSettlementChallengeState.addProposal(
-            wallet, nonce.add(1), stageAmount,
+        nullSettlementChallengeState.initiateProposal(
+            wallet, nonce, stageAmount,
             activeBalanceAmount.sub(
                 dscCumulativeTransferAmount.add(dscStageAmount).add(stageAmount)
             ),
@@ -463,7 +479,8 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     view
     returns (
         int256 activeBalanceAmount, uint256 activeBalanceBlockNumber,
-        int256 dscCumulativeTransferAmount, int256 dscStageAmount
+        int256 dscCumulativeTransferAmount, int256 dscStageAmount,
+        uint256 nonce
     ) {
         (activeBalanceAmount, activeBalanceBlockNumber) = balanceTracker.fungibleActiveRecord(
             wallet, currency
@@ -472,6 +489,10 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         if (driipSettlementChallengeState.hasProposal(wallet, currency)) {
             dscCumulativeTransferAmount = driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, currency);
             dscStageAmount = driipSettlementChallengeState.proposalStageAmount(wallet, currency);
+            nonce = driipSettlementChallengeState.proposalNonce(wallet, currency);
         }
+
+        if (nullSettlementChallengeState.hasProposal(wallet, currency))
+            nonce = nonce.clampMin(nullSettlementChallengeState.proposalNonce(wallet, currency));
     }
 }
