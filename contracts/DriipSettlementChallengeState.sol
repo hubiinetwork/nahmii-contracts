@@ -29,7 +29,8 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public ADD_PROPOSAL_ACTION = "add_proposal";
+    string constant public INITIATE_PROPOSAL_ACTION = "initiate_proposal";
+    string constant public TERMINATE_PROPOSAL_ACTION = "terminate_proposal";
     string constant public REMOVE_PROPOSAL_ACTION = "remove_proposal";
     string constant public DISQUALIFY_PROPOSAL_ACTION = "disqualify_proposal";
     string constant public QUALIFY_PROPOSAL_ACTION = "qualify_proposal";
@@ -44,7 +45,10 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event AddProposalEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+    event InitiateProposalEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
+        bytes32 challengedHash, string challengedKind);
+    event TerminateProposalEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
         int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind);
     event RemoveProposalEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
@@ -78,7 +82,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         return proposals.length;
     }
 
-    /// @notice Add proposal
+    /// @notice Initiate proposal
     /// @param wallet The address of the concerned challenged wallet
     /// @param nonce The wallet nonce
     /// @param cumulativeTransferAmount The proposal cumulative transfer amount
@@ -89,22 +93,88 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param walletInitiated True if reward from candidate balance
     /// @param challengedHash The candidate driip hash
     /// @param challengedKind The candidate driip kind
-    function addProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+    function initiateProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
         int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind)
     public
-    onlyEnabledServiceAction(ADD_PROPOSAL_ACTION)
+    onlyEnabledServiceAction(INITIATE_PROPOSAL_ACTION)
     {
-        // Add proposal
-        _addProposal(
+        // Initiate proposal
+        _initiateProposal(
             wallet, nonce, cumulativeTransferAmount, stageAmount, targetBalanceAmount,
             currency, blockNumber, walletInitiated, challengedHash, challengedKind
         );
 
         // Emit event
-        emit AddProposalEvent(
+        emit InitiateProposalEvent(
             wallet, nonce, cumulativeTransferAmount, stageAmount, targetBalanceAmount, currency,
             blockNumber, walletInitiated, challengedHash, challengedKind
+        );
+    }
+
+    /// @notice Terminate a proposal
+    /// @param wallet The address of the concerned challenged wallet
+    /// @param currency The concerned currency
+    function terminateProposal(address wallet, MonetaryTypesLib.Currency currency, bool clearNonce)
+    public
+    onlyEnabledServiceAction(TERMINATE_PROPOSAL_ACTION)
+    {
+        // Get the proposal index
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+
+        // Return gracefully if there is no proposal to terminate
+        if (0 == index)
+            return;
+
+        // Clear wallet-nonce-currency triplet entry, which enables reinitiation of proposal for that triplet
+        if (clearNonce)
+            proposalIndexByWalletNonceCurrency[wallet][proposals[index - 1].nonce][currency.ct][currency.id] = 0;
+
+        // Terminate proposal
+        proposals[index - 1].terminated = true;
+
+        // Emit event
+        emit TerminateProposalEvent(
+            wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
+            proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance, currency,
+            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            proposals[index - 1].challenged.hash, proposals[index - 1].challenged.kind
+        );
+    }
+
+    /// @notice Terminate a proposal
+    /// @param wallet The address of the concerned challenged wallet
+    /// @param currency The concerned currency
+    /// @param clearNonce Clear wallet-nonce-currency triplet entry
+    /// @param walletTerminated True if wallet terminated
+    function terminateProposal(address wallet, MonetaryTypesLib.Currency currency, bool clearNonce,
+        bool walletTerminated)
+    public
+    onlyEnabledServiceAction(TERMINATE_PROPOSAL_ACTION)
+    {
+        // Get the proposal index
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+
+        // Return gracefully if there is no proposal to terminate
+        if (0 == index)
+            return;
+
+        // Require that role that initialized (wallet or operator) can only cancel its own proposal
+        require(walletTerminated == proposals[index - 1].walletInitiated);
+
+        // Clear wallet-nonce-currency triplet entry, which enables reinitiation of proposal for that triplet
+        if (clearNonce)
+            proposalIndexByWalletNonceCurrency[wallet][proposals[index - 1].nonce][currency.ct][currency.id] = 0;
+
+        // Terminate proposal
+        proposals[index - 1].terminated = true;
+
+        // Emit event
+        emit TerminateProposalEvent(
+            wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
+            proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance, currency,
+            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            proposals[index - 1].challenged.hash, proposals[index - 1].challenged.kind
         );
     }
 
@@ -118,7 +188,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         // Get the proposal index
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
 
-        // Return gracefully if there is no proposal to cancel
+        // Return gracefully if there is no proposal to remove
         if (0 == index)
             return;
 
@@ -145,7 +215,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         // Get the proposal index
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
 
-        // Return gracefully if there is no proposal to cancel
+        // Return gracefully if there is no proposal to remove
         if (0 == index)
             return;
 
@@ -256,6 +326,21 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         return 0 != proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
     }
 
+    /// @notice Gauge whether the proposal for the given wallet and currency has terminated
+    /// @param wallet The address of the concerned wallet
+    /// @param currency The concerned currency
+    /// @return true if proposal has terminated, else false
+    function hasProposalTerminated(address wallet, MonetaryTypesLib.Currency currency)
+    public
+    view
+    returns (bool)
+    {
+        // 1-based index
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+        require(0 != index);
+        return proposals[index - 1].terminated;
+    }
+
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
@@ -267,11 +352,8 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     {
         // 1-based index
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        return (
-        0 == index ||
-        0 == proposals[index - 1].nonce ||
-        block.timestamp >= proposals[index - 1].expirationTime
-        );
+        require(0 != index);
+        return block.timestamp >= proposals[index - 1].expirationTime;
     }
 
     /// @notice Get the proposal nonce of the given wallet and currency
@@ -487,7 +569,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _addProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+    function _initiateProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
         int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind)
     private
@@ -499,26 +581,29 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         require(stageAmount.isPositiveInt256());
         require(targetBalanceAmount.isPositiveInt256());
 
-        // Create proposal
-        proposals.length++;
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+
+        // Create proposal if needed
+        if (0 == index) {
+            index = ++(proposals.length);
+            proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = index;
+            proposalIndexByWalletNonceCurrency[wallet][nonce][currency.ct][currency.id] = index;
+        }
 
         // Populate proposal
-        proposals[proposals.length - 1].wallet = wallet;
-        proposals[proposals.length - 1].nonce = nonce;
-        proposals[proposals.length - 1].blockNumber = blockNumber;
-        proposals[proposals.length - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
-        proposals[proposals.length - 1].status = SettlementChallengeTypesLib.Status.Qualified;
-        proposals[proposals.length - 1].currency = currency;
-        proposals[proposals.length - 1].amounts.cumulativeTransfer = cumulativeTransferAmount;
-        proposals[proposals.length - 1].amounts.stage = stageAmount;
-        proposals[proposals.length - 1].amounts.targetBalance = targetBalanceAmount;
-        proposals[proposals.length - 1].walletInitiated = walletInitiated;
-        proposals[proposals.length - 1].challenged.hash = challengedHash;
-        proposals[proposals.length - 1].challenged.kind = challengedKind;
-
-        // Store proposal index
-        proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = proposals.length;
-        proposalIndexByWalletNonceCurrency[wallet][nonce][currency.ct][currency.id] = proposals.length;
+        proposals[index - 1].wallet = wallet;
+        proposals[index - 1].nonce = nonce;
+        proposals[index - 1].blockNumber = blockNumber;
+        proposals[index - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
+        proposals[index - 1].status = SettlementChallengeTypesLib.Status.Qualified;
+        proposals[index - 1].currency = currency;
+        proposals[index - 1].amounts.cumulativeTransfer = cumulativeTransferAmount;
+        proposals[index - 1].amounts.stage = stageAmount;
+        proposals[index - 1].amounts.targetBalance = targetBalanceAmount;
+        proposals[index - 1].walletInitiated = walletInitiated;
+        proposals[index - 1].terminated = false;
+        proposals[index - 1].challenged.hash = challengedHash;
+        proposals[index - 1].challenged.kind = challengedKind;
     }
 
     function _removeProposal(uint256 index)
