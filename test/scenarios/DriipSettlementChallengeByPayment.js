@@ -320,7 +320,8 @@ module.exports = (glob) => {
 
             describe('if called with overlapping null settlement challenge', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallengeState._setProposalExpired(false);
+                    await web3NullSettlementChallengeState._setProposal(true);
+                    await web3NullSettlementChallengeState._setProposalTerminated(false);
                 });
 
                 it('should revert', async () => {
@@ -335,8 +336,6 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     await web3DriipSettlementChallengeState._setProposalExpired(true);
-
-                    await web3NullSettlementChallengeState._setProposalExpired(true);
 
                     await ethersBalanceTracker._set(
                         await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
@@ -360,12 +359,6 @@ module.exports = (glob) => {
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
-
-                    // TODO Determine removal of completed settlement challenges
-                    // (await ethersDriipSettlementChallengeState._removeProposalsCount())
-                    //     ._bn.should.eq.BN(1);
-                    // (await ethersNullSettlementChallengeState._removeProposalsCount())
-                    //     ._bn.should.eq.BN(1);
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
@@ -444,7 +437,8 @@ module.exports = (glob) => {
 
             describe('if called with overlapping null settlement challenge', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallengeState._setProposalExpired(false);
+                    await web3NullSettlementChallengeState._setProposal(true);
+                    await web3NullSettlementChallengeState._setProposalTerminated(false);
                 });
 
                 it('should revert', async () => {
@@ -459,8 +453,6 @@ module.exports = (glob) => {
 
                 beforeEach(async () => {
                     await web3DriipSettlementChallengeState._setProposalExpired(true);
-
-                    await web3NullSettlementChallengeState._setProposalExpired(true);
 
                     await ethersBalanceTracker._set(
                         await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
@@ -484,12 +476,6 @@ module.exports = (glob) => {
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
-
-                    // TODO Determine removal of completed settlement challenges
-                    // (await ethersDriipSettlementChallengeState._removeProposalsCount())
-                    //     ._bn.should.eq.BN(1);
-                    // (await ethersNullSettlementChallengeState._removeProposalsCount())
-                    //     ._bn.should.eq.BN(1);
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
@@ -543,13 +529,14 @@ module.exports = (glob) => {
                 dscProposal.currency.id._bn.should.eq.BN(10);
                 dscProposal.walletInitiated.should.be.true;
 
-                (await ethersNullSettlementChallengeState._removeProposalsCount())
+                (await ethersNullSettlementChallengeState._terminateProposalsCount())
                     ._bn.should.eq.BN(1);
 
                 const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
                 nscProposal.wallet.should.equal(utils.getAddress(glob.owner));
                 nscProposal.currency.ct.should.equal(mocks.address1);
                 nscProposal.currency.id._bn.should.eq.BN(10);
+                nscProposal.terminated.should.be.true;
             });
         });
 
@@ -590,13 +577,14 @@ module.exports = (glob) => {
                 dscProposal.currency.id._bn.should.eq.BN(10);
                 dscProposal.walletInitiated.should.be.false;
 
-                (await ethersNullSettlementChallengeState._removeProposalsCount())
+                (await ethersNullSettlementChallengeState._terminateProposalsCount())
                     ._bn.should.eq.BN(1);
 
                 const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
                 nscProposal.wallet.should.equal(utils.getAddress(glob.user_a));
                 nscProposal.currency.ct.should.equal(mocks.address1);
                 nscProposal.currency.id._bn.should.eq.BN(10);
+                nscProposal.terminated.should.be.true;
             });
         });
 

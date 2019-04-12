@@ -176,7 +176,7 @@ BalanceTrackable {
         driipSettlementChallengeState.removeProposal(msg.sender, currency, true);
 
         // Stop dependent null settlement challenge if existent
-        nullSettlementChallengeState.removeProposal(msg.sender, currency);
+        nullSettlementChallengeState.terminateProposal(msg.sender, currency);
     }
 
     /// @notice Stop settlement challenge
@@ -204,7 +204,7 @@ BalanceTrackable {
         driipSettlementChallengeState.removeProposal(wallet, currency, false);
 
         // Stop dependent null settlement challenge if existent
-        nullSettlementChallengeState.removeProposal(wallet, currency);
+        nullSettlementChallengeState.terminateProposal(wallet, currency);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
@@ -455,7 +455,10 @@ BalanceTrackable {
         require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
         // Require that there is no ongoing overlapping null settlement challenge
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
+        require(
+            !nullSettlementChallengeState.hasProposal(wallet, payment.currency) ||
+        nullSettlementChallengeState.hasProposalTerminated(wallet, payment.currency)
+        );
 
         // Deduce the concerned nonce and cumulative relative transfer
         (uint256 nonce, int256 cumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);

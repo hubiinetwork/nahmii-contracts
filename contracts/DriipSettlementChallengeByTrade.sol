@@ -430,7 +430,10 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     private
     {
         // Require that there is no ongoing overlapping null settlement challenge
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended));
+        require(
+            !nullSettlementChallengeState.hasProposal(wallet, trade.currencies.intended) ||
+        nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended)
+        );
 
         // Deduce the concerned trade party
         TradeTypesLib.TradeParty memory party = _tradeParty(trade, wallet);
@@ -449,7 +452,10 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     private
     {
         // Require that there is no ongoing overlapping null settlement challenge
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate));
+        require(
+            !nullSettlementChallengeState.hasProposal(wallet, trade.currencies.conjugate) ||
+        nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate)
+        );
 
         // Deduce the concerned trade party
         TradeTypesLib.TradeParty memory party = _tradeParty(trade, wallet);
