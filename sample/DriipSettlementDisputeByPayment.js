@@ -104,6 +104,7 @@ contract('DriipSettlementDisputeByPayment', (accounts) => {
                 1, {gasLimit: 1e6}
             );
 
+            await ethersDriipSettlementChallengeState._setProposal(true);
             await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
 
             filter = {

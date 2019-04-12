@@ -451,8 +451,10 @@ module.exports = (glob) => {
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
 
+                await ethersDriipSettlementChallengeState._setProposal(true);
+                await ethersDriipSettlementChallengeState._setProposalTerminated(false);
                 await ethersDriipSettlementChallengeState._setProposalExpired(true);
-                await ethersDriipSettlementChallengeState._setProposalChallengedHash(trade.seal.hash)
+                await ethersDriipSettlementChallengeState._setProposalChallengedHash(trade.seal.hash);
 
                 await ethersValidator.setTradeSeller(false);
                 await ethersValidator.setTradeBuyer(true);
@@ -511,6 +513,26 @@ module.exports = (glob) => {
             describe('if proposal is defined wrt other trade', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState._setProposalChallengedHash(mocks.hash1);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not been initiated', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposal(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has been terminated', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposalTerminated(true);
                 });
 
                 it('should revert', async () => {
@@ -673,8 +695,10 @@ module.exports = (glob) => {
 
                 trade = await mocks.mockTrade(glob.owner);
 
+                await ethersDriipSettlementChallengeState._setProposal(true);
+                await ethersDriipSettlementChallengeState._setProposalTerminated(false);
                 await ethersDriipSettlementChallengeState._setProposalExpired(true);
-                await ethersDriipSettlementChallengeState._setProposalChallengedHash(trade.seal.hash)
+                await ethersDriipSettlementChallengeState._setProposalChallengedHash(trade.seal.hash);
 
                 await ethersValidator.setTradeSeller(false);
                 await ethersValidator.setTradeBuyer(true);
@@ -743,6 +767,26 @@ module.exports = (glob) => {
             describe('if proposal is defined wrt other trade', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState._setProposalChallengedHash(mocks.hash1);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not been initiated', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposal(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has been terminated', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposalTerminated(true);
                 });
 
                 it('should revert', async () => {

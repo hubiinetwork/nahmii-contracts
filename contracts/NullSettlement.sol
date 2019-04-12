@@ -133,6 +133,12 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         // Require that there is no overlapping driip settlement challenge
         require(!driipSettlementChallengeState.hasProposal(wallet, currency));
 
+        // Require that null settlement challenge proposal has been initiated
+        require(nullSettlementChallengeState.hasProposal(wallet, currency));
+
+        // Require that null settlement challenge proposal has not been terminated already
+        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency));
+
         // Require that null settlement challenge proposal has expired
         require(nullSettlementChallengeState.hasProposalExpired(wallet, currency));
 
@@ -141,17 +147,16 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
             wallet, currency
         ));
 
+        // Require that operational mode is normal and data is available, or that nonce is
+        // smaller than max null nonce
+        require(configuration.isOperationalModeNormal() && communityVote.isDataAvailable());
+
         // Get null settlement challenge proposal nonce
         uint256 nonce = nullSettlementChallengeState.proposalNonce(wallet, currency);
 
-        // Require that operational mode is normal and data is available, or that nonce is
-        // smaller than max null nonce
-        require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-            || (nonce < nullSettlementState.maxNullNonce()));
-
         // If wallet has previously settled balance of the concerned currency with higher
         // null settlement nonce, then don't settle again
-        require(nonce > nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency));
+        require(nonce >= nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency));
 
         // Update settled nonce of wallet and currency
         nullSettlementState.setMaxNonceByWalletAndCurrency(wallet, currency, nonce);
@@ -166,10 +171,6 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         );
 
         // Remove null settlement challenge proposal
-        nullSettlementChallengeState.removeProposal(wallet, currency);
-
-        // If payment nonce is beyond max null settlement nonce then update max null nonce
-        if (nonce > nullSettlementState.maxNullNonce())
-            nullSettlementState.setMaxNullNonce(nonce);
+        nullSettlementChallengeState.terminateProposal(wallet, currency);
     }
 }

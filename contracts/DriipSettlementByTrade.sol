@@ -205,7 +205,21 @@ FraudChallengable, WalletLockable {
         require(trade.seal.hash == driipSettlementChallengeState.proposalChallengedHash(wallet, trade.currencies.intended));
         require(trade.seal.hash == driipSettlementChallengeState.proposalChallengedHash(wallet, trade.currencies.conjugate));
 
-        // Require that proposals have expired
+        // Extract properties depending on settlement role
+        (
+        DriipSettlementTypesLib.SettlementRole settlementRole,
+        TradeTypesLib.TradeParty memory party
+        ) = _getRoleProperties(trade, wallet);
+
+        // Require that driip settlement challenge proposals have been initiated
+        require(driipSettlementChallengeState.hasProposal(wallet, party.nonce, trade.currencies.intended));
+        require(driipSettlementChallengeState.hasProposal(wallet, party.nonce, trade.currencies.conjugate));
+
+        // Require that driip settlement challenge proposal have not been terminated already
+        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended));
+        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate));
+
+        // Require that driip settlement challenge proposals have expired
         require(driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended));
         require(driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate));
 
@@ -217,10 +231,8 @@ FraudChallengable, WalletLockable {
             wallet, trade.currencies.conjugate
         ));
 
-        // Require that operational mode is normal and data is available, or that nonce is
-        // smaller than max null nonce
-        require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-            || (trade.nonce < driipSettlementState.maxDriipNonce()));
+        // Require that operational mode is normal and data is available
+        require(configuration.isOperationalModeNormal() && communityVote.isDataAvailable());
 
         // Init settlement, i.e. create one if no such settlement exists for the double pair of wallets and nonces
         driipSettlementState.initSettlement(
@@ -228,12 +240,6 @@ FraudChallengable, WalletLockable {
             trade.seller.wallet, trade.seller.nonce,
             trade.buyer.wallet, trade.buyer.nonce
         );
-
-        // Extract properties depending on settlement role
-        (
-        DriipSettlementTypesLib.SettlementRole settlementRole,
-        TradeTypesLib.TradeParty memory party
-        ) = _getRoleProperties(trade, wallet);
 
         // If exists settlement of nonce then require that wallet has not already settled
         require(!driipSettlementState.isSettlementRoleDone(
@@ -290,7 +296,6 @@ FraudChallengable, WalletLockable {
             _stageFees(wallet, party.fees.total, revenueFund, party.nonce);
 
         // If trade global nonce is beyond max driip nonce then update max driip nonce
-        // TODO TBM when global nonce goes away
         if (trade.nonce > driipSettlementState.maxDriipNonce())
             driipSettlementState.setMaxDriipNonce(trade.nonce);
     }

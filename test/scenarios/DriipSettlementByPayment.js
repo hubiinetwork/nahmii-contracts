@@ -418,6 +418,8 @@ module.exports = (glob) => {
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
 
+                await ethersDriipSettlementChallengeState._setProposal(true);
+                await ethersDriipSettlementChallengeState._setProposalTerminated(false);
                 await ethersDriipSettlementChallengeState._setProposalExpired(true);
                 await ethersDriipSettlementChallengeState._setProposalChallengedHash(payment.seals.operator.hash);
             });
@@ -475,6 +477,26 @@ module.exports = (glob) => {
             describe('if proposal is defined wrt other payment', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState._setProposalChallengedHash(mocks.hash1);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not been initiated', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposal(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has been terminated', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposalTerminated(true);
                 });
 
                 it('should revert', async () => {
@@ -589,13 +611,14 @@ module.exports = (glob) => {
                                 payment.sender.wallet, payment.currency)
                         )._bn.should.eq.BN(payment.sender.nonce._bn);
 
-                        (await ethersDriipSettlementChallengeState._removeProposalsCount())
+                        (await ethersDriipSettlementChallengeState._terminateProposalsCount())
                             ._bn.should.eq.BN(1);
 
                         const proposal = await ethersDriipSettlementChallengeState._proposals(0);
                         proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                         proposal.currency.ct.should.equal(payment.currency.ct);
                         proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                        proposal.terminated.should.be.true;
 
                         (await ethersDriipSettlementState.maxDriipNonce())
                             ._bn.should.eq.BN(payment.nonce._bn);
@@ -632,6 +655,8 @@ module.exports = (glob) => {
 
                 payment = await mocks.mockPayment(glob.owner);
 
+                await ethersDriipSettlementChallengeState._setProposal(true);
+                await ethersDriipSettlementChallengeState._setProposalTerminated(false);
                 await ethersDriipSettlementChallengeState._setProposalExpired(true);
                 await ethersDriipSettlementChallengeState._setProposalChallengedHash(payment.seals.operator.hash);
             });
@@ -699,6 +724,26 @@ module.exports = (glob) => {
             describe('if proposal is defined wrt other payment', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState._setProposalChallengedHash(mocks.hash1);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has not been initiated', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposal(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                });
+            });
+
+            describe('if proposal has been terminated', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposalTerminated(true);
                 });
 
                 it('should revert', async () => {
@@ -813,13 +858,14 @@ module.exports = (glob) => {
                                 payment.sender.wallet, payment.currency)
                         )._bn.should.eq.BN(payment.sender.nonce._bn);
 
-                        (await ethersDriipSettlementChallengeState._removeProposalsCount())
+                        (await ethersDriipSettlementChallengeState._terminateProposalsCount())
                             ._bn.should.eq.BN(1);
 
                         const proposal = await ethersDriipSettlementChallengeState._proposals(0);
                         proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                         proposal.currency.ct.should.equal(payment.currency.ct);
                         proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                        proposal.terminated.should.be.true;
 
                         (await ethersDriipSettlementState.maxDriipNonce())
                             ._bn.should.eq.BN(payment.nonce._bn);

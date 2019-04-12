@@ -85,6 +85,9 @@ BalanceTrackable, FraudChallengable, Servable {
         // Require that payment candidate is not labelled fraudulent
         require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
 
+        // Require that proposal has been initiated
+        require(nullSettlementChallengeState.hasProposal(wallet, payment.currency));
+
         // Require that proposal has not expired
         require(!nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 

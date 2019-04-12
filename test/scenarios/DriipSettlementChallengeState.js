@@ -98,10 +98,10 @@ module.exports = (glob) => {
             });
         });
 
-        describe('addProposal()', () => {
+        describe('initiateProposal()', () => {
             describe('if not enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeState.addProposal(
+                    ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     ).should.be.rejected;
@@ -114,17 +114,17 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.registerService(glob.owner);
                     await ethersDriipSettlementChallengeState.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                        glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
-                        topics: ethersDriipSettlementChallengeState.interface.events['AddProposalEvent'].topics
+                        topics: ethersDriipSettlementChallengeState.interface.events['InitiateProposalEvent'].topics
                     };
                 });
 
-                it('successfully add proposal', async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                it('successfully initiate proposal', async () => {
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -146,11 +146,178 @@ module.exports = (glob) => {
                     proposal.amounts.stage._bn.should.eq.BN(20);
                     proposal.amounts.targetBalance._bn.should.eq.BN(30);
                     proposal.walletInitiated.should.be.true;
+                    proposal.terminated.should.be.false;
                     proposal.challenged.hash.should.equal(mocks.hash1);
                     proposal.challenged.kind.should.equal('some_challenged_kind');
 
                     (await ethersDriipSettlementChallengeState.proposalsCount())
                         ._bn.should.eq.BN(1);
+                });
+            });
+        });
+
+        describe('terminateProposal(address,(address,uint256),bool)', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersDriipSettlementChallengeState.registerService(glob.owner);
+                await ethersDriipSettlementChallengeState.enableServiceAction(
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                );
+            });
+
+            describe('if not enabled service action', () => {
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeState['terminateProposal(address,(address,uint256),bool)'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, true, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if no proposal has been initiated', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementChallengeState.TERMINATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersDriipSettlementChallengeState.interface.events['TerminateProposalEvent'].topics
+                    };
+                });
+
+                it('should return gracefully', async () => {
+                    await ethersDriipSettlementChallengeState['terminateProposal(address,(address,uint256),bool)'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, true, {gasLimit: 1e6}
+                    );
+
+                    (await provider.getLogs(filter))
+                        .should.be.an('array').that.is.empty;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementChallengeState.TERMINATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState.initiateProposal(
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersDriipSettlementChallengeState.interface.events['TerminateProposalEvent'].topics
+                    };
+                });
+
+                it('successfully terminate proposal', async () => {
+                    await ethersDriipSettlementChallengeState['terminateProposal(address,(address,uint256),bool)'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, true, {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const proposal = await ethersDriipSettlementChallengeState.proposals(0);
+                    proposal.terminated.should.be.true;
+                });
+            });
+        });
+
+        describe('terminateProposal(address,(address,uint256),bool,bool)', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersDriipSettlementChallengeState.registerService(glob.owner);
+                await ethersDriipSettlementChallengeState.enableServiceAction(
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                );
+            });
+
+            describe('if not enabled service action', () => {
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeState['terminateProposal(address,(address,uint256),bool,bool)'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, true, true, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if no proposal has been initiated', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementChallengeState.TERMINATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersDriipSettlementChallengeState.interface.events['TerminateProposalEvent'].topics
+                    };
+                });
+
+                it('should return gracefully', async () => {
+                    await ethersDriipSettlementChallengeState['terminateProposal(address,(address,uint256),bool,bool)'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, true, true, {gasLimit: 1e6}
+                    );
+
+                    (await provider.getLogs(filter))
+                        .should.be.an('array').that.is.empty;
+                });
+            });
+
+            describe('if proposal was initiated by the conjugate role', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementChallengeState.TERMINATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState.initiateProposal(
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersDriipSettlementChallengeState.interface.events['TerminateProposalEvent'].topics
+                    };
+                });
+
+                it('should return gracefully', async () => {
+                    ethersDriipSettlementChallengeState['terminateProposal(address,(address,uint256),bool,bool)'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, true, false, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementChallengeState.TERMINATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState.initiateProposal(
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersDriipSettlementChallengeState.interface.events['TerminateProposalEvent'].topics
+                    };
+                });
+
+                it('successfully terminate proposal', async () => {
+                    await ethersDriipSettlementChallengeState['terminateProposal(address,(address,uint256),bool,bool)'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, true, true, {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const proposal = await ethersDriipSettlementChallengeState.proposals(0);
+                    proposal.terminated.should.be.true;
                 });
             });
         });
@@ -161,7 +328,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -173,7 +340,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if no proposal has been added', () => {
+            describe('if no proposal has been initiated', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.enableServiceAction(
                         glob.owner, await ethersDriipSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
@@ -201,7 +368,7 @@ module.exports = (glob) => {
                         glob.owner, await ethersDriipSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -212,7 +379,7 @@ module.exports = (glob) => {
                     };
                 });
 
-                it('successfully cancel proposal', async () => {
+                it('successfully terminate proposal', async () => {
                     await ethersDriipSettlementChallengeState['removeProposal(address,(address,uint256))'](
                         glob.user_a, {ct: mocks.address0, id: 0}, {gasLimit: 1e6}
                     );
@@ -232,7 +399,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -244,7 +411,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if no proposal has been added', () => {
+            describe('if no proposal has been initiated', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.enableServiceAction(
                         glob.owner, await ethersDriipSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
@@ -272,7 +439,7 @@ module.exports = (glob) => {
                         glob.owner, await ethersDriipSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -291,7 +458,7 @@ module.exports = (glob) => {
                         glob.owner, await ethersDriipSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -302,7 +469,7 @@ module.exports = (glob) => {
                     };
                 });
 
-                it('successfully cancel proposal', async () => {
+                it('successfully terminate proposal', async () => {
                     await ethersDriipSettlementChallengeState['removeProposal(address,(address,uint256),bool)'](
                         glob.user_a, {ct: mocks.address0, id: 0}, true, {gasLimit: 1e6}
                     );
@@ -320,7 +487,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
@@ -333,7 +500,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if no proposal has been added', () => {
+            describe('if no proposal has been initiated', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.enableServiceAction(
                         glob.owner, await ethersDriipSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
@@ -356,7 +523,7 @@ module.exports = (glob) => {
                         glob.owner, await ethersDriipSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -394,7 +561,7 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersDriipSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersDriipSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
@@ -409,7 +576,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if no proposal has been added', () => {
+            describe('if no proposal has been initiated', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState.enableServiceAction(
                         glob.owner, await ethersDriipSettlementChallengeState.QUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
@@ -431,7 +598,7 @@ module.exports = (glob) => {
                         glob.owner, await ethersDriipSettlementChallengeState.QUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -472,14 +639,14 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersDriipSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersDriipSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added', () => {
+            describe('if no settlement challenge proposal has been initiated', () => {
                 it('should return false', async () => {
                     (await ethersDriipSettlementChallengeState['hasProposal(address,uint256,(address,uint256))'](glob.user_a, 1, {
                         ct: mocks.address0,
@@ -488,9 +655,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added', () => {
+            describe('if settlement challenge proposal has been initiated', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -506,7 +673,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has been removed', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -529,14 +696,14 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersDriipSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersDriipSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added', () => {
+            describe('if no settlement challenge proposal has been initiated', () => {
                 it('should return false', async () => {
                     (await ethersDriipSettlementChallengeState['hasProposal(address,(address,uint256))'](glob.user_a, {
                         ct: mocks.address0,
@@ -545,9 +712,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added', () => {
+            describe('if settlement challenge proposal has been initiated', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -563,7 +730,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has been removed', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -582,20 +749,78 @@ module.exports = (glob) => {
             });
         });
 
+        describe('hasProposalTerminated()', () => {
+            beforeEach(async () => {
+                await ethersDriipSettlementChallengeState.registerService(glob.owner);
+                await ethersDriipSettlementChallengeState.enableServiceAction(
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                );
+            });
+
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
+                it('should return true', async () => {
+                    ethersDriipSettlementChallengeState.hasProposalTerminated(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    }).should.be.rejected;
+                });
+            });
+
+            describe('if settlement challenge proposal has been initiated but not terminated for the wallet and currency', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.initiateProposal(
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
+                    );
+                });
+
+                it('should return false', async () => {
+                    (await ethersDriipSettlementChallengeState.hasProposalTerminated(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    })).should.be.false;
+                });
+            });
+
+            describe('if settlement challenge proposal has been initiated and terminated for the wallet and currency', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementChallengeState.TERMINATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState.initiateProposal(
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState['terminateProposal(address,(address,uint256),bool)'](
+                        glob.user_a, {ct: mocks.address0, id: 0}, true, {gasLimit: 1e6}
+                    );
+                });
+
+                it('should return true', async () => {
+                    (await ethersDriipSettlementChallengeState.hasProposalTerminated(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    })).should.be.true;
+                });
+            });
+        });
+
         describe('hasProposalExpired()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should return true', async () => {
-                    (await ethersDriipSettlementChallengeState.hasProposalExpired(glob.user_a, {
+                    ethersDriipSettlementChallengeState.hasProposalExpired(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
-                    })).should.be.true;
+                    }).should.be.rejected;
                 });
             });
 
@@ -603,7 +828,7 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3Configuration.setSettlementChallengeTimeout((await provider.getBlockNumber()) + 1, 0);
 
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -619,7 +844,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge is ongoing for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -638,11 +863,11 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalNonce(glob.user_a, {
                         ct: mocks.address0,
@@ -651,9 +876,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -672,11 +897,11 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalBlockNumber(glob.user_a, {
                         ct: mocks.address0,
@@ -685,9 +910,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -706,11 +931,11 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalExpirationTime(glob.user_a, {
                         ct: mocks.address0,
@@ -719,11 +944,11 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
                 let block;
 
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -744,11 +969,11 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalStatus(glob.user_a, {
                         ct: mocks.address0,
@@ -757,9 +982,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -778,11 +1003,11 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalCumulativeTransferAmount(glob.user_a, {
                         ct: mocks.address0,
@@ -791,9 +1016,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -812,11 +1037,11 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalStageAmount(glob.user_a, {
                         ct: mocks.address0,
@@ -825,9 +1050,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -846,11 +1071,11 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalTargetBalanceAmount(glob.user_a, {
                         ct: mocks.address0,
@@ -859,9 +1084,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -880,11 +1105,11 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalChallengedHash(glob.user_a, {
                         ct: mocks.address0,
@@ -893,9 +1118,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -914,11 +1139,11 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalChallengedKind(glob.user_a, {
                         ct: mocks.address0,
@@ -927,9 +1152,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -948,11 +1173,11 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalWalletInitiated(glob.user_a, {
                         ct: mocks.address0,
@@ -961,9 +1186,9 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -982,14 +1207,14 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersDriipSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersDriipSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalDisqualificationChallenger(glob.user_a, {
                         ct: mocks.address0,
@@ -1000,7 +1225,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -1016,7 +1241,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -1040,14 +1265,14 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersDriipSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersDriipSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalDisqualificationNonce(glob.user_a, {
                         ct: mocks.address0,
@@ -1058,7 +1283,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -1074,7 +1299,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -1098,14 +1323,14 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersDriipSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersDriipSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalDisqualificationBlockNumber(glob.user_a, {
                         ct: mocks.address0,
@@ -1116,7 +1341,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -1132,7 +1357,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -1156,14 +1381,14 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersDriipSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersDriipSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalDisqualificationCandidateHash(glob.user_a, {
                         ct: mocks.address0,
@@ -1174,7 +1399,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -1190,7 +1415,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -1214,14 +1439,14 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
-                    glob.owner, await ethersDriipSettlementChallengeState.ADD_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
                 await ethersDriipSettlementChallengeState.enableServiceAction(
                     glob.owner, await ethersDriipSettlementChallengeState.DISQUALIFY_PROPOSAL_ACTION(), {gasLimit: 1e6}
                 );
             });
 
-            describe('if no settlement challenge proposal has been added for the wallet and currency', () => {
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeState.proposalDisqualificationCandidateKind(glob.user_a, {
                         ct: mocks.address0,
@@ -1232,7 +1457,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has not been disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );
@@ -1248,7 +1473,7 @@ module.exports = (glob) => {
 
             describe('if settlement challenge proposal has been disqualified', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementChallengeState.addProposal(
+                    await ethersDriipSettlementChallengeState.initiateProposal(
                         glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
                         30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
                     );

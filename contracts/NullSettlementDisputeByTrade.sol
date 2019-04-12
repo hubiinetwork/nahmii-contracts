@@ -87,6 +87,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         // Get the relevant currency
         MonetaryTypesLib.Currency memory currency = _orderCurrency(order);
 
+        // Require that proposal has been initiated
+        require(nullSettlementChallengeState.hasProposal(order.wallet, currency));
+
         // Require that proposal has not expired
         require(!nullSettlementChallengeState.hasProposalExpired(order.wallet, currency));
 
@@ -142,6 +145,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
 
         // Get the relevant currency
         MonetaryTypesLib.Currency memory currency = _tradeCurrency(trade, wallet);
+
+        // Require that proposal has been initiated
+        require(nullSettlementChallengeState.hasProposal(wallet, currency));
 
         // Require that proposal has not expired
         require(!nullSettlementChallengeState.hasProposalExpired(wallet, currency));

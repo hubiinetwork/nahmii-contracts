@@ -19,22 +19,26 @@ import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 contract MockedDriipSettlementChallengeState {
 
     uint256 public _addProposalsCount;
+    uint256 public _terminateProposalsCount;
     uint256 public _removeProposalsCount;
     SettlementChallengeTypesLib.Proposal[] public _proposals;
     bool public _proposal;
+    bool public _proposalTerminated;
     bool public _proposalExpired;
 
     function _reset()
     public
     {
         delete _addProposalsCount;
+        delete _terminateProposalsCount;
         delete _removeProposalsCount;
         delete _proposals;
         delete _proposal;
+        delete _proposalTerminated;
         delete _proposalExpired;
     }
 
-    function addProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
+    function initiateProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
         int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind)
     public
@@ -56,23 +60,49 @@ contract MockedDriipSettlementChallengeState {
         _addProposalsCount++;
     }
 
-    function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency)
+    function terminateProposal(address wallet, MonetaryTypesLib.Currency currency, bool)
     public
     {
         uint256 index = _addProposalIfNone();
 
-        _proposals[index].wallet = challengedWallet;
+        _proposals[index].wallet = wallet;
+        _proposals[index].currency = currency;
+        _proposals[index].terminated = true;
+
+        _terminateProposalsCount++;
+    }
+
+    function terminateProposal(address wallet, MonetaryTypesLib.Currency currency, bool,
+        bool walletTerminated)
+    public
+    {
+        uint256 index = _addProposalIfNone();
+
+        _proposals[index].wallet = wallet;
+        _proposals[index].currency = currency;
+        _proposals[index].walletInitiated = walletTerminated;
+        _proposals[index].terminated = true;
+
+        _terminateProposalsCount++;
+    }
+
+    function removeProposal(address wallet, MonetaryTypesLib.Currency currency)
+    public
+    {
+        uint256 index = _addProposalIfNone();
+
+        _proposals[index].wallet = wallet;
         _proposals[index].currency = currency;
 
         _removeProposalsCount++;
     }
 
-    function removeProposal(address challengedWallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    function removeProposal(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
     public
     {
         uint256 index = _addProposalIfNone();
 
-        _proposals[index].wallet = challengedWallet;
+        _proposals[index].wallet = wallet;
         _proposals[index].currency = currency;
         _proposals[index].walletInitiated = walletTerminated;
 
@@ -106,6 +136,14 @@ contract MockedDriipSettlementChallengeState {
         delete _proposals[index].disqualification;
     }
 
+    function hasProposal(address, uint256, MonetaryTypesLib.Currency)
+    public
+    view
+    returns (bool)
+    {
+        return _proposal;
+    }
+
     function hasProposal(address, MonetaryTypesLib.Currency)
     public
     view
@@ -118,6 +156,20 @@ contract MockedDriipSettlementChallengeState {
     public
     {
         _proposal = proposal;
+    }
+
+    function hasProposalTerminated(address, MonetaryTypesLib.Currency)
+    public
+    view
+    returns (bool)
+    {
+        return _proposalTerminated;
+    }
+
+    function _setProposalTerminated(bool proposalTerminated)
+    public
+    {
+        _proposalTerminated = proposalTerminated;
     }
 
     function hasProposalExpired(address, MonetaryTypesLib.Currency)

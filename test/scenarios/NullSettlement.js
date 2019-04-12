@@ -369,8 +369,32 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if proposal has not been initiated', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(false);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if proposal has been terminated', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(true);
+                    await ethersNullSettlementChallengeState._setProposalTerminated(true);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
             describe('if proposal has not expired', () => {
                 beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(true);
                     await ethersNullSettlementChallengeState._setProposalExpired(false);
                 });
 
@@ -382,6 +406,7 @@ module.exports = (glob) => {
 
             describe('if null settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(true);
                     await ethersNullSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -398,6 +423,10 @@ module.exports = (glob) => {
 
                 before(() => {
                     challenger = Wallet.createRandom().address;
+                });
+
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(true);
                 });
 
                 describe('if operational mode is exit and nonce is higher than the highest known nonce', () => {
@@ -447,13 +476,14 @@ module.exports = (glob) => {
                             glob.owner, {ct: mocks.address0, id: 0}
                         ))._bn.should.eq.BN(1);
 
-                        (await ethersNullSettlementChallengeState._removeProposalsCount())
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
                             ._bn.should.eq.BN(1);
 
                         const proposal = await ethersNullSettlementChallengeState._proposals(0);
                         proposal.wallet.should.equal(utils.getAddress(glob.owner));
                         proposal.currency.ct.should.equal(mocks.address0);
                         proposal.currency.id._bn.should.eq.BN(0);
+                        proposal.terminated.should.be.true;
                     });
                 });
 
@@ -513,8 +543,32 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if proposal has not been initiated', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(false);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if proposal has been terminated', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(true);
+                    await ethersNullSettlementChallengeState._setProposalTerminated(true);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
             describe('if proposal has not expired', () => {
                 beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(true);
                     await ethersNullSettlementChallengeState._setProposalExpired(false);
                 });
 
@@ -526,6 +580,7 @@ module.exports = (glob) => {
 
             describe('if null settlement challenge result is disqualified', () => {
                 beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(true);
                     await ethersNullSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -542,6 +597,10 @@ module.exports = (glob) => {
 
                 before(() => {
                     challenger = Wallet.createRandom().address;
+                });
+
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(true);
                 });
 
                 describe('if operational mode is exit and nonce is higher than the highest known nonce', () => {
@@ -591,13 +650,14 @@ module.exports = (glob) => {
                             wallet, {ct: mocks.address0, id: 0}
                         ))._bn.should.eq.BN(1);
 
-                        (await ethersNullSettlementChallengeState._removeProposalsCount())
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
                             ._bn.should.eq.BN(1);
 
                         const proposal = await ethersNullSettlementChallengeState._proposals(0);
                         proposal.wallet.should.equal(wallet);
                         proposal.currency.ct.should.equal(mocks.address0);
                         proposal.currency.id._bn.should.eq.BN(0);
+                        proposal.terminated.should.be.true;
                     });
                 });
 

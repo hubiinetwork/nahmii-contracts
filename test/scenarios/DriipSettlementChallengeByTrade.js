@@ -306,7 +306,8 @@ module.exports = (glob) => {
 
             describe('if called with overlapping null settlement challenge', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallengeState._setProposalExpired(false);
+                    await web3NullSettlementChallengeState._setProposal(true);
+                    await web3NullSettlementChallengeState._setProposalTerminated(false);
                 });
 
                 it('should revert', async () => {
@@ -321,8 +322,6 @@ module.exports = (glob) => {
                 let filter;
 
                 beforeEach(async () => {
-                    await web3NullSettlementChallengeState._setProposalExpired(true);
-
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
                         topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeEvent'].topics
@@ -418,7 +417,8 @@ module.exports = (glob) => {
 
             describe('if called with overlapping null settlement challenge', () => {
                 beforeEach(async () => {
-                    await web3NullSettlementChallengeState._setProposalExpired(false);
+                    await web3NullSettlementChallengeState._setProposal(true);
+                    await web3NullSettlementChallengeState._setProposalTerminated(false);
                 });
 
                 it('should revert', async () => {
@@ -433,8 +433,6 @@ module.exports = (glob) => {
                 let filter;
 
                 beforeEach(async () => {
-                    await web3NullSettlementChallengeState._setProposalExpired(true);
-
                     filter = {
                         fromBlock: await provider.getBlockNumber(),
                         topics: ethersDriipSettlementChallengeByTrade.interface.events['StartChallengeFromTradeByProxyEvent'].topics
@@ -504,6 +502,7 @@ module.exports = (glob) => {
                 proposal.currency.ct.should.equal(mocks.address1);
                 proposal.currency.id._bn.should.eq.BN(10);
                 proposal.walletInitiated.should.be.true;
+                proposal.terminated.should.be.true;
             });
         });
 
@@ -534,6 +533,7 @@ module.exports = (glob) => {
                 proposal.currency.ct.should.equal(mocks.address1);
                 proposal.currency.id._bn.should.eq.BN(10);
                 proposal.walletInitiated.should.be.false;
+                proposal.terminated.should.be.true;
             });
         });
 

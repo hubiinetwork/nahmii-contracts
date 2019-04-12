@@ -101,6 +101,9 @@ BalanceTrackable, FraudChallengable, Servable {
         // Require that payment candidate is not labelled fraudulent
         require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
 
+        // Require that proposal has been initiated
+        require(driipSettlementChallengeState.hasProposal(wallet, payment.currency));
+
         // Require that proposal has not expired
         require(!driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
@@ -126,7 +129,7 @@ BalanceTrackable, FraudChallengable, Servable {
         );
 
         // Cancel dependent null settlement challenge if existent
-        nullSettlementChallengeState.removeProposal(wallet, payment.currency);
+        nullSettlementChallengeState.terminateProposal(wallet, payment.currency);
 
         // Emit event
         emit ChallengeByPaymentEvent(

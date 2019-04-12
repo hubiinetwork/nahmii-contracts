@@ -206,7 +206,19 @@ FraudChallengable, WalletLockable {
             wallet, payment.currency
         ));
 
-        // Require that proposal has expired
+        // Extract properties depending on settlement role
+        (
+        DriipSettlementTypesLib.SettlementRole settlementRole, uint256 walletNonce,
+        NahmiiTypesLib.OriginFigure[] memory totalFees, int256 currentBalance
+        ) = _getRoleProperties(payment, wallet);
+
+        // Require that driip settlement challenge proposal has been initiated
+        require(driipSettlementChallengeState.hasProposal(wallet, walletNonce, payment.currency));
+
+        // Require that driip settlement challenge proposal has not been terminated already
+        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency));
+
+        // Require that driip settlement challenge proposal has expired
         require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
 
         // Require that driip settlement challenge proposal qualified
@@ -214,10 +226,8 @@ FraudChallengable, WalletLockable {
             wallet, payment.currency
         ));
 
-        // Require that operational mode is normal and data is available, or that nonce is
-        // smaller than max null nonce
-        require((configuration.isOperationalModeNormal() && communityVote.isDataAvailable())
-            || payment.nonce < driipSettlementState.maxDriipNonce());
+        // Require that operational mode is normal and data is available
+        require(configuration.isOperationalModeNormal() && communityVote.isDataAvailable());
 
         // Init settlement, i.e. create one if no such settlement exists for the double pair of wallets and nonces
         driipSettlementState.initSettlement(
@@ -225,12 +235,6 @@ FraudChallengable, WalletLockable {
             payment.sender.wallet, payment.sender.nonce,
             payment.recipient.wallet, payment.recipient.nonce
         );
-
-        // Extract properties depending on settlement role
-        (
-        DriipSettlementTypesLib.SettlementRole settlementRole,uint256 walletNonce,
-        NahmiiTypesLib.OriginFigure[] memory totalFees, int256 currentBalance
-        ) = _getRoleProperties(payment, wallet);
 
         // If exists settlement of nonce then require that wallet has not already settled
         require(!driipSettlementState.isSettlementRoleDone(
@@ -265,10 +269,9 @@ FraudChallengable, WalletLockable {
             _stageFees(wallet, totalFees, revenueFund, walletNonce);
 
         // Remove driip settlement challenge proposal
-        driipSettlementChallengeState.removeProposal(wallet, payment.currency);
+        driipSettlementChallengeState.terminateProposal(wallet, payment.currency, false);
 
         // If payment global nonce is beyond max driip nonce then update max driip nonce
-        // TODO TBM when global nonce goes away
         if (payment.nonce > driipSettlementState.maxDriipNonce())
             driipSettlementState.setMaxDriipNonce(payment.nonce);
     }

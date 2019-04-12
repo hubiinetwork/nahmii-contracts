@@ -162,6 +162,9 @@ BalanceTrackable {
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
+        // Stop challenge
+        _stopChallenge(msg.sender, currency, true, true);
+
         // Emit event
         emit StopChallengeEvent(
             msg.sender,
@@ -171,12 +174,6 @@ BalanceTrackable {
             driipSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, currency),
             currencyCt, currencyId
         );
-
-        // Stop driip settlement challenge
-        driipSettlementChallengeState.removeProposal(msg.sender, currency, true);
-
-        // Stop dependent null settlement challenge if existent
-        nullSettlementChallengeState.removeProposal(msg.sender, currency);
     }
 
     /// @notice Stop settlement challenge
@@ -190,6 +187,9 @@ BalanceTrackable {
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
+        // Terminate driip settlement challenge proposal
+        _stopChallenge(wallet, currency, true, false);
+
         // Emit event
         emit StopChallengeByProxyEvent(
             wallet,
@@ -199,12 +199,6 @@ BalanceTrackable {
             driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
             currencyCt, currencyId, msg.sender
         );
-
-        // Stop driip settlement challenge
-        driipSettlementChallengeState.removeProposal(wallet, currency, false);
-
-        // Stop dependent null settlement challenge if existent
-        nullSettlementChallengeState.removeProposal(wallet, currency);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
@@ -452,22 +446,44 @@ BalanceTrackable {
         require(validator.isPaymentParty(payment, wallet));
 
         // Require that there is no ongoing overlapping driip settlement challenge
-        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
+        require(
+            !driipSettlementChallengeState.hasProposal(wallet, payment.currency) ||
+        driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency)
+        );
 
         // Require that there is no ongoing overlapping null settlement challenge
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
+        require(
+            !nullSettlementChallengeState.hasProposal(wallet, payment.currency) ||
+        nullSettlementChallengeState.hasProposalTerminated(wallet, payment.currency)
+        );
 
         // Deduce the concerned nonce and cumulative relative transfer
         (uint256 nonce, int256 cumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);
 
-        // Add proposal, including assurance that there is no overlap with active proposal
+        // Initiate proposal, including assurance that there is no overlap with active proposal
         // Target balance amount is calculated as current balance - cumulativeTransferAmount - stageAmount
-        driipSettlementChallengeState.addProposal(
+        driipSettlementChallengeState.initiateProposal(
             wallet, nonce, cumulativeTransferAmount, stageAmount,
             balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency).sub(cumulativeTransferAmount.add(stageAmount)),
             payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
+    }
+
+    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool clearNonce, bool walletTerminated)
+    private
+    {
+        // Require that there is an unterminated driip settlement challenge proposal
+        require(
+            driipSettlementChallengeState.hasProposal(wallet, currency) &&
+            !driipSettlementChallengeState.hasProposalTerminated(wallet, currency)
+        );
+
+        // Terminate driip settlement challenge proposal
+        driipSettlementChallengeState.terminateProposal(wallet, currency, clearNonce, walletTerminated);
+
+        // Terminate dependent null settlement challenge proposal if existent
+        nullSettlementChallengeState.terminateProposal(wallet, currency);
     }
 
     function _paymentPartyProperties(PaymentTypesLib.Payment payment, address wallet)
