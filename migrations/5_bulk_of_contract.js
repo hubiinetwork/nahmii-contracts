@@ -672,19 +672,21 @@ module.exports = (deployer, network, accounts) => {
             await instance.setConfiguration(addressStorage.get('Configuration'));
             await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             await instance.registerService(addressStorage.get('NullSettlementChallengeByPayment'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), 'add_proposal');
-            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), 'remove_proposal');
+            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), await instance.INIT_PROPOSAL_ACTION.call());
+            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
             await instance.registerService(addressStorage.get('NullSettlementChallengeByTrade'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByTrade'), 'add_proposal');
-            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByTrade'), 'remove_proposal');
+            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByTrade'), await instance.INIT_PROPOSAL_ACTION.call());
+            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByTrade'), await instance.TERMINATE_PROPOSAL_ACTION.call());
             await instance.registerService(addressStorage.get('NullSettlementDisputeByPayment'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByPayment'), 'disqualify_proposal');
+            await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByPayment'), await instance.DISQUALIFY_PROPOSAL_ACTION.call());
             await instance.registerService(addressStorage.get('NullSettlementDisputeByTrade'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByTrade'), 'disqualify_proposal');
+            await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByTrade'), await instance.DISQUALIFY_PROPOSAL_ACTION.call());
             await instance.registerService(addressStorage.get('NullSettlement'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlement'), 'remove_proposal');
+            await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.TERMINATE_PROPOSAL_ACTION.call());
+            await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
+            await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
             await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), 'remove_proposal');
+            await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
 
             instance = await NullSettlementChallengeByPayment.at(addressStorage.get('NullSettlementChallengeByPayment'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -692,7 +694,6 @@ module.exports = (deployer, network, accounts) => {
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             await instance.setNullSettlementDisputeByPayment(addressStorage.get('NullSettlementDisputeByPayment'));
             await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
-            await instance.setNullSettlementState(addressStorage.get('NullSettlementState'));
             await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
 
             instance = await NullSettlementChallengeByTrade.at(addressStorage.get('NullSettlementChallengeByTrade'));
