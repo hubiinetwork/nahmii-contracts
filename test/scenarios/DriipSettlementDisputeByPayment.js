@@ -570,13 +570,14 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersNullSettlementChallengeState._removeProposalsCount())
+                    (await ethersNullSettlementChallengeState._terminateProposalsCount())
                         ._bn.should.eq.BN(1);
 
                     const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
                     nscProposal.wallet.should.equal(payment.sender.wallet);
                     nscProposal.currency.ct.should.equal(payment.currency.ct);
                     nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                    nscProposal.terminated.should.be.true;
                 });
             });
 
@@ -645,13 +646,14 @@ module.exports = (glob) => {
                     (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
 
-                    (await ethersNullSettlementChallengeState._removeProposalsCount())
+                    (await ethersNullSettlementChallengeState._terminateProposalsCount())
                         ._bn.should.eq.BN(1);
 
                     const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
                     nscProposal.wallet.should.equal(payment.sender.wallet);
                     nscProposal.currency.ct.should.equal(payment.currency.ct);
                     nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                    nscProposal.terminated.should.be.true;
                 });
             });
 
@@ -718,13 +720,14 @@ module.exports = (glob) => {
                         progressiveReward.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
 
-                        (await ethersNullSettlementChallengeState._removeProposalsCount())
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
                             ._bn.should.eq.BN(1);
 
                         const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
                         nscProposal.wallet.should.equal(payment.sender.wallet);
                         nscProposal.currency.ct.should.equal(payment.currency.ct);
                         nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
 
@@ -777,13 +780,14 @@ module.exports = (glob) => {
                         progressiveReward.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
 
-                        (await ethersNullSettlementChallengeState._removeProposalsCount())
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
                             ._bn.should.eq.BN(1);
 
                         const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
                         nscProposal.wallet.should.equal(payment.sender.wallet);
                         nscProposal.currency.ct.should.equal(payment.currency.ct);
                         nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
             });
@@ -861,13 +865,14 @@ module.exports = (glob) => {
                         progressiveReward.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
 
-                        (await ethersNullSettlementChallengeState._removeProposalsCount())
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
                             ._bn.should.eq.BN(1);
 
                         const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
                         nscProposal.wallet.should.equal(payment.sender.wallet);
                         nscProposal.currency.ct.should.equal(payment.currency.ct);
                         nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
 
@@ -923,13 +928,14 @@ module.exports = (glob) => {
                         progressiveReward.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
 
-                        (await ethersNullSettlementChallengeState._removeProposalsCount())
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
                             ._bn.should.eq.BN(1);
 
                         const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
                         nscProposal.wallet.should.equal(payment.sender.wallet);
                         nscProposal.currency.ct.should.equal(payment.currency.ct);
                         nscProposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
             });

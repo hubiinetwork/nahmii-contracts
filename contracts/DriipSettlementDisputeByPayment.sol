@@ -126,7 +126,7 @@ BalanceTrackable, FraudChallengable, Servable {
         );
 
         // Cancel dependent null settlement challenge if existent
-        nullSettlementChallengeState.removeProposal(wallet, payment.currency);
+        nullSettlementChallengeState.terminateProposal(wallet, payment.currency);
 
         // Emit event
         emit ChallengeByPaymentEvent(
