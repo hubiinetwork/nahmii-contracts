@@ -437,6 +437,24 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if called on undefined proposal', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
+                    await ethersDriipSettlementDisputeByPayment.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementDisputeByPayment.CHALLENGE_BY_PAYMENT_ACTION(),
+                        {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState._setProposal(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementDisputeByPayment.challengeByPayment(
+                        payment.sender.wallet, payment, glob.user_a, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if called on expired proposal', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementDisputeByPayment.registerService(glob.owner);
@@ -445,7 +463,8 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await web3DriipSettlementChallengeState._setProposalExpired(true);
+                    await ethersDriipSettlementChallengeState._setProposal(true);
+                    await ethersDriipSettlementChallengeState._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
@@ -463,6 +482,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalNonce(
                         payment.sender.nonce.add(10)
                     );
@@ -483,6 +503,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalDisqualificationNonce(
                         payment.sender.nonce.add(10)
                     );
@@ -503,6 +524,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalTargetBalanceAmount(
                         payment.transfers.single.mul(2)
                     );
@@ -528,6 +550,7 @@ module.exports = (glob) => {
                         1, {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                 });
 
@@ -594,6 +617,7 @@ module.exports = (glob) => {
                         1, {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
@@ -669,6 +693,8 @@ module.exports = (glob) => {
                         await ethersBalanceTracker.depositedBalanceType(), payment.sender.balances.current.mul(2),
                         1, {gasLimit: 1e6}
                     );
+
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                 });
 
                 describe('if wallet balance amount is greater than fractional amount', () => {
@@ -805,6 +831,7 @@ module.exports = (glob) => {
                         1, {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );

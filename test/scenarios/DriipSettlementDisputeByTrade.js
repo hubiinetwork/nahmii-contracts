@@ -397,6 +397,24 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if called on undefined proposal', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
+                    await ethersDriipSettlementDisputeByTrade.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
+                        {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState._setProposal(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementDisputeByTrade.challengeByOrder(
+                        order, glob.user_a, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if called on expired proposal', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
@@ -405,7 +423,8 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await web3DriipSettlementChallengeState._setProposalExpired(true);
+                    await ethersDriipSettlementChallengeState._setProposal(true);
+                    await ethersDriipSettlementChallengeState._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
@@ -423,6 +442,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalNonce(
                         order.nonce.add(10)
                     );
@@ -443,6 +463,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalDisqualificationNonce(
                         order.nonce.add(10)
                     );
@@ -463,6 +484,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalTargetBalanceAmount(
                         order.placement.amount.div(order.placement.rate).mul(2)
                     );
@@ -483,6 +505,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                 });
 
@@ -534,6 +557,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
@@ -594,6 +618,8 @@ module.exports = (glob) => {
                         glob.owner, await ethersDriipSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
                         {gasLimit: 1e6}
                     );
+
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                 });
 
                 describe('if wallet balance amount is greater than fractional amount', () => {
@@ -709,6 +735,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -921,6 +948,25 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if called on undefined proposal', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
+                    await ethersDriipSettlementDisputeByTrade.enableServiceAction(
+                        glob.owner,
+                        await ethersDriipSettlementDisputeByTrade.UNCHALLENGE_ORDER_CANDIDATE_BY_TRADE_ACTION(),
+                        {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState._setProposal(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementDisputeByTrade.unchallengeOrderCandidateByTrade(
+                        order, trade, glob.user_a, {gasLimit: 2e6}
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if called on expired proposal', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
@@ -930,6 +976,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalExpired(true);
                 });
 
@@ -948,6 +995,8 @@ module.exports = (glob) => {
                         await ethersDriipSettlementDisputeByTrade.UNCHALLENGE_ORDER_CANDIDATE_BY_TRADE_ACTION(),
                         {gasLimit: 1e6}
                     );
+
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                 });
 
                 it('should revert', async () => {
@@ -966,6 +1015,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -990,6 +1040,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -1016,6 +1067,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -1044,6 +1096,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -1073,6 +1126,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -1101,6 +1155,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -1163,6 +1218,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
@@ -1334,6 +1390,24 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if called on undefined proposal', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
+                    await ethersDriipSettlementDisputeByTrade.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementDisputeByTrade.CHALLENGE_BY_TRADE_ACTION(),
+                        {gasLimit: 1e6}
+                    );
+
+                    await ethersDriipSettlementChallengeState._setProposal(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementDisputeByTrade.challengeByTrade(
+                        trade.buyer.wallet, trade, glob.user_a, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if called on expired proposal', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementDisputeByTrade.registerService(glob.owner);
@@ -1342,7 +1416,8 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
-                    await web3DriipSettlementChallengeState._setProposalExpired(true);
+                    await ethersDriipSettlementChallengeState._setProposal(true);
+                    await ethersDriipSettlementChallengeState._setProposalExpired(true);
                 });
 
                 it('should revert', async () => {
@@ -1360,6 +1435,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalNonce(
                         trade.buyer.nonce.add(10)
                     );
@@ -1380,6 +1456,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalDisqualificationNonce(
                         trade.buyer.nonce.add(10)
                     );
@@ -1400,6 +1477,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalTargetBalanceAmount(
                         trade.transfers.conjugate.single.mul(2)
                     );
@@ -1420,6 +1498,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                 });
 
@@ -1471,6 +1550,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalWalletInitiated(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
@@ -1531,6 +1611,8 @@ module.exports = (glob) => {
                         glob.owner, await ethersDriipSettlementDisputeByTrade.CHALLENGE_BY_TRADE_ACTION(),
                         {gasLimit: 1e6}
                     );
+
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                 });
 
                 describe('if wallet balance amount is greater than fractional amount', () => {
@@ -1644,6 +1726,7 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalStatus(
                         mocks.settlementStatuses.indexOf('Disqualified')
                     );
