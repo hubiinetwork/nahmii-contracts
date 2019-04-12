@@ -82,9 +82,6 @@ contract('DriipSettlementChallengeByPayment', (accounts) => {
         beforeEach(async () => {
             payment = await mocks.mockPayment(operator, {sender: {wallet: operator}});
 
-            await web3DriipSettlementChallengeState._setProposalExpired(true);
-            await web3NullSettlementChallengeState._setProposalExpired(true);
-
             await ethersBalanceTracker._set(
                 await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('1', 18),
                 {gasLimit: 1e6}
@@ -117,9 +114,6 @@ contract('DriipSettlementChallengeByPayment', (accounts) => {
 
         beforeEach(async () => {
             payment = await mocks.mockPayment(operator, {sender: {wallet: operator}});
-
-            await web3DriipSettlementChallengeState._setProposalExpired(true);
-            await web3NullSettlementChallengeState._setProposalExpired(true);
 
             await ethersBalanceTracker._set(
                 await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('1', 18),

@@ -98,6 +98,7 @@ contract('NullSettlementDisputeByPayment', (accounts) => {
                 1, {gasLimit: 1e6}
             );
 
+            await ethersNullSettlementChallengeState._setProposal(true);
             await ethersNullSettlementChallengeState._setProposalWalletInitiated(true);
 
             filter = {
