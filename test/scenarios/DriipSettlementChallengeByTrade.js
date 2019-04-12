@@ -502,6 +502,7 @@ module.exports = (glob) => {
                 proposal.currency.ct.should.equal(mocks.address1);
                 proposal.currency.id._bn.should.eq.BN(10);
                 proposal.walletInitiated.should.be.true;
+                proposal.terminated.should.be.true;
             });
         });
 
@@ -532,6 +533,7 @@ module.exports = (glob) => {
                 proposal.currency.ct.should.equal(mocks.address1);
                 proposal.currency.id._bn.should.eq.BN(10);
                 proposal.walletInitiated.should.be.false;
+                proposal.terminated.should.be.true;
             });
         });
 

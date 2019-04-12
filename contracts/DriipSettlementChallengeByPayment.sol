@@ -172,10 +172,10 @@ BalanceTrackable {
             currencyCt, currencyId
         );
 
-        // Stop driip settlement challenge
-        driipSettlementChallengeState.removeProposal(msg.sender, currency, true);
+        // Terminate driip settlement challenge proposal
+        driipSettlementChallengeState.terminateProposal(msg.sender, currency, true, true);
 
-        // Stop dependent null settlement challenge if existent
+        // Terminate dependent null settlement challenge proposal if existent
         nullSettlementChallengeState.terminateProposal(msg.sender, currency);
     }
 
@@ -200,10 +200,10 @@ BalanceTrackable {
             currencyCt, currencyId, msg.sender
         );
 
-        // Stop driip settlement challenge
-        driipSettlementChallengeState.removeProposal(wallet, currency, false);
+        // Terminate driip settlement challenge proposal
+        driipSettlementChallengeState.terminateProposal(wallet, currency, true, false);
 
-        // Stop dependent null settlement challenge if existent
+        // Terminate dependent null settlement challenge proposal if existent
         nullSettlementChallengeState.terminateProposal(wallet, currency);
     }
 
@@ -452,7 +452,10 @@ BalanceTrackable {
         require(validator.isPaymentParty(payment, wallet));
 
         // Require that there is no ongoing overlapping driip settlement challenge
-        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
+        require(
+            !driipSettlementChallengeState.hasProposal(wallet, payment.currency) ||
+        driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency)
+        );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
@@ -463,9 +466,9 @@ BalanceTrackable {
         // Deduce the concerned nonce and cumulative relative transfer
         (uint256 nonce, int256 cumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);
 
-        // Add proposal, including assurance that there is no overlap with active proposal
+        // Initiate proposal, including assurance that there is no overlap with active proposal
         // Target balance amount is calculated as current balance - cumulativeTransferAmount - stageAmount
-        driipSettlementChallengeState.addProposal(
+        driipSettlementChallengeState.initiateProposal(
             wallet, nonce, cumulativeTransferAmount, stageAmount,
             balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency).sub(cumulativeTransferAmount.add(stageAmount)),
             payment.currency, payment.blockNumber,

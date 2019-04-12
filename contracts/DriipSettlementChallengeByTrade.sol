@@ -140,8 +140,10 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     function stopChallenge(address currencyCt, uint256 currencyId)
     public
     {
-        // Stop challenge
-        _stopChallenge(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true);
+        // Terminate proposal
+        driipSettlementChallengeState.terminateProposal(
+            msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true, true
+        );
 
         // Emit event
         emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
@@ -155,8 +157,10 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     public
     onlyOperator
     {
-        // Stop challenge
-        _stopChallenge(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), false);
+        // Terminate proposal
+        driipSettlementChallengeState.terminateProposal(
+            wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), true, false
+        );
 
         // Emit event
         emit StopChallengeByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
@@ -419,13 +423,6 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         _addConjugateProposalFromTrade(wallet, trade, conjugateStageAmount, walletInitiated);
     }
 
-    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
-    private
-    {
-        // Stop challenge
-        driipSettlementChallengeState.removeProposal(wallet, currency, walletTerminated);
-    }
-
     function _addIntendedProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool walletInitiated)
     private
     {
@@ -441,8 +438,8 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         // Require that intended balance amount is not less than stage amount
         require(party.balances.intended.current >= stageAmount);
 
-        // Add proposal, including assurance that there is no overlap with active proposal
-        driipSettlementChallengeState.addProposal(
+        // Initiate proposal, including assurance that there is no overlap with active proposal
+        driipSettlementChallengeState.initiateProposal(
             wallet, party.nonce, 0, stageAmount, party.balances.intended.current.sub(stageAmount), trade.currencies.intended,
             trade.blockNumber, walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_KIND()
         );
@@ -463,8 +460,8 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         // Require that conjugate balance amount is not less than stage amount
         require(party.balances.conjugate.current >= stageAmount);
 
-        // Add proposal, including assurance that there is no overlap with active proposal
-        driipSettlementChallengeState.addProposal(
+        // Initiate proposal, including assurance that there is no overlap with active proposal
+        driipSettlementChallengeState.initiateProposal(
             wallet, party.nonce, 0, stageAmount, party.balances.conjugate.current.sub(stageAmount), trade.currencies.conjugate,
             trade.blockNumber, walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_KIND()
         );

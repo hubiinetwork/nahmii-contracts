@@ -308,7 +308,8 @@ module.exports = (glob) => {
 
             describe('if called with overlapping driip settlement challenge', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallengeState._setProposalExpired(false);
+                    await web3DriipSettlementChallengeState._setProposal(true);
+                    await web3DriipSettlementChallengeState._setProposalTerminated(false);
                 });
 
                 it('should revert', async () => {
@@ -425,7 +426,8 @@ module.exports = (glob) => {
 
             describe('if called with overlapping driip settlement challenge', () => {
                 beforeEach(async () => {
-                    await web3DriipSettlementChallengeState._setProposalExpired(false);
+                    await web3DriipSettlementChallengeState._setProposal(true);
+                    await web3DriipSettlementChallengeState._setProposalTerminated(false);
                 });
 
                 it('should revert', async () => {
@@ -520,7 +522,7 @@ module.exports = (glob) => {
                 const logs = await provider.getLogs(filter);
                 logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                (await ethersDriipSettlementChallengeState._removeProposalsCount())
+                (await ethersDriipSettlementChallengeState._terminateProposalsCount())
                     ._bn.should.eq.BN(1);
 
                 const dscProposal = await ethersDriipSettlementChallengeState._proposals(0);
@@ -528,6 +530,7 @@ module.exports = (glob) => {
                 dscProposal.currency.ct.should.equal(mocks.address1);
                 dscProposal.currency.id._bn.should.eq.BN(10);
                 dscProposal.walletInitiated.should.be.true;
+                dscProposal.terminated.should.be.true;
 
                 (await ethersNullSettlementChallengeState._terminateProposalsCount())
                     ._bn.should.eq.BN(1);
@@ -568,7 +571,7 @@ module.exports = (glob) => {
                 const logs = await provider.getLogs(filter);
                 logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                (await ethersDriipSettlementChallengeState._removeProposalsCount())
+                (await ethersDriipSettlementChallengeState._terminateProposalsCount())
                     ._bn.should.eq.BN(1);
 
                 const dscProposal = await ethersDriipSettlementChallengeState._proposals(0);
@@ -576,6 +579,7 @@ module.exports = (glob) => {
                 dscProposal.currency.ct.should.equal(mocks.address1);
                 dscProposal.currency.id._bn.should.eq.BN(10);
                 dscProposal.walletInitiated.should.be.false;
+                dscProposal.terminated.should.be.true;
 
                 (await ethersNullSettlementChallengeState._terminateProposalsCount())
                     ._bn.should.eq.BN(1);
