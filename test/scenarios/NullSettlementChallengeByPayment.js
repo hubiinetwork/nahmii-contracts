@@ -353,6 +353,8 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
 
+                await ethersNullSettlementChallengeState._setProposal(true);
+                await ethersNullSettlementChallengeState._setProposalTerminated(false);
                 await ethersNullSettlementChallengeState._setProposalNonce(1);
                 await ethersNullSettlementChallengeState._setProposalStageAmount(10);
                 await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(20);
@@ -363,20 +365,46 @@ module.exports = (glob) => {
                 };
             });
 
-            it('should stop challenge successfully', async () => {
-                await ethersNullSettlementChallengeByPayment.stopChallenge(
-                    mocks.address1, 10, {gasLimit: 1e6}
-                );
+            describe('if called with undefined proposal', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(false);
+                });
 
-                const logs = await provider.getLogs(filter);
-                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeByPayment.stopChallenge(
+                        mocks.address1, 10, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
 
-                const proposal = await ethersNullSettlementChallengeState._proposals(0);
-                proposal.wallet.should.equal(utils.getAddress(glob.owner));
-                proposal.currency.ct.should.equal(mocks.address1);
-                proposal.currency.id._bn.should.eq.BN(10);
-                proposal.walletInitiated.should.be.true;
-                proposal.terminated.should.be.true;
+            describe('if called with terminated proposal', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposalTerminated(true);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeByPayment.stopChallenge(
+                        mocks.address1, 10, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should stop challenge successfully', async () => {
+                    await ethersNullSettlementChallengeByPayment.stopChallenge(
+                        mocks.address1, 10, {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const proposal = await ethersNullSettlementChallengeState._proposals(0);
+                    proposal.wallet.should.equal(utils.getAddress(glob.owner));
+                    proposal.currency.ct.should.equal(mocks.address1);
+                    proposal.currency.id._bn.should.eq.BN(10);
+                    proposal.walletInitiated.should.be.true;
+                    proposal.terminated.should.be.true;
+                });
             });
         });
 
@@ -386,6 +414,8 @@ module.exports = (glob) => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
 
+                await ethersNullSettlementChallengeState._setProposal(true);
+                await ethersNullSettlementChallengeState._setProposalTerminated(false);
                 await ethersNullSettlementChallengeState._setProposalNonce(1);
                 await ethersNullSettlementChallengeState._setProposalStageAmount(10);
                 await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(20);
@@ -396,20 +426,46 @@ module.exports = (glob) => {
                 };
             });
 
-            it('should stop challenge successfully', async () => {
-                await ethersNullSettlementChallengeByPayment.stopChallengeByProxy(
-                    glob.user_a, mocks.address1, 10, {gasLimit: 1e6}
-                );
+            describe('if called with undefined proposal', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposal(false);
+                });
 
-                const logs = await provider.getLogs(filter);
-                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeByPayment.stopChallengeByProxy(
+                        glob.user_a, mocks.address1, 10, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
 
-                const proposal = await ethersNullSettlementChallengeState._proposals(0);
-                proposal.wallet.should.equal(utils.getAddress(glob.user_a));
-                proposal.currency.ct.should.equal(mocks.address1);
-                proposal.currency.id._bn.should.eq.BN(10);
-                proposal.walletInitiated.should.be.false;
-                proposal.terminated.should.be.true;
+            describe('if called with terminated proposal', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState._setProposalTerminated(true);
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeByPayment.stopChallengeByProxy(
+                        glob.user_a, mocks.address1, 10, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should stop challenge successfully', async () => {
+                    await ethersNullSettlementChallengeByPayment.stopChallengeByProxy(
+                        glob.user_a, mocks.address1, 10, {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const proposal = await ethersNullSettlementChallengeState._proposals(0);
+                    proposal.wallet.should.equal(utils.getAddress(glob.user_a));
+                    proposal.currency.ct.should.equal(mocks.address1);
+                    proposal.currency.id._bn.should.eq.BN(10);
+                    proposal.walletInitiated.should.be.false;
+                    proposal.terminated.should.be.true;
+                });
             });
         });
 

@@ -165,6 +165,9 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
+        // Stop challenge
+        _stopChallenge(msg.sender, currency, true);
+
         // Emit event
         emit StopChallengeEvent(
             msg.sender,
@@ -172,11 +175,6 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
             nullSettlementChallengeState.proposalStageAmount(msg.sender, currency),
             nullSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, currency),
             currencyCt, currencyId
-        );
-
-        // Stop challenge
-        nullSettlementChallengeState.terminateProposal(
-            msg.sender, currency, true
         );
     }
 
@@ -191,6 +189,9 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
+        // Stop challenge
+        _stopChallenge(wallet, currency, false);
+
         // Emit event
         emit StopChallengeByProxyEvent(
             wallet,
@@ -198,11 +199,6 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
             nullSettlementChallengeState.proposalStageAmount(wallet, currency),
             nullSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
             currencyCt, currencyId, msg.sender
-        );
-
-        // Stop challenge
-        nullSettlementChallengeState.terminateProposal(
-            wallet, currency, false
         );
     }
 
@@ -474,6 +470,21 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
     }
 
+    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    private
+    {
+        // Require that there is an unterminated driip settlement challenge proposal
+        require(
+            nullSettlementChallengeState.hasProposal(wallet, currency) &&
+            !nullSettlementChallengeState.hasProposalTerminated(wallet, currency)
+        );
+
+        // Terminate driip settlement challenge proposal
+        nullSettlementChallengeState.terminateProposal(
+            wallet, currency, walletTerminated
+        );
+    }
+
     function _externalProperties(address wallet, MonetaryTypesLib.Currency currency)
     private
     view
@@ -487,8 +498,11 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
 
         if (driipSettlementChallengeState.hasProposal(wallet, currency)) {
-            dscCumulativeTransferAmount = driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, currency);
-            dscStageAmount = driipSettlementChallengeState.proposalStageAmount(wallet, currency);
+            if (!driipSettlementChallengeState.hasProposalTerminated(wallet, currency)) {
+                dscCumulativeTransferAmount = driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, currency);
+                dscStageAmount = driipSettlementChallengeState.proposalStageAmount(wallet, currency);
+            }
+
             nonce = driipSettlementChallengeState.proposalNonce(wallet, currency);
         }
 

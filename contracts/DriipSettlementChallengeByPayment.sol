@@ -162,6 +162,9 @@ BalanceTrackable {
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
+        // Stop challenge
+        _stopChallenge(msg.sender, currency, true, true);
+
         // Emit event
         emit StopChallengeEvent(
             msg.sender,
@@ -171,12 +174,6 @@ BalanceTrackable {
             driipSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, currency),
             currencyCt, currencyId
         );
-
-        // Terminate driip settlement challenge proposal
-        driipSettlementChallengeState.terminateProposal(msg.sender, currency, true, true);
-
-        // Terminate dependent null settlement challenge proposal if existent
-        nullSettlementChallengeState.terminateProposal(msg.sender, currency);
     }
 
     /// @notice Stop settlement challenge
@@ -190,6 +187,9 @@ BalanceTrackable {
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
+        // Terminate driip settlement challenge proposal
+        _stopChallenge(wallet, currency, true, false);
+
         // Emit event
         emit StopChallengeByProxyEvent(
             wallet,
@@ -199,12 +199,6 @@ BalanceTrackable {
             driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
             currencyCt, currencyId, msg.sender
         );
-
-        // Terminate driip settlement challenge proposal
-        driipSettlementChallengeState.terminateProposal(wallet, currency, true, false);
-
-        // Terminate dependent null settlement challenge proposal if existent
-        nullSettlementChallengeState.terminateProposal(wallet, currency);
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
@@ -474,6 +468,22 @@ BalanceTrackable {
             payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
+    }
+
+    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool clearNonce, bool walletTerminated)
+    private
+    {
+        // Require that there is an unterminated driip settlement challenge proposal
+        require(
+            driipSettlementChallengeState.hasProposal(wallet, currency) &&
+            !driipSettlementChallengeState.hasProposalTerminated(wallet, currency)
+        );
+
+        // Terminate driip settlement challenge proposal
+        driipSettlementChallengeState.terminateProposal(wallet, currency, clearNonce, walletTerminated);
+
+        // Terminate dependent null settlement challenge proposal if existent
+        nullSettlementChallengeState.terminateProposal(wallet, currency);
     }
 
     function _paymentPartyProperties(PaymentTypesLib.Payment payment, address wallet)
