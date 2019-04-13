@@ -21,11 +21,11 @@ library SettlementChallengeTypesLib {
     // -----------------------------------------------------------------------------------------------------------------
     enum Status {Qualified, Disqualified}
 
-    // TODO Add property for start-of-settlement-challenge block number
     struct Proposal {
         address wallet;
         uint256 nonce;
-        uint256 blockNumber;
+        uint256 referenceBlockNumber;
+        uint256 definitionBlockNumber;
 
         uint256 expirationTime;
 

@@ -343,7 +343,7 @@ module.exports = (glob) => {
                     intendedProposal.amounts.targetBalance._bn.should.eq.BN(0);
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
                     intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
-                    intendedProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    intendedProposal.referenceBlockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     intendedProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     intendedProposal.walletInitiated.should.be.true;
                     intendedProposal.challenged.hash.should.equal(trade.seal.hash);
@@ -355,7 +355,7 @@ module.exports = (glob) => {
                     conjugateProposal.amounts.targetBalance._bn.should.eq.BN(0);
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
                     conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
-                    conjugateProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    conjugateProposal.referenceBlockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     conjugateProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     conjugateProposal.walletInitiated.should.be.true;
                     conjugateProposal.challenged.hash.should.equal(trade.seal.hash);
@@ -454,7 +454,7 @@ module.exports = (glob) => {
                     intendedProposal.amounts.targetBalance._bn.should.eq.BN(0);
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
                     intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
-                    intendedProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    intendedProposal.referenceBlockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     intendedProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     intendedProposal.walletInitiated.should.be.false;
                     intendedProposal.challenged.hash.should.equal(trade.seal.hash);
@@ -466,7 +466,7 @@ module.exports = (glob) => {
                     conjugateProposal.amounts.targetBalance._bn.should.eq.BN(0);
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
                     conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
-                    conjugateProposal.blockNumber._bn.should.eq.BN(trade.blockNumber._bn);
+                    conjugateProposal.referenceBlockNumber._bn.should.eq.BN(trade.blockNumber._bn);
                     conjugateProposal.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                     conjugateProposal.walletInitiated.should.be.false;
                     conjugateProposal.challenged.hash.should.equal(trade.seal.hash);
@@ -561,14 +561,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalBlockNumber()', () => {
+        describe('proposalReferenceBlockNumber()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementChallengeState._setProposalBlockNumber(1);
+                await ethersDriipSettlementChallengeState._setProposalReferenceBlockNumber(1);
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByTrade.proposalBlockNumber(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByTrade.proposalReferenceBlockNumber(glob.owner, mocks.address0, 0))
                     ._bn.should.eq.BN(1);
             });
         });

@@ -137,7 +137,7 @@ module.exports = (glob) => {
                     const proposal = await ethersDriipSettlementChallengeState.proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(glob.user_a));
                     proposal.nonce._bn.should.eq.BN(1);
-                    proposal.blockNumber._bn.should.eq.BN(30);
+                    proposal.referenceBlockNumber._bn.should.eq.BN(30);
                     proposal.expirationTime._bn.should.eq.BN(utils.bigNumberify(1e4).add(block.timestamp)._bn);
                     proposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
                     proposal.currency.ct.should.equal(mocks.address0);
@@ -893,7 +893,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalBlockNumber()', () => {
+        describe('proposalReferenceBlockNumber()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState.registerService(glob.owner);
                 await ethersDriipSettlementChallengeState.enableServiceAction(
@@ -903,7 +903,7 @@ module.exports = (glob) => {
 
             describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeState.proposalBlockNumber(glob.user_a, {
+                    ethersDriipSettlementChallengeState.proposalReferenceBlockNumber(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
                     }).should.be.rejected;
@@ -919,10 +919,48 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully return proposal block number', async () => {
-                    (await ethersDriipSettlementChallengeState.proposalBlockNumber(glob.user_a, {
+                    (await ethersDriipSettlementChallengeState.proposalReferenceBlockNumber(glob.user_a, {
                         ct: mocks.address0,
                         id: 0
                     }))._bn.should.eq.BN(30);
+                });
+            });
+        });
+
+        describe('proposalDefinitionBlockNumber()', () => {
+            beforeEach(async () => {
+                await ethersDriipSettlementChallengeState.registerService(glob.owner);
+                await ethersDriipSettlementChallengeState.enableServiceAction(
+                    glob.owner, await ethersDriipSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
+                );
+            });
+
+            describe('if no settlement challenge proposal has been initiated for the wallet and currency', () => {
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeState.proposalDefinitionBlockNumber(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    }).should.be.rejected;
+                });
+            });
+
+            describe('if settlement challenge proposal has been initiated for the wallet and currency', () => {
+                let blockNumber;
+
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState.initiateProposal(
+                        glob.user_a, 1, 10, 20, 30, {ct: mocks.address0, id: 0},
+                        30, true, mocks.hash1, 'some_challenged_kind', {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+                });
+
+                it('should successfully return proposal block number', async () => {
+                    (await ethersDriipSettlementChallengeState.proposalDefinitionBlockNumber(glob.user_a, {
+                        ct: mocks.address0,
+                        id: 0
+                    }))._bn.should.eq.BN(blockNumber);
                 });
             });
         });

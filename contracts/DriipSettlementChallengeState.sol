@@ -137,7 +137,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         emit TerminateProposalEvent(
             wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
             proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance, currency,
-            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            proposals[index - 1].referenceBlockNumber, proposals[index - 1].walletInitiated,
             proposals[index - 1].challenged.hash, proposals[index - 1].challenged.kind
         );
     }
@@ -173,7 +173,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         emit TerminateProposalEvent(
             wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
             proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance, currency,
-            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            proposals[index - 1].referenceBlockNumber, proposals[index - 1].walletInitiated,
             proposals[index - 1].challenged.hash, proposals[index - 1].challenged.kind
         );
     }
@@ -196,7 +196,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         emit RemoveProposalEvent(
             wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
             proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance, currency,
-            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            proposals[index - 1].referenceBlockNumber, proposals[index - 1].walletInitiated,
             proposals[index - 1].challenged.hash, proposals[index - 1].challenged.kind
         );
 
@@ -226,7 +226,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         emit RemoveProposalEvent(
             wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
             proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance, currency,
-            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            proposals[index - 1].referenceBlockNumber, proposals[index - 1].walletInitiated,
             proposals[index - 1].challenged.hash, proposals[index - 1].challenged.kind
         );
 
@@ -265,7 +265,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         emit DisqualifyProposalEvent(
             challengedWallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
             proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance,
-            currency, proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            currency, proposals[index - 1].referenceBlockNumber, proposals[index - 1].walletInitiated,
             challengerWallet, candidateNonce, candidateHash, candidateKind
         );
     }
@@ -285,7 +285,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         emit QualifyProposalEvent(
             wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.cumulativeTransfer,
             proposals[index - 1].amounts.stage, proposals[index - 1].amounts.targetBalance, currency,
-            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated,
+            proposals[index - 1].referenceBlockNumber, proposals[index - 1].walletInitiated,
             proposals[index - 1].disqualification.challenger,
             proposals[index - 1].disqualification.nonce,
             proposals[index - 1].disqualification.candidate.hash,
@@ -370,18 +370,32 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         return proposals[index - 1].nonce;
     }
 
-    /// @notice Get the proposal block number of the given wallet and currency
+    /// @notice Get the proposal reference block number of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The settlement proposal block number
-    function proposalBlockNumber(address wallet, MonetaryTypesLib.Currency currency)
+    /// @return The settlement proposal reference block number
+    function proposalReferenceBlockNumber(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].blockNumber;
+        return proposals[index - 1].referenceBlockNumber;
+    }
+
+    /// @notice Get the proposal definition block number of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currency The concerned currency
+    /// @return The settlement proposal definition block number
+    function proposalDefinitionBlockNumber(address wallet, MonetaryTypesLib.Currency currency)
+    public
+    view
+    returns (uint256)
+    {
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+        require(0 != index);
+        return proposals[index - 1].definitionBlockNumber;
     }
 
     /// @notice Get the proposal expiration time of the given wallet and currency
@@ -570,7 +584,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function _initiateProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
-        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 referenceBlockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind)
     private
     {
@@ -593,7 +607,8 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         // Populate proposal
         proposals[index - 1].wallet = wallet;
         proposals[index - 1].nonce = nonce;
-        proposals[index - 1].blockNumber = blockNumber;
+        proposals[index - 1].referenceBlockNumber = referenceBlockNumber;
+        proposals[index - 1].definitionBlockNumber = block.number;
         proposals[index - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[index - 1].status = SettlementChallengeTypesLib.Status.Qualified;
         proposals[index - 1].currency = currency;

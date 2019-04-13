@@ -39,7 +39,7 @@ contract MockedDriipSettlementChallengeState {
     }
 
     function initiateProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
-        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 referenceBlockNumber, bool walletInitiated,
         bytes32 challengedHash, string challengedKind)
     public
     {
@@ -51,7 +51,8 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].amounts.stage = stageAmount;
         _proposals[index].amounts.targetBalance = targetBalanceAmount;
         _proposals[index].currency = currency;
-        _proposals[index].blockNumber = blockNumber;
+        _proposals[index].referenceBlockNumber = referenceBlockNumber;
+        _proposals[index].definitionBlockNumber = block.number;
         _proposals[index].walletInitiated = walletInitiated;
 
         _proposals[index].challenged.hash = challengedHash;
@@ -201,19 +202,34 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].nonce = _proposalNonce;
     }
 
-    function proposalBlockNumber(address, MonetaryTypesLib.Currency)
+    function proposalReferenceBlockNumber(address, MonetaryTypesLib.Currency)
     public
     view
     returns (uint256)
     {
-        return _proposals[_proposals.length - 1].blockNumber;
+        return _proposals[_proposals.length - 1].referenceBlockNumber;
     }
 
-    function _setProposalBlockNumber(uint256 _proposalBlockNumber)
+    function _setProposalReferenceBlockNumber(uint256 _proposalReferenceBlockNumber)
     public
     {
         uint256 index = _addProposalIfNone();
-        _proposals[index].blockNumber = _proposalBlockNumber;
+        _proposals[index].referenceBlockNumber = _proposalReferenceBlockNumber;
+    }
+
+    function proposalDefinitionBlockNumber(address, MonetaryTypesLib.Currency)
+    public
+    view
+    returns (uint256)
+    {
+        return _proposals[_proposals.length - 1].definitionBlockNumber;
+    }
+
+    function _setProposalDefinitionBlockNumber(uint256 _proposalDefinitionBlockNumber)
+    public
+    {
+        uint256 index = _addProposalIfNone();
+        _proposals[index].definitionBlockNumber = _proposalDefinitionBlockNumber;
     }
 
     function proposalExpirationTime(address, MonetaryTypesLib.Currency)

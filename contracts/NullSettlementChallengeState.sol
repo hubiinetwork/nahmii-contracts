@@ -120,7 +120,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         emit TerminateProposalEvent(
             wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.stage,
             proposals[index - 1].amounts.targetBalance, currency,
-            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated
+            proposals[index - 1].referenceBlockNumber, proposals[index - 1].walletInitiated
         );
     }
 
@@ -149,7 +149,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         emit TerminateProposalEvent(
             wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.stage,
             proposals[index - 1].amounts.targetBalance, currency,
-            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated
+            proposals[index - 1].referenceBlockNumber, proposals[index - 1].walletInitiated
         );
     }
 
@@ -171,7 +171,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         emit RemoveProposalEvent(
             wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.stage,
             proposals[index - 1].amounts.targetBalance, currency,
-            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated
+            proposals[index - 1].referenceBlockNumber, proposals[index - 1].walletInitiated
         );
 
         // Remove proposal
@@ -200,7 +200,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         emit RemoveProposalEvent(
             wallet, proposals[index - 1].nonce, proposals[index - 1].amounts.stage,
             proposals[index - 1].amounts.targetBalance, currency,
-            proposals[index - 1].blockNumber, proposals[index - 1].walletInitiated
+            proposals[index - 1].referenceBlockNumber, proposals[index - 1].walletInitiated
         );
 
         // Remove proposal
@@ -237,7 +237,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         // Emit event
         emit DisqualifyProposalEvent(
             challengedWallet, proposals[index - 1].nonce, proposals[index - 1].amounts.stage,
-            proposals[index - 1].amounts.targetBalance, currency, proposals[index - 1].blockNumber,
+            proposals[index - 1].amounts.targetBalance, currency, proposals[index - 1].referenceBlockNumber,
             proposals[index - 1].walletInitiated, challengerWallet, candidateNonce, candidateHash, candidateKind
         );
     }
@@ -299,18 +299,32 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         return proposals[index - 1].nonce;
     }
 
-    /// @notice Get the settlement proposal block number of the given wallet and currency
+    /// @notice Get the settlement proposal reference block number of the given wallet and currency
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    /// @return The settlement proposal block number
-    function proposalBlockNumber(address wallet, MonetaryTypesLib.Currency currency)
+    /// @return The settlement proposal reference block number
+    function proposalReferenceBlockNumber(address wallet, MonetaryTypesLib.Currency currency)
     public
     view
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
-        return proposals[index - 1].blockNumber;
+        return proposals[index - 1].referenceBlockNumber;
+    }
+
+    /// @notice Get the settlement proposal definition block number of the given wallet and currency
+    /// @param wallet The address of the concerned wallet
+    /// @param currency The concerned currency
+    /// @return The settlement proposal reference block number
+    function proposalDefinitionBlockNumber(address wallet, MonetaryTypesLib.Currency currency)
+    public
+    view
+    returns (uint256)
+    {
+        uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
+        require(0 != index);
+        return proposals[index - 1].definitionBlockNumber;
     }
 
     /// @notice Get the settlement proposal expiration time of the given wallet and currency
@@ -457,7 +471,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function _initiateProposal(address wallet, uint256 nonce, int256 stageAmount, int256 targetBalanceAmount,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated)
+        MonetaryTypesLib.Currency currency, uint256 referenceBlockNumber, bool walletInitiated)
     private
     {
         // Require that stage and target balance amounts are positive
@@ -475,7 +489,8 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         // Populate proposal
         proposals[index - 1].wallet = wallet;
         proposals[index - 1].nonce = nonce;
-        proposals[index - 1].blockNumber = blockNumber;
+        proposals[index - 1].referenceBlockNumber = referenceBlockNumber;
+        proposals[index - 1].definitionBlockNumber = block.number;
         proposals[index - 1].expirationTime = block.timestamp.add(configuration.settlementChallengeTimeout());
         proposals[index - 1].status = SettlementChallengeTypesLib.Status.Qualified;
         proposals[index - 1].currency = currency;
