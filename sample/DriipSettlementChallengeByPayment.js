@@ -145,6 +145,7 @@ contract('DriipSettlementChallengeByPayment', (accounts) => {
         let filter;
 
         beforeEach(async () => {
+            await ethersDriipSettlementChallengeState._setProposal(true);
             await ethersDriipSettlementChallengeState._setProposalNonce(1);
             await ethersDriipSettlementChallengeState._setProposalCumulativeTransferAmount(utils.parseUnits('1', 18));
             await ethersDriipSettlementChallengeState._setProposalStageAmount(utils.parseUnits('2', 18));
@@ -171,6 +172,7 @@ contract('DriipSettlementChallengeByPayment', (accounts) => {
         let filter;
 
         beforeEach(async () => {
+            await ethersDriipSettlementChallengeState._setProposal(true);
             await ethersDriipSettlementChallengeState._setProposalNonce(1);
             await ethersDriipSettlementChallengeState._setProposalCumulativeTransferAmount(utils.parseUnits('1', 18));
             await ethersDriipSettlementChallengeState._setProposalStageAmount(utils.parseUnits('2', 18));

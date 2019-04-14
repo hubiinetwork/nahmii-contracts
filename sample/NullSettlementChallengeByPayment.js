@@ -128,6 +128,7 @@ contract('NullSettlementChallengeByPayment', (accounts) => {
         let filter;
 
         beforeEach(async () => {
+            await ethersNullSettlementChallengeState._setProposal(true);
             await ethersNullSettlementChallengeState._setProposalNonce(1);
             await ethersNullSettlementChallengeState._setProposalStageAmount(1000);
             await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(2000);
@@ -153,6 +154,7 @@ contract('NullSettlementChallengeByPayment', (accounts) => {
         let filter;
 
         beforeEach(async () => {
+            await ethersNullSettlementChallengeState._setProposal(true);
             await ethersNullSettlementChallengeState._setProposalNonce(1);
             await ethersNullSettlementChallengeState._setProposalStageAmount(1000);
             await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(2000);
