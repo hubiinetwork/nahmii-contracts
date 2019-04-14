@@ -156,7 +156,7 @@ BalanceTrackable, FraudChallengable, Servable {
         ).sub(
             balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
                 wallet, payment.currency,
-                driipSettlementChallengeState.proposalBlockNumber(wallet, payment.currency)
+                driipSettlementChallengeState.proposalReferenceBlockNumber(wallet, payment.currency)
             )
         );
 

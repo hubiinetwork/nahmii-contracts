@@ -272,7 +272,7 @@ module.exports = (glob) => {
                     proposal.amounts.targetBalance._bn.should.eq.BN(0);
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
-                    proposal.blockNumber._bn.should.eq.BN(1);
+                    proposal.referenceBlockNumber._bn.should.eq.BN(1);
                     proposal.nonce._bn.should.eq.BN(21);
                     proposal.walletInitiated.should.be.true;
                     proposal.challenged.hash.should.equal(mocks.hash0);
@@ -332,7 +332,7 @@ module.exports = (glob) => {
                     proposal.amounts.targetBalance._bn.should.eq.BN(0);
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
-                    proposal.blockNumber._bn.should.eq.BN(1);
+                    proposal.referenceBlockNumber._bn.should.eq.BN(1);
                     proposal.nonce._bn.should.eq.BN(21);
                     proposal.walletInitiated.should.be.false;
                     proposal.challenged.hash.should.equal(mocks.hash0);
@@ -423,14 +423,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalBlockNumber()', () => {
+        describe('proposalReferenceBlockNumber()', () => {
             beforeEach(async () => {
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersNullSettlementChallengeState._setProposalBlockNumber(1);
+                await ethersNullSettlementChallengeState._setProposalReferenceBlockNumber(1);
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersNullSettlementChallengeByTrade.proposalBlockNumber(glob.owner, mocks.address0, 0))
+                (await ethersNullSettlementChallengeByTrade.proposalReferenceBlockNumber(glob.owner, mocks.address0, 0))
                     ._bn.should.eq.BN(1);
             });
         });

@@ -367,7 +367,7 @@ module.exports = (glob) => {
                     proposal.amounts.targetBalance._bn.should.eq.BN(0);
                     proposal.currency.ct.should.equal(payment.currency.ct);
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
-                    proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    proposal.referenceBlockNumber._bn.should.eq.BN(payment.blockNumber._bn);
                     proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                     proposal.walletInitiated.should.be.true;
                     proposal.challenged.hash.should.equal(payment.seals.operator.hash);
@@ -485,7 +485,7 @@ module.exports = (glob) => {
                     proposal.amounts.targetBalance._bn.should.eq.BN(0);
                     proposal.currency.ct.should.equal(payment.currency.ct);
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
-                    proposal.blockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    proposal.referenceBlockNumber._bn.should.eq.BN(payment.blockNumber._bn);
                     proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                     proposal.walletInitiated.should.be.false;
                     proposal.challenged.hash.should.equal(payment.seals.operator.hash);
@@ -672,14 +672,14 @@ module.exports = (glob) => {
             });
         });
 
-        describe('proposalBlockNumber()', () => {
+        describe('proposalReferenceBlockNumber()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
-                await ethersDriipSettlementChallengeState._setProposalBlockNumber(1);
+                await ethersDriipSettlementChallengeState._setProposalReferenceBlockNumber(1);
             });
 
             it('should return from corresponding function in challenge state instance', async () => {
-                (await ethersDriipSettlementChallengeByPayment.proposalBlockNumber(glob.owner, mocks.address0, 0))
+                (await ethersDriipSettlementChallengeByPayment.proposalReferenceBlockNumber(glob.owner, mocks.address0, 0))
                     ._bn.should.eq.BN(1);
             });
         });

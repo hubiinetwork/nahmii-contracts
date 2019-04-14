@@ -137,7 +137,7 @@ BalanceTrackable, FraudChallengable, Servable {
         ).sub(
             balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
                 wallet, payment.currency,
-                nullSettlementChallengeState.proposalBlockNumber(wallet, payment.currency)
+                nullSettlementChallengeState.proposalReferenceBlockNumber(wallet, payment.currency)
             )
         );
 

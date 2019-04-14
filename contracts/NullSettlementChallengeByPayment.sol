@@ -267,12 +267,12 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @return The settlement proposal block number
-    function proposalBlockNumber(address wallet, address currencyCt, uint256 currencyId)
+    function proposalReferenceBlockNumber(address wallet, address currencyCt, uint256 currencyId)
     public
     view
     returns (uint256)
     {
-        return nullSettlementChallengeState.proposalBlockNumber(
+        return nullSettlementChallengeState.proposalReferenceBlockNumber(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
         );
     }
