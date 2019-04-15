@@ -150,6 +150,12 @@ module.exports = (glob) => {
                     proposal.challenged.hash.should.equal(mocks.hash1);
                     proposal.challenged.kind.should.equal('some_challenged_kind');
 
+                    (await ethersDriipSettlementChallengeState.proposalIndexByWalletCurrency(glob.user_a, mocks.address0, 0))
+                        ._bn.should.eq.BN(1);
+
+                    (await ethersDriipSettlementChallengeState.proposalIndexByWalletNonceCurrency(glob.user_a, 1, mocks.address0, 0))
+                        ._bn.should.eq.BN(1);
+
                     (await ethersDriipSettlementChallengeState.proposalsCount())
                         ._bn.should.eq.BN(1);
                 });

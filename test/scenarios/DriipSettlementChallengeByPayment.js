@@ -648,6 +648,30 @@ module.exports = (glob) => {
             });
         });
 
+        describe('hasProposal()', () => {
+            beforeEach(async () => {
+                await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
+                await ethersDriipSettlementChallengeState._setProposal(true);
+            });
+
+            it('should return from corresponding function in challenge state instance', async () => {
+                (await ethersDriipSettlementChallengeByPayment.hasProposal(glob.owner, mocks.address0, 0))
+                    .should.be.true;
+            });
+        });
+
+        describe('hasProposalTerminated()', () => {
+            beforeEach(async () => {
+                await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
+                await ethersDriipSettlementChallengeState._setProposalTerminated(true);
+            });
+
+            it('should return from corresponding function in challenge state instance', async () => {
+                (await ethersDriipSettlementChallengeByPayment.hasProposalTerminated(glob.owner, mocks.address0, 0))
+                    .should.be.true;
+            });
+        });
+
         describe('hasProposalExpired()', () => {
             beforeEach(async () => {
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});

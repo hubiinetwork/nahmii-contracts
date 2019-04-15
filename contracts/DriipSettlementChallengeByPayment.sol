@@ -201,6 +201,36 @@ BalanceTrackable {
         );
     }
 
+    /// @notice Gauge whether the proposal for the given wallet and currency has been defined
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return true if proposal has been initiated, else false
+    function hasProposal(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (bool)
+    {
+        return driipSettlementChallengeState.hasProposal(
+            wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
+        );
+    }
+
+    /// @notice Gauge whether the proposal for the given wallet and currency has terminated
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @return true if proposal has terminated, else false
+    function hasProposalTerminated(address wallet, address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (bool)
+    {
+        return driipSettlementChallengeState.hasProposalTerminated(
+            wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
+        );
+    }
+
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)

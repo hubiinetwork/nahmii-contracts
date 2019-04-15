@@ -601,7 +601,6 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         if (0 == index) {
             index = ++(proposals.length);
             proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = index;
-            proposalIndexByWalletNonceCurrency[wallet][nonce][currency.ct][currency.id] = index;
         }
 
         // Populate proposal
@@ -619,6 +618,9 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         proposals[index - 1].terminated = false;
         proposals[index - 1].challenged.hash = challengedHash;
         proposals[index - 1].challenged.kind = challengedKind;
+
+        // Update index of wallet-nonce-currency triplet
+        proposalIndexByWalletNonceCurrency[wallet][nonce][currency.ct][currency.id] = index;
     }
 
     function _removeProposal(uint256 index)
