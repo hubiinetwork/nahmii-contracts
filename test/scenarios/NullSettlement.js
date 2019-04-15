@@ -358,9 +358,10 @@ module.exports = (glob) => {
                 await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(0);
             });
 
-            describe('if there exists an overlapping driip settlement challenge', () => {
+            describe('if there exists a non-terminated driip settlement challenge', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementChallengeState._setProposal(true);
+                    await ethersDriipSettlementChallengeState._setProposalTerminated(false);
                 });
 
                 it('should revert', async () => {
