@@ -131,7 +131,9 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     private
     {
         // Require that there is no overlapping driip settlement challenge
-        require(!driipSettlementChallengeState.hasProposal(wallet, currency));
+        if (driipSettlementChallengeState.hasProposal(wallet, currency)) {
+            require(driipSettlementChallengeState.hasProposalExpired(wallet, currency));
+        }
 
         // Require that null settlement challenge proposal has been initiated
         require(nullSettlementChallengeState.hasProposal(wallet, currency));
