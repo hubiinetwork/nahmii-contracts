@@ -324,7 +324,6 @@ module.exports = (deployer, network, accounts) => {
                 TokenHolderRevenueFund,
                 Validator,
                 ValidatorV2
-
             ]);
             await deployer.link(SafeMathUintLib, [
                 BalanceTracker,
@@ -610,6 +609,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setValidator(addressStorage.get('Validator'));
             await instance.setSecurityBond(addressStorage.get('SecurityBond'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
             await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
             await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
@@ -708,6 +708,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setValidator(addressStorage.get('Validator'));
             await instance.setSecurityBond(addressStorage.get('SecurityBond'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
             await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
             await instance.registerService(addressStorage.get('NullSettlementChallengeByPayment'));
@@ -729,8 +730,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setCommunityVote(addressStorage.get('CommunityVote'));
             await instance.registerService(addressStorage.get('NullSettlement'));
             await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NULL_NONCE_ACTION.call());
-            await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NONCE_WALLET_CURRENCY_ACTION.call()
-            );
+            await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NONCE_WALLET_CURRENCY_ACTION.call());
 
             instance = await NullSettlement.at(addressStorage.get('NullSettlement'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -794,6 +794,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setValidator(addressStorage.get('Validator'));
             await instance.setSecurityBond(addressStorage.get('SecurityBond'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
 
             instance = await FraudChallengeBySuccessivePayments.at(addressStorage.get('FraudChallengeBySuccessivePayments'));
             await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
@@ -801,6 +802,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setValidator(addressStorage.get('Validator'));
             await instance.setSecurityBond(addressStorage.get('SecurityBond'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
 
             instance = await FraudChallengeByPaymentSucceedingTrade.at(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
             await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
@@ -808,6 +810,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setValidator(addressStorage.get('Validator'));
             await instance.setSecurityBond(addressStorage.get('SecurityBond'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
 
             instance = await FraudChallengeByTradeSucceedingPayment.at(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
             await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
@@ -815,6 +818,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setValidator(addressStorage.get('Validator'));
             await instance.setSecurityBond(addressStorage.get('SecurityBond'));
             await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+            await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
 
             instance = await FraudChallengeByTradeOrderResiduals.at(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
             await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
