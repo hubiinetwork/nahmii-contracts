@@ -17,7 +17,7 @@ module.exports = async (callback) => {
     deployerAccount = helpers.parseDeployerArg();
 
     if (!testNetwork)
-        helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
+        helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 14400);
 
     try {
 

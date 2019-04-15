@@ -15,7 +15,7 @@ module.exports = async (callback) => {
     const standard = helpers.parseStringArg('standard');
 
     if (!helpers.isTestNetwork(network))
-        helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 7200);
+        helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 14400);
 
     try {
         const instance = await TransferControllerManager.deployed();
