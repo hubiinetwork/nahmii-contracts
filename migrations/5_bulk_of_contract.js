@@ -897,6 +897,7 @@ module.exports = (deployer, network, accounts) => {
             await instance.setPaymentHasher(addressStorage.get('PaymentHasher'));
 
             instance = await WalletLocker.at(addressStorage.get('WalletLocker'));
+            await instance.setConfiguration(addressStorage.get('Configuration'));
             await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
             await instance.authorizeInitialService(addressStorage.get('DriipSettlementDisputeByPayment'));
             await instance.registerService(addressStorage.get('DriipSettlementDisputeByTrade'));
