@@ -597,12 +597,9 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
 
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
 
-        // Create proposal if needed
-        if (0 == index) {
-            index = ++(proposals.length);
-            proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = index;
-            proposalIndexByWalletNonceCurrency[wallet][nonce][currency.ct][currency.id] = index;
-        }
+        index = ++(proposals.length);
+        proposalIndexByWalletCurrency[wallet][currency.ct][currency.id] = index;
+        proposalIndexByWalletNonceCurrency[wallet][nonce][currency.ct][currency.id] = index;
 
         // Populate proposal
         proposals[index - 1].wallet = wallet;
