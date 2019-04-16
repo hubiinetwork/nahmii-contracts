@@ -48,11 +48,8 @@ const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallenge');
 const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
-// const MockedDriipSettlementChallenge = artifacts.require('MockedDriipSettlementChallenge');
 const MockedDriipSettlementDisputeByPayment = artifacts.require('MockedDriipSettlementDisputeByPayment');
 const MockedDriipSettlementDisputeByTrade = artifacts.require('MockedDriipSettlementDisputeByTrade');
-// const MockedNullSettlementChallenge = artifacts.require('MockedNullSettlementChallenge');
-// const MockedNullSettlementDispute = artifacts.require('MockedNullSettlementDispute');
 const MockedValidator = artifacts.require('MockedValidator');
 const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
@@ -230,7 +227,6 @@ module.exports = (deployer, network, accounts) => {
                 TradeHasher,
                 Validator,
                 ValidatorV2
-
             ]);
             await deployer.link(NahmiiTypesLib, [
                 CancelOrdersChallenge,
@@ -253,9 +249,6 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByTrade,
                 FraudChallengeByTradeOrderResiduals,
                 MockedCancelOrdersChallenge,
-                // MockedDriipSettlementChallenge,
-                // MockedNullSettlementChallenge,
-                // MockedNullSettlementDispute,
                 MockedValidator,
                 NullSettlementChallengeState,
                 PaymentHasher,
@@ -263,7 +256,6 @@ module.exports = (deployer, network, accounts) => {
                 Validatable,
                 Validator,
                 ValidatorV2
-
             ]);
             await deployer.link(NonFungibleBalanceLib, [
                 BalanceTracker
@@ -278,10 +270,7 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments,
                 FraudChallengeByTradeSucceedingPayment,
-                // MockedDriipSettlementChallenge,
                 MockedDriipSettlementDisputeByPayment,
-                // MockedNullSettlementChallenge,
-                // MockedNullSettlementDispute,
                 MockedValidator,
                 NullSettlementChallengeByPayment,
                 NullSettlementDisputeByPayment,
@@ -365,8 +354,6 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementChallengeState,
                 DriipSettlementDisputeByPayment,
                 DriipSettlementDisputeByTrade,
-                // MockedDriipSettlementChallenge,
-                // MockedNullSettlementChallenge,
                 NullSettlement,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade,
@@ -397,10 +384,7 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeByTradeOrderResiduals,
                 FraudChallengeByTradeSucceedingPayment,
                 MockedCancelOrdersChallenge,
-                // MockedDriipSettlementChallenge,
                 MockedDriipSettlementDisputeByTrade,
-                // MockedNullSettlementChallenge,
-                // MockedNullSettlementDispute,
                 MockedValidator,
                 NullSettlementChallengeByTrade,
                 NullSettlementDisputeByTrade,
@@ -418,22 +402,16 @@ module.exports = (deployer, network, accounts) => {
                 TokenHolderRevenueFund
             ]);
 
+            const delayBlocks = helpers.isTestNetwork(network) ? 1 : 10;
+
             if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
-                await execDeploy(ctl, 'Configuration', '', Configuration);
-
-                await execDeploy(ctl, 'ERC20TransferController', '', ERC20TransferController);
-
-                await execDeploy(ctl, 'ERC721TransferController', '', ERC721TransferController);
-
-                await execDeploy(ctl, 'TransferControllerManager', '', TransferControllerManager);
-
                 await execDeploy(ctl, 'BalanceTracker', '', BalanceTracker);
-
-                await execDeploy(ctl, 'TransactionTracker', '', TransactionTracker);
-
                 await execDeploy(ctl, 'ClientFund', '', ClientFund);
-
-                const delayBlocks = helpers.isTestNetwork(network) ? 1 : 10;
+                await execDeploy(ctl, 'Configuration', '', Configuration);
+                await execDeploy(ctl, 'ERC20TransferController', '', ERC20TransferController);
+                await execDeploy(ctl, 'ERC721TransferController', '', ERC721TransferController);
+                await execDeploy(ctl, 'TransferControllerManager', '', TransferControllerManager);
+                await execDeploy(ctl, 'TransactionTracker', '', TransactionTracker);
 
                 instance = await Configuration.at(addressStorage.get('Configuration'));
                 await instance.setConfirmationBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 12);
@@ -444,21 +422,14 @@ module.exports = (deployer, network, accounts) => {
                 await instance.setPaymentFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e15, [], []);                          // 0.1%
                 await instance.setPaymentMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e11);                           // 0.00001%
                 await instance.setWalletLockTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 30);              // 30 days
-                if (network.startsWith('mainnet')) {
-                    await instance.setCancelOrderChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 3); // 3 days
-                    await instance.setSettlementChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 5);  // 5 days
-                } else {
-                    await instance.setCancelOrderChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 3);           // 3 minutes
-                    await instance.setSettlementChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 5);            // 5 minutes
-                }
+                await instance.setCancelOrderChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 3);               // 3 minutes
+                await instance.setSettlementChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 5);                // 5 minutes
                 await instance.setWalletSettlementStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e17);               // 10%
                 await instance.setOperatorSettlementStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 5e17);             // 50%
                 await instance.setFraudStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 5e17);                          // 50%
-                if (network.startsWith('mainnet')) {
-                    // await instance.setUpdateDelayBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2880);                       // ~12 hours
-                    await instance.setEarliestSettlementBlockNumber((await web3.eth.getBlockNumberPromise()) + 172800);                      // In ~30 days
-                    // await instance.disableEarliestSettlementBlockNumberUpdate();
-                }
+                // await instance.setUpdateDelayBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2880);                           // ~12 hours
+                // await instance.setEarliestSettlementBlockNumber((await web3.eth.getBlockNumberPromise()) + 172800);                          // In ~30 days
+                // await instance.disableEarliestSettlementBlockNumberUpdate();
 
                 instance = await TransferControllerManager.at(addressStorage.get('TransferControllerManager'));
                 await instance.registerTransferController('ERC20', addressStorage.get('ERC20TransferController'), {from: deployerAccount});
@@ -478,13 +449,50 @@ module.exports = (deployer, network, accounts) => {
                 await instance.freezeTransactionTracker();
 
             } else if (network.startsWith('mainnet')) {
-                addressStorage.set('Configuration', '0x3dc79902b8f6b2e35e8307bb4238743f8a8e05cb');
+                addressStorage.set('BalanceTracker', '0xbc1bcc29edf605095bf4fe7a953b7c115ecc8cad');
+                addressStorage.set('ClientFund', '0xcc8d82f6ba952966e63001c7b320eef2ae729099');
+                // addressStorage.set('Configuration', '0x3dc79902b8f6b2e35e8307bb4238743f8a8e05cb');
                 addressStorage.set('ERC20TransferController', '0x42aa8205bfa075d52f904602e631a897fea8651e');
                 addressStorage.set('ERC721TransferController', '0x40732b9658431723ac13b132d0430282c7877238');
                 addressStorage.set('TransferControllerManager', '0x375cccb1d483088d3d13c6b7536f0ca28622ba7e');
-                addressStorage.set('BalanceTracker', '0xbc1bcc29edf605095bf4fe7a953b7c115ecc8cad');
                 addressStorage.set('TransactionTracker', '0x8adfe445750937cefe42d9fb428563d61ea1aa02');
-                addressStorage.set('ClientFund', '0xcc8d82f6ba952966e63001c7b320eef2ae729099');
+
+                await execDeploy(ctl, 'Configuration', '', Configuration);
+
+                instance = await Configuration.at(addressStorage.get('Configuration'));
+                await instance.setConfirmationBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 12);
+                await instance.setTradeMakerFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e15, [], []);                       // 0.1%
+                await instance.setTradeMakerMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e11);                        // 0.00001%
+                await instance.setTradeTakerFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2e15, [], []);                       // 0.2%
+                await instance.setTradeTakerMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2e11);                        // 0.00002%
+                await instance.setPaymentFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e15, [], []);                          // 0.1%
+                await instance.setPaymentMinimumFee((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e11);                           // 0.00001%
+                await instance.setWalletLockTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 30);              // 30 days
+                await instance.setCancelOrderChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 3);     // 3 days
+                await instance.setSettlementChallengeTimeout((await web3.eth.getBlockNumberPromise()) + delayBlocks, 60 * 60 * 24 * 5);      // 5 days
+                await instance.setWalletSettlementStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 1e17);               // 10%
+                await instance.setOperatorSettlementStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 5e17);             // 50%
+                await instance.setFraudStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 5e17);                          // 50%
+                await instance.setUpdateDelayBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2880);                           // ~12 hours
+                await instance.setEarliestSettlementBlockNumber((await web3.eth.getBlockNumberPromise()) + 172800);                          // In ~30 days
+                // await instance.disableEarliestSettlementBlockNumberUpdate();
+
+                // instance = await TransferControllerManager.at(addressStorage.get('TransferControllerManager'));
+                // await instance.registerTransferController('ERC20', addressStorage.get('ERC20TransferController'), {from: deployerAccount});
+                // await instance.registerTransferController('ERC721', addressStorage.get('ERC721TransferController'), {from: deployerAccount});
+                //
+                // instance = await BalanceTracker.at(addressStorage.get('BalanceTracker'));
+                // await instance.registerService(addressStorage.get('ClientFund'));
+                //
+                // instance = await TransactionTracker.at(addressStorage.get('TransactionTracker'));
+                // await instance.registerService(addressStorage.get('ClientFund'));
+                //
+                // instance = await ClientFund.at(addressStorage.get('ClientFund'));
+                // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
+                // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
+                // await instance.freezeBalanceTracker();
+                // await instance.setTransactionTracker(addressStorage.get('TransactionTracker'));
+                // await instance.freezeTransactionTracker();
             }
 
             await execDeploy(ctl, 'SignerManager', '', SignerManager);

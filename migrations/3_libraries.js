@@ -70,10 +70,10 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'BlockNumbIntsLib', '', BlockNumbIntsLib);
                 await execDeploy(ctl, 'BlockNumbUintsLib', '', BlockNumbUintsLib);
                 await execDeploy(ctl, 'ConstantsLib', '', ConstantsLib);
+                await execDeploy(ctl, 'DriipSettlementTypesLib', '', DriipSettlementTypesLib);
                 await execDeploy(ctl, 'MonetaryTypesLib', '', MonetaryTypesLib);
                 await execDeploy(ctl, 'SafeMathIntLib', '', SafeMathIntLib);
                 await execDeploy(ctl, 'SafeMathUintLib', '', SafeMathUintLib);
-                await execDeploy(ctl, 'DriipSettlementTypesLib', '', DriipSettlementTypesLib);
 
                 await deployer.link(ConstantsLib, [
                     BlockNumbDisdIntsLib
@@ -86,6 +86,7 @@ module.exports = (deployer, network, accounts) => {
                     DriipSettlementTypesLib,
                     NahmiiTypesLib,
                     PaymentTypesLib,
+                    SettlementChallengeTypesLib,
                     TradeTypesLib
                 ]);
                 await deployer.link(SafeMathIntLib, [
@@ -115,9 +116,9 @@ module.exports = (deployer, network, accounts) => {
 
                 await execDeploy(ctl, 'FungibleBalanceLib', '', FungibleBalanceLib);
                 await execDeploy(ctl, 'NonFungibleBalanceLib', '', NonFungibleBalanceLib);
+                await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
                 await execDeploy(ctl, 'Strings', '', Strings);
                 await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
-                await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
 
                 await deployer.link(NahmiiTypesLib, [
                     PaymentTypesLib,
@@ -128,8 +129,8 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'TradeTypesLib', '', TradeTypesLib);
 
             } else if (network.startsWith('mainnet')) {
-                addressStorage.set('BlockNumbDisdIntsLib', '0x92caece328a4f746c18630c6289d74a5417185b2');
                 // addressStorage.set('BlockNumbCurrenciesLib', '0x1285bdda4c9353bd0ae87af7e9433f9cfd7a4029');
+                addressStorage.set('BlockNumbDisdIntsLib', '0x92caece328a4f746c18630c6289d74a5417185b2');
                 addressStorage.set('BlockNumbIntsLib', '0xcb1a97acac9597b9ea177348ed669667ecea9657');
                 addressStorage.set('BlockNumbUintsLib', '0x412be41435959fb66540ad1d4c41bf85216a7369');
                 addressStorage.set('ConstantsLib', '0x5fcf3704016b90ded3c81d75613ceab0a6a26025');
@@ -139,6 +140,42 @@ module.exports = (deployer, network, accounts) => {
                 addressStorage.set('NonFungibleBalanceLib', '0x4f6f9422b8509b4df036c738f9d3e2827e29af6a');
                 addressStorage.set('SafeMathIntLib', '0x2fcb98529d58669e229c453de4b4705bb6b2d414');
                 addressStorage.set('SafeMathUintLib', '0x0ff948c236c8d4dfcd0168bf243314c8ff8ec967');
+
+                const monetaryTypesLib = await MonetaryTypesLib.at(addressStorage.get('MonetaryTypesLib'));
+                const safeMathIntLib = await SafeMathIntLib.at(addressStorage.get('SafeMathIntLib'));
+                const safeMathUintLib = await SafeMathUintLib.at(addressStorage.get('SafeMathUintLib'));
+
+                await deployer.link(monetaryTypesLib.constructor, [
+                    BalanceTrackerLib,
+                    BlockNumbFiguresLib,
+                    BlockNumbReferenceCurrenciesLib,
+                    DriipSettlementTypesLib,
+                    NahmiiTypesLib,
+                    PaymentTypesLib,
+                    SettlementChallengeTypesLib
+                ]);
+                await deployer.link(safeMathIntLib.constructor, [
+                    BalanceTrackerLib
+                ]);
+                await deployer.link(safeMathUintLib.constructor, [
+                    BalanceTrackerLib
+                ]);
+
+                await execDeploy(ctl, 'BalanceTrackerLib', '', BalanceTrackerLib);
+                await execDeploy(ctl, 'BlockNumbFiguresLib', '', BlockNumbFiguresLib);
+                await execDeploy(ctl, 'BlockNumbReferenceCurrenciesLib', '', BlockNumbReferenceCurrenciesLib);
+                await execDeploy(ctl, 'SettlementChallengeTypesLib', '', SettlementChallengeTypesLib);
+                await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
+                await execDeploy(ctl, 'Strings', '', Strings);
+                await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
+
+                const nahmiiTypesLib = await NahmiiTypesLib.at(addressStorage.get('NahmiiTypesLib'));
+
+                await deployer.link(nahmiiTypesLib.constructor, [
+                    PaymentTypesLib
+                ]);
+
+                await execDeploy(ctl, 'PaymentTypesLib', '', PaymentTypesLib);
             }
 
         } finally {
