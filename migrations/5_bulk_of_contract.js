@@ -32,9 +32,6 @@ const ERC20TransferController = artifacts.require('ERC20TransferController');
 const ERC721TransferController = artifacts.require('ERC721TransferController');
 const FraudChallenge = artifacts.require('FraudChallenge');
 const FraudChallengeByDoubleSpentOrders = artifacts.require('FraudChallengeByDoubleSpentOrders');
-// const FraudChallengeByDuplicateDriipNonceOfPayments = artifacts.require('FraudChallengeByDuplicateDriipNonceOfPayments');
-// const FraudChallengeByDuplicateDriipNonceOfTradeAndPayment = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment');
-// const FraudChallengeByDuplicateDriipNonceOfTrades = artifacts.require('FraudChallengeByDuplicateDriipNonceOfTrades');
 const FraudChallengeByOrder = artifacts.require('FraudChallengeByOrder');
 const FraudChallengeByPayment = artifacts.require('FraudChallengeByPayment');
 const FraudChallengeByPaymentSucceedingTrade = artifacts.require('FraudChallengeByPaymentSucceedingTrade');
@@ -182,7 +179,6 @@ module.exports = (deployer, network, accounts) => {
                 SecurityBond,
                 Validator,
                 ValidatorV2
-
             ]);
             await deployer.link(CurrenciesLib, [
                 BalanceTracker,
@@ -240,9 +236,6 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementDisputeByTrade,
                 DriipSettlementState,
                 FraudChallengeByDoubleSpentOrders,
-                // FraudChallengeByDuplicateDriipNonceOfPayments,
-                // FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
-                // FraudChallengeByDuplicateDriipNonceOfTrades,
                 FraudChallengeByOrder,
                 FraudChallengeByPayment,
                 FraudChallengeBySuccessivePayments,
@@ -264,8 +257,6 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementByPayment,
                 DriipSettlementChallengeByPayment,
                 DriipSettlementDisputeByPayment,
-                // FraudChallengeByDuplicateDriipNonceOfPayments,
-                // FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
                 FraudChallengeByPayment,
                 FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessivePayments,
@@ -375,8 +366,6 @@ module.exports = (deployer, network, accounts) => {
                 DriipSettlementChallengeByTrade,
                 DriipSettlementDisputeByTrade,
                 FraudChallengeByDoubleSpentOrders,
-                // FraudChallengeByDuplicateDriipNonceOfTradeAndPayment,
-                // FraudChallengeByDuplicateDriipNonceOfTrades,
                 FraudChallengeByOrder,
                 FraudChallengeByPaymentSucceedingTrade,
                 FraudChallengeBySuccessiveTrades,
@@ -421,18 +410,15 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'ERC20TransferController', '', ERC20TransferController);
                 await execDeploy(ctl, 'ERC721TransferController', '', ERC721TransferController);
                 await execDeploy(ctl, 'FraudChallenge', '', FraudChallenge);
-                await execDeploy(ctl, 'FraudChallengeByOrder', '', FraudChallengeByOrder);
-                await execDeploy(ctl, 'FraudChallengeByTrade', '', FraudChallengeByTrade);
-                await execDeploy(ctl, 'FraudChallengeByPayment', '', FraudChallengeByPayment);
-                await execDeploy(ctl, 'FraudChallengeBySuccessiveTrades', '', FraudChallengeBySuccessiveTrades);
-                await execDeploy(ctl, 'FraudChallengeBySuccessivePayments', '', FraudChallengeBySuccessivePayments);
-                await execDeploy(ctl, 'FraudChallengeByPaymentSucceedingTrade', '', FraudChallengeByPaymentSucceedingTrade);
-                await execDeploy(ctl, 'FraudChallengeByTradeSucceedingPayment', '', FraudChallengeByTradeSucceedingPayment);
-                await execDeploy(ctl, 'FraudChallengeByTradeOrderResiduals', '', FraudChallengeByTradeOrderResiduals);
                 await execDeploy(ctl, 'FraudChallengeByDoubleSpentOrders', '', FraudChallengeByDoubleSpentOrders);
-                // await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfTrades', '', FraudChallengeByDuplicateDriipNonceOfTrades);
-                // await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfPayments', '', FraudChallengeByDuplicateDriipNonceOfPayments);
-                // await execDeploy(ctl, 'FraudChallengeByDuplicateDriipNonceOfTradeAndPayment', '', FraudChallengeByDuplicateDriipNonceOfTradeAndPayment);
+                await execDeploy(ctl, 'FraudChallengeByOrder', '', FraudChallengeByOrder);
+                await execDeploy(ctl, 'FraudChallengeByPayment', '', FraudChallengeByPayment);
+                await execDeploy(ctl, 'FraudChallengeByPaymentSucceedingTrade', '', FraudChallengeByPaymentSucceedingTrade);
+                await execDeploy(ctl, 'FraudChallengeBySuccessivePayments', '', FraudChallengeBySuccessivePayments);
+                await execDeploy(ctl, 'FraudChallengeBySuccessiveTrades', '', FraudChallengeBySuccessiveTrades);
+                await execDeploy(ctl, 'FraudChallengeByTrade', '', FraudChallengeByTrade);
+                await execDeploy(ctl, 'FraudChallengeByTradeOrderResiduals', '', FraudChallengeByTradeOrderResiduals);
+                await execDeploy(ctl, 'FraudChallengeByTradeSucceedingPayment', '', FraudChallengeByTradeSucceedingPayment);
                 await execDeploy(ctl, 'NullSettlement', '', NullSettlement);
                 await execDeploy(ctl, 'NullSettlementChallengeByPayment', '', NullSettlementChallengeByPayment);
                 await execDeploy(ctl, 'NullSettlementChallengeByTrade', '', NullSettlementChallengeByTrade);
@@ -463,11 +449,11 @@ module.exports = (deployer, network, accounts) => {
                 instance = await ClientFund.at(addressStorage.get('ClientFund'));
                 await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
                 await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
-                // await instance.freezeBalanceTracker();
+                await instance.freezeBalanceTracker();
                 await instance.setTransactionTracker(addressStorage.get('TransactionTracker'));
-                // await instance.freezeTransactionTracker();
+                await instance.freezeTransactionTracker();
                 await instance.setWalletLocker(addressStorage.get('WalletLocker'));
-                // await instance.freezeWalletLocker();
+                await instance.freezeWalletLocker();
                 await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
                 await instance.registerBeneficiary(addressStorage.get('RevenueFund1'));
                 await instance.registerBeneficiary(addressStorage.get('PartnerFund'));
@@ -477,7 +463,7 @@ module.exports = (deployer, network, accounts) => {
                 await instance.authorizeInitialService(addressStorage.get('DriipSettlementByTrade'));
                 await instance.registerService(addressStorage.get('NullSettlement'));
                 await instance.authorizeInitialService(addressStorage.get('NullSettlement'));
-                // await instance.disableInitialServiceAuthorization();
+                await instance.disableInitialServiceAuthorization();
 
                 instance = await Configuration.at(addressStorage.get('Configuration'));
                 await instance.setConfirmationBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 12);
@@ -506,12 +492,6 @@ module.exports = (deployer, network, accounts) => {
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeOrderResiduals'), await instance.OPERATIONAL_MODE_ACTION.call());
                 await instance.registerService(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), await instance.OPERATIONAL_MODE_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'), await instance.OPERATIONAL_MODE_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'), await instance.OPERATIONAL_MODE_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), await instance.OPERATIONAL_MODE_ACTION.call());
                 await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessiveTrades'), await instance.OPERATIONAL_MODE_ACTION.call());
                 await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
@@ -708,13 +688,6 @@ module.exports = (deployer, network, accounts) => {
                 await instance.registerService(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), await instance.ADD_DOUBLE_SPENDER_WALLET_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'), await instance.ADD_FRAUDULENT_PAYMENT_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), await instance.ADD_FRAUDULENT_PAYMENT_ACTION.call());
                 await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessiveTrades'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
                 await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
@@ -789,24 +762,6 @@ module.exports = (deployer, network, accounts) => {
                 await instance.setValidator(addressStorage.get('Validator'));
                 await instance.setSecurityBond(addressStorage.get('SecurityBond'));
 
-                // instance = await FraudChallengeByDuplicateDriipNonceOfTrades.at(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'));
-                // await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
-                // await instance.setConfiguration(addressStorage.get('Configuration'));
-                // await instance.setValidator(addressStorage.get('Validator'));
-                // await instance.setSecurityBond(addressStorage.get('SecurityBond'));
-
-                // instance = await FraudChallengeByDuplicateDriipNonceOfPayments.at(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'));
-                // await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
-                // await instance.setConfiguration(addressStorage.get('Configuration'));
-                // await instance.setValidator(addressStorage.get('Validator'));
-                // await instance.setSecurityBond(addressStorage.get('SecurityBond'));
-
-                // instance = await FraudChallengeByDuplicateDriipNonceOfTradeAndPayment.at(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
-                // await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
-                // await instance.setConfiguration(addressStorage.get('Configuration'));
-                // await instance.setValidator(addressStorage.get('Validator'));
-                // await instance.setSecurityBond(addressStorage.get('SecurityBond'));
-
                 instance = await PartnerFund.at(addressStorage.get('PartnerFund'));
                 await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
 
@@ -822,26 +777,20 @@ module.exports = (deployer, network, accounts) => {
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeByPayment'), await instance.REWARD_ACTION.call());
                 await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessivePayments'), await instance.REWARD_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByTrade'), await instance.REWARD_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByOrder'), await instance.REWARD_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessiveTrades'), await instance.REWARD_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'), await instance.REWARD_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeSucceedingPayment'), await instance.REWARD_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), await instance.REWARD_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeOrderResiduals'), await instance.REWARD_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTrades'), await instance.REWARD_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfPayments'), await instance.REWARD_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDuplicateDriipNonceOfTradeAndPayment'), await instance.REWARD_ACTION.call());
+                await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
+                await instance.enableServiceAction(addressStorage.get('FraudChallengeByTrade'), await instance.REWARD_ACTION.call());
+                await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
+                await instance.enableServiceAction(addressStorage.get('FraudChallengeByOrder'), await instance.REWARD_ACTION.call());
+                await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+                await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessiveTrades'), await instance.REWARD_ACTION.call());
+                await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
+                await instance.enableServiceAction(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'), await instance.REWARD_ACTION.call());
+                await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
+                await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeSucceedingPayment'), await instance.REWARD_ACTION.call());
+                await instance.registerService(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
+                await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), await instance.REWARD_ACTION.call());
+                await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
+                await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeOrderResiduals'), await instance.REWARD_ACTION.call());
                 await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), await instance.REWARD_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), await instance.DEPRIVE_ACTION.call());
@@ -904,15 +853,15 @@ module.exports = (deployer, network, accounts) => {
                 addressStorage.set('ERC20TransferController', '0x42aa8205bfa075d52f904602e631a897fea8651e');
                 addressStorage.set('ERC721TransferController', '0x40732b9658431723ac13b132d0430282c7877238');
                 await execDeploy(ctl, 'FraudChallenge', '', FraudChallenge);
+                // await execDeploy(ctl, 'FraudChallengeByDoubleSpentOrders', '', FraudChallengeByDoubleSpentOrders);
                 // await execDeploy(ctl, 'FraudChallengeByOrder', '', FraudChallengeByOrder);
-                // await execDeploy(ctl, 'FraudChallengeByTrade', '', FraudChallengeByTrade);
                 await execDeploy(ctl, 'FraudChallengeByPayment', '', FraudChallengeByPayment);
-                // await execDeploy(ctl, 'FraudChallengeBySuccessiveTrades', '', FraudChallengeBySuccessiveTrades);
-                await execDeploy(ctl, 'FraudChallengeBySuccessivePayments', '', FraudChallengeBySuccessivePayments);
                 // await execDeploy(ctl, 'FraudChallengeByPaymentSucceedingTrade', '', FraudChallengeByPaymentSucceedingTrade);
-                // await execDeploy(ctl, 'FraudChallengeByTradeSucceedingPayment', '', FraudChallengeByTradeSucceedingPayment);
+                await execDeploy(ctl, 'FraudChallengeBySuccessivePayments', '', FraudChallengeBySuccessivePayments);
+                // await execDeploy(ctl, 'FraudChallengeBySuccessiveTrades', '', FraudChallengeBySuccessiveTrades);
+                // await execDeploy(ctl, 'FraudChallengeByTrade', '', FraudChallengeByTrade);
                 // await execDeploy(ctl, 'FraudChallengeByTradeOrderResiduals', '', FraudChallengeByTradeOrderResiduals);
-                await execDeploy(ctl, 'FraudChallengeByDoubleSpentOrders', '', FraudChallengeByDoubleSpentOrders);
+                // await execDeploy(ctl, 'FraudChallengeByTradeSucceedingPayment', '', FraudChallengeByTradeSucceedingPayment);
                 await execDeploy(ctl, 'NullSettlement', '', NullSettlement);
                 await execDeploy(ctl, 'NullSettlementChallengeByPayment', '', NullSettlementChallengeByPayment);
                 // await execDeploy(ctl, 'NullSettlementChallengeByTrade', '', NullSettlementChallengeByTrade);
@@ -1179,17 +1128,17 @@ module.exports = (deployer, network, accounts) => {
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeByPayment'), await instance.ADD_FRAUDULENT_PAYMENT_ACTION.call());
                 await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessivePayments'), await instance.ADD_FRAUDULENT_PAYMENT_ACTION.call());
+                // await instance.registerService(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
+                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
+                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), await instance.ADD_DOUBLE_SPENDER_WALLET_ACTION.call());
                 // await instance.registerService(addressStorage.get('FraudChallengeByOrder'));
                 // await instance.enableServiceAction(addressStorage.get('FraudChallengeByOrder'), await instance.ADD_FRAUDULENT_ORDER_ACTION.call());
+                // await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+                // await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessiveTrades'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
                 // await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
                 // await instance.enableServiceAction(addressStorage.get('FraudChallengeByTrade'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
                 // await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
                 // await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeOrderResiduals'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeByDoubleSpentOrders'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeByDoubleSpentOrders'), await instance.ADD_DOUBLE_SPENDER_WALLET_ACTION.call());
-                // await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
-                // await instance.enableServiceAction(addressStorage.get('FraudChallengeBySuccessiveTrades'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
                 // await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
                 // await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeSucceedingPayment'), await instance.ADD_FRAUDULENT_TRADE_ACTION.call());
                 // await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
@@ -1320,9 +1269,9 @@ module.exports = (deployer, network, accounts) => {
                 instance = await Validator.at(addressStorage.get('Validator'));
                 await instance.setPaymentHasher(addressStorage.get('PaymentHasher'));
 
-                instance = await ValidatorV2.at(addressStorage.get('ValidatorV2'));
-                await instance.setPaymentHasher(addressStorage.get('PaymentHasher'));
-                await instance.setTradeHasher(addressStorage.get('TradeHasher'));
+                // instance = await ValidatorV2.at(addressStorage.get('ValidatorV2'));
+                // await instance.setPaymentHasher(addressStorage.get('PaymentHasher'));
+                // await instance.setTradeHasher(addressStorage.get('TradeHasher'));
 
                 instance = await WalletLocker.at(addressStorage.get('WalletLocker'));
                 await instance.setConfiguration(addressStorage.get('Configuration'));
