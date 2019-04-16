@@ -20,7 +20,6 @@ import {WalletLockable} from "./WalletLockable.sol";
 import {TransferController} from "./TransferController.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {TokenHolderRevenueFund} from "./TokenHolderRevenueFund.sol";
-import "./ERC20TransferController.sol";
 
 /**
  * @title Client fund
