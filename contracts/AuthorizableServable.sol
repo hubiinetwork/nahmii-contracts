@@ -201,7 +201,11 @@ contract AuthorizableServable is Servable {
         bytes32 actionHash = hashString(action);
 
         return isEnabledServiceAction(service, action) &&
-        (isInitialServiceAuthorizedForWallet(service, wallet) || serviceActionWalletAuthorizedMap[service][actionHash][wallet]);
+        (
+        isInitialServiceAuthorizedForWallet(service, wallet) ||
+        serviceWalletAuthorizedMap[service][wallet] ||
+        serviceActionWalletAuthorizedMap[service][actionHash][wallet]
+        );
     }
 
     function isInitialServiceAuthorizedForWallet(address service, address wallet)
