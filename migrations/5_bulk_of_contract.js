@@ -939,7 +939,7 @@ module.exports = (deployer, network, accounts) => {
                 await instance.setOperatorSettlementStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 5e17);             // 50%
                 await instance.setFraudStakeFraction((await web3.eth.getBlockNumberPromise()) + delayBlocks, 5e17);                          // 50%
                 await instance.setUpdateDelayBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 2880);                           // ~12 hours
-                await instance.setEarliestSettlementBlockNumber((await web3.eth.getBlockNumberPromise()) + 172800);                          // In ~30 days
+                await instance.setEarliestSettlementBlockNumber((await web3.eth.getBlockNumberPromise()) + 200);
                 await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
                 await instance.enableServiceAction(addressStorage.get('FraudChallengeByPayment'), await instance.OPERATIONAL_MODE_ACTION.call());
                 await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
