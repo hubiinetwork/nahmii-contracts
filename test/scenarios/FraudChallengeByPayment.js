@@ -365,16 +365,6 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if payment is genuine', () => {
-                beforeEach(async () => {
-                    payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
-                });
-
-                it('should revert', async () => {
-                    return ethersFraudChallengeByPayment.challenge(payment, overrideOptions).should.be.rejected;
-                });
-            });
-
             describe('if payment is not sealed by operator', () => {
                 beforeEach(async () => {
                     ethersValidator.setGenuinePaymentOperatorSeal(false);
@@ -397,27 +387,37 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if payment wallet signature is fraudulent', () => {
+            describe('if payment is genuine', () => {
+                beforeEach(async () => {
+                    payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
+                });
+
+                it('should revert', async () => {
+                    return ethersFraudChallengeByPayment.challenge(payment, overrideOptions).should.be.rejected;
+                });
+            });
+
+            describe('if payment sender wallet signature is fraudulent', () => {
                 beforeEach(async () => {
                     await ethersValidator.setGenuineWalletSignature(false);
+
                     payment = await mocks.mockPayment(glob.owner, {blockNumber: utils.bigNumberify(blockNumber10)});
                 });
 
                 it('should set operational mode exit, store fraudulent payment and reward in security bond', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPaymentHashesCount, rewardsCount, reward, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersSecurityBond._rewardsCount(),
-                        ethersSecurityBond.rewards(utils.bigNumberify(0)),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentPaymentHashesCount.eq(1).should.be.true;
-                    rewardsCount.eq(1).should.be.true;
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
+
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
                     reward.wallet.should.equal(utils.getAddress(glob.owner));
-                    reward.rewardFraction._bn.should.eq.BN(5e17.toString());
-                    logs.should.have.lengthOf(1);
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+
+                    (await ethersWalletLocker._fungibleLocksCount())._bn.should.eq.BN(0);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
 
@@ -429,19 +429,24 @@ module.exports = (glob) => {
 
                 it('should set operational mode exit, store fraudulent payment and reward', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
-                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(0),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentPaymentHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
+
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
+
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
                     lock.lockedWallet.should.equal(payment.sender.wallet);
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+                    lock.amount._bn.should.eq.BN(payment.sender.balances.current._bn);
+                    lock.currencyCt.should.equal(payment.currency.ct);
+                    lock.currencyId._bn.should.eq.BN(payment.currency.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(0);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
 
@@ -454,19 +459,23 @@ module.exports = (glob) => {
                 it('should set operational mode exit, store fraudulent payment and reward', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
 
-                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(0),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentPaymentHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
+
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
                     lock.lockedWallet.should.equal(payment.sender.wallet);
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+                    lock.amount._bn.should.eq.BN(payment.sender.balances.current._bn);
+                    lock.currencyCt.should.equal(payment.currency.ct);
+                    lock.currencyId._bn.should.eq.BN(payment.currency.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(0);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
 
@@ -479,19 +488,23 @@ module.exports = (glob) => {
                 it('should set operational mode exit, store fraudulent payment and seize seller\'s funds', async () => {
                     await ethersFraudChallengeByPayment.challenge(payment, overrideOptions);
 
-                    const [operationalModeExit, fraudulentPaymentHashesCount, lockedWalletsCount, lock, logs] = await Promise.all([
-                        ethersConfiguration.isOperationalModeExit(),
-                        ethersFraudChallenge.fraudulentPaymentHashesCount(),
-                        ethersWalletLocker._lockedWalletsCount(),
-                        ethersWalletLocker.locks(0),
-                        provider.getLogs(filter)
-                    ]);
-                    operationalModeExit.should.be.true;
-                    fraudulentPaymentHashesCount.eq(1).should.be.true;
-                    lockedWalletsCount.eq(1).should.be.true;
+                    (await ethersConfiguration.isOperationalModeExit()).should.be.true;
+
+                    (await ethersFraudChallenge.fraudulentPaymentHashesCount())._bn.should.eq.BN(1);
+
+                    const reward = await ethersSecurityBond.fractionalRewards(0);
+                    reward.wallet.should.equal(utils.getAddress(glob.owner));
+                    reward.fraction._bn.should.eq.BN(5e17.toString());
+
+                    const lock = await ethersWalletLocker.fungibleLocks(0);
                     lock.lockedWallet.should.equal(payment.recipient.wallet);
                     lock.lockerWallet.should.equal(utils.getAddress(glob.owner));
-                    logs.should.have.lengthOf(1);
+                    lock.amount._bn.should.eq.BN(payment.recipient.balances.current._bn);
+                    lock.currencyCt.should.equal(payment.currency.ct);
+                    lock.currencyId._bn.should.eq.BN(payment.currency.id._bn);
+                    lock.visibleTimeout._bn.should.eq.BN(0);
+
+                    (await provider.getLogs(filter)).should.have.lengthOf(1);
                 });
             });
         });

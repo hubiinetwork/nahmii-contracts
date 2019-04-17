@@ -11,18 +11,26 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Challenge} from "./Challenge.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {BalanceTrackable} from "./BalanceTrackable.sol";
+import {SafeMathIntLib} from "./SafeMathIntLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
+import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
+import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
  * @title FraudChallengeBySuccessivePayments
  * @notice Where driips are challenged wrt fraud by mismatch in successive payments
  */
-contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, Challenge, Validatable,
-SecurityBondable, WalletLockable {
+contract FraudChallengeBySuccessivePayments is Ownable, FraudChallengable, ConfigurableOperational, Validatable,
+SecurityBondable, WalletLockable, BalanceTrackable {
+    using SafeMathIntLib for int256;
+    using BalanceTrackerLib for BalanceTracker;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -44,8 +52,8 @@ SecurityBondable, WalletLockable {
     /// @param lastPayment Fraudulent payment candidate
     /// @param wallet The address of the concerned wallet
     function challenge(
-        NahmiiTypesLib.Payment firstPayment,
-        NahmiiTypesLib.Payment lastPayment,
+        PaymentTypesLib.Payment firstPayment,
+        PaymentTypesLib.Payment lastPayment,
         address wallet
     )
     public
@@ -55,20 +63,22 @@ SecurityBondable, WalletLockable {
     {
         require(validator.isPaymentParty(firstPayment, wallet));
         require(validator.isPaymentParty(lastPayment, wallet));
-        require(
-            firstPayment.currency.ct == lastPayment.currency.ct &&
-            firstPayment.currency.id == lastPayment.currency.id
-        );
 
-        NahmiiTypesLib.PaymentPartyRole firstPaymentPartyRole = (wallet == firstPayment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
-        NahmiiTypesLib.PaymentPartyRole lastPaymentPartyRole = (wallet == lastPayment.sender.wallet ? NahmiiTypesLib.PaymentPartyRole.Sender : NahmiiTypesLib.PaymentPartyRole.Recipient);
+        require(validator.isPaymentCurrency(firstPayment, lastPayment.currency));
+
+        PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole = _paymentPartyRole(firstPayment, wallet);
+        PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole = _paymentPartyRole(lastPayment, wallet);
 
         require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
 
+        int256 deltaActiveBalance = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
+            wallet, firstPayment.currency, firstPayment.blockNumber, lastPayment.blockNumber
+        );
+
         // Require existence of fraud signal
         require(!(
-            (validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole)) &&
-            (validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment))
+        validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole, deltaActiveBalance) &&
+        validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment)
         ));
 
         // Toggle operational mode exit
@@ -78,15 +88,30 @@ SecurityBondable, WalletLockable {
         fraudChallenge.addFraudulentPaymentHash(lastPayment.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
+        securityBond.rewardFractional(msg.sender, configuration.fraudStakeFraction(), 0);
 
-        // Lock amount of size equivalent to payment amount
+        // Lock amount of size equivalent to payment balance
         walletLocker.lockFungibleByProxy(
-            wallet, msg.sender, lastPayment.amount, lastPayment.currency.ct, lastPayment.currency.id
+            wallet, msg.sender,
+            PaymentTypesLib.PaymentPartyRole.Sender == lastPaymentPartyRole ? lastPayment.sender.balances.current : lastPayment.recipient.balances.current,
+            lastPayment.currency.ct, lastPayment.currency.id, 0
         );
 
         emit ChallengeBySuccessivePaymentsEvent(
             firstPayment.seals.operator.hash, lastPayment.seals.operator.hash, msg.sender, wallet
         );
+    }
+
+    //
+    // Private functions
+    // -----------------------------------------------------------------------------------------------------------------
+    function _paymentPartyRole(PaymentTypesLib.Payment payment, address wallet)
+    private
+    view
+    returns (PaymentTypesLib.PaymentPartyRole)
+    {
+        return validator.isPaymentSender(payment, wallet) ?
+        PaymentTypesLib.PaymentPartyRole.Sender :
+        PaymentTypesLib.PaymentPartyRole.Recipient;
     }
 }

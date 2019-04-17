@@ -11,16 +11,16 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Challenge} from "./Challenge.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {Validatable} from "./Validatable.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 
 /**
  * @title FraudChallengeByDuplicateDriipNonceOfPayments
  * @notice Where driips are challenged wrt fraud by duplicate drip nonce of payments
  */
-contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, Challenge, Validatable,
+contract FraudChallengeByDuplicateDriipNonceOfPayments is Ownable, FraudChallengable, ConfigurableOperational, Validatable,
 SecurityBondable {
     //
     // Events
@@ -42,8 +42,8 @@ SecurityBondable {
     /// @param payment1 First payment with duplicate driip nonce
     /// @param payment2 Second payment with duplicate driip nonce
     function challenge(
-        NahmiiTypesLib.Payment payment1,
-        NahmiiTypesLib.Payment payment2
+        PaymentTypesLib.Payment payment1,
+        PaymentTypesLib.Payment payment2
     )
     public
     onlyOperationalModeNormal
@@ -64,7 +64,7 @@ SecurityBondable {
         fraudChallenge.addFraudulentPaymentHash(payment2.seals.operator.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
+        securityBond.rewardFractional(msg.sender, configuration.fraudStakeFraction(), 0);
 
         // Emit event
         emit ChallengeByDuplicateDriipNonceOfPaymentsEvent(

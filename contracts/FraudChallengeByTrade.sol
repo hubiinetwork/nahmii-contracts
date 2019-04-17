@@ -11,18 +11,18 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
-import {Challenge} from "./Challenge.sol";
-import {Validatable} from "./Validatable.sol";
+import {ConfigurableOperational} from "./ConfigurableOperational.sol";
+import {ValidatableV2} from "./ValidatableV2.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
-import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 
 /**
  * @title FraudChallengeByTrade
  * @notice Where driips are challenged wrt fraud by mismatch in single trade property values
  */
-contract FraudChallengeByTrade is Ownable, FraudChallengable, Challenge, Validatable,
+contract FraudChallengeByTrade is Ownable, FraudChallengable, ConfigurableOperational, ValidatableV2,
 SecurityBondable, WalletLockable {
     using SafeMathIntLib for int256;
 
@@ -42,7 +42,8 @@ SecurityBondable, WalletLockable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challenge(NahmiiTypesLib.Trade trade) public
+    function challenge(TradeTypesLib.Trade trade)
+    public
     onlyOperationalModeNormal
     onlySealedTrade(trade)
     {
@@ -66,25 +67,29 @@ SecurityBondable, WalletLockable {
         fraudChallenge.addFraudulentTradeHash(trade.seal.hash);
 
         // Reward stake fraction
-        securityBond.reward(msg.sender, configuration.fraudStakeFraction(), 0);
+        securityBond.rewardFractional(msg.sender, configuration.fraudStakeFraction(), 0);
 
         // Lock amount of size equivalent to trade intended and conjugate amounts of buyer
         if (!genuineBuyerAndFee) {
             walletLocker.lockFungibleByProxy(
-                trade.buyer.wallet, msg.sender, trade.amount, trade.currencies.intended.ct, trade.currencies.intended.id
+                trade.buyer.wallet, msg.sender, trade.buyer.balances.intended.current,
+                trade.currencies.intended.ct, trade.currencies.intended.id, 0
             );
             walletLocker.lockFungibleByProxy(
-                trade.buyer.wallet, msg.sender, trade.amount.div(trade.rate), trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                trade.buyer.wallet, msg.sender, trade.buyer.balances.conjugate.current,
+                trade.currencies.conjugate.ct, trade.currencies.conjugate.id, 0
             );
         }
 
         // Lock amount of size equivalent to trade intended and conjugate amounts of seller
         if (!genuineSellerAndFee) {
             walletLocker.lockFungibleByProxy(
-                trade.seller.wallet, msg.sender, trade.amount, trade.currencies.intended.ct, trade.currencies.intended.id
+                trade.seller.wallet, msg.sender, trade.seller.balances.intended.current,
+                trade.currencies.intended.ct, trade.currencies.intended.id, 0
             );
             walletLocker.lockFungibleByProxy(
-                trade.seller.wallet, msg.sender, trade.amount.div(trade.rate), trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+                trade.seller.wallet, msg.sender, trade.seller.balances.conjugate.current,
+                trade.currencies.conjugate.ct, trade.currencies.conjugate.id, 0
             );
         }
 

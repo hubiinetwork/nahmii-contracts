@@ -6,6 +6,7 @@
 
 const Migrations = artifacts.require('Migrations');
 
+const debug = require('debug')('1_initial_migrations');
 const path = require('path');
 const helpers = require('../scripts/common/helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');
@@ -15,25 +16,27 @@ const AddressStorage = require('../scripts/common/address_storage.js');
 module.exports = (deployer, network, accounts) => {
     deployer.then(async () => {
         let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
-        let ownerAccount;
+        let deployerAccount;
         let instance;
 
         await addressStorage.load();
 
         if (helpers.isTestNetwork(network))
-            ownerAccount = accounts[0];
+            deployerAccount = accounts[0];
         else {
-            ownerAccount = helpers.getOwnerAccountFromArgs();
+            deployerAccount = helpers.parseDeployerArg();
 
             if (web3.eth.personal)
-                web3.eth.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
+                await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 14400); // 4h
             else
-                web3.personal.unlockAccount(ownerAccount, helpers.getPasswordFromArgs(), 7200); //120 minutes
+                await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 14400); // 4h
         }
+
+        debug(`deployerAccount: ${deployerAccount}`);
 
         try {
             if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
-                instance = await deployer.deploy(Migrations, {from: ownerAccount});
+                instance = await deployer.deploy(Migrations, {from: deployerAccount});
                 addressStorage.set('Migrations', instance.address);
 
             } else {
@@ -42,15 +45,14 @@ module.exports = (deployer, network, accounts) => {
             }
 
         } finally {
-            if (!helpers.isTestNetwork(network)) {
+            if (!helpers.isTestNetwork(network))
                 if (web3.eth.personal)
-                    web3.eth.personal.lockAccount(ownerAccount);
+                    await web3.eth.personal.lockAccount(deployerAccount);
                 else
-                    web3.personal.lockAccount(ownerAccount);
-            }
+                    await web3.personal.lockAccount(deployerAccount);
         }
 
-        console.log(`Saving addresses in ${__filename}...`);
+        debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();
     });
 };

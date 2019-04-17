@@ -27,8 +27,8 @@ contract TransferControllerManager is Ownable {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(bytes32 => address) registeredTransferControllers;
-    mapping(address => CurrencyInfo) registeredCurrencies;
+    mapping(bytes32 => address) public registeredTransferControllers;
+    mapping(address => CurrencyInfo) public registeredCurrencies;
 
     //
     // Events

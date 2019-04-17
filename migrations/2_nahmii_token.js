@@ -7,6 +7,7 @@
 const SafeMath = artifacts.require('SafeMath');
 const NahmiiToken = artifacts.require('NahmiiToken');
 
+const debug = require('debug')('2_nahmii_token');
 const path = require('path');
 const helpers = require('../scripts/common/helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');
@@ -16,7 +17,7 @@ const AddressStorage = require('../scripts/common/address_storage.js');
 module.exports = (deployer, network, accounts) => {
     deployer.then(async () => {
         let addressStorage = new AddressStorage(deployer.basePath + path.sep + '..' + path.sep + 'build' + path.sep + 'addresses.json', network);
-        let ownerAccount;
+        let deployerAccount;
 
         await addressStorage.load();
 
@@ -24,48 +25,67 @@ module.exports = (deployer, network, accounts) => {
         //     addressStorage.clear();
 
         if (helpers.isTestNetwork(network))
-            ownerAccount = accounts[0];
+            deployerAccount = accounts[0];
 
-        let ctl = {
-            deployer,
-            deployFilters: helpers.getFiltersFromArgs(),
-            addressStorage,
-            ownerAccount
-        };
+        else {
+            deployerAccount = helpers.parseDeployerArg();
 
-        if (helpers.isTestNetwork(network)) {
-            await execDeploy(ctl, 'SafeMath', '', SafeMath);
+            if (web3.eth.personal)
+                await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 14400); // 4h
+            else
+                await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 14400); // 4h
+        }
 
-            await deployer.link(SafeMath, NahmiiToken);
+        debug(`deployerAccount: ${deployerAccount}`);
 
-            await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+        try {
+            if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
+                let ctl = {
+                    deployer,
+                    deployFilters: helpers.getFiltersFromArgs(),
+                    addressStorage,
+                    deployerAccount
+                };
 
-            const instance = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
-            await instance.mint(ownerAccount, 120e24);
-            await instance.disableMinting();
+                await execDeploy(ctl, 'SafeMath', '', SafeMath);
 
-            console.log(`Balance of token holder: ${(await instance.balanceOf(ownerAccount)).toString()}`);
-            console.log(`Minting disabled:        ${await instance.mintingDisabled()}`);
+                await deployer.link(SafeMath, NahmiiToken);
 
-        } else if (network.startsWith('ropsten'))
-            addressStorage.set('NahmiiToken', '0x65905e653b750bcb8f903374bc93cbd8e2e71b71');
+                const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
 
-        else if (network.startsWith('mainnet'))
-            addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
+                if (!helpers.isTestNetwork(network)) {
+                    debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
+                    // await instance.disableMinting();
+                    debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
+                }
 
-        console.log(`Saving addresses in ${__filename}...`);
+            } else if (network.startsWith('mainnet'))
+                addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
+
+        } finally {
+            if (!helpers.isTestNetwork(network))
+                if (web3.eth.personal)
+                    await web3.eth.personal.lockAccount(deployerAccount);
+                else
+                    await web3.personal.lockAccount(deployerAccount);
+        }
+
+        debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();
     });
 };
 
 async function execDeploy(ctl, contractName, instanceName, contract) {
     let address = ctl.addressStorage.get(instanceName || contractName);
+    let instance;
 
     if (!address || shouldDeploy(contractName, ctl.deployFilters)) {
-        let instance = await ctl.deployer.deploy(contract, {from: ctl.ownerAccount});
+        instance = await ctl.deployer.deploy(contract, {from: ctl.deployerAccount});
 
         ctl.addressStorage.set(instanceName || contractName, instance.address);
     }
+
+    return instance;
 }
 
 function shouldDeploy(contractName, deployFilters) {

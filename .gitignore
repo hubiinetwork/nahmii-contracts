@@ -3,3 +3,4 @@
 build/contracts/
 node_modules/
 tmp/
+package-lock.json
