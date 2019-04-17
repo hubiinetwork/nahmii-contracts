@@ -83,7 +83,6 @@ module.exports = (deployer, network, accounts) => {
                     BlockNumbFiguresLib,
                     BlockNumbReferenceCurrenciesLib,
                     CurrenciesLib,
-                    DriipSettlementTypesLib,
                     NahmiiTypesLib,
                     PaymentTypesLib,
                     SettlementChallengeTypesLib,
@@ -149,7 +148,6 @@ module.exports = (deployer, network, accounts) => {
                     BalanceTrackerLib,
                     BlockNumbFiguresLib,
                     BlockNumbReferenceCurrenciesLib,
-                    DriipSettlementTypesLib,
                     NahmiiTypesLib,
                     PaymentTypesLib,
                     SettlementChallengeTypesLib
@@ -164,8 +162,9 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'BalanceTrackerLib', '', BalanceTrackerLib);
                 await execDeploy(ctl, 'BlockNumbFiguresLib', '', BlockNumbFiguresLib);
                 await execDeploy(ctl, 'BlockNumbReferenceCurrenciesLib', '', BlockNumbReferenceCurrenciesLib);
-                await execDeploy(ctl, 'SettlementChallengeTypesLib', '', SettlementChallengeTypesLib);
+                await execDeploy(ctl, 'DriipSettlementTypesLib', '', DriipSettlementTypesLib);
                 await execDeploy(ctl, 'NahmiiTypesLib', '', NahmiiTypesLib);
+                await execDeploy(ctl, 'SettlementChallengeTypesLib', '', SettlementChallengeTypesLib);
                 await execDeploy(ctl, 'Strings', '', Strings);
                 await execDeploy(ctl, 'TxHistoryLib', '', TxHistoryLib);
 
