@@ -828,12 +828,26 @@ module.exports = (deployer, network, accounts) => {
                 await instance.setConfiguration(addressStorage.get('Configuration'));
                 await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
                 await instance.authorizeInitialService(addressStorage.get('DriipSettlementDisputeByPayment'));
-                await instance.registerService(addressStorage.get('DriipSettlementDisputeByTrade'));
-                await instance.authorizeInitialService(addressStorage.get('DriipSettlementDisputeByTrade'));
                 await instance.registerService(addressStorage.get('NullSettlementDisputeByPayment'));
                 await instance.authorizeInitialService(addressStorage.get('NullSettlementDisputeByPayment'));
+                await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
+                await instance.authorizeInitialService(addressStorage.get('FraudChallengeByPayment'));
+                await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
+                await instance.authorizeInitialService(addressStorage.get('FraudChallengeBySuccessivePayments'));
+                await instance.registerService(addressStorage.get('DriipSettlementDisputeByTrade'));
+                await instance.authorizeInitialService(addressStorage.get('DriipSettlementDisputeByTrade'));
                 await instance.registerService(addressStorage.get('NullSettlementDisputeByTrade'));
                 await instance.authorizeInitialService(addressStorage.get('NullSettlementDisputeByTrade'));
+                await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
+                await instance.authorizeInitialService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
+                await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+                await instance.authorizeInitialService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+                await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
+                await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTrade'));
+                await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
+                await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
+                await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
+                await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
 
             } else if (network.startsWith('mainnet')) {
                 addressStorage.set('BalanceTracker', '0xbc1bcc29edf605095bf4fe7a953b7c115ecc8cad');
@@ -1279,10 +1293,24 @@ module.exports = (deployer, network, accounts) => {
                 await instance.authorizeInitialService(addressStorage.get('DriipSettlementDisputeByPayment'));
                 await instance.registerService(addressStorage.get('NullSettlementDisputeByPayment'));
                 await instance.authorizeInitialService(addressStorage.get('NullSettlementDisputeByPayment'));
+                await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
+                await instance.authorizeInitialService(addressStorage.get('FraudChallengeByPayment'));
+                await instance.registerService(addressStorage.get('FraudChallengeBySuccessivePayments'));
+                await instance.authorizeInitialService(addressStorage.get('FraudChallengeBySuccessivePayments'));
                 // await instance.registerService(addressStorage.get('DriipSettlementDisputeByTrade'));
                 // await instance.authorizeInitialService(addressStorage.get('DriipSettlementDisputeByTrade'));
                 // await instance.registerService(addressStorage.get('NullSettlementDisputeByTrade'));
                 // await instance.authorizeInitialService(addressStorage.get('NullSettlementDisputeByTrade'));
+                // await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
+                // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
+                // await instance.registerService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+                // await instance.authorizeInitialService(addressStorage.get('FraudChallengeBySuccessiveTrades'));
+                // await instance.registerService(addressStorage.get('FraudChallengeByTrade'));
+                // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTrade'));
+                // await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
+                // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
+                // await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
+                // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
             }
 
         } finally {
