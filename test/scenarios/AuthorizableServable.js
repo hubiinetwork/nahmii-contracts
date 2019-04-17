@@ -43,6 +43,14 @@ module.exports = (glob) => {
             });
         });
 
+        describe('isAuthorizedRegisteredServiceAction()', () => {
+            it('should equal value initialized', async () => {
+                (await web3AuthorizableServable.isAuthorizedRegisteredServiceAction.call(
+                    Wallet.createRandom().address, 'some_action', Wallet.createRandom().address
+                )).should.be.false;
+            });
+        });
+
         describe('authorizeInitialService()', () => {
             let service;
 
@@ -116,6 +124,16 @@ module.exports = (glob) => {
 
                     (await web3AuthorizableServable.isAuthorizedRegisteredService.call(service, Wallet.createRandom().address))
                         .should.be.true;
+
+                    (await web3AuthorizableServable.isAuthorizedRegisteredServiceAction.call(
+                        service, 'some_action', Wallet.createRandom().address
+                    )).should.be.false;
+
+                    await web3AuthorizableServable.enableServiceAction(service, 'some_action');
+
+                    (await web3AuthorizableServable.isAuthorizedRegisteredServiceAction.call(
+                        service, 'some_action', Wallet.createRandom().address
+                    )).should.be.true;
                 });
             });
         });
@@ -183,6 +201,16 @@ module.exports = (glob) => {
 
                     (await web3AuthorizableServable.isAuthorizedRegisteredService.call(service, glob.user_a))
                         .should.be.true;
+
+                    (await web3AuthorizableServable.isAuthorizedRegisteredServiceAction.call(
+                        service, 'some_action', glob.user_a
+                    )).should.be.false;
+
+                    await web3AuthorizableServable.enableServiceAction(service, 'some_action');
+
+                    (await web3AuthorizableServable.isAuthorizedRegisteredServiceAction.call(
+                        service, 'some_action', glob.user_a
+                    )).should.be.true;
                 });
             });
         });
@@ -262,15 +290,17 @@ module.exports = (glob) => {
 
                     (await web3AuthorizableServable.isAuthorizedRegisteredService.call(service, glob.user_a))
                         .should.be.false;
-                });
-            });
-        });
 
-        describe('isAuthorizedRegisteredServiceAction()', () => {
-            it('should equal value initialized', async () => {
-                (await web3AuthorizableServable.isAuthorizedRegisteredServiceAction.call(
-                    Wallet.createRandom().address, 'some_action', Wallet.createRandom().address
-                )).should.be.false;
+                    (await web3AuthorizableServable.isAuthorizedRegisteredServiceAction.call(
+                        service, 'some_action', glob.user_a
+                    )).should.be.false;
+
+                    await web3AuthorizableServable.enableServiceAction(service, 'some_action');
+
+                    (await web3AuthorizableServable.isAuthorizedRegisteredServiceAction.call(
+                        service, 'some_action', glob.user_a
+                    )).should.be.false;
+                });
             });
         });
 
