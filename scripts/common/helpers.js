@@ -14,6 +14,13 @@ exports.parseStringArg = (argName) => {
     throw new Error(`Error: Missing '${arg}' parameter`);
 };
 
+exports.parseIntArg = (argName) => {
+    const result = parseInt(exports.parseStringArg(argName));
+    if (isNaN(result))
+        throw new Error(`Error: Non-integer specified in '--${argName}' argument`);
+    return result;
+};
+
 exports.parseAddressArg = (argName) => {
     let address = exports.parseStringArg(argName);
     if (address.substr(0, 2).toLowerCase() == '0x')
