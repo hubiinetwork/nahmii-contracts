@@ -21,6 +21,7 @@
     "exec:script:mainnet": "truffle compile && truffle exec scripts/common/script_template.js --network mainnet-infura",
     "exec:script:ropsten": "truffle compile && truffle exec scripts/common/script_template.js --network ropsten-infura",
     "exec:add_signer": "truffle exec scripts/common/add_signer.js",
+    "exec:mint_erc20_tokens": "truffle exec scripts/common/mint_erc20_tokens.js",
     "exec:register_currency": "truffle exec scripts/common/register_currency.js",
     "exec:release_nii_tokens": "truffle exec scripts/common/release_nii_tokens.js",
     "sample:events": "concurrently --raw --success first --kill-others 'ganache-cli -l 8000000 -e 1000 >/dev/null' 'truffle compile && truffle test ./sample/*.js'",
