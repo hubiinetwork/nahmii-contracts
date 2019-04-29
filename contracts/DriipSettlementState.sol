@@ -53,8 +53,8 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event InitSettlementEvent(DriipSettlementTypesLib.Settlement settlement);
-    event SetSettlementRoleDoneEvent(address wallet, uint256 nonce,
-        DriipSettlementTypesLib.SettlementRole settlementRole, bool done);
+    event SetSettlementRoleDoneEvent(address wallet, uint256 nonce, DriipSettlementTypesLib.SettlementRole settlementRole,
+        bool done, uint256 doneBlockNumber);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
         uint256 maxNonce);
     event SetMaxDriipNonceEvent(uint256 maxDriipNonce);
@@ -201,14 +201,42 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         // Require the existence of settlement
         require(0 != index);
 
-        // Update the settlement role done value
-        if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
-            settlements[index - 1].origin.done = done;
-        else // DriipSettlementTypesLib.SettlementRole.Target == settlementRole
-            settlements[index - 1].target.done = done;
+        // Get the settlement party
+        DriipSettlementTypesLib.SettlementParty storage party =
+        DriipSettlementTypesLib.SettlementRole.Origin == settlementRole ?
+        settlements[index - 1].origin :
+        settlements[index - 1].target;
+
+        // Update party done and done block number properties
+        party.done = done;
+        party.doneBlockNumber = done ? block.number : 0;
 
         // Emit event
-        emit SetSettlementRoleDoneEvent(wallet, nonce, settlementRole, done);
+        emit SetSettlementRoleDoneEvent(wallet, nonce, settlementRole, done, party.doneBlockNumber);
+    }
+
+    /// @notice Get the settlement done block number wrt the given settlement role
+    /// @param wallet The address of the concerned wallet
+    /// @param nonce The nonce of the concerned wallet
+    /// @param settlementRole The settlement role
+    /// @return The done block number of the settlement wrt the given settlement role
+    function settlementRoleDoneBlockNumber(address wallet, uint256 nonce,
+        DriipSettlementTypesLib.SettlementRole settlementRole)
+    public
+    view
+    returns (uint256)
+    {
+        // Get the 1-based index of the settlement
+        uint256 index = walletNonceSettlementIndex[wallet][nonce];
+
+        // Require the existence of settlement
+        require(0 != index);
+
+        // Return done of settlement role
+        if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
+            return settlements[index - 1].origin.doneBlockNumber;
+        else // DriipSettlementTypesLib.SettlementRole.Target == settlementRole
+            return settlements[index - 1].target.doneBlockNumber;
     }
 
     /// @notice Set the max (driip) nonce

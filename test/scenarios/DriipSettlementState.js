@@ -308,6 +308,14 @@ module.exports = (glob) => {
             });
         });
 
+        describe('settlementRoleDoneBlockNumber()', () => {
+            it('should equal value initialized', async () => {
+                ethersDriipSettlementState.settlementRoleDoneBlockNumber(
+                    glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                ).should.be.rejected;
+            });
+        });
+
         describe('setSettlementRoleDone()', () => {
             let filter;
 
@@ -343,20 +351,60 @@ module.exports = (glob) => {
                     );
                 });
 
-                it('should successfully set done of origin role', async () => {
-                    await ethersDriipSettlementState.setSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
-                    );
+                describe('if called with true as done value', () => {
+                    it('should successfully set done of origin role and update its done block number', async () => {
+                        await ethersDriipSettlementState.setSettlementRoleDone(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
+                        );
 
-                    const logs = await provider.getLogs(filter);
-                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+                        const logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    (await ethersDriipSettlementState.isSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
-                    )).should.be.true;
-                    (await ethersDriipSettlementState.isSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Target')
-                    )).should.be.false;
+                        (await ethersDriipSettlementState.isSettlementRoleDone(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        )).should.be.true;
+                        (await ethersDriipSettlementState.settlementRoleDoneBlockNumber(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        ))._bn.should.eq.BN(await provider.getBlockNumber());
+
+                        (await ethersDriipSettlementState.isSettlementRoleDone(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        )).should.be.false;
+                        (await ethersDriipSettlementState.settlementRoleDoneBlockNumber(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        ))._bn.should.eq.BN(0);
+                    });
+                });
+
+                describe('if called with false as done value', () => {
+                    beforeEach(async () => {
+                        await ethersDriipSettlementState.setSettlementRoleDone(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
+                        );
+                    });
+
+                    it('should successfully set done of origin role and update its done block number', async () => {
+                        await ethersDriipSettlementState.setSettlementRoleDone(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), false
+                        );
+
+                        const logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                        (await ethersDriipSettlementState.isSettlementRoleDone(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        )).should.be.false;
+                        (await ethersDriipSettlementState.settlementRoleDoneBlockNumber(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        ))._bn.should.eq.BN(0);
+
+                        (await ethersDriipSettlementState.isSettlementRoleDone(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        )).should.be.false;
+                        (await ethersDriipSettlementState.settlementRoleDoneBlockNumber(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        ))._bn.should.eq.BN(0);
+                    });
                 });
             });
 
@@ -372,20 +420,60 @@ module.exports = (glob) => {
                     );
                 });
 
-                it('should successfully set done of origin role', async () => {
-                    await ethersDriipSettlementState.setSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Target'), true
-                    );
+                describe('if called with true as done value', () => {
+                    it('should successfully set done of target role and update its done block number', async () => {
+                        await ethersDriipSettlementState.setSettlementRoleDone(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), true
+                        );
 
-                    const logs = await provider.getLogs(filter);
-                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+                        const logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    (await ethersDriipSettlementState.isSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
-                    )).should.be.false;
-                    (await ethersDriipSettlementState.isSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Target')
-                    )).should.be.true;
+                        (await ethersDriipSettlementState.isSettlementRoleDone(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        )).should.be.false;
+                        (await ethersDriipSettlementState.settlementRoleDoneBlockNumber(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        ))._bn.should.eq.BN(0);
+
+                        (await ethersDriipSettlementState.isSettlementRoleDone(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        )).should.be.true;
+                        (await ethersDriipSettlementState.settlementRoleDoneBlockNumber(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        ))._bn.should.eq.BN(await provider.getBlockNumber());
+                    });
+                });
+
+                describe('if called with false as done value', () => {
+                    beforeEach(async () => {
+                        await ethersDriipSettlementState.setSettlementRoleDone(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), true
+                        );
+                    });
+
+                    it('should successfully set done of target role and update its done block number', async () => {
+                        await ethersDriipSettlementState.setSettlementRoleDone(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), false
+                        );
+
+                        const logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                        (await ethersDriipSettlementState.isSettlementRoleDone(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        )).should.be.false;
+                        (await ethersDriipSettlementState.settlementRoleDoneBlockNumber(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        ))._bn.should.eq.BN(0);
+
+                        (await ethersDriipSettlementState.isSettlementRoleDone(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        )).should.be.false;
+                        (await ethersDriipSettlementState.settlementRoleDoneBlockNumber(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        ))._bn.should.eq.BN(0);
+                    });
                 });
             });
         });
@@ -417,7 +505,7 @@ module.exports = (glob) => {
             describe('if called by enabled service action', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementState.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementState.SET_MAX_DRIIP_NONCE_ACTION(),
+                        glob.owner, await ethersDriipSettlementState.SET_MAX_NONCE_ACTION(),
                         {gasLimit: 1e6}
                     );
                 });
