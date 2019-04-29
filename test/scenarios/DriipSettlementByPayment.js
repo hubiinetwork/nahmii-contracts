@@ -619,9 +619,6 @@ module.exports = (glob) => {
                         proposal.currency.ct.should.equal(payment.currency.ct);
                         proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         proposal.terminated.should.be.true;
-
-                        (await ethersDriipSettlementState.maxDriipNonce())
-                            ._bn.should.eq.BN(payment.nonce._bn);
                     });
                 });
 
@@ -866,9 +863,6 @@ module.exports = (glob) => {
                         proposal.currency.ct.should.equal(payment.currency.ct);
                         proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         proposal.terminated.should.be.true;
-
-                        (await ethersDriipSettlementState.maxDriipNonce())
-                            ._bn.should.eq.BN(payment.nonce._bn);
                     });
                 });
 

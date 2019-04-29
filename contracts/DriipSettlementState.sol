@@ -35,7 +35,6 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     string constant public INIT_SETTLEMENT_ACTION = "init_settlement";
     string constant public SET_SETTLEMENT_ROLE_DONE_ACTION = "set_settlement_role_done";
     string constant public SET_MAX_NONCE_ACTION = "set_max_nonce";
-    string constant public SET_MAX_DRIIP_NONCE_ACTION = "set_max_driip_nonce";
     string constant public SET_FEE_TOTAL_ACTION = "set_fee_total";
 
     //
@@ -216,7 +215,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     /// @param _maxDriipNonce The max nonce
     function setMaxDriipNonce(uint256 _maxDriipNonce)
     public
-    onlyEnabledServiceAction(SET_MAX_DRIIP_NONCE_ACTION)
+    onlyEnabledServiceAction(SET_MAX_NONCE_ACTION)
     {
         maxDriipNonce = _maxDriipNonce;
 

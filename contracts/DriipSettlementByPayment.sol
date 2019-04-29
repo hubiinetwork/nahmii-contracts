@@ -270,10 +270,6 @@ FraudChallengable, WalletLockable {
 
         // Remove driip settlement challenge proposal
         driipSettlementChallengeState.terminateProposal(wallet, payment.currency, false);
-
-        // If payment global nonce is beyond max driip nonce then update max driip nonce
-        if (payment.nonce > driipSettlementState.maxDriipNonce())
-            driipSettlementState.setMaxDriipNonce(payment.nonce);
     }
 
     function _getRoleProperties(PaymentTypesLib.Payment payment, address wallet)
