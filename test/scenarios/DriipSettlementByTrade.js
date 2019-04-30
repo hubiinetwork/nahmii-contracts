@@ -667,7 +667,7 @@ module.exports = (glob) => {
 
                 describe('if wallet has already settled this trade', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementState.setSettlementRoleDone(
+                        await ethersDriipSettlementState.completeSettlementParty(
                             trade.buyer.wallet, trade.buyer.nonce, mocks.settlementRoles.indexOf('Target'), true
                         );
                     });
@@ -921,7 +921,7 @@ module.exports = (glob) => {
 
                 describe('if wallet has already settled this trade', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementState.setSettlementRoleDone(
+                        await ethersDriipSettlementState.completeSettlementParty(
                             trade.buyer.wallet, trade.buyer.nonce, mocks.settlementRoles.indexOf('Target'), true
                         );
                     });

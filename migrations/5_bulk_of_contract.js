@@ -984,6 +984,7 @@ module.exports = (deployer, network, accounts) => {
                 await instance.setDriipSettlementDisputeByPayment(addressStorage.get('DriipSettlementDisputeByPayment'));
                 await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
                 await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+                await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
 
                 // instance = await DriipSettlementChallengeByTrade.at(addressStorage.get('DriipSettlementChallengeByTrade'));
                 // await instance.setValidator(addressStorage.get('ValidatorV2'));

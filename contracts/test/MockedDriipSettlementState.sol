@@ -7,17 +7,19 @@
  */
 
 pragma solidity ^0.4.25;
+pragma experimental ABIEncoderV2;
 
 import {DriipSettlementTypesLib} from "../DriipSettlementTypesLib.sol";
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
-import "../Beneficiary.sol";
-pragma experimental ABIEncoderV2;
+import {Beneficiary} from "../Beneficiary.sol";
+import {SafeMathUintLib} from "../SafeMathUintLib.sol";
 
 /**
  * @title MockedDriipSettlementState
  * @notice Mocked implementation of driip settlement state contract
  */
 contract MockedDriipSettlementState {
+    using SafeMathUintLib for uint256;
 
     DriipSettlementTypesLib.Settlement[] public settlements;
     uint256 public _maxNonceByWalletAndCurrency;
@@ -33,6 +35,14 @@ contract MockedDriipSettlementState {
         delete _totalFee;
     }
 
+    function settlementsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return settlements.length;
+    }
+
     function initSettlement(string settledKind, bytes32 settledHash, address originWallet,
         uint256 originNonce, address targetWallet, uint256 targetNonce)
     public
@@ -46,15 +56,33 @@ contract MockedDriipSettlementState {
         settlements[index].target.wallet = targetWallet;
     }
 
-    function settlementsCount()
+    function completeSettlementParty(address, uint256,
+        DriipSettlementTypesLib.SettlementRole settlementRole,
+        bool done)
     public
-    view
-    returns (uint256)
     {
-        return settlements.length;
+        uint256 index = _addSettlementIfNone();
+
+        if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
+            settlements[index].origin.done = done;
+        else
+            settlements[index].target.done = done;
     }
 
-    function isSettlementRoleDone(address, uint256,
+    function isSettlementPartyDone(address, uint256)
+    public
+    view
+    returns (bool)
+    {
+        if (0 == settlements.length)
+            return false;
+
+        uint256 index = settlements.length - 1;
+
+        return (settlements[index - 1].origin.done || settlements[index - 1].target.done);
+    }
+
+    function isSettlementPartyDone(address, uint256,
         DriipSettlementTypesLib.SettlementRole settlementRole)
     public
     view
@@ -71,17 +99,32 @@ contract MockedDriipSettlementState {
             return settlements[index].target.done;
     }
 
-    function setSettlementRoleDone(address, uint256,
-        DriipSettlementTypesLib.SettlementRole settlementRole,
-        bool done)
+    function settlementPartyDoneBlockNumber(address, uint256)
     public
+    view
+    returns (uint256)
     {
-        uint256 index = _addSettlementIfNone();
+        require(0 < settlements.length);
+
+        uint256 index = settlements.length - 1;
+
+        return settlements[index].origin.doneBlockNumber.clampMin(settlements[index].target.doneBlockNumber);
+    }
+
+    function settlementPartyDoneBlockNumber(address, uint256,
+        DriipSettlementTypesLib.SettlementRole settlementRole)
+    public
+    view
+    returns (uint256)
+    {
+        require(0 < settlements.length);
+
+        uint256 index = settlements.length - 1;
 
         if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
-            settlements[index].origin.done = done;
+            return settlements[index].origin.doneBlockNumber;
         else
-            settlements[index].target.done = done;
+            return settlements[index].target.doneBlockNumber;
     }
 
     function _addSettlementIfNone()

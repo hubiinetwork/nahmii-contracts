@@ -237,12 +237,12 @@ FraudChallengable, WalletLockable {
         );
 
         // If exists settlement of nonce then require that wallet has not already settled
-        require(!driipSettlementState.isSettlementRoleDone(
+        require(!driipSettlementState.isSettlementPartyDone(
             wallet, walletNonce, settlementRole
         ));
 
         // Set address of origin or target to prevent the same settlement from being resettled by this wallet
-        driipSettlementState.setSettlementRoleDone(
+        driipSettlementState.completeSettlementParty(
             wallet, walletNonce, settlementRole, true
         );
 
