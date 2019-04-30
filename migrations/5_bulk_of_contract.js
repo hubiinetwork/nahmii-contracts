@@ -47,6 +47,7 @@ const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedDriipSettlementDisputeByPayment = artifacts.require('MockedDriipSettlementDisputeByPayment');
 const MockedDriipSettlementDisputeByTrade = artifacts.require('MockedDriipSettlementDisputeByTrade');
+const MockedDriipSettlementState = artifacts.require('MockedDriipSettlementState');
 const MockedValidator = artifacts.require('MockedValidator');
 const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
@@ -321,6 +322,7 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeBySuccessivePayments,
                 FraudChallengeBySuccessiveTrades,
                 FraudChallengeByTradeSucceedingPayment,
+                MockedDriipSettlementState,
                 NullSettlement,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade,

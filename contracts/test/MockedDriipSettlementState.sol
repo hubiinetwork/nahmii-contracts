@@ -63,10 +63,13 @@ contract MockedDriipSettlementState {
     {
         uint256 index = _addSettlementIfNone();
 
-        if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
-            settlements[index].origin.done = done;
-        else
-            settlements[index].target.done = done;
+        DriipSettlementTypesLib.SettlementParty storage settlementParty =
+        DriipSettlementTypesLib.SettlementRole.Origin == settlementRole ?
+        settlements[index].origin :
+        settlements[index].target;
+
+        settlementParty.done = done;
+        settlementParty.doneBlockNumber = done ? block.number : 0;
     }
 
     function isSettlementPartyDone(address, uint256)
@@ -99,6 +102,19 @@ contract MockedDriipSettlementState {
             return settlements[index].target.done;
     }
 
+    function _setSettlementPartyDone(DriipSettlementTypesLib.SettlementRole settlementRole, bool done)
+    public
+    {
+        require(0 < settlements.length);
+
+        uint256 index = settlements.length - 1;
+
+        if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
+            settlements[index].origin.done = done;
+        else
+            settlements[index].target.done = done;
+    }
+
     function settlementPartyDoneBlockNumber(address, uint256)
     public
     view
@@ -125,6 +141,19 @@ contract MockedDriipSettlementState {
             return settlements[index].origin.doneBlockNumber;
         else
             return settlements[index].target.doneBlockNumber;
+    }
+
+    function _setSettlementPartyDoneBlockNumber(DriipSettlementTypesLib.SettlementRole settlementRole, uint256 doneBlockNumber)
+    public
+    {
+        require(0 < settlements.length);
+
+        uint256 index = settlements.length - 1;
+
+        if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
+            settlements[index].origin.doneBlockNumber = doneBlockNumber;
+        else
+            settlements[index].target.doneBlockNumber = doneBlockNumber;
     }
 
     function _addSettlementIfNone()

@@ -19,6 +19,7 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDisputeByPayment} from "./DriipSettlementDisputeByPayment.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
+import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
@@ -42,6 +43,7 @@ BalanceTrackable {
     DriipSettlementDisputeByPayment public driipSettlementDisputeByPayment;
     DriipSettlementChallengeState public driipSettlementChallengeState;
     NullSettlementChallengeState public nullSettlementChallengeState;
+    DriipSettlementState public driipSettlementState;
 
     //
     // Events
@@ -52,6 +54,8 @@ BalanceTrackable {
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
+    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
+        DriipSettlementState newDriipSettlementState);
     event StartChallengeFromPaymentEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
         int256 targetBalanceAmount, address currencyCt, uint256 currencyId);
     event StartChallengeFromPaymentByProxyEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
@@ -106,6 +110,18 @@ BalanceTrackable {
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
         emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
+    }
+
+    /// @notice Set the driip settlement state contract
+    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
+    function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
+    public
+    onlyDeployer
+    notNullAddress(newDriipSettlementState)
+    {
+        DriipSettlementState oldDriipSettlementState = driipSettlementState;
+        driipSettlementState = newDriipSettlementState;
+        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
     }
 
     /// @notice Start settlement challenge on payment
@@ -494,7 +510,9 @@ BalanceTrackable {
         // Target balance amount is calculated as current balance - cumulativeTransferAmount - stageAmount
         driipSettlementChallengeState.initiateProposal(
             wallet, nonce, cumulativeTransferAmount, stageAmount,
-            balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency).sub(cumulativeTransferAmount.add(stageAmount)),
+            balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency).sub(
+                cumulativeTransferAmount.add(stageAmount)
+            ),
             payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
@@ -519,14 +537,45 @@ BalanceTrackable {
     function _paymentPartyProperties(PaymentTypesLib.Payment payment, address wallet)
     private
     view
-    returns (uint256, int256)
+    returns (uint256 nonce, int256 correctedCumulativeTransferAmount)
     {
-        // Obtain the active balance amount at the payment block
-        int256 balanceAmountAtPaymentBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(wallet, payment.currency, payment.blockNumber);
+        // Obtain unsynchronized stage amount from previous driip settlement if existent.
+        int256 unsynchronizedStageAmount = 0;
+        if (driipSettlementChallengeState.hasProposal(wallet, payment.currency)) {
+            uint256 previousChallengeNonce = driipSettlementChallengeState.proposalNonce(wallet, payment.currency);
 
-        // Return wallet nonce and cumulative relative transfer
-        return validator.isPaymentSender(payment, wallet) ?
-        (payment.sender.nonce, balanceAmountAtPaymentBlock.sub(payment.sender.balances.current)) :
-    (payment.recipient.nonce, balanceAmountAtPaymentBlock.sub(payment.recipient.balances.current));
+            // Get settlement party done block number. The function returns 0 if the settlement party has not effectuated
+            // its side of the settlement.
+            uint256 settlementPartyDoneBlockNumber = driipSettlementState.settlementPartyDoneBlockNumber(
+                wallet, previousChallengeNonce
+            );
+
+            // If payment is not up to date wrt events affecting the wallet's balance then obtain
+            // the unsynchronized stage amount from the previous driip settlement challenge.
+            if (payment.blockNumber < settlementPartyDoneBlockNumber)
+                unsynchronizedStageAmount = driipSettlementChallengeState.proposalStageAmount(
+                    wallet, payment.currency
+                );
+        }
+
+        // Obtain the active balance amount at the payment block
+        int256 balanceAmountAtPaymentBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+            wallet, payment.currency, payment.blockNumber
+        );
+
+        // Obtain nonce and cumulative (relative) transfer amount.
+        // Correct the cumulative transfer amount for wrong value occurring from
+        // race condition of off-chain wallet rebalance resulting from completed settlement
+        if (validator.isPaymentSender(payment, wallet)) {
+            nonce = payment.sender.nonce;
+            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock
+            .sub(payment.sender.balances.current)
+            .add(unsynchronizedStageAmount);
+        } else {
+            nonce = payment.recipient.nonce;
+            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock
+            .sub(payment.recipient.balances.current)
+            .add(unsynchronizedStageAmount);
+        }
     }
 }

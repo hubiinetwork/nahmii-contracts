@@ -10,6 +10,7 @@ const SignerManager = artifacts.require('SignerManager');
 const MockedDriipSettlementDisputeByPayment = artifacts.require('MockedDriipSettlementDisputeByPayment');
 const MockedDriipSettlementChallengeState = artifacts.require('MockedDriipSettlementChallengeState');
 const MockedNullSettlementChallengeState = artifacts.require('MockedNullSettlementChallengeState');
+const MockedDriipSettlementState = artifacts.require('MockedDriipSettlementState');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
 const MockedWalletLocker = artifacts.require('MockedWalletLocker');
@@ -31,6 +32,7 @@ module.exports = (glob) => {
         let web3DriipSettlementDisputeByPayment, ethersDriipSettlementDisputeByPayment;
         let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
         let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
+        let web3DriipSettlementState, ethersDriipSettlementState;
         let provider;
 
         before(async () => {
@@ -44,6 +46,8 @@ module.exports = (glob) => {
             ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, MockedDriipSettlementChallengeState.abi, glob.signer_owner);
             web3NullSettlementChallengeState = await MockedNullSettlementChallengeState.new();
             ethersNullSettlementChallengeState = new Contract(web3NullSettlementChallengeState.address, MockedNullSettlementChallengeState.abi, glob.signer_owner);
+            web3DriipSettlementState = await MockedDriipSettlementState.new();
+            ethersDriipSettlementState = new Contract(web3DriipSettlementState.address, MockedDriipSettlementState.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
@@ -65,6 +69,7 @@ module.exports = (glob) => {
             await ethersDriipSettlementChallengeByPayment.setDriipSettlementDisputeByPayment(ethersDriipSettlementDisputeByPayment.address);
             await ethersDriipSettlementChallengeByPayment.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
             await ethersDriipSettlementChallengeByPayment.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
+            await ethersDriipSettlementChallengeByPayment.setDriipSettlementState(ethersDriipSettlementState.address);
 
             await ethersConfiguration.setEarliestSettlementBlockNumber(0);
         });
@@ -254,8 +259,12 @@ module.exports = (glob) => {
                 await ethersBalanceTracker._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+                await ethersDriipSettlementState._reset({gasLimit: 1e6});
 
-                payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
+                payment = await mocks.mockPayment(glob.owner, {
+                    sender: {wallet: glob.owner},
+                    blockNumber: utils.bigNumberify(0)
+                });
             });
 
             describe('if wallet is locked', () => {
@@ -332,11 +341,12 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if within operational constraints', () => {
+            describe('if there is no existent driip settlement challenge proposal to suggest unsynchronized payment balance', () => {
                 let filter;
 
                 beforeEach(async () => {
-                    await web3DriipSettlementChallengeState._setProposalExpired(true);
+                    await web3DriipSettlementChallengeState._setProposal(false);
+                    await web3DriipSettlementChallengeState._setProposalTerminated(true);
 
                     await ethersBalanceTracker._set(
                         await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
@@ -353,7 +363,7 @@ module.exports = (glob) => {
                     };
                 });
 
-                it('should start challenge successfully', async () => {
+                it('should start challenge successfully without correcting cumulative transfer amount', async () => {
                     await ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
                         payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
@@ -363,7 +373,144 @@ module.exports = (glob) => {
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                    proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
+                        utils.parseUnits('10000', 18).sub(payment.sender.balances.current)._bn
+                    );
                     proposal.amounts.stage._bn.should.eq.BN(payment.sender.balances.current._bn);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(0);
+                    proposal.currency.ct.should.equal(payment.currency.ct);
+                    proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                    proposal.referenceBlockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                    proposal.walletInitiated.should.be.true;
+                    proposal.challenged.hash.should.equal(payment.seals.operator.hash);
+                    proposal.challenged.kind.should.equal('payment');
+                });
+            });
+
+            describe('if there exist a driip settlement challenge proposal but the payment includes its causal rebalance', () => {
+                let filter;
+
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposal(true);
+                    await ethersDriipSettlementChallengeState._setProposalTerminated(true);
+                    await ethersDriipSettlementChallengeState._setProposalNonce(0);
+
+                    await ethersDriipSettlementState.initSettlement(
+                        'payment', payment.seals.operator.hash,
+                        payment.sender.wallet, payment.sender.nonce,
+                        payment.recipient.wallet, payment.recipient.nonce,
+                        {gasLimit: 1e6}
+                    );
+                    await ethersDriipSettlementState._setSettlementPartyDoneBlockNumber(
+                        mocks.settlementRoles.indexOf('Origin'), payment.blockNumber
+                    );
+
+                    await ethersBalanceTracker._set(
+                        await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
+                        {gasLimit: 1e6}
+                    );
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
+                        payment.blockNumber, {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentEvent'].topics
+                    };
+                });
+
+                it('should start challenge successfully without correcting cumulative transfer amount', async () => {
+                    await ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const proposal = await ethersDriipSettlementChallengeState._proposals(1);
+
+                    // TODO Remove
+                    console.log(`Cumulative transfer amount: ${utils.formatUnits(proposal.amounts.cumulativeTransfer, 18)}`);
+                    console.log(`Stage amount: ${utils.formatUnits(proposal.amounts.stage, 18)}`);
+                    console.log(`Target balance amount: ${utils.formatUnits(proposal.amounts.targetBalance, 18)}`);
+
+                    proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                    proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
+                        utils.parseUnits('10000', 18).sub(payment.sender.balances.current)._bn
+                    );
+                    proposal.amounts.stage._bn.should.eq.BN(payment.sender.balances.current._bn);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(0);
+                    proposal.currency.ct.should.equal(payment.currency.ct);
+                    proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                    proposal.referenceBlockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                    proposal.walletInitiated.should.be.true;
+                    proposal.challenged.hash.should.equal(payment.seals.operator.hash);
+                    proposal.challenged.kind.should.equal('payment');
+                });
+            });
+
+            describe('if there exist a driip settlement challenge proposal and the payment does not include its causal rebalance', () => {
+                let filter;
+
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposal(true);
+                    await ethersDriipSettlementChallengeState._setProposalTerminated(true);
+                    await ethersDriipSettlementChallengeState._setProposalNonce(0);
+                    await ethersDriipSettlementChallengeState._setProposalStageAmount(utils.parseUnits('100', 18));
+
+                    await ethersDriipSettlementState.initSettlement(
+                        'payment', payment.seals.operator.hash,
+                        payment.sender.wallet, payment.sender.nonce,
+                        payment.recipient.wallet, payment.recipient.nonce,
+                        {gasLimit: 1e6}
+                    );
+                    await ethersDriipSettlementState._setSettlementPartyDoneBlockNumber(
+                        mocks.settlementRoles.indexOf('Origin'), payment.blockNumber.add(1)
+                    );
+
+                    await ethersBalanceTracker._set(
+                        await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
+                        {gasLimit: 1e6}
+                    );
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
+                        payment.blockNumber, {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentEvent'].topics
+                    };
+                });
+
+                it('should start challenge successfully with corrected cumulative transfer amount', async () => {
+                    await ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
+                        payment, payment.sender.balances.current.sub(utils.parseUnits('100', 18)), {gasLimit: 3e6} // TODO Remove '9399.8'
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const proposal = await ethersDriipSettlementChallengeState._proposals(1);
+
+                    // TODO Remove
+                    console.log(`Cumulative transfer amount: ${utils.formatUnits(proposal.amounts.cumulativeTransfer, 18)}`);
+                    console.log(`Stage amount: ${utils.formatUnits(proposal.amounts.stage, 18)}`);
+                    console.log(`Target balance amount: ${utils.formatUnits(proposal.amounts.targetBalance, 18)}`);
+
+                    proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                    proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
+                        utils.parseUnits('10000', 18)
+                            .sub(payment.sender.balances.current)
+                            .add(utils.parseUnits('100', 18))
+                            ._bn
+                    );
+                    proposal.amounts.stage._bn.should.eq.BN(
+                        payment.sender.balances.current.sub(utils.parseUnits('100', 18))._bn
+                    );
                     proposal.amounts.targetBalance._bn.should.eq.BN(0);
                     proposal.currency.ct.should.equal(payment.currency.ct);
                     proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
@@ -384,8 +531,12 @@ module.exports = (glob) => {
                 await ethersBalanceTracker._reset({gasLimit: 1e6});
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+                await ethersDriipSettlementState._reset({gasLimit: 1e6});
 
-                payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
+                payment = await mocks.mockPayment(glob.owner, {
+                    sender: {wallet: glob.owner},
+                    blockNumber: utils.bigNumberify(0)
+                });
             });
 
             describe('if called with improperly sealed payment', () => {
@@ -450,11 +601,12 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if within operational constraints', () => {
+            describe('if there is no existent driip settlement challenge proposal to suggest unsynchronized payment balance', () => {
                 let filter;
 
                 beforeEach(async () => {
-                    await web3DriipSettlementChallengeState._setProposalExpired(true);
+                    await web3DriipSettlementChallengeState._setProposal(false);
+                    await web3DriipSettlementChallengeState._setProposalTerminated(true);
 
                     await ethersBalanceTracker._set(
                         await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
@@ -471,7 +623,7 @@ module.exports = (glob) => {
                     };
                 });
 
-                it('should start challenge successfully', async () => {
+                it('should start challenge successfully without correcting cumulative transfer amount', async () => {
                     await ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
                         payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
                     );
@@ -481,6 +633,9 @@ module.exports = (glob) => {
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(0);
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                    proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
+                        utils.parseUnits('10000', 18).sub(payment.sender.balances.current)._bn
+                    );
                     proposal.amounts.stage._bn.should.eq.BN(payment.sender.balances.current._bn);
                     proposal.amounts.targetBalance._bn.should.eq.BN(0);
                     proposal.currency.ct.should.equal(payment.currency.ct);
@@ -492,6 +647,143 @@ module.exports = (glob) => {
                     proposal.challenged.kind.should.equal('payment');
                 });
             });
+
+            describe('if there exist a driip settlement challenge proposal but the payment includes its causal rebalance', () => {
+                let filter;
+
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposal(true);
+                    await ethersDriipSettlementChallengeState._setProposalTerminated(true);
+                    await ethersDriipSettlementChallengeState._setProposalNonce(0);
+
+                    await ethersDriipSettlementState.initSettlement(
+                        'payment', payment.seals.operator.hash,
+                        payment.sender.wallet, payment.sender.nonce,
+                        payment.recipient.wallet, payment.recipient.nonce,
+                        {gasLimit: 1e6}
+                    );
+                    await ethersDriipSettlementState._setSettlementPartyDoneBlockNumber(
+                        mocks.settlementRoles.indexOf('Origin'), payment.blockNumber
+                    );
+
+                    await ethersBalanceTracker._set(
+                        await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
+                        {gasLimit: 1e6}
+                    );
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
+                        payment.blockNumber, {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentByProxyEvent'].topics
+                    };
+                });
+
+                it('should start challenge successfully without correcting cumulative transfer amount', async () => {
+                    await ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
+                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const proposal = await ethersDriipSettlementChallengeState._proposals(1);
+
+                    // TODO Remove
+                    console.log(`Cumulative transfer amount: ${utils.formatUnits(proposal.amounts.cumulativeTransfer, 18)}`);
+                    console.log(`Stage amount: ${utils.formatUnits(proposal.amounts.stage, 18)}`);
+                    console.log(`Target balance amount: ${utils.formatUnits(proposal.amounts.targetBalance, 18)}`);
+
+                    proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                    proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
+                        utils.parseUnits('10000', 18).sub(payment.sender.balances.current)._bn
+                    );
+                    proposal.amounts.stage._bn.should.eq.BN(payment.sender.balances.current._bn);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(0);
+                    proposal.currency.ct.should.equal(payment.currency.ct);
+                    proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                    proposal.referenceBlockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                    proposal.walletInitiated.should.be.false;
+                    proposal.challenged.hash.should.equal(payment.seals.operator.hash);
+                    proposal.challenged.kind.should.equal('payment');
+                });
+            });
+
+            describe('if there exist a driip settlement challenge proposal and the payment does not include its causal rebalance', () => {
+                let filter;
+
+                beforeEach(async () => {
+                    await ethersDriipSettlementChallengeState._setProposal(true);
+                    await ethersDriipSettlementChallengeState._setProposalTerminated(true);
+                    await ethersDriipSettlementChallengeState._setProposalNonce(0);
+                    await ethersDriipSettlementChallengeState._setProposalStageAmount(utils.parseUnits('100', 18));
+
+                    await ethersDriipSettlementState.initSettlement(
+                        'payment', payment.seals.operator.hash,
+                        payment.sender.wallet, payment.sender.nonce,
+                        payment.recipient.wallet, payment.recipient.nonce,
+                        {gasLimit: 1e6}
+                    );
+                    await ethersDriipSettlementState._setSettlementPartyDoneBlockNumber(
+                        mocks.settlementRoles.indexOf('Origin'), payment.blockNumber.add(1)
+                    );
+
+                    await ethersBalanceTracker._set(
+                        await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
+                        {gasLimit: 1e6}
+                    );
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('10000', 18),
+                        payment.blockNumber, {gasLimit: 1e6}
+                    );
+
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersDriipSettlementChallengeByPayment.interface.events['StartChallengeFromPaymentByProxyEvent'].topics
+                    };
+                });
+
+                it('should start challenge successfully with corrected cumulative transfer amount', async () => {
+                    await ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
+                        payment.sender.wallet, payment,
+                        payment.sender.balances.current.sub(utils.parseUnits('100', 18)),
+                        {gasLimit: 3e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const proposal = await ethersDriipSettlementChallengeState._proposals(1);
+
+                    // TODO Remove
+                    console.log(`Cumulative transfer amount: ${utils.formatUnits(proposal.amounts.cumulativeTransfer, 18)}`);
+                    console.log(`Stage amount: ${utils.formatUnits(proposal.amounts.stage, 18)}`);
+                    console.log(`Target balance amount: ${utils.formatUnits(proposal.amounts.targetBalance, 18)}`);
+
+                    proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                    proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
+                        utils.parseUnits('10000', 18)
+                            .sub(payment.sender.balances.current)
+                            .add(utils.parseUnits('100', 18))
+                            ._bn
+                    );
+                    proposal.amounts.stage._bn.should.eq.BN(
+                        payment.sender.balances.current.sub(utils.parseUnits('100', 18))._bn
+                    );
+                    proposal.amounts.targetBalance._bn.should.eq.BN(0);
+                    proposal.currency.ct.should.equal(payment.currency.ct);
+                    proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                    proposal.referenceBlockNumber._bn.should.eq.BN(payment.blockNumber._bn);
+                    proposal.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                    proposal.walletInitiated.should.be.false;
+                    proposal.challenged.hash.should.equal(payment.seals.operator.hash);
+                    proposal.challenged.kind.should.equal('payment');
+                });
+            });
+
         });
 
         describe('stopChallenge()', () => {
