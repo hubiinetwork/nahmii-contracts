@@ -162,6 +162,44 @@ module.exports = (glob) => {
             });
         });
 
+        describe('settlementUpgradesFrozen()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersDriipSettlementState.settlementUpgradesFrozen())
+                    .should.be.false;
+            });
+        });
+
+        describe('freezeSettlementUpgrades()', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3DriipSettlementState.freezeSettlementUpgrades({from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by deployer', () => {
+                let address, filter;
+
+                beforeEach(async () => {
+                    address = Wallet.createRandom().address;
+
+                    filter = await fromBlockTopicsFilter(
+                        ethersDriipSettlementState.interface.events.FreezeSettlementUpgradesEvent.topics
+                    );
+                });
+
+                it('should disable changing community vote', async () => {
+                    await web3DriipSettlementState.freezeSettlementUpgrades();
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    (await ethersDriipSettlementState.settlementUpgradesFrozen())
+                        .should.be.true;
+                });
+            });
+        });
+
         describe('settlementsCount()', () => {
             it('should equal value initialized', async () => {
                 (await ethersDriipSettlementState.settlementsCount())
@@ -382,7 +420,7 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
                         )).should.be.true;
-                        
+
                         (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
                             glob.user_a, 1
                         ))._bn.should.eq.BN(await provider.getBlockNumber());
@@ -396,7 +434,7 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
                             glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
                         )).should.be.false;
-                        
+
                         (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
                             glob.user_b, 2
                         ))._bn.should.eq.BN(0);
@@ -427,7 +465,7 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
                         )).should.be.false;
-                        
+
                         (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
                             glob.user_a, 1
                         ))._bn.should.eq.BN(0);
@@ -524,7 +562,7 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
                         )).should.be.false;
-                        
+
                         (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
                             glob.user_a, 1
                         ))._bn.should.eq.BN(0);
@@ -538,7 +576,7 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
                             glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
                         )).should.be.false;
-                        
+
                         (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
                             glob.user_b, 2
                         ))._bn.should.eq.BN(0);
@@ -730,6 +768,79 @@ module.exports = (glob) => {
                     );
                     totalFee.nonce._bn.should.eq.BN(10);
                     totalFee.amount._bn.should.eq.BN(20);
+                });
+            });
+        });
+
+        describe('upgradeSettlement', () => {
+            let upgradableWeb3DriipSettlementState, upgradableEthersDriipSettlementState;
+
+            beforeEach(async () => {
+                await ethersDriipSettlementState.registerService(glob.owner);
+                await ethersDriipSettlementState.enableServiceAction(
+                    glob.owner, await ethersDriipSettlementState.INIT_SETTLEMENT_ACTION(),
+                    {gasLimit: 1e6}
+                );
+
+                await ethersDriipSettlementState.initSettlement(
+                    'payment', mocks.hash1, glob.user_a, 1, glob.user_b, 2, {gasLimit: 1e6}
+                );
+
+                upgradableWeb3DriipSettlementState = await DriipSettlementState.new(glob.owner);
+                upgradableEthersDriipSettlementState = new Contract(upgradableWeb3DriipSettlementState.address, DriipSettlementState.abi, glob.signer_owner);
+            });
+
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    upgradableWeb3DriipSettlementState.upgradeSettlement(web3DriipSettlementState.address, 0, {from: glob.user_a, gas: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called after settlement upgrades have been frozen', () => {
+                beforeEach(async () => {
+                    await upgradableEthersDriipSettlementState.freezeSettlementUpgrades();
+                });
+
+                it('should revert', async () => {
+                    upgradableEthersDriipSettlementState.upgradeSettlement(ethersDriipSettlementState.address, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let filter;
+
+                beforeEach(async () => {
+                    filter = await fromBlockTopicsFilter(
+                        upgradableEthersDriipSettlementState.interface.events.UpgradeSettlementEvent.topics
+                    );
+                });
+
+                it('should successfully upgrade settlement', async () => {
+                    await upgradableEthersDriipSettlementState.upgradeSettlement(ethersDriipSettlementState.address, 0, {gasLimit: 3e6});
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const settlement = await upgradableEthersDriipSettlementState.settlements(0);
+                    settlement.settledKind.should.equal('payment');
+                    settlement.settledHash.should.equal(mocks.hash1);
+                    settlement.origin.nonce._bn.should.eq.BN(1);
+                    settlement.origin.wallet.should.equal(utils.getAddress(glob.user_a));
+                    settlement.target.nonce._bn.should.eq.BN(2);
+                    settlement.target.wallet.should.equal(utils.getAddress(glob.user_b));
+                });
+            });
+
+            describe('if upgrading existing settlement', () => {
+                beforeEach(async () => {
+                    await upgradableEthersDriipSettlementState.upgradeSettlement(ethersDriipSettlementState.address, 0, {gasLimit: 1e6});
+                });
+
+                it('should revert', async () => {
+                    upgradableEthersDriipSettlementState.upgradeSettlement(ethersDriipSettlementState.address, 0, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
             });
         });
