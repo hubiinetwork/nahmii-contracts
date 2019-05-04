@@ -49,7 +49,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
 
     mapping(address => mapping(address => mapping(address => mapping(address => mapping(uint256 => MonetaryTypesLib.NoncedAmount))))) public totalFeesMap;
 
-    bool public settlementUpgradesFrozen;
+    bool public upgradesFrozen;
 
     //
     // Events
@@ -57,14 +57,20 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     event InitSettlementEvent(DriipSettlementTypesLib.Settlement settlement);
     event CompleteSettlementPartyEvent(address wallet, uint256 nonce, DriipSettlementTypesLib.SettlementRole settlementRole,
         bool done, uint256 doneBlockNumber);
-    event FreezeSettlementUpgradesEvent();
-    event UpgradeSettlementEvent(DriipSettlementTypesLib.Settlement settlement, DriipSettlementState otherDriipSettlementState, uint256 otherIndex);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
         uint256 maxNonce);
     event SetMaxDriipNonceEvent(uint256 maxDriipNonce);
     event UpdateMaxDriipNonceFromCommunityVoteEvent(uint256 maxDriipNonce);
     event SetTotalFeeEvent(address wallet, Beneficiary beneficiary, address destination,
         MonetaryTypesLib.Currency currency, MonetaryTypesLib.NoncedAmount totalFee);
+    event FreezeUpgradesEvent();
+    event UpgradeSettlementEvent(DriipSettlementState otherDriipSettlementState, uint256 otherIndex,
+        DriipSettlementTypesLib.Settlement settlement);
+    event UpgradeMaxNonceByWalletAndCurrencyEvent(DriipSettlementState otherDriipSettlementState,
+        address wallet, MonetaryTypesLib.Currency currency, uint256 maxNonce);
+    event UpgradeTotalFeeEvent(DriipSettlementState otherDriipSettlementState, address wallet,
+        Beneficiary beneficiary, address destination, MonetaryTypesLib.Currency currency,
+        MonetaryTypesLib.NoncedAmount totalFee);
 
     //
     // Constructor
@@ -391,18 +397,18 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
 
     /// @notice Freeze all future settlement upgrades
     /// @dev This operation can not be undone
-    function freezeSettlementUpgrades()
+    function freezeUpgrades()
     public
     onlyDeployer
     {
         // Freeze upgrade
-        settlementUpgradesFrozen = true;
+        upgradesFrozen = true;
 
         // Emit event
-        emit FreezeSettlementUpgradesEvent();
+        emit FreezeUpgradesEvent();
     }
 
-    /// @notice Upgrade from other driip settlement state instance
+    /// @notice Upgrade settlement from other driip settlement state instance
     /// @param otherDriipSettlementState Address of other instance of driip settlement state
     /// @param otherIndex Index of settlement in other instance to be upgraded
     function upgradeSettlement(DriipSettlementState otherDriipSettlementState, uint256 otherIndex)
@@ -410,7 +416,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     onlyDeployer
     {
         // Require that upgrades have not been frozen
-        require(!settlementUpgradesFrozen);
+        require(!upgradesFrozen);
 
         // Obtain settlement from old driip settlement state
         (
@@ -439,7 +445,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         settlements[index].target.wallet = target.wallet;
 
         // Emit event
-        emit UpgradeSettlementEvent(settlements[index], otherDriipSettlementState, otherIndex);
+        emit UpgradeSettlementEvent(otherDriipSettlementState, otherIndex, settlements[index]);
 
         // Store 1-based index value
         index++;
@@ -447,5 +453,53 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         walletSettlementIndices[target.wallet].push(index);
         walletNonceSettlementIndex[origin.wallet][origin.nonce] = index;
         walletNonceSettlementIndex[target.wallet][target.nonce] = index;
+    }
+
+    /// @notice Upgrade max nonce by wallet and currency from other driip settlement state instance
+    function upgradeMaxNonceByWalletAndCurrency(DriipSettlementState otherDriipSettlementState,
+        address wallet, MonetaryTypesLib.Currency currency)
+    public
+    onlyDeployer
+    {
+        // Require that upgrades have not been frozen
+        require(!upgradesFrozen);
+
+        // Require that max nonce is 0
+        require(0 == walletCurrencyMaxNonce[wallet][currency.ct][currency.id]);
+
+        // Obtain max nonce from old driip settlement state
+        uint256 maxNonce = otherDriipSettlementState.maxNonceByWalletAndCurrency(
+            wallet, currency
+        );
+
+        // Update max nonce value
+        walletCurrencyMaxNonce[wallet][currency.ct][currency.id] = maxNonce;
+
+        // Emit event
+        emit UpgradeMaxNonceByWalletAndCurrencyEvent(otherDriipSettlementState, wallet, currency, maxNonce);
+    }
+
+    /// @notice Upgrade total fee from other driip settlement state instance
+    function upgradeTotalFee(DriipSettlementState otherDriipSettlementState, address wallet, Beneficiary beneficiary,
+        address destination, MonetaryTypesLib.Currency currency)
+    public
+    onlyDeployer
+    {
+        // Require that upgrades have not been frozen
+        require(!upgradesFrozen);
+
+        // Require that total fees is 0
+        require(0 == totalFeesMap[wallet][address(beneficiary)][destination][currency.ct][currency.id].nonce);
+
+        // Obtain total fee from old driip settlement state
+        MonetaryTypesLib.NoncedAmount memory _totalFee = otherDriipSettlementState.totalFee(
+            wallet, beneficiary, destination, currency
+        );
+
+        // Update total fee value
+        totalFeesMap[wallet][address(beneficiary)][destination][currency.ct][currency.id] = _totalFee;
+
+        // Emit event
+        emit UpgradeTotalFeeEvent(otherDriipSettlementState, wallet, beneficiary, destination, currency, _totalFee);
     }
 }

@@ -162,17 +162,17 @@ module.exports = (glob) => {
             });
         });
 
-        describe('settlementUpgradesFrozen()', () => {
+        describe('upgradesFrozen()', () => {
             it('should equal value initialized', async () => {
-                (await ethersDriipSettlementState.settlementUpgradesFrozen())
+                (await ethersDriipSettlementState.upgradesFrozen())
                     .should.be.false;
             });
         });
 
-        describe('freezeSettlementUpgrades()', () => {
+        describe('freezeUpgrades()', () => {
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementState.freezeSettlementUpgrades({from: glob.user_a})
+                    web3DriipSettlementState.freezeUpgrades({from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -184,17 +184,17 @@ module.exports = (glob) => {
                     address = Wallet.createRandom().address;
 
                     filter = await fromBlockTopicsFilter(
-                        ethersDriipSettlementState.interface.events.FreezeSettlementUpgradesEvent.topics
+                        ethersDriipSettlementState.interface.events.FreezeUpgradesEvent.topics
                     );
                 });
 
                 it('should disable changing community vote', async () => {
-                    await web3DriipSettlementState.freezeSettlementUpgrades();
+                    await web3DriipSettlementState.freezeUpgrades();
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    (await ethersDriipSettlementState.settlementUpgradesFrozen())
+                    (await ethersDriipSettlementState.upgradesFrozen())
                         .should.be.true;
                 });
             });
@@ -799,7 +799,7 @@ module.exports = (glob) => {
 
             describe('if called after settlement upgrades have been frozen', () => {
                 beforeEach(async () => {
-                    await upgradableEthersDriipSettlementState.freezeSettlementUpgrades();
+                    await upgradableEthersDriipSettlementState.freezeUpgrades();
                 });
 
                 it('should revert', async () => {
