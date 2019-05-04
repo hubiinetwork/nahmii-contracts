@@ -64,13 +64,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     event SetTotalFeeEvent(address wallet, Beneficiary beneficiary, address destination,
         MonetaryTypesLib.Currency currency, MonetaryTypesLib.NoncedAmount totalFee);
     event FreezeUpgradesEvent();
-    event UpgradeSettlementEvent(DriipSettlementState otherDriipSettlementState, uint256 otherIndex,
-        DriipSettlementTypesLib.Settlement settlement);
-    event UpgradeMaxNonceByWalletAndCurrencyEvent(DriipSettlementState otherDriipSettlementState,
-        address wallet, MonetaryTypesLib.Currency currency, uint256 maxNonce);
-    event UpgradeTotalFeeEvent(DriipSettlementState otherDriipSettlementState, address wallet,
-        Beneficiary beneficiary, address destination, MonetaryTypesLib.Currency currency,
-        MonetaryTypesLib.NoncedAmount totalFee);
+    event UpgradeSettlementEvent(DriipSettlementTypesLib.Settlement settlement);
 
     //
     // Constructor
@@ -409,25 +403,19 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     }
 
     /// @notice Upgrade settlement from other driip settlement state instance
-    /// @param otherDriipSettlementState Address of other instance of driip settlement state
-    /// @param otherIndex Index of settlement in other instance to be upgraded
-    function upgradeSettlement(DriipSettlementState otherDriipSettlementState, uint256 otherIndex)
+    function upgradeSettlement(string settledKind, bytes32 settledHash,
+        address originWallet, uint256 originNonce, bool originDone, uint256 originDoneBlockNumber,
+        address targetWallet, uint256 targetNonce, bool targetDone, uint256 targetDoneBlockNumber)
     public
     onlyDeployer
     {
         // Require that upgrades have not been frozen
         require(!upgradesFrozen);
 
-        // Obtain settlement from old driip settlement state
-        (
-        string memory settledKind, bytes32 settledHash,
-        DriipSettlementTypesLib.SettlementParty memory origin, DriipSettlementTypesLib.SettlementParty memory target
-        ) = otherDriipSettlementState.settlements(otherIndex);
-
-        // Require that settlement has not been upgraded already
+        // Require that settlement has not been initialized/upgraded already
         require(
-            0 == walletNonceSettlementIndex[origin.wallet][origin.nonce] &&
-            0 == walletNonceSettlementIndex[target.wallet][target.nonce]
+            0 == walletNonceSettlementIndex[originWallet][originNonce] &&
+            0 == walletNonceSettlementIndex[targetWallet][targetNonce]
         );
 
         // Create new settlement
@@ -439,67 +427,23 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         // Update settlement
         settlements[index].settledKind = settledKind;
         settlements[index].settledHash = settledHash;
-        settlements[index].origin.nonce = origin.nonce;
-        settlements[index].origin.wallet = origin.wallet;
-        settlements[index].target.nonce = target.nonce;
-        settlements[index].target.wallet = target.wallet;
+        settlements[index].origin.nonce = originNonce;
+        settlements[index].origin.wallet = originWallet;
+        settlements[index].origin.done = originDone;
+        settlements[index].origin.doneBlockNumber = originDoneBlockNumber;
+        settlements[index].target.nonce = targetNonce;
+        settlements[index].target.wallet = targetWallet;
+        settlements[index].target.done = targetDone;
+        settlements[index].target.doneBlockNumber = targetDoneBlockNumber;
 
         // Emit event
-        emit UpgradeSettlementEvent(otherDriipSettlementState, otherIndex, settlements[index]);
+        emit UpgradeSettlementEvent(settlements[index]);
 
         // Store 1-based index value
         index++;
-        walletSettlementIndices[origin.wallet].push(index);
-        walletSettlementIndices[target.wallet].push(index);
-        walletNonceSettlementIndex[origin.wallet][origin.nonce] = index;
-        walletNonceSettlementIndex[target.wallet][target.nonce] = index;
-    }
-
-    /// @notice Upgrade max nonce by wallet and currency from other driip settlement state instance
-    function upgradeMaxNonceByWalletAndCurrency(DriipSettlementState otherDriipSettlementState,
-        address wallet, MonetaryTypesLib.Currency currency)
-    public
-    onlyDeployer
-    {
-        // Require that upgrades have not been frozen
-        require(!upgradesFrozen);
-
-        // Require that max nonce is 0
-        require(0 == walletCurrencyMaxNonce[wallet][currency.ct][currency.id]);
-
-        // Obtain max nonce from old driip settlement state
-        uint256 maxNonce = otherDriipSettlementState.maxNonceByWalletAndCurrency(
-            wallet, currency
-        );
-
-        // Update max nonce value
-        walletCurrencyMaxNonce[wallet][currency.ct][currency.id] = maxNonce;
-
-        // Emit event
-        emit UpgradeMaxNonceByWalletAndCurrencyEvent(otherDriipSettlementState, wallet, currency, maxNonce);
-    }
-
-    /// @notice Upgrade total fee from other driip settlement state instance
-    function upgradeTotalFee(DriipSettlementState otherDriipSettlementState, address wallet, Beneficiary beneficiary,
-        address destination, MonetaryTypesLib.Currency currency)
-    public
-    onlyDeployer
-    {
-        // Require that upgrades have not been frozen
-        require(!upgradesFrozen);
-
-        // Require that total fees is 0
-        require(0 == totalFeesMap[wallet][address(beneficiary)][destination][currency.ct][currency.id].nonce);
-
-        // Obtain total fee from old driip settlement state
-        MonetaryTypesLib.NoncedAmount memory _totalFee = otherDriipSettlementState.totalFee(
-            wallet, beneficiary, destination, currency
-        );
-
-        // Update total fee value
-        totalFeesMap[wallet][address(beneficiary)][destination][currency.ct][currency.id] = _totalFee;
-
-        // Emit event
-        emit UpgradeTotalFeeEvent(otherDriipSettlementState, wallet, beneficiary, destination, currency, _totalFee);
+        walletSettlementIndices[originWallet].push(index);
+        walletSettlementIndices[targetWallet].push(index);
+        walletNonceSettlementIndex[originWallet][originNonce] = index;
+        walletNonceSettlementIndex[targetWallet][targetNonce] = index;
     }
 }

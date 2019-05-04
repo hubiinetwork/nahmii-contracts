@@ -713,6 +713,8 @@ contract Configuration is Modifiable, Ownable, Servable {
     public
     onlyOperator
     {
+        // TODO Add require on earliestSettlementBlockNumberUpdateDisabled being false
+
         earliestSettlementBlockNumber = _earliestSettlementBlockNumber;
         emit SetEarliestSettlementBlockNumberEvent(earliestSettlementBlockNumber);
     }
