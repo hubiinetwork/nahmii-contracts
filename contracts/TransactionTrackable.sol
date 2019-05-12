@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {TransactionTracker} from "./TransactionTracker.sol";
@@ -36,8 +36,8 @@ contract TransactionTrackable is Ownable {
     function setTransactionTracker(TransactionTracker newTransactionTracker)
     public
     onlyDeployer
-    notNullAddress(newTransactionTracker)
-    notSameAddresses(newTransactionTracker, transactionTracker)
+    notNullAddress(address(newTransactionTracker))
+    notSameAddresses(address(newTransactionTracker), address(transactionTracker))
     {
         // Require that this contract has not been frozen
         require(!transactionTrackerFrozen);
@@ -66,7 +66,7 @@ contract TransactionTrackable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier transactionTrackerInitialized() {
-        require(transactionTracker != address(0));
+        require(address(transactionTracker) != address(0));
         _;
     }
 }

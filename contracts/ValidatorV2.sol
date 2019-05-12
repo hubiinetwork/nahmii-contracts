@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -40,7 +40,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @dev Logics of this function only applies to FT
-    function isGenuineTradeBuyerFeeOfFungible(TradeTypesLib.Trade trade)
+    function isGenuineTradeBuyerFeeOfFungible(TradeTypesLib.Trade memory trade)
     public
     view
     returns (bool)
@@ -72,7 +72,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to FT
-    function isGenuineTradeSellerFeeOfFungible(TradeTypesLib.Trade trade)
+    function isGenuineTradeSellerFeeOfFungible(TradeTypesLib.Trade memory trade)
     public
     view
     returns (bool)
@@ -104,7 +104,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to NFT
-    function isGenuineTradeBuyerFeeOfNonFungible(TradeTypesLib.Trade trade)
+    function isGenuineTradeBuyerFeeOfNonFungible(TradeTypesLib.Trade memory trade)
     public
     view
     returns (bool)
@@ -118,7 +118,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to NFT
-    function isGenuineTradeSellerFeeOfNonFungible(TradeTypesLib.Trade trade)
+    function isGenuineTradeSellerFeeOfNonFungible(TradeTypesLib.Trade memory trade)
     public
     view
     returns (bool)
@@ -132,7 +132,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to FT
-    function isGenuineTradeBuyerOfFungible(TradeTypesLib.Trade trade)
+    function isGenuineTradeBuyerOfFungible(TradeTypesLib.Trade memory trade)
     public
     view
     returns (bool)
@@ -147,7 +147,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to FT
-    function isGenuineTradeSellerOfFungible(TradeTypesLib.Trade trade)
+    function isGenuineTradeSellerOfFungible(TradeTypesLib.Trade memory trade)
     public
     view
     returns (bool)
@@ -162,7 +162,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to NFT
-    function isGenuineTradeBuyerOfNonFungible(TradeTypesLib.Trade trade)
+    function isGenuineTradeBuyerOfNonFungible(TradeTypesLib.Trade memory trade)
     public
     view
     returns (bool)
@@ -172,7 +172,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to NFT
-    function isGenuineTradeSellerOfNonFungible(TradeTypesLib.Trade trade)
+    function isGenuineTradeSellerOfNonFungible(TradeTypesLib.Trade memory trade)
     public
     view
     returns (bool)
@@ -181,7 +181,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         && (!signerManager.isSigner(trade.seller.wallet));
     }
 
-    function isGenuineOrderWalletHash(TradeTypesLib.Order order)
+    function isGenuineOrderWalletHash(TradeTypesLib.Order memory order)
     public
     view
     returns (bool)
@@ -189,7 +189,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return tradeHasher.hashOrderAsWallet(order) == order.seals.wallet.hash;
     }
 
-    function isGenuineOrderOperatorHash(TradeTypesLib.Order order)
+    function isGenuineOrderOperatorHash(TradeTypesLib.Order memory order)
     public
     view
     returns (bool)
@@ -197,7 +197,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return tradeHasher.hashOrderAsOperator(order) == order.seals.operator.hash;
     }
 
-    function isGenuineOperatorSignature(bytes32 hash, NahmiiTypesLib.Signature signature)
+    function isGenuineOperatorSignature(bytes32 hash, NahmiiTypesLib.Signature memory signature)
     public
     view
     returns (bool)
@@ -205,7 +205,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return isSignedByRegisteredSigner(hash, signature.v, signature.r, signature.s);
     }
 
-    function isGenuineWalletSignature(bytes32 hash, NahmiiTypesLib.Signature signature, address wallet)
+    function isGenuineWalletSignature(bytes32 hash, NahmiiTypesLib.Signature memory signature, address wallet)
     public
     pure
     returns (bool)
@@ -213,7 +213,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return isSignedBy(hash, signature.v, signature.r, signature.s, wallet);
     }
 
-    function isGenuineOrderWalletSeal(TradeTypesLib.Order order)
+    function isGenuineOrderWalletSeal(TradeTypesLib.Order memory order)
     public
     view
     returns (bool)
@@ -222,7 +222,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         && isGenuineWalletSignature(order.seals.wallet.hash, order.seals.wallet.signature, order.wallet);
     }
 
-    function isGenuineOrderOperatorSeal(TradeTypesLib.Order order)
+    function isGenuineOrderOperatorSeal(TradeTypesLib.Order memory order)
     public
     view
     returns (bool)
@@ -231,7 +231,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         && isGenuineOperatorSignature(order.seals.operator.hash, order.seals.operator.signature);
     }
 
-    function isGenuineOrderSeals(TradeTypesLib.Order order)
+    function isGenuineOrderSeals(TradeTypesLib.Order memory order)
     public
     view
     returns (bool)
@@ -239,7 +239,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return isGenuineOrderWalletSeal(order) && isGenuineOrderOperatorSeal(order);
     }
 
-    function isGenuineTradeHash(TradeTypesLib.Trade trade)
+    function isGenuineTradeHash(TradeTypesLib.Trade memory trade)
     public
     view
     returns (bool)
@@ -247,7 +247,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return tradeHasher.hashTrade(trade) == trade.seal.hash;
     }
 
-    function isGenuineTradeSeal(TradeTypesLib.Trade trade)
+    function isGenuineTradeSeal(TradeTypesLib.Trade memory trade)
     public
     view
     returns (bool)
@@ -256,7 +256,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         && isGenuineOperatorSignature(trade.seal.hash, trade.seal.signature);
     }
 
-    function isGenuinePaymentWalletHash(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentWalletHash(PaymentTypesLib.Payment memory payment)
     public
     view
     returns (bool)
@@ -264,7 +264,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return paymentHasher.hashPaymentAsWallet(payment) == payment.seals.wallet.hash;
     }
 
-    function isGenuinePaymentOperatorHash(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentOperatorHash(PaymentTypesLib.Payment memory payment)
     public
     view
     returns (bool)
@@ -272,7 +272,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return paymentHasher.hashPaymentAsOperator(payment) == payment.seals.operator.hash;
     }
 
-    function isGenuinePaymentWalletSeal(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentWalletSeal(PaymentTypesLib.Payment memory payment)
     public
     view
     returns (bool)
@@ -281,7 +281,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         && isGenuineWalletSignature(payment.seals.wallet.hash, payment.seals.wallet.signature, payment.sender.wallet);
     }
 
-    function isGenuinePaymentOperatorSeal(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentOperatorSeal(PaymentTypesLib.Payment memory payment)
     public
     view
     returns (bool)
@@ -290,7 +290,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         && isGenuineOperatorSignature(payment.seals.operator.hash, payment.seals.operator.signature);
     }
 
-    function isGenuinePaymentSeals(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentSeals(PaymentTypesLib.Payment memory payment)
     public
     view
     returns (bool)
@@ -299,7 +299,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to FT
-    function isGenuinePaymentFeeOfFungible(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentFeeOfFungible(PaymentTypesLib.Payment memory payment)
     public
     view
     returns (bool)
@@ -320,7 +320,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to NFT
-    function isGenuinePaymentFeeOfNonFungible(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentFeeOfNonFungible(PaymentTypesLib.Payment memory payment)
     public
     view
     returns (bool)
@@ -334,7 +334,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to FT
-    function isGenuinePaymentSenderOfFungible(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentSenderOfFungible(PaymentTypesLib.Payment memory payment)
     public
     view
     returns (bool)
@@ -345,7 +345,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to FT
-    function isGenuinePaymentRecipientOfFungible(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentRecipientOfFungible(PaymentTypesLib.Payment memory payment)
     public
     pure
     returns (bool)
@@ -355,7 +355,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to NFT
-    function isGenuinePaymentSenderOfNonFungible(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentSenderOfNonFungible(PaymentTypesLib.Payment memory payment)
     public
     view
     returns (bool)
@@ -365,7 +365,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     /// @dev Logics of this function only applies to NFT
-    function isGenuinePaymentRecipientOfNonFungible(PaymentTypesLib.Payment payment)
+    function isGenuinePaymentRecipientOfNonFungible(PaymentTypesLib.Payment memory payment)
     public
     pure
     returns (bool)
@@ -374,9 +374,9 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isSuccessiveTradesPartyNonces(
-        TradeTypesLib.Trade firstTrade,
+        TradeTypesLib.Trade memory firstTrade,
         TradeTypesLib.TradePartyRole firstTradePartyRole,
-        TradeTypesLib.Trade lastTrade,
+        TradeTypesLib.Trade memory lastTrade,
         TradeTypesLib.TradePartyRole lastTradePartyRole
     )
     public
@@ -389,9 +389,9 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isSuccessivePaymentsPartyNonces(
-        PaymentTypesLib.Payment firstPayment,
+        PaymentTypesLib.Payment memory firstPayment,
         PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole,
-        PaymentTypesLib.Payment lastPayment,
+        PaymentTypesLib.Payment memory lastPayment,
         PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole
     )
     public
@@ -404,9 +404,9 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isSuccessiveTradePaymentPartyNonces(
-        TradeTypesLib.Trade trade,
+        TradeTypesLib.Trade memory trade,
         TradeTypesLib.TradePartyRole tradePartyRole,
-        PaymentTypesLib.Payment payment,
+        PaymentTypesLib.Payment memory payment,
         PaymentTypesLib.PaymentPartyRole paymentPartyRole
     )
     public
@@ -419,9 +419,9 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isSuccessivePaymentTradePartyNonces(
-        PaymentTypesLib.Payment payment,
+        PaymentTypesLib.Payment memory payment,
         PaymentTypesLib.PaymentPartyRole paymentPartyRole,
-        TradeTypesLib.Trade trade,
+        TradeTypesLib.Trade memory trade,
         TradeTypesLib.TradePartyRole tradePartyRole
     )
     public
@@ -434,10 +434,10 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isGenuineSuccessiveTradesBalances(
-        TradeTypesLib.Trade firstTrade,
+        TradeTypesLib.Trade memory firstTrade,
         TradeTypesLib.TradePartyRole firstTradePartyRole,
         TradeTypesLib.CurrencyRole firstTradeCurrencyRole,
-        TradeTypesLib.Trade lastTrade,
+        TradeTypesLib.Trade memory lastTrade,
         TradeTypesLib.TradePartyRole lastTradePartyRole,
         TradeTypesLib.CurrencyRole lastTradeCurrencyRole,
         int256 delta
@@ -456,9 +456,9 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isGenuineSuccessivePaymentsBalances(
-        PaymentTypesLib.Payment firstPayment,
+        PaymentTypesLib.Payment memory firstPayment,
         PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole,
-        PaymentTypesLib.Payment lastPayment,
+        PaymentTypesLib.Payment memory lastPayment,
         PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole,
         int256 delta
     )
@@ -473,10 +473,10 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isGenuineSuccessiveTradePaymentBalances(
-        TradeTypesLib.Trade trade,
+        TradeTypesLib.Trade memory trade,
         TradeTypesLib.TradePartyRole tradePartyRole,
         TradeTypesLib.CurrencyRole tradeCurrencyRole,
-        PaymentTypesLib.Payment payment,
+        PaymentTypesLib.Payment memory payment,
         PaymentTypesLib.PaymentPartyRole paymentPartyRole,
         int256 delta
     )
@@ -493,9 +493,9 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isGenuineSuccessivePaymentTradeBalances(
-        PaymentTypesLib.Payment payment,
+        PaymentTypesLib.Payment memory payment,
         PaymentTypesLib.PaymentPartyRole paymentPartyRole,
-        TradeTypesLib.Trade trade,
+        TradeTypesLib.Trade memory trade,
         TradeTypesLib.TradePartyRole tradePartyRole,
         TradeTypesLib.CurrencyRole tradeCurrencyRole,
         int256 delta
@@ -513,9 +513,9 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isGenuineSuccessiveTradesTotalFees(
-        TradeTypesLib.Trade firstTrade,
+        TradeTypesLib.Trade memory firstTrade,
         TradeTypesLib.TradePartyRole firstTradePartyRole,
-        TradeTypesLib.Trade lastTrade,
+        TradeTypesLib.Trade memory lastTrade,
         TradeTypesLib.TradePartyRole lastTradePartyRole
     )
     public
@@ -538,8 +538,8 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isGenuineSuccessiveTradeOrderResiduals(
-        TradeTypesLib.Trade firstTrade,
-        TradeTypesLib.Trade lastTrade,
+        TradeTypesLib.Trade memory firstTrade,
+        TradeTypesLib.Trade memory lastTrade,
         TradeTypesLib.TradePartyRole tradePartyRole
     )
     public
@@ -554,8 +554,8 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isGenuineSuccessivePaymentsTotalFees(
-        PaymentTypesLib.Payment firstPayment,
-        PaymentTypesLib.Payment lastPayment
+        PaymentTypesLib.Payment memory firstPayment,
+        PaymentTypesLib.Payment memory lastPayment
     )
     public
     pure
@@ -567,9 +567,9 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isGenuineSuccessiveTradePaymentTotalFees(
-        TradeTypesLib.Trade trade,
+        TradeTypesLib.Trade memory trade,
         TradeTypesLib.TradePartyRole tradePartyRole,
-        PaymentTypesLib.Payment payment
+        PaymentTypesLib.Payment memory payment
     )
     public
     pure
@@ -584,9 +584,9 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     }
 
     function isGenuineSuccessivePaymentTradeTotalFees(
-        PaymentTypesLib.Payment payment,
+        PaymentTypesLib.Payment memory payment,
         PaymentTypesLib.PaymentPartyRole paymentPartyRole,
-        TradeTypesLib.Trade trade,
+        TradeTypesLib.Trade memory trade,
         TradeTypesLib.TradePartyRole tradePartyRole
     )
     public
@@ -608,7 +608,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return lastTotalFee.amount == firstTotalFee.amount.add(lastSingleFee.amount);
     }
 
-    function isTradeParty(TradeTypesLib.Trade trade, address wallet)
+    function isTradeParty(TradeTypesLib.Trade memory trade, address wallet)
     public
     pure
     returns (bool)
@@ -616,7 +616,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return wallet == trade.buyer.wallet || wallet == trade.seller.wallet;
     }
 
-    function isTradeBuyer(TradeTypesLib.Trade trade, address wallet)
+    function isTradeBuyer(TradeTypesLib.Trade memory trade, address wallet)
     public
     pure
     returns (bool)
@@ -624,7 +624,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return wallet == trade.buyer.wallet;
     }
 
-    function isTradeSeller(TradeTypesLib.Trade trade, address wallet)
+    function isTradeSeller(TradeTypesLib.Trade memory trade, address wallet)
     public
     pure
     returns (bool)
@@ -632,7 +632,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return wallet == trade.seller.wallet;
     }
 
-    function isTradeOrder(TradeTypesLib.Trade trade, TradeTypesLib.Order order)
+    function isTradeOrder(TradeTypesLib.Trade memory trade, TradeTypesLib.Order memory order)
     public
     pure
     returns (bool)
@@ -641,7 +641,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         trade.seller.order.hashes.operator == order.seals.operator.hash);
     }
 
-    function isTradeIntendedCurrency(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
+    function isTradeIntendedCurrency(TradeTypesLib.Trade memory trade, MonetaryTypesLib.Currency memory currency)
     public
     pure
     returns (bool)
@@ -649,7 +649,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return currency.ct == trade.currencies.intended.ct && currency.id == trade.currencies.intended.id;
     }
 
-    function isTradeConjugateCurrency(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
+    function isTradeConjugateCurrency(TradeTypesLib.Trade memory trade, MonetaryTypesLib.Currency memory currency)
     public
     pure
     returns (bool)
@@ -657,7 +657,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return currency.ct == trade.currencies.conjugate.ct && currency.id == trade.currencies.conjugate.id;
     }
 
-    function isTradeCurrency(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
+    function isTradeCurrency(TradeTypesLib.Trade memory trade, MonetaryTypesLib.Currency memory currency)
     public
     pure
     returns (bool)
@@ -665,7 +665,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return isTradeIntendedCurrency(trade, currency) || isTradeConjugateCurrency(trade, currency);
     }
 
-    function isTradeIntendedCurrencyNonFungible(TradeTypesLib.Trade trade)
+    function isTradeIntendedCurrencyNonFungible(TradeTypesLib.Trade memory trade)
     public
     pure
     returns (bool)
@@ -674,7 +674,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         || trade.currencies.intended.id != trade.buyer.fees.single.currency.id;
     }
 
-    function isTradeConjugateCurrencyNonFungible(TradeTypesLib.Trade trade)
+    function isTradeConjugateCurrencyNonFungible(TradeTypesLib.Trade memory trade)
     public
     pure
     returns (bool)
@@ -683,7 +683,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         || trade.currencies.conjugate.id != trade.seller.fees.single.currency.id;
     }
 
-    function isPaymentParty(PaymentTypesLib.Payment payment, address wallet)
+    function isPaymentParty(PaymentTypesLib.Payment memory payment, address wallet)
     public
     pure
     returns (bool)
@@ -691,7 +691,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return wallet == payment.sender.wallet || wallet == payment.recipient.wallet;
     }
 
-    function isPaymentSender(PaymentTypesLib.Payment payment, address wallet)
+    function isPaymentSender(PaymentTypesLib.Payment memory payment, address wallet)
     public
     pure
     returns (bool)
@@ -699,7 +699,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return wallet == payment.sender.wallet;
     }
 
-    function isPaymentRecipient(PaymentTypesLib.Payment payment, address wallet)
+    function isPaymentRecipient(PaymentTypesLib.Payment memory payment, address wallet)
     public
     pure
     returns (bool)
@@ -707,7 +707,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return wallet == payment.recipient.wallet;
     }
 
-    function isPaymentCurrency(PaymentTypesLib.Payment payment, MonetaryTypesLib.Currency currency)
+    function isPaymentCurrency(PaymentTypesLib.Payment memory payment, MonetaryTypesLib.Currency memory currency)
     public
     pure
     returns (bool)
@@ -715,7 +715,7 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
         return currency.ct == payment.currency.ct && currency.id == payment.currency.id;
     }
 
-    function isPaymentCurrencyNonFungible(PaymentTypesLib.Payment payment)
+    function isPaymentCurrencyNonFungible(PaymentTypesLib.Payment memory payment)
     public
     pure
     returns (bool)
@@ -727,10 +727,10 @@ contract ValidatorV2 is Ownable, SignerManageable, Configurable, PaymentHashable
     //
     // Private unctions
     // -----------------------------------------------------------------------------------------------------------------
-    function getProtocolFigureByCurrency(NahmiiTypesLib.OriginFigure[] originFigures, MonetaryTypesLib.Currency currency)
+    function getProtocolFigureByCurrency(NahmiiTypesLib.OriginFigure[] memory originFigures, MonetaryTypesLib.Currency memory currency)
     private
     pure
-    returns (MonetaryTypesLib.Figure) {
+    returns (MonetaryTypesLib.Figure memory) {
         for (uint256 i = 0; i < originFigures.length; i++)
             if (originFigures[i].figure.currency.ct == currency.ct && originFigures[i].figure.currency.id == currency.id
             && originFigures[i].originId == 0)

@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Beneficiary} from "../Beneficiary.sol";
@@ -42,8 +42,8 @@ contract MockedTokenHolderRevenueFund /*is Beneficiary*/ {
         _claimTransfers.length = 0;
     }
 
-    function claimAndTransferToBeneficiary(Beneficiary beneficiary, address destWallet, string balanceType,
-        address currencyCt, uint256 currencyId, string standard)
+    function claimAndTransferToBeneficiary(Beneficiary beneficiary, address destWallet, string memory balanceType,
+        address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         _claimTransfers.push(
@@ -56,8 +56,8 @@ contract MockedTokenHolderRevenueFund /*is Beneficiary*/ {
     function _getClaimTransfer(uint256 index)
     public
     view
-    returns (Beneficiary beneficiary, address destWallet, string balanceType,
-        address currencyCt, uint256 currencyId, string standard)
+    returns (Beneficiary beneficiary, address destWallet, string memory balanceType,
+        address currencyCt, uint256 currencyId, string memory standard)
     {
         beneficiary = _claimTransfers[index].beneficiary;
         destWallet = _claimTransfers[index].destWallet;

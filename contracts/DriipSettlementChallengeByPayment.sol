@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -81,7 +81,7 @@ BalanceTrackable {
     function setDriipSettlementDisputeByPayment(DriipSettlementDisputeByPayment newDriipSettlementDisputeByPayment)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementDisputeByPayment)
+    notNullAddress(address(newDriipSettlementDisputeByPayment))
     {
         DriipSettlementDisputeByPayment oldDriipSettlementDisputeByPayment = driipSettlementDisputeByPayment;
         driipSettlementDisputeByPayment = newDriipSettlementDisputeByPayment;
@@ -93,7 +93,7 @@ BalanceTrackable {
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementChallengeState)
+    notNullAddress(address(newDriipSettlementChallengeState))
     {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
@@ -105,7 +105,7 @@ BalanceTrackable {
     function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
+    notNullAddress(address(newNullSettlementChallengeState))
     {
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
@@ -117,7 +117,7 @@ BalanceTrackable {
     function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementState)
+    notNullAddress(address(newDriipSettlementState))
     {
         DriipSettlementState oldDriipSettlementState = driipSettlementState;
         driipSettlementState = newDriipSettlementState;
@@ -127,7 +127,7 @@ BalanceTrackable {
     /// @notice Start settlement challenge on payment
     /// @param payment The challenged payment
     /// @param stageAmount Amount of payment currency to be staged
-    function startChallengeFromPayment(PaymentTypesLib.Payment payment, int256 stageAmount)
+    function startChallengeFromPayment(PaymentTypesLib.Payment memory payment, int256 stageAmount)
     public
     {
         // Require that wallet is not temporarily disqualified
@@ -151,7 +151,7 @@ BalanceTrackable {
     /// @param wallet The concerned party
     /// @param payment The challenged payment
     /// @param stageAmount Amount of payment currency to be staged
-    function startChallengeFromPaymentByProxy(address wallet, PaymentTypesLib.Payment payment, int256 stageAmount)
+    function startChallengeFromPaymentByProxy(address wallet, PaymentTypesLib.Payment memory payment, int256 stageAmount)
     public
     onlyOperator
     {
@@ -375,7 +375,7 @@ BalanceTrackable {
     function proposalChallengedKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         return driipSettlementChallengeState.proposalChallengedKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -434,7 +434,7 @@ BalanceTrackable {
     function proposalDisqualificationCandidateKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         return driipSettlementChallengeState.proposalDisqualificationCandidateKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -459,7 +459,7 @@ BalanceTrackable {
     /// @notice Challenge the settlement by providing payment candidate
     /// @param wallet The wallet whose settlement is being challenged
     /// @param payment The payment candidate that challenges the challenged driip
-    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment)
+    function challengeByPayment(address wallet, PaymentTypesLib.Payment memory payment)
     public
     onlyOperationalModeNormal
     {
@@ -480,7 +480,7 @@ BalanceTrackable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _startChallengeFromPayment(address wallet, PaymentTypesLib.Payment payment,
+    function _startChallengeFromPayment(address wallet, PaymentTypesLib.Payment memory payment,
         int256 stageAmount, bool walletInitiated)
     private
     onlySealedPayment(payment)
@@ -518,7 +518,7 @@ BalanceTrackable {
         );
     }
 
-    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool clearNonce, bool walletTerminated)
+    function _stopChallenge(address wallet, MonetaryTypesLib.Currency memory currency, bool clearNonce, bool walletTerminated)
     private
     {
         // Require that there is an unterminated driip settlement challenge proposal
@@ -534,7 +534,7 @@ BalanceTrackable {
         nullSettlementChallengeState.terminateProposal(wallet, currency);
     }
 
-    function _paymentPartyProperties(PaymentTypesLib.Payment payment, address wallet)
+    function _paymentPartyProperties(PaymentTypesLib.Payment memory payment, address wallet)
     private
     view
     returns (uint256 nonce, int256 correctedCumulativeTransferAmount)

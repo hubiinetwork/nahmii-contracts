@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -74,7 +74,7 @@ FraudChallengable, WalletLockable {
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementChallengeState)
+    notNullAddress(address(newDriipSettlementChallengeState))
     {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
@@ -86,7 +86,7 @@ FraudChallengable, WalletLockable {
     function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementState)
+    notNullAddress(address(newDriipSettlementState))
     {
         DriipSettlementState oldDriipSettlementState = driipSettlementState;
         driipSettlementState = newDriipSettlementState;
@@ -98,7 +98,7 @@ FraudChallengable, WalletLockable {
     function setRevenueFund(RevenueFund newRevenueFund)
     public
     onlyDeployer
-    notNullAddress(newRevenueFund)
+    notNullAddress(address(newRevenueFund))
     {
         RevenueFund oldRevenueFund = revenueFund;
         revenueFund = newRevenueFund;
@@ -110,7 +110,7 @@ FraudChallengable, WalletLockable {
     function setPartnerFund(PartnerFund newPartnerFund)
     public
     onlyDeployer
-    notNullAddress(newPartnerFund)
+    notNullAddress(address(newPartnerFund))
     {
         PartnerFund oldPartnerFund = partnerFund;
         partnerFund = newPartnerFund;
@@ -144,7 +144,7 @@ FraudChallengable, WalletLockable {
     function settlementByWalletAndIndex(address wallet, uint256 index)
     public
     view
-    returns (DriipSettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement memory)
     {
         return driipSettlementState.settlementByWalletAndIndex(wallet, index);
     }
@@ -156,14 +156,14 @@ FraudChallengable, WalletLockable {
     function settlementByWalletAndNonce(address wallet, uint256 nonce)
     public
     view
-    returns (DriipSettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement memory)
     {
         return driipSettlementState.settlementByWalletAndNonce(wallet, nonce);
     }
 
     /// @notice Settle driip that is a trade
     /// @param trade The trade to be settled
-    function settleTrade(TradeTypesLib.Trade trade)
+    function settleTrade(TradeTypesLib.Trade memory trade)
     public
     {
         // Settle trade
@@ -176,7 +176,7 @@ FraudChallengable, WalletLockable {
     /// @notice Settle driip that is a trade
     /// @param wallet The wallet whose side of the trade is to be settled
     /// @param trade The trade to be settled
-    function settleTradeByProxy(address wallet, TradeTypesLib.Trade trade)
+    function settleTradeByProxy(address wallet, TradeTypesLib.Trade memory trade)
     public
     onlyOperator
     {
@@ -190,7 +190,7 @@ FraudChallengable, WalletLockable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _settleTrade(address wallet, TradeTypesLib.Trade trade)
+    function _settleTrade(address wallet, TradeTypesLib.Trade memory trade)
     private
     onlySealedTrade(trade)
     onlyTradeParty(trade, wallet)
@@ -300,7 +300,7 @@ FraudChallengable, WalletLockable {
             driipSettlementState.setMaxDriipNonce(trade.nonce);
     }
 
-    function _getRoleProperties(TradeTypesLib.Trade trade, address wallet)
+    function _getRoleProperties(TradeTypesLib.Trade memory trade, address wallet)
     private
     view
     returns (
@@ -318,7 +318,7 @@ FraudChallengable, WalletLockable {
         }
     }
 
-    function _stageFees(address wallet, NahmiiTypesLib.OriginFigure[] fees,
+    function _stageFees(address wallet, NahmiiTypesLib.OriginFigure[] memory fees,
         Beneficiary protocolBeneficiary, uint256 nonce)
     private
     {

@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
@@ -67,7 +67,7 @@ contract TokenMultiTimelock is Ownable {
     function setToken(IERC20 _token)
     public
     onlyOperator
-    notNullOrThisAddress(_token)
+    notNullOrThisAddress(address(_token))
     {
         // Require that the token has not previously been set
         require(address(token) == address(0));
@@ -98,7 +98,7 @@ contract TokenMultiTimelock is Ownable {
     /// @param amounts The amounts to be released
     /// @param releaseBlockNumbers The set release block numbers for releases whose earliest release time
     /// is in the past
-    function defineReleases(uint256[] earliestReleaseTimes, uint256[] amounts, uint256[] releaseBlockNumbers)
+    function defineReleases(uint256[] memory earliestReleaseTimes, uint256[] memory amounts, uint256[] memory releaseBlockNumbers)
     onlyOperator
     public
     {

@@ -571,11 +571,11 @@ module.exports = function (glob) {
                     const blockNumber = await provider.getBlockNumber();
 
                     currencies.forEach(async (currency) => {
-                        const accrualBlockNumbers = await ethersTokenHolderRevenueFund.accrualBlockNumbersByCurrency(currency.ct, currency.id);
-                        accrualBlockNumbers[0]._bn.should.eq.BN(blockNumber);
+                        const accrualBlockNumber = await ethersTokenHolderRevenueFund.accrualBlockNumbersByCurrency(currency.ct, currency.id, 0);
+                        accrualBlockNumber._bn.should.eq.BN(blockNumber);
 
                         (await ethersTokenHolderRevenueFund.aggregateAccrualAmountByCurrencyBlockNumber(
-                            blockNumber, currency.ct, currency.id
+                            currency.ct, currency.id, blockNumber
                         ))._bn.should.eq.BN((await ethersTokenHolderRevenueFund.aggregateAccrualBalance(currency.ct, currency.id))._bn);
 
                         (await ethersTokenHolderRevenueFund.periodAccrualBalance(currency.ct, currency.id))

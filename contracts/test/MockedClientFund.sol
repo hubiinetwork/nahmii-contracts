@@ -6,7 +6,8 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
+pragma experimental ABIEncoderV2;
 
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 import {Beneficiary} from "../Beneficiary.sol";
@@ -59,7 +60,7 @@ contract MockedClientFund {
     }
 
     function updateSettledBalance(address wallet, int256 value, address currencyCt,
-        uint256 currencyId, string standard, uint256 blockNumber)
+        uint256 currencyId, string memory standard, uint256 blockNumber)
     public
     {
         settledBalanceUpdates.push(
@@ -88,7 +89,7 @@ contract MockedClientFund {
     function _settledBalanceUpdates(uint256 index)
     public
     view
-    returns (address, int256, address, uint256, string) {
+    returns (address, int256, address, uint256, string memory) {
         return (
         settledBalanceUpdates[index].sourceWallet,
         settledBalanceUpdates[index].figure.amount,
@@ -99,7 +100,7 @@ contract MockedClientFund {
     }
 
     function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId,
-        string standard)
+        string memory standard)
     public
     {
         stages.push(
@@ -128,7 +129,7 @@ contract MockedClientFund {
     function _stages(uint256 index)
     public
     view
-    returns (address, address, int256, address, uint256, string)
+    returns (address, address, int256, address, uint256, string memory)
     {
         return (
         stages[index].sourceWallet,
@@ -141,7 +142,7 @@ contract MockedClientFund {
     }
 
     function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId, string standard)
+        address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         beneficiaryTransfers.push(
@@ -169,7 +170,7 @@ contract MockedClientFund {
     function _beneficiaryTransfers(uint256 index)
     public
     view
-    returns (address, address, int256, address, uint256, string)
+    returns (address, address, int256, address, uint256, string memory)
     {
         return (
         beneficiaryTransfers[index].sourceWallet,

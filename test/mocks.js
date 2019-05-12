@@ -227,7 +227,8 @@ exports.mockPayment = async (operator, params) => {
                         }
                     }
                 ]
-            }
+            },
+            data: 'some_sender_data'
         },
         recipient: {
             wallet: recipientWallet.address,
@@ -253,7 +254,10 @@ exports.mockPayment = async (operator, params) => {
             total: utils.parseUnits('200', 18)
         },
         blockNumber: utils.bigNumberify(0),
-        operatorId: utils.bigNumberify(0)
+        operator: {
+            id: utils.bigNumberify(0),
+            data: 'some_operator_data'
+        }
     }, params);
 
     const operatorSigner = exports.createWeb3Signer(operator);
@@ -429,7 +433,8 @@ exports.hashPaymentAsWallet = (payment) => {
         payment.currency.id
     );
     const senderHash = cryptography.hash(
-        payment.sender.wallet
+        payment.sender.wallet,
+        payment.sender.data
     );
     const recipientHash = cryptography.hash(
         payment.recipient.wallet
@@ -440,17 +445,17 @@ exports.hashPaymentAsWallet = (payment) => {
 
 exports.hashPaymentAsOperator = (payment) => {
     const walletSignatureHash = exports.hashSignature(payment.seals.wallet.signature);
-    const nonceHash = cryptography.hash(
-        payment.nonce
-    );
     const senderHash = exports.hashPaymentSenderPartyAsOperator(payment.sender);
     const recipientHash = exports.hashPaymentRecipientPartyAsOperator(payment.recipient);
     const transfersHash = cryptography.hash(
         payment.transfers.single,
         payment.transfers.total
     );
+    const operatorHash = cryptography.hash(
+        payment.operator.data
+    );
 
-    return cryptography.hash(walletSignatureHash, nonceHash, senderHash, recipientHash, transfersHash);
+    return cryptography.hash(walletSignatureHash, senderHash, recipientHash, transfersHash, operatorHash);
 };
 
 exports.hashPaymentSenderPartyAsOperator = (sender) => {

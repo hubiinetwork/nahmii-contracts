@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {ValidatorV2} from "./ValidatorV2.sol";
@@ -37,8 +37,8 @@ contract ValidatableV2 is Ownable {
     function setValidator(ValidatorV2 newValidator)
     public
     onlyDeployer
-    notNullAddress(newValidator)
-    notSameAddresses(newValidator, validator)
+    notNullAddress(address(newValidator))
+    notSameAddresses(address(newValidator), address(validator))
     {
         //set new validator
         ValidatorV2 oldValidator = validator;
@@ -52,46 +52,46 @@ contract ValidatableV2 is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier validatorInitialized() {
-        require(validator != address(0));
+        require(address(validator) != address(0));
         _;
     }
 
-    modifier onlySealedOrder(TradeTypesLib.Order order) {
+    modifier onlySealedOrder(TradeTypesLib.Order memory order) {
         require(validator.isGenuineOrderSeals(order));
         _;
     }
 
-    modifier onlyOperatorSealedOrder(TradeTypesLib.Order order) {
+    modifier onlyOperatorSealedOrder(TradeTypesLib.Order memory order) {
         require(validator.isGenuineOrderOperatorSeal(order));
         _;
     }
 
-    modifier onlySealedTrade(TradeTypesLib.Trade trade) {
+    modifier onlySealedTrade(TradeTypesLib.Trade memory trade) {
         require(validator.isGenuineTradeSeal(trade));
         _;
     }
 
-    modifier onlyOperatorSealedPayment(PaymentTypesLib.Payment payment) {
+    modifier onlyOperatorSealedPayment(PaymentTypesLib.Payment memory payment) {
         require(validator.isGenuinePaymentOperatorSeal(payment));
         _;
     }
 
-    modifier onlySealedPayment(PaymentTypesLib.Payment payment) {
+    modifier onlySealedPayment(PaymentTypesLib.Payment memory payment) {
         require(validator.isGenuinePaymentSeals(payment));
         _;
     }
 
-    modifier onlyTradeParty(TradeTypesLib.Trade trade, address wallet) {
+    modifier onlyTradeParty(TradeTypesLib.Trade memory trade, address wallet) {
         require(validator.isTradeParty(trade, wallet));
         _;
     }
 
-    modifier onlyPaymentParty(PaymentTypesLib.Payment payment, address wallet) {
+    modifier onlyPaymentParty(PaymentTypesLib.Payment memory payment, address wallet) {
         require(validator.isPaymentParty(payment, wallet));
         _;
     }
 
-    modifier onlyPaymentSender(PaymentTypesLib.Payment payment, address wallet) {
+    modifier onlyPaymentSender(PaymentTypesLib.Payment memory payment, address wallet) {
         require(validator.isPaymentSender(payment, wallet));
         _;
     }

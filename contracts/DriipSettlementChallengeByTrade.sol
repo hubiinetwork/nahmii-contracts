@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -68,7 +68,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     function setDriipSettlementDisputeByTrade(DriipSettlementDisputeByTrade newDriipSettlementDisputeByTrade)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementDisputeByTrade)
+    notNullAddress(address(newDriipSettlementDisputeByTrade))
     {
         DriipSettlementDisputeByTrade oldDriipSettlementDisputeByTrade = driipSettlementDisputeByTrade;
         driipSettlementDisputeByTrade = newDriipSettlementDisputeByTrade;
@@ -80,7 +80,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementChallengeState)
+    notNullAddress(address(newDriipSettlementChallengeState))
     {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
@@ -92,7 +92,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
+    notNullAddress(address(newNullSettlementChallengeState))
     {
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
@@ -103,7 +103,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     /// @param trade The challenged trade
     /// @param intendedStageAmount Amount of intended currency to be staged
     /// @param conjugateStageAmount Amount of conjugate currency to be staged
-    function startChallengeFromTrade(TradeTypesLib.Trade trade, int256 intendedStageAmount,
+    function startChallengeFromTrade(TradeTypesLib.Trade memory trade, int256 intendedStageAmount,
         int256 conjugateStageAmount)
     public
     {
@@ -122,7 +122,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     /// @param trade The challenged trade
     /// @param intendedStageAmount Amount of intended currency to be staged
     /// @param conjugateStageAmount Amount of conjugate currency to be staged
-    function startChallengeFromTradeByProxy(address wallet, TradeTypesLib.Trade trade, int256 intendedStageAmount,
+    function startChallengeFromTradeByProxy(address wallet, TradeTypesLib.Trade memory trade, int256 intendedStageAmount,
         int256 conjugateStageAmount)
     public
     onlyOperator
@@ -294,7 +294,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     function proposalChallengedKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         return driipSettlementChallengeState.proposalChallengedKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -353,7 +353,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     function proposalDisqualificationCandidateKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         return driipSettlementChallengeState.proposalDisqualificationCandidateKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -377,7 +377,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
 
     /// @notice Challenge the settlement by providing order candidate
     /// @param order The order candidate that challenges the challenged driip
-    function challengeByOrder(TradeTypesLib.Order order)
+    function challengeByOrder(TradeTypesLib.Order memory order)
     public
     onlyOperationalModeNormal
     {
@@ -387,7 +387,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     /// @notice Unchallenge settlement by providing trade that shows that challenge order candidate has been filled
     /// @param order The order candidate that challenged driip
     /// @param trade The trade in which order has been filled
-    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order order, TradeTypesLib.Trade trade)
+    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order memory order, TradeTypesLib.Trade memory trade)
     public
     onlyOperationalModeNormal
     {
@@ -397,7 +397,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     /// @notice Challenge the settlement by providing trade candidate
     /// @param wallet The wallet whose settlement is being challenged
     /// @param trade The trade candidate that challenges the challenged driip
-    function challengeByTrade(address wallet, TradeTypesLib.Trade trade)
+    function challengeByTrade(address wallet, TradeTypesLib.Trade memory trade)
     public
     onlyOperationalModeNormal
     {
@@ -407,7 +407,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _startChallengeFromTrade(address wallet, TradeTypesLib.Trade trade,
+    function _startChallengeFromTrade(address wallet, TradeTypesLib.Trade memory trade,
         int256 intendedStageAmount, int256 conjugateStageAmount, bool walletInitiated)
     private
     onlySealedTrade(trade)
@@ -423,7 +423,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         _addConjugateProposalFromTrade(wallet, trade, conjugateStageAmount, walletInitiated);
     }
 
-    function _addIntendedProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool walletInitiated)
+    function _addIntendedProposalFromTrade(address wallet, TradeTypesLib.Trade memory trade, int256 stageAmount, bool walletInitiated)
     private
     {
         // Require that there is no ongoing overlapping null settlement challenge
@@ -445,7 +445,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         );
     }
 
-    function _addConjugateProposalFromTrade(address wallet, TradeTypesLib.Trade trade, int256 stageAmount, bool walletInitiated)
+    function _addConjugateProposalFromTrade(address wallet, TradeTypesLib.Trade memory trade, int256 stageAmount, bool walletInitiated)
     private
     {
         // Require that there is no ongoing overlapping null settlement challenge
@@ -467,10 +467,10 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         );
     }
 
-    function _tradeParty(TradeTypesLib.Trade trade, address wallet)
+    function _tradeParty(TradeTypesLib.Trade memory trade, address wallet)
     private
     view
-    returns (TradeTypesLib.TradeParty)
+    returns (TradeTypesLib.TradeParty memory)
     {
         return validator.isTradeBuyer(trade, wallet) ? trade.buyer : trade.seller;
     }

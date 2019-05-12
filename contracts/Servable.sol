@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 
@@ -100,7 +100,7 @@ contract Servable is Ownable {
     /// @notice Enable a named action in an already registered service contract
     /// @param service The address of the registered service contract
     /// @param action The name of the action to be enabled
-    function enableServiceAction(address service, string action)
+    function enableServiceAction(address service, string memory action)
     public
     onlyDeployer
     notNullOrThisAddress(service)
@@ -121,7 +121,7 @@ contract Servable is Ownable {
     /// @notice Enable a named action in a service contract
     /// @param service The address of the service contract
     /// @param action The name of the action to be disabled
-    function disableServiceAction(address service, string action)
+    function disableServiceAction(address service, string memory action)
     public
     onlyDeployer
     notNullOrThisAddress(service)
@@ -161,7 +161,7 @@ contract Servable is Ownable {
     /// @notice Gauge whether a service contract action is enabled which implies also registered and active
     /// @param service The address of the service contract
     /// @param action The name of action
-    function isEnabledServiceAction(address service, string action)
+    function isEnabledServiceAction(address service, string memory action)
     public
     view
     returns (bool)
@@ -173,7 +173,7 @@ contract Servable is Ownable {
     //
     // Internal functions
     // -----------------------------------------------------------------------------------------------------------------
-    function hashString(string _string)
+    function hashString(string memory _string)
     internal
     pure
     returns (bytes32)
@@ -201,7 +201,7 @@ contract Servable is Ownable {
         _;
     }
 
-    modifier onlyEnabledServiceAction(string action) {
+    modifier onlyEnabledServiceAction(string memory action) {
         require(isEnabledServiceAction(msg.sender, action));
         _;
     }

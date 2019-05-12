@@ -584,8 +584,9 @@ module.exports = function (glob) {
             describe('of ERC721 token', () => {
                 describe.skip('if called without prior approval', () => {
                     it('should revert', async () => {
-                        web3ClientFund.receiveTokens('', 10, web3ERC721.address, 0, '', {from: glob.user_a})
-                            .should.be.rejected;
+                        web3ClientFund.receiveTokens(
+                            '', 10, web3ERC721.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
                     });
                 });
 
@@ -1586,7 +1587,6 @@ module.exports = function (glob) {
 
                     (await ethersBalanceTracker.hasId(glob.user_a, depositedBalanceType, 10, web3ERC721.address, 0))
                         .should.be.true;
-
                 });
             });
         });
@@ -1775,6 +1775,9 @@ module.exports = function (glob) {
                     await web3ClientFund.withdraw(
                         2, web3ERC20.address, 0, '', {from: glob.user_b}
                     );
+
+                    (await ethersERC20.balanceOf(glob.user_b))
+                        ._bn.should.eq.BN(2);
 
                     (await ethersBalanceTracker.get(glob.user_b, depositedBalanceType, web3ERC20.address, 0))
                         ._bn.should.eq.BN(7);

@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -52,8 +52,8 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     /// @param lastPayment Fraudulent payment candidate
     /// @param wallet The address of the concerned wallet
     function challenge(
-        PaymentTypesLib.Payment firstPayment,
-        PaymentTypesLib.Payment lastPayment,
+        PaymentTypesLib.Payment memory firstPayment,
+        PaymentTypesLib.Payment memory lastPayment,
         address wallet
     )
     public
@@ -105,7 +105,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _paymentPartyRole(PaymentTypesLib.Payment payment, address wallet)
+    function _paymentPartyRole(PaymentTypesLib.Payment memory payment, address wallet)
     private
     view
     returns (PaymentTypesLib.PaymentPartyRole)

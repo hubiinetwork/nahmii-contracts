@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {TradeHasher} from "./TradeHasher.sol";
@@ -34,8 +34,8 @@ contract TradeHashable is Ownable {
     function setTradeHasher(TradeHasher newTradeHasher)
     public
     onlyDeployer
-    notNullAddress(newTradeHasher)
-    notSameAddresses(newTradeHasher, tradeHasher)
+    notNullAddress(address(newTradeHasher))
+    notSameAddresses(address(newTradeHasher), address(tradeHasher))
     {
         // Set new trade hasher
         TradeHasher oldTradeHasher = tradeHasher;
@@ -49,7 +49,7 @@ contract TradeHashable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier tradeHasherInitialized() {
-        require(tradeHasher != address(0));
+        require(address(tradeHasher) != address(0));
         _;
     }
 }

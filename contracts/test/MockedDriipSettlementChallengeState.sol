@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {SettlementChallengeTypesLib} from "../SettlementChallengeTypesLib.sol";
@@ -39,8 +39,8 @@ contract MockedDriipSettlementChallengeState {
     }
 
     function initiateProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
-        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 referenceBlockNumber, bool walletInitiated,
-        bytes32 challengedHash, string challengedKind)
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency memory currency, uint256 referenceBlockNumber, bool walletInitiated,
+        bytes32 challengedHash, string memory challengedKind)
     public
     {
         uint256 index = _proposals.length++;
@@ -61,7 +61,7 @@ contract MockedDriipSettlementChallengeState {
         _addProposalsCount++;
     }
 
-    function terminateProposal(address wallet, MonetaryTypesLib.Currency currency, bool)
+    function terminateProposal(address wallet, MonetaryTypesLib.Currency memory currency, bool)
     public
     {
         uint256 index = _addProposalIfNone();
@@ -73,7 +73,7 @@ contract MockedDriipSettlementChallengeState {
         _terminateProposalsCount++;
     }
 
-    function terminateProposal(address wallet, MonetaryTypesLib.Currency currency, bool,
+    function terminateProposal(address wallet, MonetaryTypesLib.Currency memory currency, bool,
         bool walletTerminated)
     public
     {
@@ -87,7 +87,7 @@ contract MockedDriipSettlementChallengeState {
         _terminateProposalsCount++;
     }
 
-    function removeProposal(address wallet, MonetaryTypesLib.Currency currency)
+    function removeProposal(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     {
         uint256 index = _addProposalIfNone();
@@ -98,7 +98,7 @@ contract MockedDriipSettlementChallengeState {
         _removeProposalsCount++;
     }
 
-    function removeProposal(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    function removeProposal(address wallet, MonetaryTypesLib.Currency memory currency, bool walletTerminated)
     public
     {
         uint256 index = _addProposalIfNone();
@@ -110,8 +110,8 @@ contract MockedDriipSettlementChallengeState {
         _removeProposalsCount++;
     }
 
-    function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
-        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string candidateKind)
+    function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency memory currency, address challengerWallet,
+        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string memory candidateKind)
     public
     {
         uint256 index = _addProposalIfNone();
@@ -126,7 +126,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].disqualification.candidate.kind = candidateKind;
     }
 
-    function qualifyProposal(address wallet, MonetaryTypesLib.Currency currency)
+    function qualifyProposal(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     {
         uint256 index = _addProposalIfNone();
@@ -137,7 +137,7 @@ contract MockedDriipSettlementChallengeState {
         delete _proposals[index].disqualification;
     }
 
-    function hasProposal(address, uint256, MonetaryTypesLib.Currency)
+    function hasProposal(address, uint256, MonetaryTypesLib.Currency memory)
     public
     view
     returns (bool)
@@ -145,7 +145,7 @@ contract MockedDriipSettlementChallengeState {
         return _proposal;
     }
 
-    function hasProposal(address, MonetaryTypesLib.Currency)
+    function hasProposal(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (bool)
@@ -159,7 +159,7 @@ contract MockedDriipSettlementChallengeState {
         _proposal = proposal;
     }
 
-    function hasProposalTerminated(address, MonetaryTypesLib.Currency)
+    function hasProposalTerminated(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (bool)
@@ -173,7 +173,7 @@ contract MockedDriipSettlementChallengeState {
         _proposalTerminated = proposalTerminated;
     }
 
-    function hasProposalExpired(address, MonetaryTypesLib.Currency)
+    function hasProposalExpired(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (bool)
@@ -187,7 +187,7 @@ contract MockedDriipSettlementChallengeState {
         _proposalExpired = proposalExpired;
     }
 
-    function proposalNonce(address, MonetaryTypesLib.Currency)
+    function proposalNonce(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (uint256)
@@ -202,7 +202,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].nonce = _proposalNonce;
     }
 
-    function proposalReferenceBlockNumber(address, MonetaryTypesLib.Currency)
+    function proposalReferenceBlockNumber(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (uint256)
@@ -217,7 +217,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].referenceBlockNumber = _proposalReferenceBlockNumber;
     }
 
-    function proposalDefinitionBlockNumber(address, MonetaryTypesLib.Currency)
+    function proposalDefinitionBlockNumber(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (uint256)
@@ -232,7 +232,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].definitionBlockNumber = _proposalDefinitionBlockNumber;
     }
 
-    function proposalExpirationTime(address, MonetaryTypesLib.Currency)
+    function proposalExpirationTime(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (uint256)
@@ -247,7 +247,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].expirationTime = _proposalExpirationTime;
     }
 
-    function proposalStatus(address, MonetaryTypesLib.Currency)
+    function proposalStatus(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (SettlementChallengeTypesLib.Status)
@@ -262,7 +262,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].status = _proposalStatus;
     }
 
-    function proposalCumulativeTransferAmount(address, MonetaryTypesLib.Currency)
+    function proposalCumulativeTransferAmount(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (int256)
@@ -277,7 +277,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].amounts.cumulativeTransfer = _proposalCumulativeTransferAmount;
     }
 
-    function proposalStageAmount(address, MonetaryTypesLib.Currency)
+    function proposalStageAmount(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (int256)
@@ -292,7 +292,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].amounts.stage = _proposalStageAmount;
     }
 
-    function proposalTargetBalanceAmount(address, MonetaryTypesLib.Currency)
+    function proposalTargetBalanceAmount(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (int256)
@@ -307,7 +307,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].amounts.targetBalance = _proposalTargetBalanceAmount;
     }
 
-    function proposalChallengedHash(address, MonetaryTypesLib.Currency)
+    function proposalChallengedHash(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (bytes32)
@@ -322,22 +322,22 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].challenged.hash = _proposalChallengedHash;
     }
 
-    function proposalChallengedKind(address, MonetaryTypesLib.Currency)
+    function proposalChallengedKind(address, MonetaryTypesLib.Currency memory)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         return _proposals[_proposals.length - 1].challenged.kind;
     }
 
-    function _setProposalChallengedKind(string _proposalChallengedKind)
+    function _setProposalChallengedKind(string memory _proposalChallengedKind)
     public
     {
         uint256 index = _addProposalIfNone();
         _proposals[index].challenged.kind = _proposalChallengedKind;
     }
 
-    function proposalWalletInitiated(address, MonetaryTypesLib.Currency)
+    function proposalWalletInitiated(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (bool)
@@ -352,7 +352,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].walletInitiated = _proposalWalletInitiated;
     }
 
-    function proposalDisqualificationChallenger(address, MonetaryTypesLib.Currency)
+    function proposalDisqualificationChallenger(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (address)
@@ -367,7 +367,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].disqualification.challenger = _proposalDisqualificationChallenger;
     }
 
-    function proposalDisqualificationNonce(address, MonetaryTypesLib.Currency)
+    function proposalDisqualificationNonce(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (uint256)
@@ -382,7 +382,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].disqualification.nonce = _proposalDisqualificationNonce;
     }
 
-    function proposalDisqualificationBlockNumber(address, MonetaryTypesLib.Currency)
+    function proposalDisqualificationBlockNumber(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (uint256)
@@ -397,7 +397,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].disqualification.blockNumber = _proposalDisqualificationBlockNumber;
     }
 
-    function proposalDisqualificationCandidateHash(address, MonetaryTypesLib.Currency)
+    function proposalDisqualificationCandidateHash(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (bytes32)
@@ -412,15 +412,15 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].disqualification.candidate.hash = _proposalDisqualificationCandidateHash;
     }
 
-    function proposalDisqualificationCandidateKind(address, MonetaryTypesLib.Currency)
+    function proposalDisqualificationCandidateKind(address, MonetaryTypesLib.Currency memory)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         return _proposals[_proposals.length - 1].disqualification.candidate.kind;
     }
 
-    function _setProposalDisqualificationCandidateKind(string _proposalDisqualificationCandidateKind)
+    function _setProposalDisqualificationCandidateKind(string memory _proposalDisqualificationCandidateKind)
     public
     {
         uint256 index = _addProposalIfNone();

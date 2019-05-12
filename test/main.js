@@ -81,8 +81,6 @@ contract('Unit tests', function () {
     require('./scenarios/FraudChallengeByTradeOrderResiduals')(glob);
     require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
-    require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
-    require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
     require('./scenarios/NullSettlement')(glob);
     require('./scenarios/NullSettlementChallengeByPayment')(glob);
     require('./scenarios/NullSettlementChallengeByTrade')(glob);

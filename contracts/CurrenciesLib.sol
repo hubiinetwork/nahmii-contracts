@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -80,7 +80,7 @@ library CurrenciesLib {
     function getByIndex(Currencies storage self, uint256 index)
     internal
     view
-    returns (MonetaryTypesLib.Currency)
+    returns (MonetaryTypesLib.Currency memory)
     {
         require(index < self.currencies.length);
         return self.currencies[index];
@@ -89,7 +89,7 @@ library CurrenciesLib {
     function getByIndices(Currencies storage self, uint256 low, uint256 up)
     internal
     view
-    returns (MonetaryTypesLib.Currency[])
+    returns (MonetaryTypesLib.Currency[] memory)
     {
         require(0 < self.currencies.length);
         require(low <= up);

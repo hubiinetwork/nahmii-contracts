@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {CommunityVote} from "./CommunityVote.sol";
@@ -35,8 +35,8 @@ contract CommunityVotable is Ownable {
     function setCommunityVote(CommunityVote newCommunityVote) 
     public 
     onlyDeployer
-    notNullAddress(newCommunityVote)
-    notSameAddresses(newCommunityVote, communityVote)
+    notNullAddress(address(newCommunityVote))
+    notSameAddresses(address(newCommunityVote), address(communityVote))
     {
         require(!communityVoteFrozen);
 
@@ -64,7 +64,7 @@ contract CommunityVotable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier communityVoteInitialized() {
-        require(communityVote != address(0));
+        require(address(communityVote) != address(0));
         _;
     }
 }

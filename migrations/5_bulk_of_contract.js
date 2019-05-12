@@ -100,8 +100,8 @@ module.exports = (deployer, network, accounts) => {
 
         await addressStorage.load();
 
-        if (helpers.isResetArgPresent())
-            addressStorage.clear();
+        // if (helpers.isResetArgPresent())
+        //     addressStorage.clear();
 
         if (helpers.isTestNetwork(network))
             deployerAccount = accounts[0];
@@ -182,7 +182,6 @@ module.exports = (deployer, network, accounts) => {
                 ValidatorV2
             ]);
             await deployer.link(CurrenciesLib, [
-                BalanceTracker,
                 PartnerFund,
                 RevenueFund1,
                 SecurityBond,

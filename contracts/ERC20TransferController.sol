@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {TransferController} from "./TransferController.sol";
 import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";

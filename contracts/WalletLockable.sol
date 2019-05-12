@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {WalletLocker} from "./WalletLocker.sol";
@@ -36,8 +36,8 @@ contract WalletLockable is Ownable {
     function setWalletLocker(WalletLocker newWalletLocker)
     public
     onlyDeployer
-    notNullAddress(newWalletLocker)
-    notSameAddresses(newWalletLocker, walletLocker)
+    notNullAddress(address(newWalletLocker))
+    notSameAddresses(address(newWalletLocker), address(walletLocker))
     {
         // Require that this contract has not been frozen
         require(!walletLockerFrozen);
@@ -66,7 +66,7 @@ contract WalletLockable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier walletLockerInitialized() {
-        require(walletLocker != address(0));
+        require(address(walletLocker) != address(0));
         _;
     }
 }

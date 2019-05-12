@@ -106,4 +106,8 @@ AddressStorage.prototype.get = function (key) {
     return this.contents.networks[this.network][key];
 };
 
+AddressStorage.prototype.toJSON = function() {
+    return JSON.stringify(this.contents, null, 2);
+};
+
 module.exports = AddressStorage;

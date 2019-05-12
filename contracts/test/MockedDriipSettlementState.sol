@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {DriipSettlementTypesLib} from "../DriipSettlementTypesLib.sol";
@@ -43,7 +43,7 @@ contract MockedDriipSettlementState {
         return settlements.length;
     }
 
-    function initSettlement(string settledKind, bytes32 settledHash, address originWallet,
+    function initSettlement(string memory settledKind, bytes32 settledHash, address originWallet,
         uint256 originNonce, address targetWallet, uint256 targetNonce)
     public
     {
@@ -163,7 +163,7 @@ contract MockedDriipSettlementState {
         return settlements.length > 0 ? settlements.length - 1 : settlements.length++;
     }
 
-    function maxNonceByWalletAndCurrency(address, MonetaryTypesLib.Currency)
+    function maxNonceByWalletAndCurrency(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (uint256)
@@ -171,7 +171,7 @@ contract MockedDriipSettlementState {
         return _maxNonceByWalletAndCurrency;
     }
 
-    function setMaxNonceByWalletAndCurrency(address, MonetaryTypesLib.Currency,
+    function setMaxNonceByWalletAndCurrency(address, MonetaryTypesLib.Currency memory,
         uint256 maxNonce)
     public
     {
@@ -184,16 +184,16 @@ contract MockedDriipSettlementState {
         maxDriipNonce = _maxDriipNonce;
     }
 
-    function totalFee(address, Beneficiary, address, MonetaryTypesLib.Currency)
+    function totalFee(address, Beneficiary, address, MonetaryTypesLib.Currency memory)
     public
     view
-    returns (MonetaryTypesLib.NoncedAmount)
+    returns (MonetaryTypesLib.NoncedAmount memory)
     {
         return _totalFee;
     }
 
-    function setTotalFee(address, Beneficiary, address, MonetaryTypesLib.Currency,
-        MonetaryTypesLib.NoncedAmount fee)
+    function setTotalFee(address, Beneficiary, address, MonetaryTypesLib.Currency memory,
+        MonetaryTypesLib.NoncedAmount memory fee)
     public
     {
         _totalFee = fee;

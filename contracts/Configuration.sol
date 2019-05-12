@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Modifiable} from "./Modifiable.sol";
@@ -112,7 +112,6 @@ contract Configuration is Modifiable, Ownable, Servable {
     }
 
     //
-
     // Public functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set operational mode to Exit
@@ -232,7 +231,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeMakerFee(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    function setTradeMakerFee(uint256 fromBlockNumber, int256 nominal, int256[] memory discountTiers, int256[] memory discountValues)
     public
     onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
@@ -266,7 +265,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setTradeTakerFee(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    function setTradeTakerFee(uint256 fromBlockNumber, int256 nominal, int256[] memory discountTiers, int256[] memory discountValues)
     public
     onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
@@ -300,7 +299,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Nominal relative fee
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
-    function setPaymentFee(uint256 fromBlockNumber, int256 nominal, int256[] discountTiers, int256[] discountValues)
+    function setPaymentFee(uint256 fromBlockNumber, int256 nominal, int256[] memory discountTiers, int256[] memory discountValues)
     public
     onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)
@@ -348,7 +347,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     /// @param nominal Discount tier levels
     /// @param nominal Discount values
     function setCurrencyPaymentFee(uint256 fromBlockNumber, address currencyCt, uint256 currencyId, int256 nominal,
-        int256[] discountTiers, int256[] discountValues)
+        int256[] memory discountTiers, int256[] memory discountValues)
     public
     onlyOperator
     onlyDelayedBlockNumber(fromBlockNumber)

@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 library BlockNumbIntsLib {
     //
@@ -35,7 +35,7 @@ library BlockNumbIntsLib {
     function currentEntry(BlockNumbInts storage self)
     internal
     view
-    returns (Entry)
+    returns (Entry memory)
     {
         return entryAt(self, block.number);
     }
@@ -51,7 +51,7 @@ library BlockNumbIntsLib {
     function entryAt(BlockNumbInts storage self, uint256 _blockNumber)
     internal
     view
-    returns (Entry)
+    returns (Entry memory)
     {
         return self.entries[indexByBlockNumber(self, _blockNumber)];
     }
@@ -78,7 +78,7 @@ library BlockNumbIntsLib {
     function entries(BlockNumbInts storage self)
     internal
     view
-    returns (Entry[])
+    returns (Entry[] memory)
     {
         return self.entries;
     }

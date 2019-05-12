@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -42,7 +42,7 @@ SecurityBondable, WalletLockable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a trade candidate in continuous Fraud Challenge (FC)
     /// @param trade Fraudulent trade candidate
-    function challenge(TradeTypesLib.Trade trade)
+    function challenge(TradeTypesLib.Trade memory trade)
     public
     onlyOperationalModeNormal
     onlySealedTrade(trade)

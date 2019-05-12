@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Beneficiary} from "./Beneficiary.sol";
@@ -25,7 +25,7 @@ contract AccrualBeneficiary is Beneficiary {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function closeAccrualPeriod(MonetaryTypesLib.Currency[])
+    function closeAccrualPeriod(MonetaryTypesLib.Currency[] memory)
     public
     {
         emit CloseAccrualPeriodEvent();

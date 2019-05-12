@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -38,7 +38,7 @@ SecurityBondable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit an order candidate in continuous Fraud Challenge (FC)
     /// @param order Fraudulent order candidate
-    function challenge(TradeTypesLib.Order order)
+    function challenge(TradeTypesLib.Order memory order)
     public
     onlyOperationalModeNormal
     onlyOperatorSealedOrder(order)
