@@ -158,7 +158,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
-        // TODO Validate
         (bool success,) = address(controller).delegatecall(
             abi.encodeWithSelector(
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
@@ -342,7 +341,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         else {
             // Approve of beneficiary
             TransferController controller = transferController(currencyCt, standard);
-            // TODO Validate
             (bool success,) = address(controller).delegatecall(
                 abi.encodeWithSelector(
                     controller.getApproveSignature(), address(beneficiary), uint256(claimedAmount), currencyCt, currencyId
@@ -397,7 +395,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         else {
             TransferController controller = transferController(currencyCt, standard);
-            // TODO Validate
             (bool success,) = address(controller).delegatecall(
                 abi.encodeWithSelector(
                     controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId
@@ -455,29 +452,5 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         // Return the claimed amount
         return claimedAmount;
-    }
-
-    function _transferToBeneficiary(Beneficiary beneficiary, address destWallet, string memory balanceType,
-        int256 amount, address currencyCt, uint256 currencyId, string memory standard)
-    private
-    {
-        // Transfer ETH to the beneficiary
-        if (address(0) == currencyCt && 0 == currencyId)
-            beneficiary.receiveEthersTo.value(uint256(amount))(destWallet, balanceType);
-
-        else {
-            // Approve of beneficiary
-            TransferController controller = transferController(currencyCt, standard);
-            // TODO Validate
-            (bool success,) = address(controller).delegatecall(
-                abi.encodeWithSelector(
-                    controller.getApproveSignature(), address(beneficiary), uint256(amount), currencyCt, currencyId
-                )
-            );
-            require(success);
-
-            // Transfer tokens to the beneficiary
-            beneficiary.receiveTokensTo(destWallet, balanceType, amount, currencyCt, currencyId, standard);
-        }
     }
 }

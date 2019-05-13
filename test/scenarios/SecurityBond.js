@@ -17,20 +17,21 @@ chai.should();
 
 module.exports = function (glob) {
     describe('SecurityBond', function () {
+        let provider;
         let web3TransferControllerManager;
         let web3Configuration, ethersConfiguration;
         let web3ERC20, ethersERC20;
         let web3SecurityBond, ethersSecurityBond;
         let web3MockedSecurityBondService, ethersMockedSecurityBondService;
-        let web3MockedBeneficiary, ethersBeneficiary;
+        let web3MockedBeneficiary, ethersMockedBeneficiary;
 
         before(async () => {
+            provider = glob.signer_owner.provider;
+
             web3TransferControllerManager = await TransferControllerManager.deployed();
 
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
-            web3MockedBeneficiary = await MockedBeneficiary.new(glob.owner);
-            ethersBeneficiary = new Contract(web3MockedBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);
         });
 
         beforeEach(async () => {
@@ -40,6 +41,9 @@ module.exports = function (glob) {
             await web3ERC20.mint(glob.user_a, 1000);
 
             await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
+
+            web3MockedBeneficiary = await MockedBeneficiary.new(glob.owner);
+            ethersMockedBeneficiary = new Contract(web3MockedBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);
 
             web3SecurityBond = await SecurityBond.new(glob.owner);
             ethersSecurityBond = new Contract(web3SecurityBond.address, SecurityBond.abi, glob.signer_owner);
@@ -256,6 +260,8 @@ module.exports = function (glob) {
 
                         (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(10);
+
+                        (await ethersERC20.balanceOf(ethersSecurityBond.address))._bn.should.eq.BN(10);
                     });
                 });
 
@@ -279,6 +285,8 @@ module.exports = function (glob) {
 
                         (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(20);
+
+                        (await ethersERC20.balanceOf(ethersSecurityBond.address))._bn.should.eq.BN(20);
                     });
                 });
             });
@@ -337,6 +345,8 @@ module.exports = function (glob) {
 
                         (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(10);
+
+                        (await ethersERC20.balanceOf(ethersSecurityBond.address))._bn.should.eq.BN(10);
                     });
                 });
 
@@ -360,6 +370,8 @@ module.exports = function (glob) {
 
                         (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(20);
+
+                        (await ethersERC20.balanceOf(ethersSecurityBond.address))._bn.should.eq.BN(20);
                     });
                 });
             });
@@ -773,6 +785,14 @@ module.exports = function (glob) {
 
                         (await ethersSecurityBond.depositedBalance(mocks.address0, 0))
                             ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
+
+                        const benefit = await ethersMockedBeneficiary._benefits(0);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        benefit.balanceType.should.equal('staged');
+                        benefit.figure.amount._bn.should.eq.BN(utils.parseEther('0.8')._bn);
+
+                        (await provider.getBalance(ethersMockedBeneficiary.address))
+                            ._bn.should.eq.BN(utils.parseEther('0.8')._bn);
                     });
                 });
 
@@ -802,6 +822,17 @@ module.exports = function (glob) {
 
                         (await ethersSecurityBond.depositedBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(2);
+
+                        const benefit = await ethersMockedBeneficiary._benefits(0);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_a));
+                        benefit.balanceType.should.equal('staged');
+                        benefit.figure.amount._bn.should.eq.BN(8);
+                        benefit.figure.currency.ct.should.equal(utils.getAddress(web3ERC20.address));
+                        benefit.figure.currency.id._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
+
+                        (await ethersERC20.allowance(ethersSecurityBond.address, ethersMockedBeneficiary.address))
+                            ._bn.should.eq.BN(8);
                     });
                 });
             });
@@ -978,6 +1009,8 @@ module.exports = function (glob) {
 
             describe('if within operational constraints', () => {
                 describe('of Ether', () => {
+                    let balanceBefore;
+
                     beforeEach(async () => {
                         await web3SecurityBond.receiveEthersTo(
                             mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
@@ -991,6 +1024,8 @@ module.exports = function (glob) {
                         await web3SecurityBond.claimAndStage(
                             mocks.address0, 0, {from: glob.user_b}
                         );
+
+                        balanceBefore = await provider.getBalance(glob.user_b)._bn;
                     });
 
                     it('should successfully withdraw', async () => {
@@ -1005,6 +1040,9 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
                         (await ethersSecurityBond.stagedBalance(glob.user_b, mocks.address0, 0))
                             ._bn.should.eq.BN(utils.parseEther('0.7')._bn);
+
+                        (await provider.getBalance(glob.user_b))
+                            ._bn.should.be.gt.BN(balanceBefore);
                     });
                 });
 
@@ -1039,6 +1077,7 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(2);
                         (await ethersSecurityBond.stagedBalance(glob.user_b, web3ERC20.address, 0))
                             ._bn.should.eq.BN(7);
+
                         (await ethersERC20.balanceOf(glob.user_b))
                             ._bn.should.eq.BN(1);
                     });

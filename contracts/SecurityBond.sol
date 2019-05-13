@@ -146,7 +146,6 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
-        // TODO Validate
         (bool success,) = address(controller).delegatecall(
             abi.encodeWithSelector(
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
@@ -343,7 +342,6 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
 
         else {
             TransferController controller = transferController(currencyCt, standard);
-            // TODO Validate
             (bool success,) = address(controller).delegatecall(
                 abi.encodeWithSelector(
                     controller.getApproveSignature(), address(beneficiary), uint256(claimedAmount), currencyCt, currencyId
@@ -399,7 +397,6 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
 
         else {
             TransferController controller = transferController(currencyCt, standard);
-            // TODO Validate
             (bool success,) = address(controller).delegatecall(
                 abi.encodeWithSelector(
                     controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId

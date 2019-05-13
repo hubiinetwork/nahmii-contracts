@@ -26,11 +26,6 @@ module.exports = function (glob) {
             provider = glob.signer_owner.provider;
 
             web3TransferControllerManager = await TransferControllerManager.deployed();
-
-            web3MockedAccrualBeneficiary99 = await MockedAccrualBeneficiary.new(glob.owner);
-            ethersMockedAccrualBeneficiary99 = new Contract(web3MockedAccrualBeneficiary99.address, MockedAccrualBeneficiary.abi, glob.signer_owner);
-            web3MockedAccrualBeneficiary01 = await MockedAccrualBeneficiary.new(glob.owner);
-            ethersMockedAccrualBeneficiary01 = new Contract(web3MockedAccrualBeneficiary01.address, MockedAccrualBeneficiary.abi, glob.signer_owner);
         });
 
         beforeEach(async () => {
@@ -40,6 +35,11 @@ module.exports = function (glob) {
             await web3ERC20.mint(glob.user_a, 1000);
 
             await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
+
+            web3MockedAccrualBeneficiary99 = await MockedAccrualBeneficiary.new(glob.owner);
+            ethersMockedAccrualBeneficiary99 = new Contract(web3MockedAccrualBeneficiary99.address, MockedAccrualBeneficiary.abi, glob.signer_owner);
+            web3MockedAccrualBeneficiary01 = await MockedAccrualBeneficiary.new(glob.owner);
+            ethersMockedAccrualBeneficiary01 = new Contract(web3MockedAccrualBeneficiary01.address, MockedAccrualBeneficiary.abi, glob.signer_owner);
 
             web3RevenueFund1 = await RevenueFund1.new(glob.owner);
             ethersRevenueFund1 = new Contract(web3RevenueFund1.address, RevenueFund1.abi, glob.signer_owner);
@@ -250,6 +250,8 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(10);
                         (await ethersRevenueFund1.aggregateAccrualBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(10);
+
+                        (await ethersERC20.balanceOf(ethersRevenueFund1.address))._bn.should.eq.BN(10);
                     });
                 });
 
@@ -275,6 +277,9 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(20);
                         (await ethersRevenueFund1.aggregateAccrualBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(20);
+
+
+                        (await ethersERC20.balanceOf(ethersRevenueFund1.address))._bn.should.eq.BN(20);
                     });
                 });
             });
@@ -335,6 +340,8 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(10);
                         (await ethersRevenueFund1.aggregateAccrualBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(10);
+
+                        (await ethersERC20.balanceOf(ethersRevenueFund1.address))._bn.should.eq.BN(10);
                     });
                 });
 
@@ -360,6 +367,8 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(20);
                         (await ethersRevenueFund1.aggregateAccrualBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(20);
+
+                        (await ethersERC20.balanceOf(ethersRevenueFund1.address))._bn.should.eq.BN(20);
                     });
                 });
             });
@@ -491,6 +500,7 @@ module.exports = function (glob) {
                 });
             });
         });
+
         describe('closeAccrualPeriod()', () => {
             describe('if called by non-operator', () => {
                 beforeEach(() => {
@@ -512,11 +522,11 @@ module.exports = function (glob) {
                     );
 
                     await web3ERC20.approve(
-                        web3RevenueFund1.address, 10,
+                        web3RevenueFund1.address, 100,
                         {from: glob.user_a, gas: 1e6}
                     );
                     await web3RevenueFund1.receiveTokensTo(
-                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        glob.user_a, '', 100, web3ERC20.address, 0, '',
                         {from: glob.user_a, gas: 1e6}
                     );
 
@@ -529,6 +539,16 @@ module.exports = function (glob) {
                     (await ethersMockedAccrualBeneficiary99._closedAccrualPeriodsCount())
                         ._bn.should.eq.BN(1);
                     (await ethersMockedAccrualBeneficiary01._closedAccrualPeriodsCount())
+                        ._bn.should.eq.BN(1);
+
+                    (await provider.getBalance(ethersMockedAccrualBeneficiary99.address))
+                        ._bn.should.eq.BN(utils.parseEther('0.99')._bn);
+                    (await provider.getBalance(ethersMockedAccrualBeneficiary01.address))
+                        ._bn.should.eq.BN(utils.parseEther('0.01')._bn);
+
+                    (await ethersERC20.allowance(ethersRevenueFund1.address, ethersMockedAccrualBeneficiary99.address))
+                        ._bn.should.eq.BN(99);
+                    (await ethersERC20.allowance(ethersRevenueFund1.address, ethersMockedAccrualBeneficiary01.address))
                         ._bn.should.eq.BN(1);
                 });
             });

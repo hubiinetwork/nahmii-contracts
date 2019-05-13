@@ -746,7 +746,6 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         else {
             TransferController controller = transferController(currencyCt, standard);
-            // TODO Validate
             (bool success,) = address(controller).delegatecall(
                 abi.encodeWithSelector(
                     controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId
@@ -798,7 +797,6 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
-        // TODO Validate
         (bool success,) = address(controller).delegatecall(
             abi.encodeWithSelector(
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId

@@ -116,7 +116,6 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
-        // TODO Validate
         (bool success,) = address(controller).delegatecall(
             abi.encodeWithSelector(
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
@@ -264,7 +263,6 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
                         // Transfer token to the beneficiary
                         else {
                             TransferController controller = transferController(currency.ct, "");
-                            // TODO Validate
                             (bool success,) = address(controller).delegatecall(
                                 abi.encodeWithSelector(
                                     controller.getApproveSignature(), address(beneficiary), uint256(transferable), currency.ct, currency.id

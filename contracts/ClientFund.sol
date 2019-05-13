@@ -139,7 +139,6 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         TransferController controller = transferController(currencyCt, standard);
 
         // Execute transfer
-        // TODO Validate
         (bool success,) = address(controller).delegatecall(
             abi.encodeWithSelector(
                 controller.getReceiveSignature(), msg.sender, this, uint256(value), currencyCt, currencyId
@@ -517,9 +516,10 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
             beneficiary.receiveEthersTo.value(uint256(value))(destWallet, "");
 
         else {
-            // Approve of beneficiary
+            // Get transfer controller
             TransferController controller = transferController(currencyCt, standard);
-            // TODO Validate
+
+            // Approve of beneficiary
             (bool success,) = address(controller).delegatecall(
                 abi.encodeWithSelector(
                     controller.getApproveSignature(), address(beneficiary), uint256(value), currencyCt, currencyId
@@ -540,13 +540,13 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     {
         // Transfer ETH
         if (address(0) == currencyCt && 0 == currencyId)
-        // TODO Validate
             wallet.transfer(uint256(value));
 
-        // Transfer token
         else {
+            // Get transfer controller
             TransferController controller = transferController(currencyCt, standard);
-            // TODO Validate
+
+            // Transfer token
             (bool success,) = address(controller).delegatecall(
                 abi.encodeWithSelector(
                     controller.getDispatchSignature(), address(this), wallet, uint256(value), currencyCt, currencyId

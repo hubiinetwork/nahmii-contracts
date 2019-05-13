@@ -431,11 +431,6 @@ module.exports = (glob) => {
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(1);
 
-                    // TODO Remove
-                    console.log(`Cumulative transfer amount: ${utils.formatUnits(proposal.amounts.cumulativeTransfer, 18)}`);
-                    console.log(`Stage amount: ${utils.formatUnits(proposal.amounts.stage, 18)}`);
-                    console.log(`Target balance amount: ${utils.formatUnits(proposal.amounts.targetBalance, 18)}`);
-
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                     proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
                         utils.parseUnits('10000', 18).sub(payment.sender.balances.current)._bn
@@ -488,18 +483,13 @@ module.exports = (glob) => {
 
                 it('should start challenge successfully with corrected cumulative transfer amount', async () => {
                     await ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current.sub(utils.parseUnits('100', 18)), {gasLimit: 3e6} // TODO Remove '9399.8'
+                        payment, payment.sender.balances.current.sub(utils.parseUnits('100', 18)), {gasLimit: 3e6}
                     );
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(1);
-
-                    // TODO Remove
-                    console.log(`Cumulative transfer amount: ${utils.formatUnits(proposal.amounts.cumulativeTransfer, 18)}`);
-                    console.log(`Stage amount: ${utils.formatUnits(proposal.amounts.stage, 18)}`);
-                    console.log(`Target balance amount: ${utils.formatUnits(proposal.amounts.targetBalance, 18)}`);
 
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                     proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
@@ -691,11 +681,6 @@ module.exports = (glob) => {
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(1);
 
-                    // TODO Remove
-                    console.log(`Cumulative transfer amount: ${utils.formatUnits(proposal.amounts.cumulativeTransfer, 18)}`);
-                    console.log(`Stage amount: ${utils.formatUnits(proposal.amounts.stage, 18)}`);
-                    console.log(`Target balance amount: ${utils.formatUnits(proposal.amounts.targetBalance, 18)}`);
-
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                     proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
                         utils.parseUnits('10000', 18).sub(payment.sender.balances.current)._bn
@@ -757,11 +742,6 @@ module.exports = (glob) => {
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
                     const proposal = await ethersDriipSettlementChallengeState._proposals(1);
-
-                    // TODO Remove
-                    console.log(`Cumulative transfer amount: ${utils.formatUnits(proposal.amounts.cumulativeTransfer, 18)}`);
-                    console.log(`Stage amount: ${utils.formatUnits(proposal.amounts.stage, 18)}`);
-                    console.log(`Target balance amount: ${utils.formatUnits(proposal.amounts.targetBalance, 18)}`);
 
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                     proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
