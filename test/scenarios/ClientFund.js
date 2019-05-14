@@ -1427,7 +1427,7 @@ module.exports = function (glob) {
                         benefit.amount._bn.should.eq.BN(3);
                         benefit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
                         benefit.currencyId._bn.should.eq.BN(0);
-                        benefit.standard.should.be.a('string').that.is.empty;
+                        benefit.standard.should.equal('ERC20');
                     });
                 });
 
@@ -1463,7 +1463,7 @@ module.exports = function (glob) {
                         benefit.amount._bn.should.eq.BN(3);
                         benefit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
                         benefit.currencyId._bn.should.eq.BN(0);
-                        benefit.standard.should.be.a('string').that.is.empty;
+                        benefit.standard.should.equal('ERC20');
                     });
                 });
             });
@@ -1573,7 +1573,7 @@ module.exports = function (glob) {
                     benefit.amount._bn.should.eq.BN(3);
                     benefit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
                     benefit.currencyId._bn.should.eq.BN(0);
-                    benefit.standard.should.be.a('string').that.is.empty;
+                    benefit.standard.should.equal('ERC20');
                 });
             });
 

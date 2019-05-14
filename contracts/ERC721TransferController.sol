@@ -17,6 +17,11 @@ import {IERC721} from "openzeppelin-solidity/contracts/token/ERC721/IERC721.sol"
  */
 contract ERC721TransferController is TransferController {
     //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant _standard = "ERC721";
+
+    //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function isFungible()
@@ -25,6 +30,14 @@ contract ERC721TransferController is TransferController {
     returns (bool)
     {
         return false;
+    }
+
+    function standard()
+    public
+    view
+    returns (string memory)
+    {
+        return _standard;
     }
 
     function receive(address from, address to, uint256 id, address currencyCt, uint256 currencyId)
