@@ -291,8 +291,8 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
             if (0 == fees[i].originId)
                 beneficiary = protocolBeneficiary;
             else if (
-                partnerBenefactor.registeredBeneficiariesCount() > 0 &&
-                partnerBenefactor.registeredBeneficiariesCount() <= fees[i].originId
+                0 < partnerBenefactor.registeredBeneficiariesCount() &&
+                fees[i].originId <= partnerBenefactor.registeredBeneficiariesCount()
             )
                 beneficiary = partnerBenefactor.beneficiaries(fees[i].originId - 1);
 
