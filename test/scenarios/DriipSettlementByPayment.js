@@ -619,15 +619,12 @@ module.exports = (glob) => {
                         proposal.currency.ct.should.equal(payment.currency.ct);
                         proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         proposal.terminated.should.be.true;
-
-                        (await ethersDriipSettlementState.maxDriipNonce())
-                            ._bn.should.eq.BN(payment.nonce._bn);
                     });
                 });
 
                 describe('if wallet has already settled this payment', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementState.setSettlementRoleDone(
+                        await ethersDriipSettlementState.completeSettlementParty(
                             payment.sender.wallet, payment.sender.nonce, mocks.settlementRoles.indexOf('Origin'), true
                         );
                     });
@@ -866,15 +863,12 @@ module.exports = (glob) => {
                         proposal.currency.ct.should.equal(payment.currency.ct);
                         proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
                         proposal.terminated.should.be.true;
-
-                        (await ethersDriipSettlementState.maxDriipNonce())
-                            ._bn.should.eq.BN(payment.nonce._bn);
                     });
                 });
 
                 describe('if wallet has already settled this payment', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementState.setSettlementRoleDone(
+                        await ethersDriipSettlementState.completeSettlementParty(
                             payment.sender.wallet, payment.sender.nonce, mocks.settlementRoles.indexOf('Origin'), true
                         );
                     });

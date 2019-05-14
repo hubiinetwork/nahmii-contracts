@@ -60,6 +60,12 @@ module.exports = {
             },
             network_id: "*",
             gas: 8000000
+        },
+        "mainnet-hubii": {
+            host: "ethereum.hubii.com",
+            port: 8545,
+            network_id: "1",
+            gas: 8000000
         }
     },
     solc: {

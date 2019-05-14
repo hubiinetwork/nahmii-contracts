@@ -237,12 +237,12 @@ FraudChallengable, WalletLockable {
         );
 
         // If exists settlement of nonce then require that wallet has not already settled
-        require(!driipSettlementState.isSettlementRoleDone(
+        require(!driipSettlementState.isSettlementPartyDone(
             wallet, walletNonce, settlementRole
         ));
 
         // Set address of origin or target to prevent the same settlement from being resettled by this wallet
-        driipSettlementState.setSettlementRoleDone(
+        driipSettlementState.completeSettlementParty(
             wallet, walletNonce, settlementRole, true
         );
 
@@ -270,10 +270,6 @@ FraudChallengable, WalletLockable {
 
         // Remove driip settlement challenge proposal
         driipSettlementChallengeState.terminateProposal(wallet, payment.currency, false);
-
-        // If payment global nonce is beyond max driip nonce then update max driip nonce
-        if (payment.nonce > driipSettlementState.maxDriipNonce())
-            driipSettlementState.setMaxDriipNonce(payment.nonce);
     }
 
     function _getRoleProperties(PaymentTypesLib.Payment payment, address wallet)

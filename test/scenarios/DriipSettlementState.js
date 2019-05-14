@@ -162,6 +162,44 @@ module.exports = (glob) => {
             });
         });
 
+        describe('upgradesFrozen()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersDriipSettlementState.upgradesFrozen())
+                    .should.be.false;
+            });
+        });
+
+        describe('freezeUpgrades()', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3DriipSettlementState.freezeUpgrades({from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by deployer', () => {
+                let address, filter;
+
+                beforeEach(async () => {
+                    address = Wallet.createRandom().address;
+
+                    filter = await fromBlockTopicsFilter(
+                        ethersDriipSettlementState.interface.events.FreezeUpgradesEvent.topics
+                    );
+                });
+
+                it('should disable changing community vote', async () => {
+                    await web3DriipSettlementState.freezeUpgrades();
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    (await ethersDriipSettlementState.upgradesFrozen())
+                        .should.be.true;
+                });
+            });
+        });
+
         describe('settlementsCount()', () => {
             it('should equal value initialized', async () => {
                 (await ethersDriipSettlementState.settlementsCount())
@@ -300,15 +338,39 @@ module.exports = (glob) => {
             });
         });
 
-        describe('isSettlementRoleDone()', () => {
+        describe('isSettlementPartyDone(address,uint256)', () => {
             it('should equal value initialized', async () => {
-                (await ethersDriipSettlementState.isSettlementRoleDone(
+                (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256)'](
+                    glob.user_a, 1
+                )).should.be.false;
+            });
+        });
+
+        describe('isSettlementPartyDone(address,uint256,uint8)', () => {
+            it('should equal value initialized', async () => {
+                (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
                     glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
                 )).should.be.false;
             });
         });
 
-        describe('setSettlementRoleDone()', () => {
+        describe('settlementPartyDoneBlockNumber(address,uint256)', () => {
+            it('should equal value initialized', async () => {
+                ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
+                    glob.user_a, 1
+                ).should.be.rejected;
+            });
+        });
+
+        describe('settlementPartyDoneBlockNumber(address,uint256,uint8)', () => {
+            it('should equal value initialized', async () => {
+                ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256,uint8)'](
+                    glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                ).should.be.rejected;
+            });
+        });
+
+        describe('completeSettlementParty()', () => {
             let filter;
 
             beforeEach(async () => {
@@ -319,13 +381,13 @@ module.exports = (glob) => {
                 );
 
                 filter = await fromBlockTopicsFilter(
-                    ethersDriipSettlementState.interface.events.SetSettlementRoleDoneEvent.topics
+                    ethersDriipSettlementState.interface.events.CompleteSettlementPartyEvent.topics
                 );
             });
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.setSettlementRoleDone(
+                    ethersDriipSettlementState.completeSettlementParty(
                         glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
                     ).should.be.rejected
                 });
@@ -343,20 +405,88 @@ module.exports = (glob) => {
                     );
                 });
 
-                it('should successfully set done of origin role', async () => {
-                    await ethersDriipSettlementState.setSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
-                    );
+                describe('if called with true as done value', () => {
+                    it('should successfully set done of origin role and update its done block number', async () => {
+                        await ethersDriipSettlementState.completeSettlementParty(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
+                        );
 
-                    const logs = await provider.getLogs(filter);
-                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+                        const logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    (await ethersDriipSettlementState.isSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
-                    )).should.be.true;
-                    (await ethersDriipSettlementState.isSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Target')
-                    )).should.be.false;
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256)'](
+                            glob.user_a, 1
+                        )).should.be.true;
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        )).should.be.true;
+
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
+                            glob.user_a, 1
+                        ))._bn.should.eq.BN(await provider.getBlockNumber());
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256,uint8)'](
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        ))._bn.should.eq.BN(await provider.getBlockNumber());
+
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256)'](
+                            glob.user_b, 2
+                        )).should.be.false;
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        )).should.be.false;
+
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
+                            glob.user_b, 2
+                        ))._bn.should.eq.BN(0);
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256,uint8)'](
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        ))._bn.should.eq.BN(0);
+                    });
+                });
+
+                describe('if called with false as done value', () => {
+                    beforeEach(async () => {
+                        await ethersDriipSettlementState.completeSettlementParty(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
+                        );
+                    });
+
+                    it('should successfully set done of origin role and update its done block number', async () => {
+                        await ethersDriipSettlementState.completeSettlementParty(
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), false
+                        );
+
+                        const logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256)'](
+                            glob.user_a, 1
+                        )).should.be.false;
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        )).should.be.false;
+
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
+                            glob.user_a, 1
+                        ))._bn.should.eq.BN(0);
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256,uint8)'](
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        ))._bn.should.eq.BN(0);
+
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256)'](
+                            glob.user_b, 2
+                        )).should.be.false;
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        )).should.be.false;
+
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
+                            glob.user_b, 2
+                        ))._bn.should.eq.BN(0);
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256,uint8)'](
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        ))._bn.should.eq.BN(0);
+                    });
                 });
             });
 
@@ -372,20 +502,88 @@ module.exports = (glob) => {
                     );
                 });
 
-                it('should successfully set done of origin role', async () => {
-                    await ethersDriipSettlementState.setSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Target'), true
-                    );
+                describe('if called with true as done value', () => {
+                    it('should successfully set done of target role and update its done block number', async () => {
+                        await ethersDriipSettlementState.completeSettlementParty(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), true
+                        );
 
-                    const logs = await provider.getLogs(filter);
-                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+                        const logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    (await ethersDriipSettlementState.isSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
-                    )).should.be.false;
-                    (await ethersDriipSettlementState.isSettlementRoleDone(
-                        glob.user_a, 1, mocks.settlementRoles.indexOf('Target')
-                    )).should.be.true;
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256)'](
+                            glob.user_a, 1
+                        )).should.be.false;
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        )).should.be.false;
+
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
+                            glob.user_a, 1
+                        ))._bn.should.eq.BN(0);
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256,uint8)'](
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        ))._bn.should.eq.BN(0);
+
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256)'](
+                            glob.user_b, 2
+                        )).should.be.true;
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        )).should.be.true;
+
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
+                            glob.user_b, 2
+                        ))._bn.should.eq.BN(await provider.getBlockNumber());
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256,uint8)'](
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        ))._bn.should.eq.BN(await provider.getBlockNumber());
+                    });
+                });
+
+                describe('if called with false as done value', () => {
+                    beforeEach(async () => {
+                        await ethersDriipSettlementState.completeSettlementParty(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), true
+                        );
+                    });
+
+                    it('should successfully set done of target role and update its done block number', async () => {
+                        await ethersDriipSettlementState.completeSettlementParty(
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), false
+                        );
+
+                        const logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256)'](
+                            glob.user_a, 1
+                        )).should.be.false;
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        )).should.be.false;
+
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
+                            glob.user_a, 1
+                        ))._bn.should.eq.BN(0);
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256,uint8)'](
+                            glob.user_a, 1, mocks.settlementRoles.indexOf('Origin')
+                        ))._bn.should.eq.BN(0);
+
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256)'](
+                            glob.user_b, 2
+                        )).should.be.false;
+                        (await ethersDriipSettlementState['isSettlementPartyDone(address,uint256,uint8)'](
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        )).should.be.false;
+
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256)'](
+                            glob.user_b, 2
+                        ))._bn.should.eq.BN(0);
+                        (await ethersDriipSettlementState['settlementPartyDoneBlockNumber(address,uint256,uint8)'](
+                            glob.user_b, 2, mocks.settlementRoles.indexOf('Target')
+                        ))._bn.should.eq.BN(0);
+                    });
                 });
             });
         });
@@ -417,7 +615,7 @@ module.exports = (glob) => {
             describe('if called by enabled service action', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementState.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementState.SET_MAX_DRIIP_NONCE_ACTION(),
+                        glob.owner, await ethersDriipSettlementState.SET_MAX_NONCE_ACTION(),
                         {gasLimit: 1e6}
                     );
                 });
@@ -570,6 +768,78 @@ module.exports = (glob) => {
                     );
                     totalFee.nonce._bn.should.eq.BN(10);
                     totalFee.amount._bn.should.eq.BN(20);
+                });
+            });
+        });
+
+        describe('upgradeSettlement', () => {
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3DriipSettlementState.upgradeSettlement(
+                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
+                        {from: glob.user_a, gas: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called after settlement upgrades have been frozen', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.freezeUpgrades();
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementState.upgradeSettlement(
+                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
+                        {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let filter;
+
+                beforeEach(async () => {
+                    filter = await fromBlockTopicsFilter(
+                        ethersDriipSettlementState.interface.events.UpgradeSettlementEvent.topics
+                    );
+                });
+
+                it('should successfully upgrade settlement', async () => {
+                    await ethersDriipSettlementState.upgradeSettlement(
+                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
+                        {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const settlement = await ethersDriipSettlementState.settlements(0);
+                    settlement.settledKind.should.equal('some_kind');
+                    settlement.settledHash.should.equal(mocks.hash1);
+                    settlement.origin.nonce._bn.should.eq.BN(1);
+                    settlement.origin.wallet.should.equal(utils.getAddress(glob.user_a));
+                    settlement.origin.done.should.be.true;
+                    settlement.origin.doneBlockNumber._bn.should.be.eq.BN(100);
+                    settlement.target.nonce._bn.should.eq.BN(2);
+                    settlement.target.wallet.should.equal(utils.getAddress(glob.user_b));
+                    settlement.target.done.should.be.false;
+                    settlement.target.doneBlockNumber._bn.should.be.eq.BN(200);
+                });
+            });
+
+            describe('if upgrading existing settlement', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.upgradeSettlement(
+                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
+                        {gasLimit: 1e6}
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementState.upgradeSettlement(
+                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
+                        {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
         });

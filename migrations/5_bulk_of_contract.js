@@ -47,6 +47,7 @@ const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedDriipSettlementDisputeByPayment = artifacts.require('MockedDriipSettlementDisputeByPayment');
 const MockedDriipSettlementDisputeByTrade = artifacts.require('MockedDriipSettlementDisputeByTrade');
+const MockedDriipSettlementState = artifacts.require('MockedDriipSettlementState');
 const MockedValidator = artifacts.require('MockedValidator');
 const MonetaryTypesLib = artifacts.require('MonetaryTypesLib');
 const NahmiiTypesLib = artifacts.require('NahmiiTypesLib');
@@ -321,6 +322,7 @@ module.exports = (deployer, network, accounts) => {
                 FraudChallengeBySuccessivePayments,
                 FraudChallengeBySuccessiveTrades,
                 FraudChallengeByTradeSucceedingPayment,
+                MockedDriipSettlementState,
                 NullSettlement,
                 NullSettlementChallengeByPayment,
                 NullSettlementChallengeByTrade,
@@ -566,13 +568,11 @@ module.exports = (deployer, network, accounts) => {
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.INIT_SETTLEMENT_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_SETTLEMENT_ROLE_DONE_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_MAX_NONCE_ACTION.call());
-                await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_MAX_DRIIP_NONCE_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_FEE_TOTAL_ACTION.call());
                 await instance.registerService(addressStorage.get('DriipSettlementByTrade'));
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.INIT_SETTLEMENT_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_SETTLEMENT_ROLE_DONE_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_MAX_NONCE_ACTION.call());
-                await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_MAX_DRIIP_NONCE_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_FEE_TOTAL_ACTION.call());
 
                 instance = await DriipSettlementByPayment.at(addressStorage.get('DriipSettlementByPayment'));
@@ -986,6 +986,7 @@ module.exports = (deployer, network, accounts) => {
                 await instance.setDriipSettlementDisputeByPayment(addressStorage.get('DriipSettlementDisputeByPayment'));
                 await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
                 await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+                await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
 
                 // instance = await DriipSettlementChallengeByTrade.at(addressStorage.get('DriipSettlementChallengeByTrade'));
                 // await instance.setValidator(addressStorage.get('ValidatorV2'));
@@ -1027,13 +1028,11 @@ module.exports = (deployer, network, accounts) => {
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.INIT_SETTLEMENT_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_SETTLEMENT_ROLE_DONE_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_MAX_NONCE_ACTION.call());
-                await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_MAX_DRIIP_NONCE_ACTION.call());
                 await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_FEE_TOTAL_ACTION.call());
                 // await instance.registerService(addressStorage.get('DriipSettlementByTrade'));
                 // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.INIT_SETTLEMENT_ACTION.call());
                 // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_SETTLEMENT_ROLE_DONE_ACTION.call());
                 // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_MAX_NONCE_ACTION.call());
-                // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_MAX_DRIIP_NONCE_ACTION.call());
                 // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_FEE_TOTAL_ACTION.call());
 
                 instance = await DriipSettlementByPayment.at(addressStorage.get('DriipSettlementByPayment'));
