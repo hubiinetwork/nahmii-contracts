@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -72,7 +72,7 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The max nonce
-    function maxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency)
+    function maxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (uint256) {
@@ -83,7 +83,7 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @param _maxNullNonce The max nonce
-    function setMaxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency,
+    function setMaxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency memory currency,
         uint256 _maxNullNonce)
     public
     onlyEnabledServiceAction(SET_MAX_NONCE_WALLET_CURRENCY_ACTION)

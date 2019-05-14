@@ -927,27 +927,6 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('setEarliestSettlementBlockNumber()', () => {
-                describe('if called by non-operator', () => {
-                    it('should revert', async () => {
-                        web3Configuration.setEarliestSettlementBlockNumber(1000, {from: glob.user_a})
-                            .should.be.rejected;
-                    });
-                });
-
-                describe('if within operational constraints', () => {
-                    it('should equal value initialized', async () => {
-                        const result = await web3Configuration.setEarliestSettlementBlockNumber(1000);
-
-                        result.logs.should.be.an('array').and.have.lengthOf(1);
-                        result.logs[0].event.should.equal('SetEarliestSettlementBlockNumberEvent');
-
-                        (await ethersConfiguration.earliestSettlementBlockNumber())
-                            ._bn.should.eq.BN(1000);
-                    });
-                });
-            });
-
             describe('earliestSettlementBlockNumberUpdateDisabled()', () => {
                 it('should equal value initialized', async () => {
                     (await web3Configuration.earliestSettlementBlockNumberUpdateDisabled.call())
@@ -972,6 +951,38 @@ module.exports = (glob) => {
 
                         (await web3Configuration.earliestSettlementBlockNumberUpdateDisabled.call())
                             .should.be.true;
+                    });
+                });
+            });
+
+            describe('setEarliestSettlementBlockNumber()', () => {
+                describe('if called by non-operator', () => {
+                    it('should revert', async () => {
+                        web3Configuration.setEarliestSettlementBlockNumber(1000, {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if called with update disabled', () => {
+                    before(async () => {
+                        await web3Configuration.disableEarliestSettlementBlockNumberUpdate();
+                    });
+
+                    it('should revert', async () => {
+                        web3Configuration.setEarliestSettlementBlockNumber(1000, {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if within operational constraints', () => {
+                    it('should equal value initialized', async () => {
+                        const result = await web3Configuration.setEarliestSettlementBlockNumber(1000);
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('SetEarliestSettlementBlockNumberEvent');
+
+                        (await ethersConfiguration.earliestSettlementBlockNumber())
+                            ._bn.should.eq.BN(1000);
                     });
                 });
             });

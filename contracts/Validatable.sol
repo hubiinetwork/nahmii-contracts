@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {Validator} from "./Validator.sol";
@@ -37,8 +37,8 @@ contract Validatable is Ownable {
     function setValidator(Validator newValidator)
     public
     onlyDeployer
-    notNullAddress(newValidator)
-    notSameAddresses(newValidator, validator)
+    notNullAddress(address(newValidator))
+    notSameAddresses(address(newValidator), address(validator))
     {
         //set new validator
         Validator oldValidator = validator;
@@ -52,26 +52,26 @@ contract Validatable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier validatorInitialized() {
-        require(validator != address(0));
+        require(address(validator) != address(0));
         _;
     }
 
-    modifier onlyOperatorSealedPayment(PaymentTypesLib.Payment payment) {
+    modifier onlyOperatorSealedPayment(PaymentTypesLib.Payment memory payment) {
         require(validator.isGenuinePaymentOperatorSeal(payment));
         _;
     }
 
-    modifier onlySealedPayment(PaymentTypesLib.Payment payment) {
+    modifier onlySealedPayment(PaymentTypesLib.Payment memory payment) {
         require(validator.isGenuinePaymentSeals(payment));
         _;
     }
 
-    modifier onlyPaymentParty(PaymentTypesLib.Payment payment, address wallet) {
+    modifier onlyPaymentParty(PaymentTypesLib.Payment memory payment, address wallet) {
         require(validator.isPaymentParty(payment, wallet));
         _;
     }
 
-    modifier onlyPaymentSender(PaymentTypesLib.Payment payment, address wallet) {
+    modifier onlyPaymentSender(PaymentTypesLib.Payment memory payment, address wallet) {
         require(validator.isPaymentSender(payment, wallet));
         _;
     }

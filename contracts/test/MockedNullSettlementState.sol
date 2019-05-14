@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
 pragma experimental ABIEncoderV2;
@@ -27,7 +27,7 @@ contract MockedNullSettlementState {
         delete maxNullNonce;
     }
 
-    function maxNonceByWalletAndCurrency(address, MonetaryTypesLib.Currency)
+    function maxNonceByWalletAndCurrency(address, MonetaryTypesLib.Currency memory)
     public
     view
     returns (uint256)
@@ -35,7 +35,7 @@ contract MockedNullSettlementState {
         return _maxNonceByWalletAndCurrency;
     }
 
-    function setMaxNonceByWalletAndCurrency(address, MonetaryTypesLib.Currency,
+    function setMaxNonceByWalletAndCurrency(address, MonetaryTypesLib.Currency memory,
         uint256 maxNonce)
     public
     {

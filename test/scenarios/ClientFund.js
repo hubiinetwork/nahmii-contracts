@@ -584,8 +584,9 @@ module.exports = function (glob) {
             describe('of ERC721 token', () => {
                 describe.skip('if called without prior approval', () => {
                     it('should revert', async () => {
-                        web3ClientFund.receiveTokens('', 10, web3ERC721.address, 0, '', {from: glob.user_a})
-                            .should.be.rejected;
+                        web3ClientFund.receiveTokens(
+                            '', 10, web3ERC721.address, 0, '', {from: glob.user_a}
+                        ).should.be.rejected;
                     });
                 });
 
@@ -1410,6 +1411,9 @@ module.exports = function (glob) {
                             }
                         );
 
+                        (await ethersERC20.allowance(web3ClientFund.address, web3MockedBeneficiary.address))
+                            ._bn.should.eq.BN(3);
+
                         (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, web3ERC20.address, 0))
                             ._bn.should.eq.BN(10);
                         (await ethersBalanceTracker.get(glob.user_a, settledBalanceType, web3ERC20.address, 0))
@@ -1442,6 +1446,9 @@ module.exports = function (glob) {
                                 gas: 1e6
                             }
                         );
+
+                        (await ethersERC20.allowance(web3ClientFund.address, web3MockedBeneficiary.address))
+                            ._bn.should.eq.BN(3);
 
                         (await ethersBalanceTracker.get(glob.user_a, depositedBalanceType, web3ERC20.address, 0))
                             ._bn.should.eq.BN(1);
@@ -1556,6 +1563,9 @@ module.exports = function (glob) {
                     await web3MockedClientFundAuthorizedService.transferToBeneficiary(
                         glob.user_b, web3MockedBeneficiary.address, 3, web3ERC20.address, 0, '', {gas: 1e6}
                     );
+
+                    (await ethersERC20.allowance(web3ClientFund.address, web3MockedBeneficiary.address))
+                        ._bn.should.eq.BN(3);
 
                     const benefit = await ethersMockedBeneficiary._getBenefit(0);
                     benefit.wallet.should.equal(utils.getAddress(glob.user_b));
@@ -1735,6 +1745,8 @@ module.exports = function (glob) {
             });
 
             describe('of Ether', () => {
+                let balanceBefore;
+
                 beforeEach(async () => {
                     await web3ClientFund.receiveEthersTo(
                         glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
@@ -1742,6 +1754,8 @@ module.exports = function (glob) {
                     await web3MockedClientFundAuthorizedService.stage(
                         glob.user_a, web3.toWei(0.3, 'ether'), mocks.address0, 0, '', {gas: 1e6}
                     );
+
+                    balanceBefore = await provider.getBalance(glob.user_a)._bn;
                 });
 
                 it('should successfully unstage', async () => {
@@ -1755,6 +1769,8 @@ module.exports = function (glob) {
                         ._bn.should.eq.BN(0);
                     (await ethersBalanceTracker.get(glob.user_a, stagedBalanceType, mocks.address0, 0))
                         ._bn.should.eq.BN(utils.parseEther('0.1')._bn);
+
+                    (await provider.getBalance(glob.user_a))._bn.should.be.gt.BN(balanceBefore);
                 });
             });
 
@@ -1783,8 +1799,7 @@ module.exports = function (glob) {
                     (await ethersBalanceTracker.get(glob.user_b, stagedBalanceType, web3ERC20.address, 0))
                         ._bn.should.eq.BN(1);
 
-                    (await ethersERC20.balanceOf(glob.user_b))
-                        ._bn.should.eq.BN(2);
+                    (await ethersERC20.balanceOf(glob.user_b))._bn.should.eq.BN(2);
                 });
             });
 

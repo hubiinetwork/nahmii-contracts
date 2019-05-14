@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -28,7 +28,7 @@ contract TradeHasher is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function hashOrderAsWallet(TradeTypesLib.Order order)
+    function hashOrderAsWallet(TradeTypesLib.Order memory order)
     public
     pure
     returns (bytes32)
@@ -39,7 +39,7 @@ contract TradeHasher is Ownable {
         return keccak256(abi.encodePacked(rootHash, placementHash));
     }
 
-    function hashOrderAsOperator(TradeTypesLib.Order order)
+    function hashOrderAsOperator(TradeTypesLib.Order memory order)
     public
     pure
     returns (bytes32)
@@ -51,7 +51,7 @@ contract TradeHasher is Ownable {
         return keccak256(abi.encodePacked(rootHash, walletSignatureHash, placementResidualsHash));
     }
 
-    function hashTrade(TradeTypesLib.Trade trade)
+    function hashTrade(TradeTypesLib.Trade memory trade)
     public
     pure
     returns (bytes32)
@@ -64,7 +64,7 @@ contract TradeHasher is Ownable {
         return keccak256(abi.encodePacked(rootHash, buyerHash, sellerHash, transfersHash));
     }
 
-    function hashOrderPlacement(TradeTypesLib.OrderPlacement orderPlacement)
+    function hashOrderPlacement(TradeTypesLib.OrderPlacement memory orderPlacement)
     public
     pure
     returns (bytes32)
@@ -80,7 +80,7 @@ contract TradeHasher is Ownable {
             ));
     }
 
-    function hashTradeRoot(TradeTypesLib.Trade trade)
+    function hashTradeRoot(TradeTypesLib.Trade memory trade)
     public
     pure
     returns (bytes32)
@@ -96,7 +96,7 @@ contract TradeHasher is Ownable {
             ));
     }
 
-    function hashTradeParty(TradeTypesLib.TradeParty tradeParty)
+    function hashTradeParty(TradeTypesLib.TradeParty memory tradeParty)
     public
     pure
     returns (bytes32)
@@ -112,7 +112,7 @@ contract TradeHasher is Ownable {
             ));
     }
 
-    function hashTradePartyRoot(TradeTypesLib.TradeParty tradeParty)
+    function hashTradePartyRoot(TradeTypesLib.TradeParty memory tradeParty)
     public
     pure
     returns (bytes32)
@@ -125,7 +125,7 @@ contract TradeHasher is Ownable {
             ));
     }
 
-    function hashTradeOrder(TradeTypesLib.TradeOrder tradeOrder)
+    function hashTradeOrder(TradeTypesLib.TradeOrder memory tradeOrder)
     public
     pure
     returns (bytes32)
@@ -140,7 +140,7 @@ contract TradeHasher is Ownable {
     }
 
     function hashIntendedConjugateSingleTotalInt256(
-        NahmiiTypesLib.IntendedConjugateSingleTotalInt256 intededConjugateSingleTotalInt256)
+        NahmiiTypesLib.IntendedConjugateSingleTotalInt256 memory intededConjugateSingleTotalInt256)
     public
     pure
     returns (bytes32)
@@ -154,7 +154,7 @@ contract TradeHasher is Ownable {
     }
 
     function hashCurrentPreviousInt256(
-        NahmiiTypesLib.CurrentPreviousInt256 currentPreviousInt256)
+        NahmiiTypesLib.CurrentPreviousInt256 memory currentPreviousInt256)
     public
     pure
     returns (bytes32)
@@ -166,7 +166,7 @@ contract TradeHasher is Ownable {
     }
 
     function hashIntendedConjugateCurrentPreviousInt256(
-        NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 intendedConjugateCurrentPreviousInt256)
+        NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 memory intendedConjugateCurrentPreviousInt256)
     public
     pure
     returns (bytes32)
@@ -179,7 +179,7 @@ contract TradeHasher is Ownable {
             ));
     }
 
-    function hashFigure(MonetaryTypesLib.Figure figure)
+    function hashFigure(MonetaryTypesLib.Figure memory figure)
     public
     pure
     returns (bytes32)
@@ -191,7 +191,7 @@ contract TradeHasher is Ownable {
             ));
     }
 
-    function hashOriginFigures(NahmiiTypesLib.OriginFigure[] originFigures)
+    function hashOriginFigures(NahmiiTypesLib.OriginFigure[] memory originFigures)
     public
     pure
     returns (bytes32)
@@ -226,7 +226,7 @@ contract TradeHasher is Ownable {
         return keccak256(abi.encodePacked(_address));
     }
 
-    function hashSignature(NahmiiTypesLib.Signature signature)
+    function hashSignature(NahmiiTypesLib.Signature memory signature)
     public
     pure
     returns (bytes32)

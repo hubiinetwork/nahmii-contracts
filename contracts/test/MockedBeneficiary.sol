@@ -6,7 +6,8 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
+pragma experimental ABIEncoderV2;
 
 import {Beneficiary} from "../Beneficiary.sol";
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
@@ -40,7 +41,7 @@ contract MockedBeneficiary is Beneficiary {
         _benefits.length = 0;
     }
 
-    function receiveEthersTo(address wallet, string balanceType)
+    function receiveEthersTo(address wallet, string memory balanceType)
     public
     payable
     {
@@ -57,8 +58,8 @@ contract MockedBeneficiary is Beneficiary {
         );
     }
 
-    function receiveTokensTo(address wallet, string balanceType, int256 amount,
-        address currencyCt, uint256 currencyId, string standard)
+    function receiveTokensTo(address wallet, string memory balanceType, int256 amount,
+        address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         _benefits.push(
@@ -77,8 +78,8 @@ contract MockedBeneficiary is Beneficiary {
     function _getBenefit(uint256 index)
     public
     view
-    returns (address wallet, string balanceType, int256 amount, address currencyCt,
-        uint256 currencyId, string standard)
+    returns (address wallet, string memory balanceType, int256 amount, address currencyCt,
+        uint256 currencyId, string memory standard)
     {
         wallet = _benefits[index].wallet;
         balanceType = _benefits[index].balanceType;

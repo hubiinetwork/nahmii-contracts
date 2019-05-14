@@ -2,7 +2,7 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
-const {Wallet, Contract, utils} = require('ethers');
+const {Contract} = require('ethers');
 const NahmiiToken = artifacts.require('NahmiiToken');
 
 chai.use(chaiAsPromised);
@@ -210,8 +210,9 @@ module.exports = function (glob) {
             it('should successfully transfer', async () => {
                 const result = await web3NahmiiToken.transferFrom(glob.user_a, glob.user_b, 1000);
 
-                result.logs.should.be.an('array').and.have.lengthOf(1);
+                result.logs.should.be.an('array').and.have.lengthOf(2);
                 result.logs[0].event.should.equal('Transfer');
+                result.logs[1].event.should.equal('Approval');
 
                 (await ethersNahmiiToken.balanceOf(glob.user_a))
                     ._bn.should.eq.BN(0);

@@ -36,7 +36,7 @@ module.exports = {
             gas: 8000000
         },
         "ropsten-infura": {
-            provider: function() {
+            provider: function () {
                 return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3");
             },
             network_id: "*",
@@ -55,7 +55,7 @@ module.exports = {
             gas: 8000000
         },
         "mainnet-infura": {
-            provider: function() {
+            provider: function () {
                 return new HDWalletProvider(mnemonic, "https://mainnet.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3");
             },
             network_id: "*",

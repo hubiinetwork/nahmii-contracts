@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {RevenueToken} from "./RevenueToken.sol";
 
@@ -30,7 +30,7 @@ contract NahmiiToken is RevenueToken {
      * @dev Set the name of the token
      * @param _name The new token name
      */
-    function setName(string _name)
+    function setName(string memory _name)
     public
     onlyMinter
     {
@@ -42,7 +42,7 @@ contract NahmiiToken is RevenueToken {
      * @dev Set the symbol of the token
      * @param _symbol The new token symbol
      */
-    function setSymbol(string _symbol)
+    function setSymbol(string memory _symbol)
     public
     onlyMinter
     {

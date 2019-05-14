@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 /**
  * @title MockedWalletLocker
@@ -106,7 +106,7 @@ contract MockedWalletLocker {
         );
     }
 
-    function lockNonFungibleByProxy(address lockedWallet, address lockerWallet, int256[] ids,
+    function lockNonFungibleByProxy(address lockedWallet, address lockerWallet, int256[] memory ids,
         address currencyCt, uint256 currencyId, uint256 visibleTimeoutInSeconds)
     public
     {
@@ -266,12 +266,12 @@ contract MockedWalletLocker {
     function lockedIdsByIndices(address, address, address, uint256, uint256, uint256)
     public
     view
-    returns (int256[])
+    returns (int256[] memory)
     {
         return _lockedIdsByIndices;
     }
 
-    function _setLockedIdsByIndices(int256[] ids)
+    function _setLockedIdsByIndices(int256[] memory ids)
     public
     {
         _lockedIdsByIndices = ids;

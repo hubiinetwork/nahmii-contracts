@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS based on Open-Zeppelin's SafeMath library
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 /**
  * @title     SafeMathIntLib

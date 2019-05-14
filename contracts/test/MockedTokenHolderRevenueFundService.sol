@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Beneficiary} from "../Beneficiary.sol";
@@ -50,13 +50,13 @@ contract MockedTokenHolderRevenueFundService is Beneficiary {
         _tokenHolderRevenueFund = tokenHolderRevenueFund;
     }
 
-    function closeAccrualPeriod(MonetaryTypesLib.Currency[] currencies)
+    function closeAccrualPeriod(MonetaryTypesLib.Currency[] memory currencies)
     public
     {
         _tokenHolderRevenueFund.closeAccrualPeriod(currencies);
     }
 
-    function receiveEthersTo(address wallet, string balanceType)
+    function receiveEthersTo(address wallet, string memory balanceType)
     public
     payable
     {
@@ -73,8 +73,8 @@ contract MockedTokenHolderRevenueFundService is Beneficiary {
         );
     }
 
-    function receiveTokensTo(address wallet, string balanceType, int256 amount,
-        address currencyCt, uint256 currencyId, string standard)
+    function receiveTokensTo(address wallet, string memory balanceType, int256 amount,
+        address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         _benefits.push(
@@ -93,8 +93,8 @@ contract MockedTokenHolderRevenueFundService is Beneficiary {
     function _getBenefit(uint256 index)
     public
     view
-    returns (address wallet, string balanceType, int256 amount, address currencyCt,
-        uint256 currencyId, string standard)
+    returns (address wallet, string memory balanceType, int256 amount, address currencyCt,
+        uint256 currencyId, string memory standard)
     {
         wallet = _benefits[index].wallet;
         balanceType = _benefits[index].balanceType;

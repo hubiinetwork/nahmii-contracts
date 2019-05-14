@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {PaymentTypesLib} from "../PaymentTypesLib.sol";
@@ -24,7 +24,7 @@ contract MockedNullSettlementDisputeByPayment {
         _challengeByPaymentCount = 0;
     }
 
-    function challengeByPayment(address, PaymentTypesLib.Payment, address)
+    function challengeByPayment(address, PaymentTypesLib.Payment memory, address)
     public
     {
         _challengeByPaymentCount++;

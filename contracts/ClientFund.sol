@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -47,9 +47,9 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     event UnstageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
     event UpdateSettledBalanceEvent(address wallet, int256 value, address currencyCt,
         uint256 currencyId);
-    event StageToBeneficiaryEvent(address sourceWallet, address beneficiary, int256 value,
+    event StageToBeneficiaryEvent(address sourceWallet, Beneficiary beneficiary, int256 value,
         address currencyCt, uint256 currencyId, string standard);
-    event TransferToBeneficiaryEvent(address wallet, address beneficiary, int256 value,
+    event TransferToBeneficiaryEvent(address wallet, Beneficiary beneficiary, int256 value,
         address currencyCt, uint256 currencyId);
     event SeizeBalancesEvent(address seizedWallet, address seizerWallet, int256 value,
         address currencyCt, uint256 currencyId);
@@ -73,8 +73,8 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     function setTokenHolderRevenueFund(TokenHolderRevenueFund newTokenHolderRevenueFund)
     public
     onlyDeployer
-    notNullAddress(newTokenHolderRevenueFund)
-    notSameAddresses(newTokenHolderRevenueFund, tokenHolderRevenueFund)
+    notNullAddress(address(newTokenHolderRevenueFund))
+    notSameAddresses(address(newTokenHolderRevenueFund), address(tokenHolderRevenueFund))
     {
         // Set new token holder revenue fund
         TokenHolderRevenueFund oldTokenHolderRevenueFund = tokenHolderRevenueFund;
@@ -86,7 +86,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
 
     /// @notice Fallback function that deposits ethers to msg.sender's deposited balance
     function()
-    public
+    external
     payable
     {
         receiveEthersTo(msg.sender, balanceTracker.DEPOSITED_BALANCE_TYPE());
@@ -95,7 +95,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @notice Receive ethers to the given wallet's balance of the given type
     /// @param wallet The address of the concerned wallet
     /// @param balanceType The target balance type
-    function receiveEthersTo(address wallet, string balanceType)
+    function receiveEthersTo(address wallet, string memory balanceType)
     public
     payable
     {
@@ -115,8 +115,8 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function receiveTokens(string balanceType, int256 value, address currencyCt,
-        uint256 currencyId, string standard)
+    function receiveTokens(string memory balanceType, int256 value, address currencyCt,
+        uint256 currencyId, string memory standard)
     public
     {
         receiveTokensTo(msg.sender, balanceType, value, currencyCt, currencyId, standard);
@@ -129,8 +129,8 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param value The value (amount of fungible, id of non-fungible) to receive
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function receiveTokensTo(address wallet, string balanceType, int256 value, address currencyCt,
-        uint256 currencyId, string standard)
+    function receiveTokensTo(address wallet, string memory balanceType, int256 value, address currencyCt,
+        uint256 currencyId, string memory standard)
     public
     {
         require(value.isNonZeroPositiveInt256());
@@ -139,11 +139,12 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         TransferController controller = transferController(currencyCt, standard);
 
         // Execute transfer
-        require(
-            address(controller).delegatecall(
+        (bool success,) = address(controller).delegatecall(
+            abi.encodeWithSelector(
                 controller.getReceiveSignature(), msg.sender, this, uint256(value), currencyCt, currencyId
             )
         );
+        require(success);
 
         // Register reception
         _receiveTo(wallet, balanceType, value, currencyCt, currencyId, controller.isFungible());
@@ -161,7 +162,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     /// @param blockNumber The block number to which the settled balance is updated
     function updateSettledBalance(address wallet, int256 value, address currencyCt, uint256 currencyId,
-        string standard, uint256 blockNumber)
+        string memory standard, uint256 blockNumber)
     public
     onlyAuthorizedService(wallet)
     notNullAddress(wallet)
@@ -197,7 +198,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     function stage(address wallet, int256 value, address currencyCt, uint256 currencyId,
-        string standard)
+        string memory standard)
     public
     onlyAuthorizedService(wallet)
     {
@@ -223,7 +224,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function unstage(int256 value, address currencyCt, uint256 currencyId, string standard)
+    function unstage(int256 value, address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         require(value.isNonZeroPositiveInt256());
@@ -250,7 +251,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 value,
-        address currencyCt, uint256 currencyId, string standard)
+        address currencyCt, uint256 currencyId, string memory standard)
     public
     onlyAuthorizedService(wallet)
     {
@@ -275,7 +276,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
     function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 value,
-        address currencyCt, uint256 currencyId, string standard)
+        address currencyCt, uint256 currencyId, string memory standard)
     public
     onlyAuthorizedService(wallet)
     {
@@ -292,7 +293,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function seizeBalances(address wallet, address currencyCt, uint256 currencyId, string standard)
+    function seizeBalances(address wallet, address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         if (_isFungible(currencyCt, currencyId, standard))
@@ -313,7 +314,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function withdraw(int256 value, address currencyCt, uint256 currencyId, string standard)
+    function withdraw(int256 value, address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         require(value.isNonZeroPositiveInt256());
@@ -367,8 +368,8 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function claimRevenue(address claimer, string balanceType, address currencyCt,
-        uint256 currencyId, string standard)
+    function claimRevenue(address claimer, string memory balanceType, address currencyCt,
+        uint256 currencyId, string memory standard)
     public
     onlyOperator
     {
@@ -383,7 +384,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _receiveTo(address wallet, string balanceType, int256 value, address currencyCt,
+    function _receiveTo(address wallet, string memory balanceType, int256 value, address currencyCt,
         uint256 currencyId, bool fungible)
     private
     {
@@ -413,7 +414,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
             revert();
     }
 
-    function _subtractSequentially(address wallet, bytes32[] balanceTypes, int256 value, address currencyCt,
+    function _subtractSequentially(address wallet, bytes32[] memory balanceTypes, int256 value, address currencyCt,
         uint256 currencyId, bool fungible)
     private
     returns (int256)
@@ -424,7 +425,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
             return _subtractNonFungibleSequentially(wallet, balanceTypes, value, currencyCt, currencyId);
     }
 
-    function _subtractFungibleSequentially(address wallet, bytes32[] balanceTypes, int256 amount, address currencyCt, uint256 currencyId)
+    function _subtractFungibleSequentially(address wallet, bytes32[] memory balanceTypes, int256 amount, address currencyCt, uint256 currencyId)
     private
     returns (int256)
     {
@@ -466,7 +467,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         return amount;
     }
 
-    function _subtractNonFungibleSequentially(address wallet, bytes32[] balanceTypes, int256 id, address currencyCt, uint256 currencyId)
+    function _subtractNonFungibleSequentially(address wallet, bytes32[] memory balanceTypes, int256 id, address currencyCt, uint256 currencyId)
     private
     returns (int256)
     {
@@ -504,7 +505,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
     }
 
     function _transferToBeneficiary(address destWallet, Beneficiary beneficiary,
-        int256 value, address currencyCt, uint256 currencyId, string standard)
+        int256 value, address currencyCt, uint256 currencyId, string memory standard)
     private
     {
         require(value.isNonZeroPositiveInt256());
@@ -515,13 +516,16 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
             beneficiary.receiveEthersTo.value(uint256(value))(destWallet, "");
 
         else {
-            // Approve of beneficiary
+            // Get transfer controller
             TransferController controller = transferController(currencyCt, standard);
-            require(
-                address(controller).delegatecall(
-                    controller.getApproveSignature(), beneficiary, uint256(value), currencyCt, currencyId
+
+            // Approve of beneficiary
+            (bool success,) = address(controller).delegatecall(
+                abi.encodeWithSelector(
+                    controller.getApproveSignature(), address(beneficiary), uint256(value), currencyCt, currencyId
                 )
             );
+            require(success);
 
             // TODO Equip each transfer controller with standard property (so that ERC20TransferController.standard() returns "ERC20")
             // and use controller.standard() as last parameter instead of standard argument (https://github.com/hubiinetwork/nahmii-contracts/issues/309)
@@ -530,22 +534,25 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         }
     }
 
-    function _transferToWallet(address wallet,
-        int256 value, address currencyCt, uint256 currencyId, string standard)
+    function _transferToWallet(address payable wallet,
+        int256 value, address currencyCt, uint256 currencyId, string memory standard)
     private
     {
         // Transfer ETH
         if (address(0) == currencyCt && 0 == currencyId)
             wallet.transfer(uint256(value));
 
-        // Transfer token
         else {
+            // Get transfer controller
             TransferController controller = transferController(currencyCt, standard);
-            require(
-                address(controller).delegatecall(
-                    controller.getDispatchSignature(), this, wallet, uint256(value), currencyCt, currencyId
+
+            // Transfer token
+            (bool success,) = address(controller).delegatecall(
+                abi.encodeWithSelector(
+                    controller.getDispatchSignature(), address(this), wallet, uint256(value), currencyCt, currencyId
                 )
             );
+            require(success);
         }
     }
 
@@ -598,7 +605,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         }
     }
 
-    function _isFungible(address currencyCt, uint256 currencyId, string standard)
+    function _isFungible(address currencyCt, uint256 currencyId, string memory standard)
     private
     view
     returns (bool)

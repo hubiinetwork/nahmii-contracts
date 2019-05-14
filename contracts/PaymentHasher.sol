@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -28,35 +28,35 @@ contract PaymentHasher is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function hashPaymentAsWallet(PaymentTypesLib.Payment payment)
+    function hashPaymentAsWallet(PaymentTypesLib.Payment memory payment)
     public
     pure
     returns (bytes32)
     {
         bytes32 amountCurrencyHash = hashPaymentAmountCurrency(payment);
-        bytes32 senderHash = hashAddress(payment.sender.wallet);
+        bytes32 senderHash = hashPaymentSenderPartyAsWallet(payment.sender);
         bytes32 recipientHash = hashAddress(payment.recipient.wallet);
 
         return keccak256(abi.encodePacked(amountCurrencyHash, senderHash, recipientHash));
     }
 
-    function hashPaymentAsOperator(PaymentTypesLib.Payment payment)
+    function hashPaymentAsOperator(PaymentTypesLib.Payment memory payment)
     public
     pure
     returns (bytes32)
     {
         bytes32 walletSignatureHash = hashSignature(payment.seals.wallet.signature);
-        bytes32 nonceHash = hashUint256(payment.nonce);
         bytes32 senderHash = hashPaymentSenderPartyAsOperator(payment.sender);
         bytes32 recipientHash = hashPaymentRecipientPartyAsOperator(payment.recipient);
         bytes32 transfersHash = hashSingleTotalInt256(payment.transfers);
+        bytes32 operatorHash = hashString(payment.operator.data);
 
         return keccak256(abi.encodePacked(
-                walletSignatureHash, nonceHash, senderHash, recipientHash, transfersHash
+                walletSignatureHash, senderHash, recipientHash, transfersHash, operatorHash
             ));
     }
 
-    function hashPaymentAmountCurrency(PaymentTypesLib.Payment payment)
+    function hashPaymentAmountCurrency(PaymentTypesLib.Payment memory payment)
     public
     pure
     returns (bytes32)
@@ -68,8 +68,20 @@ contract PaymentHasher is Ownable {
             ));
     }
 
+    function hashPaymentSenderPartyAsWallet(
+        PaymentTypesLib.PaymentSenderParty memory paymentSenderParty)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(
+                paymentSenderParty.wallet,
+                paymentSenderParty.data
+            ));
+    }
+
     function hashPaymentSenderPartyAsOperator(
-        PaymentTypesLib.PaymentSenderParty paymentSenderParty)
+        PaymentTypesLib.PaymentSenderParty memory paymentSenderParty)
     public
     pure
     returns (bytes32)
@@ -85,7 +97,7 @@ contract PaymentHasher is Ownable {
     }
 
     function hashPaymentRecipientPartyAsOperator(
-        PaymentTypesLib.PaymentRecipientParty paymentRecipientParty)
+        PaymentTypesLib.PaymentRecipientParty memory paymentRecipientParty)
     public
     pure
     returns (bytes32)
@@ -100,7 +112,7 @@ contract PaymentHasher is Ownable {
     }
 
     function hashCurrentPreviousInt256(
-        NahmiiTypesLib.CurrentPreviousInt256 currentPreviousInt256)
+        NahmiiTypesLib.CurrentPreviousInt256 memory currentPreviousInt256)
     public
     pure
     returns (bytes32)
@@ -112,7 +124,7 @@ contract PaymentHasher is Ownable {
     }
 
     function hashSingleTotalInt256(
-        NahmiiTypesLib.SingleTotalInt256 singleTotalInt256)
+        NahmiiTypesLib.SingleTotalInt256 memory singleTotalInt256)
     public
     pure
     returns (bytes32)
@@ -123,7 +135,7 @@ contract PaymentHasher is Ownable {
             ));
     }
 
-    function hashFigure(MonetaryTypesLib.Figure figure)
+    function hashFigure(MonetaryTypesLib.Figure memory figure)
     public
     pure
     returns (bytes32)
@@ -135,7 +147,7 @@ contract PaymentHasher is Ownable {
             ));
     }
 
-    function hashOriginFigures(NahmiiTypesLib.OriginFigure[] originFigures)
+    function hashOriginFigures(NahmiiTypesLib.OriginFigure[] memory originFigures)
     public
     pure
     returns (bytes32)
@@ -162,6 +174,14 @@ contract PaymentHasher is Ownable {
         return keccak256(abi.encodePacked(_uint256));
     }
 
+    function hashString(string memory _string)
+    public
+    pure
+    returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(_string));
+    }
+
     function hashAddress(address _address)
     public
     pure
@@ -170,7 +190,7 @@ contract PaymentHasher is Ownable {
         return keccak256(abi.encodePacked(_address));
     }
 
-    function hashSignature(NahmiiTypesLib.Signature signature)
+    function hashSignature(NahmiiTypesLib.Signature memory signature)
     public
     pure
     returns (bytes32)

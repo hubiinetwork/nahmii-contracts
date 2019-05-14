@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -99,7 +99,7 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
     function cancelledOrderHashesByIndices(address wallet, uint256 low, uint256 up)
     public
     view
-    returns (bytes32[])
+    returns (bytes32[] memory)
     {
         require(0 < walletCancelledOrderOperatorHashes[wallet].length);
         require(low <= up);
@@ -113,7 +113,7 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
 
     /// @notice Cancel orders of msg.sender
     /// @param orders The orders to cancel
-    function cancelOrders(TradeTypesLib.Order[] orders)
+    function cancelOrders(TradeTypesLib.Order[] memory orders)
     public
     onlyOperationalModeNormal
     {
@@ -137,7 +137,7 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
     /// @notice Challenge cancelled order
     /// @param trade The trade that challenges a cancelled order
     /// @param wallet The address of the concerned wallet
-    function challenge(TradeTypesLib.Trade trade, address wallet)
+    function challenge(TradeTypesLib.Trade memory trade, address wallet)
     public
     onlyOperationalModeNormal
     onlySealedTrade(trade)
@@ -174,10 +174,10 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _orderOperatorHashes(TradeTypesLib.Order[] orders)
+    function _orderOperatorHashes(TradeTypesLib.Order[] memory orders)
     private
     pure
-    returns (bytes32[])
+    returns (bytes32[] memory)
     {
         bytes32[] memory operatorHashes = new bytes32[](orders.length);
         for (uint256 i = 0; i < orders.length; i++)

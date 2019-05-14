@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import 'openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
@@ -251,7 +251,7 @@ contract RevenueToken is ERC20Mintable {
     function holdersByIndices(uint256 low, uint256 up, bool posOnly)
     public
     view
-    returns (address[])
+    returns (address[] memory)
     {
         require(low <= up);
 
@@ -268,7 +268,7 @@ contract RevenueToken is ERC20Mintable {
         address[] memory _holders = new address[](length);
 
         uint256 j = 0;
-        for (i = low; i <= up; i++)
+        for (uint256 i = low; i <= up; i++)
             if (!posOnly || 0 < balanceOf(holders[i]))
                 _holders[j++] = holders[i];
 

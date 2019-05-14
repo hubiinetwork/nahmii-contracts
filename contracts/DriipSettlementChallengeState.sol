@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -94,8 +94,8 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param challengedHash The candidate driip hash
     /// @param challengedKind The candidate driip kind
     function initiateProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
-        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
-        bytes32 challengedHash, string challengedKind)
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency memory currency, uint256 blockNumber, bool walletInitiated,
+        bytes32 challengedHash, string memory challengedKind)
     public
     onlyEnabledServiceAction(INITIATE_PROPOSAL_ACTION)
     {
@@ -115,7 +115,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @notice Terminate a proposal
     /// @param wallet The address of the concerned challenged wallet
     /// @param currency The concerned currency
-    function terminateProposal(address wallet, MonetaryTypesLib.Currency currency, bool clearNonce)
+    function terminateProposal(address wallet, MonetaryTypesLib.Currency memory currency, bool clearNonce)
     public
     onlyEnabledServiceAction(TERMINATE_PROPOSAL_ACTION)
     {
@@ -147,7 +147,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param currency The concerned currency
     /// @param clearNonce Clear wallet-nonce-currency triplet entry
     /// @param walletTerminated True if wallet terminated
-    function terminateProposal(address wallet, MonetaryTypesLib.Currency currency, bool clearNonce,
+    function terminateProposal(address wallet, MonetaryTypesLib.Currency memory currency, bool clearNonce,
         bool walletTerminated)
     public
     onlyEnabledServiceAction(TERMINATE_PROPOSAL_ACTION)
@@ -181,7 +181,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @notice Remove a proposal
     /// @param wallet The address of the concerned challenged wallet
     /// @param currency The concerned currency
-    function removeProposal(address wallet, MonetaryTypesLib.Currency currency)
+    function removeProposal(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     onlyEnabledServiceAction(REMOVE_PROPOSAL_ACTION)
     {
@@ -208,7 +208,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned challenged wallet
     /// @param currency The concerned currency
     /// @param walletTerminated True if wallet terminated
-    function removeProposal(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    function removeProposal(address wallet, MonetaryTypesLib.Currency memory currency, bool walletTerminated)
     public
     onlyEnabledServiceAction(REMOVE_PROPOSAL_ACTION)
     {
@@ -243,8 +243,8 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param candidateNonce The candidate nonce
     /// @param candidateHash The candidate hash
     /// @param candidateKind The candidate kind
-    function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency currency, address challengerWallet,
-        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string candidateKind)
+    function disqualifyProposal(address challengedWallet, MonetaryTypesLib.Currency memory currency, address challengerWallet,
+        uint256 blockNumber, uint256 candidateNonce, bytes32 candidateHash, string memory candidateKind)
     public
     onlyEnabledServiceAction(DISQUALIFY_PROPOSAL_ACTION)
     {
@@ -273,7 +273,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @notice (Re)Qualify a proposal
     /// @param wallet The address of the concerned challenged wallet
     /// @param currency The concerned currency
-    function qualifyProposal(address wallet, MonetaryTypesLib.Currency currency)
+    function qualifyProposal(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     onlyEnabledServiceAction(QUALIFY_PROPOSAL_ACTION)
     {
@@ -304,7 +304,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param nonce The wallet nonce
     /// @param currency The concerned currency
     /// @return true if driip settlement challenge has been, else false
-    function hasProposal(address wallet, uint256 nonce, MonetaryTypesLib.Currency currency)
+    function hasProposal(address wallet, uint256 nonce, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (bool)
@@ -317,7 +317,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return true if proposal has expired, else false
-    function hasProposal(address wallet, MonetaryTypesLib.Currency currency)
+    function hasProposal(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (bool)
@@ -330,7 +330,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return true if proposal has terminated, else false
-    function hasProposalTerminated(address wallet, MonetaryTypesLib.Currency currency)
+    function hasProposalTerminated(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (bool)
@@ -345,7 +345,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return true if proposal has expired, else false
-    function hasProposalExpired(address wallet, MonetaryTypesLib.Currency currency)
+    function hasProposalExpired(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (bool)
@@ -360,7 +360,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal nonce
-    function proposalNonce(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalNonce(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (uint256)
@@ -374,7 +374,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal reference block number
-    function proposalReferenceBlockNumber(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalReferenceBlockNumber(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (uint256)
@@ -388,7 +388,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal definition block number
-    function proposalDefinitionBlockNumber(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalDefinitionBlockNumber(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (uint256)
@@ -402,7 +402,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal expiration time
-    function proposalExpirationTime(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalExpirationTime(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (uint256)
@@ -416,7 +416,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal status
-    function proposalStatus(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalStatus(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (SettlementChallengeTypesLib.Status)
@@ -430,7 +430,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal cumulative transfer amount
-    function proposalCumulativeTransferAmount(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalCumulativeTransferAmount(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (int256)
@@ -444,7 +444,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal stage amount
-    function proposalStageAmount(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalStageAmount(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (int256)
@@ -458,7 +458,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal target balance amount
-    function proposalTargetBalanceAmount(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalTargetBalanceAmount(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (int256)
@@ -472,7 +472,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal challenged hash
-    function proposalChallengedHash(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalChallengedHash(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (bytes32)
@@ -486,10 +486,10 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal challenged kind
-    function proposalChallengedKind(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalChallengedKind(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
@@ -500,7 +500,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal balance reward
-    function proposalWalletInitiated(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalWalletInitiated(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (bool)
@@ -514,7 +514,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal disqualification challenger
-    function proposalDisqualificationChallenger(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalDisqualificationChallenger(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (address)
@@ -528,7 +528,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal disqualification nonce
-    function proposalDisqualificationNonce(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalDisqualificationNonce(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (uint256)
@@ -542,7 +542,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal disqualification block number
-    function proposalDisqualificationBlockNumber(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalDisqualificationBlockNumber(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (uint256)
@@ -556,7 +556,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal disqualification candidate hash
-    function proposalDisqualificationCandidateHash(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalDisqualificationCandidateHash(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (bytes32)
@@ -570,10 +570,10 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The settlement proposal disqualification candidate kind
-    function proposalDisqualificationCandidateKind(address wallet, MonetaryTypesLib.Currency currency)
+    function proposalDisqualificationCandidateKind(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index);
@@ -584,8 +584,8 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
     function _initiateProposal(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
-        int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 referenceBlockNumber, bool walletInitiated,
-        bytes32 challengedHash, string challengedKind)
+        int256 targetBalanceAmount, MonetaryTypesLib.Currency memory currency, uint256 referenceBlockNumber, bool walletInitiated,
+        bytes32 challengedHash, string memory challengedKind)
     private
     {
         // Require that there is no other proposal on the given wallet-nonce-currency triplet

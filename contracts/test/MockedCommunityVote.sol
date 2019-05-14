@@ -5,7 +5,7 @@
  *
  * Copyright (C) 2017-2018 Hubii AS
  */
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 /**
  * @title MockedCommunityVote
@@ -43,7 +43,7 @@ contract MockedCommunityVote {
 
     function addDoubleSpenderWallet(bool doubleSpender)
     public
-    returns (address[3])
+    returns (address[3] memory)
     {
         doubleSpenderWalletStats.push(doubleSpender);
     }

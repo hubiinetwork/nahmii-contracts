@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {BalanceTracker} from "./BalanceTracker.sol";
@@ -19,7 +19,7 @@ library BalanceTrackerLib {
     using SafeMathUintLib for uint256;
 
     function fungibleActiveRecordByBlockNumber(BalanceTracker self, address wallet,
-        MonetaryTypesLib.Currency currency, uint256 _blockNumber)
+        MonetaryTypesLib.Currency memory currency, uint256 _blockNumber)
     internal
     view
     returns (int256 amount, uint256 blockNumber)
@@ -38,7 +38,7 @@ library BalanceTrackerLib {
     }
 
     function fungibleActiveBalanceAmountByBlockNumber(BalanceTracker self, address wallet,
-        MonetaryTypesLib.Currency currency, uint256 blockNumber)
+        MonetaryTypesLib.Currency memory currency, uint256 blockNumber)
     internal
     view
     returns (int256)
@@ -48,7 +48,7 @@ library BalanceTrackerLib {
     }
 
     function fungibleActiveDeltaBalanceAmountByBlockNumbers(BalanceTracker self, address wallet,
-        MonetaryTypesLib.Currency currency, uint256 fromBlockNumber, uint256 toBlockNumber)
+        MonetaryTypesLib.Currency memory currency, uint256 fromBlockNumber, uint256 toBlockNumber)
     internal
     view
     returns (int256)
@@ -59,7 +59,7 @@ library BalanceTrackerLib {
 
     // TODO Rename?
     function fungibleActiveRecord(BalanceTracker self, address wallet,
-        MonetaryTypesLib.Currency currency)
+        MonetaryTypesLib.Currency memory currency)
     internal
     view
     returns (int256 amount, uint256 blockNumber)
@@ -78,7 +78,7 @@ library BalanceTrackerLib {
     }
 
     // TODO Rename?
-    function fungibleActiveBalanceAmount(BalanceTracker self, address wallet, MonetaryTypesLib.Currency currency)
+    function fungibleActiveBalanceAmount(BalanceTracker self, address wallet, MonetaryTypesLib.Currency memory currency)
     internal
     view
     returns (int256)

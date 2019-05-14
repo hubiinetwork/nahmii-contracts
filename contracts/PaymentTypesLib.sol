@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
@@ -31,6 +31,8 @@ library PaymentTypesLib {
         NahmiiTypesLib.CurrentPreviousInt256 balances;
 
         NahmiiTypesLib.SingleFigureTotalOriginFigures fees;
+
+        string data;
     }
 
     struct PaymentRecipientParty {
@@ -42,9 +44,12 @@ library PaymentTypesLib {
         NahmiiTypesLib.TotalOriginFigures fees;
     }
 
-    struct Payment {
-        uint256 nonce;
+    struct Operator {
+        uint256 id;
+        string data;
+    }
 
+    struct Payment {
         int256 amount;
         MonetaryTypesLib.Currency currency;
 
@@ -56,7 +61,8 @@ library PaymentTypesLib {
 
         NahmiiTypesLib.WalletOperatorSeal seals;
         uint256 blockNumber;
-        uint256 operatorId;
+
+        Operator operator;
     }
 
     //
@@ -65,7 +71,7 @@ library PaymentTypesLib {
     function PAYMENT_KIND()
     public
     pure
-    returns (string)
+    returns (string memory)
     {
         return "payment";
     }

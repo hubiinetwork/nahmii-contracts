@@ -9,7 +9,7 @@ const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 
 const debug = require('debug')('4_revenue_token_manager');
-const moment = require('moment');
+const moment = require('moment/moment');
 const path = require('path');
 const helpers = require('../scripts/common/helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');

@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {BalanceTracker} from "./BalanceTracker.sol";
@@ -36,8 +36,8 @@ contract BalanceTrackable is Ownable {
     function setBalanceTracker(BalanceTracker newBalanceTracker)
     public
     onlyDeployer
-    notNullAddress(newBalanceTracker)
-    notSameAddresses(newBalanceTracker, balanceTracker)
+    notNullAddress(address(newBalanceTracker))
+    notSameAddresses(address(newBalanceTracker), address(balanceTracker))
     {
         // Require that this contract has not been frozen
         require(!balanceTrackerFrozen);
@@ -66,7 +66,7 @@ contract BalanceTrackable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier balanceTrackerInitialized() {
-        require(balanceTracker != address(0));
+        require(address(balanceTracker) != address(0));
         _;
     }
 }

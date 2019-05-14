@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {TransferController} from "./TransferController.sol";
@@ -50,7 +50,7 @@ contract TransferControllerManager is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerTransferController(string standard, address controller)
+    function registerTransferController(string calldata standard, address controller)
     external
     onlyDeployer
     notNullAddress(controller)
@@ -66,7 +66,7 @@ contract TransferControllerManager is Ownable {
         emit RegisterTransferControllerEvent(standard, controller);
     }
 
-    function reassociateTransferController(string oldStandard, string newStandard, address controller)
+    function reassociateTransferController(string calldata oldStandard, string calldata newStandard, address controller)
     external
     onlyDeployer
     notNullAddress(controller)
@@ -85,7 +85,7 @@ contract TransferControllerManager is Ownable {
         emit ReassociateTransferControllerEvent(oldStandard, newStandard, controller);
     }
 
-    function registerCurrency(address currencyCt, string standard)
+    function registerCurrency(address currencyCt, string calldata standard)
     external
     onlyOperator
     notNullAddress(currencyCt)
@@ -141,7 +141,7 @@ contract TransferControllerManager is Ownable {
     /**
     @notice The provided standard takes priority over assigned interface to currency
     */
-    function transferController(address currencyCt, string standard)
+    function transferController(address currencyCt, string memory standard)
     public
     view
     returns (TransferController)

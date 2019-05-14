@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -40,7 +40,7 @@ library NonFungibleBalanceLib {
     function get(Balance storage self, address currencyCt, uint256 currencyId)
     internal
     view
-    returns (int256[])
+    returns (int256[] memory)
     {
         return self.idsByCurrency[currencyCt][currencyId];
     }
@@ -48,7 +48,7 @@ library NonFungibleBalanceLib {
     function getByIndices(Balance storage self, address currencyCt, uint256 currencyId, uint256 indexLow, uint256 indexUp)
     internal
     view
-    returns (int256[])
+    returns (int256[] memory)
     {
         if (0 == self.idsByCurrency[currencyCt][currencyId].length)
             return new int256[](0);
@@ -81,7 +81,7 @@ library NonFungibleBalanceLib {
     function recordByBlockNumber(Balance storage self, address currencyCt, uint256 currencyId, uint256 blockNumber)
     internal
     view
-    returns (int256[], uint256)
+    returns (int256[] memory, uint256)
     {
         uint256 index = indexByBlockNumber(self, currencyCt, currencyId, blockNumber);
         return 0 < index ? recordByIndex(self, currencyCt, currencyId, index - 1) : (new int256[](0), 0);
@@ -90,7 +90,7 @@ library NonFungibleBalanceLib {
     function recordByIndex(Balance storage self, address currencyCt, uint256 currencyId, uint256 index)
     internal
     view
-    returns (int256[], uint256)
+    returns (int256[] memory, uint256)
     {
         if (0 == self.recordsByCurrency[currencyCt][currencyId].length)
             return (new int256[](0), 0);
@@ -103,7 +103,7 @@ library NonFungibleBalanceLib {
     function lastRecord(Balance storage self, address currencyCt, uint256 currencyId)
     internal
     view
-    returns (int256[], uint256)
+    returns (int256[] memory, uint256)
     {
         if (0 == self.recordsByCurrency[currencyCt][currencyId].length)
             return (new int256[](0), 0);
@@ -128,7 +128,7 @@ library NonFungibleBalanceLib {
         set(self, ids, currencyCt, currencyId);
     }
 
-    function set(Balance storage self, int256[] ids, address currencyCt, uint256 currencyId)
+    function set(Balance storage self, int256[] memory ids, address currencyCt, uint256 currencyId)
     internal
     {
         uint256 i;

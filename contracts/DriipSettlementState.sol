@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -102,7 +102,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     function settlementByWalletAndIndex(address wallet, uint256 index)
     public
     view
-    returns (DriipSettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement memory)
     {
         require(walletSettlementIndices[wallet].length > index);
         return settlements[walletSettlementIndices[wallet][index] - 1];
@@ -115,7 +115,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     function settlementByWalletAndNonce(address wallet, uint256 nonce)
     public
     view
-    returns (DriipSettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement memory)
     {
         require(0 < walletNonceSettlementIndex[wallet][nonce]);
         return settlements[walletNonceSettlementIndex[wallet][nonce] - 1];
@@ -129,7 +129,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     /// @param originNonce The wallet nonce of the origin wallet
     /// @param targetWallet The address of the target wallet
     /// @param targetNonce The wallet nonce of the target wallet
-    function initSettlement(string settledKind, bytes32 settledHash, address originWallet,
+    function initSettlement(string memory settledKind, bytes32 settledHash, address originWallet,
         uint256 originNonce, address targetWallet, uint256 targetNonce)
     public
     onlyEnabledServiceAction(INIT_SETTLEMENT_ACTION)
@@ -331,7 +331,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The max nonce
-    function maxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency)
+    function maxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (uint256)
@@ -343,7 +343,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @param maxNonce The max nonce
-    function setMaxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency,
+    function setMaxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency memory currency,
         uint256 maxNonce)
     public
     onlyEnabledServiceAction(SET_MAX_NONCE_ACTION)
@@ -363,10 +363,10 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     /// @param currency The concerned currency
     /// @return The total fee
     function totalFee(address wallet, Beneficiary beneficiary, address destination,
-        MonetaryTypesLib.Currency currency)
+        MonetaryTypesLib.Currency memory currency)
     public
     view
-    returns (MonetaryTypesLib.NoncedAmount)
+    returns (MonetaryTypesLib.NoncedAmount memory)
     {
         return totalFeesMap[wallet][address(beneficiary)][destination][currency.ct][currency.id];
     }
@@ -378,7 +378,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     /// @param destination The concerned destination
     /// @param _totalFee The total fee
     function setTotalFee(address wallet, Beneficiary beneficiary, address destination,
-        MonetaryTypesLib.Currency currency, MonetaryTypesLib.NoncedAmount _totalFee)
+        MonetaryTypesLib.Currency memory currency, MonetaryTypesLib.NoncedAmount memory _totalFee)
     public
     onlyEnabledServiceAction(SET_FEE_TOTAL_ACTION)
     {
@@ -403,7 +403,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     }
 
     /// @notice Upgrade settlement from other driip settlement state instance
-    function upgradeSettlement(string settledKind, bytes32 settledHash,
+    function upgradeSettlement(string memory settledKind, bytes32 settledHash,
         address originWallet, uint256 originNonce, bool originDone, uint256 originDoneBlockNumber,
         address targetWallet, uint256 targetNonce, bool targetDone, uint256 targetDoneBlockNumber)
     public

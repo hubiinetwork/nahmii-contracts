@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -65,7 +65,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
+    notNullAddress(address(newNullSettlementChallengeState))
     {
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
@@ -77,7 +77,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     function setNullSettlementState(NullSettlementState newNullSettlementState)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementState)
+    notNullAddress(address(newNullSettlementState))
     {
         NullSettlementState oldNullSettlementState = nullSettlementState;
         nullSettlementState = newNullSettlementState;
@@ -89,7 +89,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementChallengeState)
+    notNullAddress(address(newDriipSettlementChallengeState))
     {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
@@ -127,7 +127,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _settleNull(address wallet, MonetaryTypesLib.Currency currency)
+    function _settleNull(address wallet, MonetaryTypesLib.Currency memory currency)
     private
     {
         // Require that there is no overlapping driip settlement challenge

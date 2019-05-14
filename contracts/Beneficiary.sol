@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 /**
  * @title Beneficiary
@@ -16,7 +16,7 @@ contract Beneficiary {
     /// @notice Receive ethers to the given wallet's given balance type
     /// @param wallet The address of the concerned wallet
     /// @param balanceType The target balance type of the wallet
-    function receiveEthersTo(address wallet, string balanceType)
+    function receiveEthersTo(address wallet, string memory balanceType)
     public
     payable;
 
@@ -28,7 +28,7 @@ contract Beneficiary {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function receiveTokensTo(address wallet, string balanceType, int256 amount, address currencyCt,
-        uint256 currencyId, string standard)
+    function receiveTokensTo(address wallet, string memory balanceType, int256 amount, address currencyCt,
+        uint256 currencyId, string memory standard)
     public;
 }

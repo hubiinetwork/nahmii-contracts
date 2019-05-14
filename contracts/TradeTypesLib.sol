@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
@@ -94,7 +94,7 @@ library TradeTypesLib {
     function TRADE_KIND()
     public
     pure
-    returns (string)
+    returns (string memory)
     {
         return "trade";
     }
@@ -102,7 +102,7 @@ library TradeTypesLib {
     function ORDER_KIND()
     public
     pure
-    returns (string)
+    returns (string memory)
     {
         return "order";
     }
