@@ -5,7 +5,7 @@
  */
 
 const TransferControllerManager = artifacts.require('TransferControllerManager');
-const helpers = require('./helpers.js');
+const helpers = require('../common/helpers.js');
 
 module.exports = async (callback) => {
 

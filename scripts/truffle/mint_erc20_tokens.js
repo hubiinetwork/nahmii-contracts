@@ -5,7 +5,7 @@
  */
 
 const TestERC20 = artifacts.require('TestERC20');
-const helpers = require('./helpers.js');
+const helpers = require('../common/helpers.js');
 const debug = require('debug')('mint_erc20_tokens');
 
 // A script for the minting of an mintable ERC20 token, i.e. the token

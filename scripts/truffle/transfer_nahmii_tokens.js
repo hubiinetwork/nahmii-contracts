@@ -6,7 +6,7 @@
 
 const NahmiiToken = artifacts.require('NahmiiToken');
 
-const helpers = require('./helpers.js');
+const helpers = require('../common/helpers.js');
 
 // -----------------------------------------------------------------------------------------------------------------
 

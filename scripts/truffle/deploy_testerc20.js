@@ -5,7 +5,7 @@
  */
 
 const TestERC20 = artifacts.require('TestERC20');
-const helpers = require('./helpers.js');
+const helpers = require('../common/helpers.js');
 const debug = require('debug')('deploy_testerc20');
 
 // A script for the deployment of the TestERC20 contract.
