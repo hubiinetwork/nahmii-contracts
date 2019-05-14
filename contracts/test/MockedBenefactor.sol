@@ -8,14 +8,14 @@
 
 pragma solidity >=0.4.25 <0.6.0;
 
-import {Ownable} from "./Ownable.sol";
-import {Beneficiary} from "./Beneficiary.sol";
+import {Ownable} from "../Ownable.sol";
+import {Beneficiary} from "../Beneficiary.sol";
 
 /**
- * @title Benefactor
- * @notice An ownable that contains registered beneficiaries
+ * @title MockedBenefactor
+ * @notice Mocked implementation of benefactor
  */
-contract Benefactor is Ownable {
+contract MockedBenefactor {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
@@ -31,12 +31,16 @@ contract Benefactor is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Register the given beneficiary
-    /// @param beneficiary Address of beneficiary to be registered
+    function _reset()
+    public
+    {
+        for (uint256 i = 0; i < beneficiaries.length; i++)
+            beneficiaryIndexByAddress[address(beneficiaries[i])] = 0;
+        delete beneficiaries;
+    }
+
     function registerBeneficiary(Beneficiary beneficiary)
     public
-    onlyDeployer
-    notNullAddress(address(beneficiary))
     returns (bool)
     {
         address _beneficiary = address(beneficiary);
@@ -53,12 +57,8 @@ contract Benefactor is Ownable {
         return true;
     }
 
-    /// @notice Deregister the given beneficiary
-    /// @param beneficiary Address of beneficiary to be deregistered
     function deregisterBeneficiary(Beneficiary beneficiary)
     public
-    onlyDeployer
-    notNullAddress(address(beneficiary))
     returns (bool)
     {
         address _beneficiary = address(beneficiary);
@@ -81,9 +81,6 @@ contract Benefactor is Ownable {
         return true;
     }
 
-    /// @notice Gauge whether the given address is the one of a registered beneficiary
-    /// @param beneficiary Address of beneficiary
-    /// @return true if beneficiary is registered, else false
     function isRegisteredBeneficiary(Beneficiary beneficiary)
     public
     view
@@ -92,13 +89,10 @@ contract Benefactor is Ownable {
         return beneficiaryIndexByAddress[address(beneficiary)] > 0;
     }
 
-    /// @notice Get the count of registered beneficiaries
-    /// @return The count of registered beneficiaries
     function registeredBeneficiariesCount()
     public
     view
     returns (uint256)
     {
         return beneficiaries.length;
-    }
-}
+    }}

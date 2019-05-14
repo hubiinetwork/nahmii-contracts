@@ -88,6 +88,7 @@ contract('Unit tests', function () {
     require('./scenarios/NullSettlementDisputeByPayment')(glob);
     require('./scenarios/NullSettlementDisputeByTrade')(glob);
     require('./scenarios/NullSettlementState')(glob);
+    require('./scenarios/PartnerBenefactor')(glob);
     require('./scenarios/PartnerFund')(glob);
     require('./scenarios/PaymentHasher')(glob);
     require('./scenarios/RevenueFund1')(glob);

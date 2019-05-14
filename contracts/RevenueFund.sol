@@ -245,7 +245,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
                 continue;
 
             for (uint256 j = 0; j < beneficiaries.length; j++) {
-                AccrualBeneficiary beneficiary = AccrualBeneficiary(beneficiaries[j]);
+                AccrualBeneficiary beneficiary = AccrualBeneficiary(address(beneficiaries[j]));
 
                 if (beneficiaryFraction(beneficiary) > 0) {
                     int256 transferable = periodAccrual.get(currency.ct, currency.id)
@@ -284,7 +284,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
         // Close accrual period of accrual beneficiaries
         for (uint256 j = 0; j < beneficiaries.length; j++) {
-            AccrualBeneficiary beneficiary = AccrualBeneficiary(beneficiaries[j]);
+            AccrualBeneficiary beneficiary = AccrualBeneficiary(address(beneficiaries[j]));
 
             // Require that beneficiary fraction is strictly positive
             if (0 >= beneficiaryFraction(beneficiary))

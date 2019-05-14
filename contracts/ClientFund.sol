@@ -43,14 +43,16 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         uint256 currencyId, string standard);
     event WithdrawEvent(address wallet, int256 value, address currencyCt, uint256 currencyId,
         string standard);
-    event StageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
-    event UnstageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
+    event StageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId,
+        string standard);
+    event UnstageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId,
+        string standard);
     event UpdateSettledBalanceEvent(address wallet, int256 value, address currencyCt,
         uint256 currencyId);
     event StageToBeneficiaryEvent(address sourceWallet, Beneficiary beneficiary, int256 value,
         address currencyCt, uint256 currencyId, string standard);
     event TransferToBeneficiaryEvent(address wallet, Beneficiary beneficiary, int256 value,
-        address currencyCt, uint256 currencyId);
+        address currencyCt, uint256 currencyId, string standard);
     event SeizeBalancesEvent(address seizedWallet, address seizerWallet, int256 value,
         address currencyCt, uint256 currencyId);
     event ClaimRevenueEvent(address claimer, string balanceType, address currencyCt,
@@ -216,7 +218,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         );
 
         // Emit event
-        emit StageEvent(wallet, value, currencyCt, currencyId);
+        emit StageEvent(wallet, value, currencyCt, currencyId, standard);
     }
 
     /// @notice Unstage a staged value
@@ -240,7 +242,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         );
 
         // Emit event
-        emit UnstageEvent(msg.sender, value, currencyCt, currencyId);
+        emit UnstageEvent(msg.sender, value, currencyCt, currencyId, standard);
     }
 
     /// @notice Stage the value from wallet to the given beneficiary and targeted to wallet
@@ -284,7 +286,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         _transferToBeneficiary(wallet, beneficiary, value, currencyCt, currencyId, standard);
 
         // Emit event
-        emit TransferToBeneficiaryEvent(wallet, beneficiary, value, currencyCt, currencyId);
+        emit TransferToBeneficiaryEvent(wallet, beneficiary, value, currencyCt, currencyId, standard);
     }
 
     /// @notice Seize balances in the given currency of the given wallet, provided that the wallet

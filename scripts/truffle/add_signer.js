@@ -5,7 +5,7 @@
  */
 
 const SignerManager = artifacts.require('SignerManager');
-const helpers = require('./helpers.js');
+const helpers = require('../common/helpers.js');
 
 module.exports = async (callback) => {
 

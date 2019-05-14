@@ -12,6 +12,7 @@ const MockedClientFund = artifacts.require('MockedClientFund');
 const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedWalletLocker = artifacts.require('MockedWalletLocker');
+const MockedBenefactor = artifacts.require('MockedBenefactor');
 const MockedDriipSettlementChallengeState = artifacts.require('MockedDriipSettlementChallengeState');
 const MockedDriipSettlementState = artifacts.require('MockedDriipSettlementState');
 const MockedCommunityVote = artifacts.require('MockedCommunityVote');
@@ -34,6 +35,8 @@ module.exports = (glob) => {
         let web3CommunityVote, ethersCommunityVote;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3WalletLocker, ethersWalletLocker;
+        let web3PartnerBenefactor, ethersPartnerBenefactor;
+        let web3PartnerBeneficiary, ethersPartnerBeneficiary;
         let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
         let web3DriipSettlementState, ethersDriipSettlementState;
         let web3Validator, ethersValidator;
@@ -55,6 +58,10 @@ module.exports = (glob) => {
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3WalletLocker = await MockedWalletLocker.new();
             ethersWalletLocker = new Contract(web3WalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
+            web3PartnerBenefactor = await MockedBenefactor.new();
+            ethersPartnerBenefactor = new Contract(web3PartnerBenefactor.address, MockedBenefactor.abi, glob.signer_owner);
+            web3PartnerBeneficiary = await MockedBeneficiary.new();
+            ethersPartnerBeneficiary = new Contract(web3PartnerBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);
             web3DriipSettlementChallengeState = await MockedDriipSettlementChallengeState.new();
             ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, MockedDriipSettlementChallengeState.abi, glob.signer_owner);
             web3DriipSettlementState = await MockedDriipSettlementState.new();
@@ -64,6 +71,8 @@ module.exports = (glob) => {
 
             await web3Configuration.registerService(glob.owner);
             await web3Configuration.enableServiceAction(glob.owner, 'operational_mode', {gasLimit: 1e6});
+
+            await web3PartnerBenefactor.registerBeneficiary(web3PartnerBeneficiary.address);
         });
 
         beforeEach(async () => {
@@ -76,6 +85,7 @@ module.exports = (glob) => {
             await ethersDriipSettlementByPayment.setCommunityVote(web3CommunityVote.address);
             await ethersDriipSettlementByPayment.setFraudChallenge(web3FraudChallenge.address);
             await ethersDriipSettlementByPayment.setWalletLocker(web3WalletLocker.address);
+            await ethersDriipSettlementByPayment.setPartnerBenefactor(web3PartnerBenefactor.address);
             await ethersDriipSettlementByPayment.setDriipSettlementChallengeState(web3DriipSettlementChallengeState.address);
             await ethersDriipSettlementByPayment.setDriipSettlementState(web3DriipSettlementState.address);
             await ethersDriipSettlementByPayment.setRevenueFund(web3RevenueFund.address);
@@ -402,6 +412,39 @@ module.exports = (glob) => {
             });
         });
 
+        describe('partnerBenefactor()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersDriipSettlementByPayment.partnerBenefactor())
+                    .should.equal(utils.getAddress(ethersPartnerBenefactor.address));
+            });
+        });
+
+        describe('setPartnerBenefactor()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called by deployer', () => {
+                it('should set new value and emit event', async () => {
+                    const result = await web3DriipSettlementByPayment.setPartnerBenefactor(address);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetPartnerBenefactorEvent');
+
+                    (await ethersDriipSettlementByPayment.partnerBenefactor()).should.equal(address);
+                });
+            });
+
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3DriipSettlementByPayment.setPartnerBenefactor(address, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+        });
+
         describe('settlePayment()', () => {
             let payment;
 
@@ -414,6 +457,7 @@ module.exports = (glob) => {
                 await ethersDriipSettlementState._reset({gasLimit: 1e6});
                 await ethersFraudChallenge._reset({gasLimit: 1e6});
                 await ethersWalletLocker._reset({gasLimit: 1e6});
+                await ethersPartnerBeneficiary._reset({gasLimit: 1e6});
                 await ethersRevenueFund._reset({gasLimit: 1e6});
 
                 payment = await mocks.mockPayment(glob.owner, {sender: {wallet: glob.owner}});
@@ -577,7 +621,7 @@ module.exports = (glob) => {
                         settledBalanceUpdate[2].should.equal(payment.currency.ct);
                         settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
 
-                        (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
+                        (await ethersClientFund._stagesCount())._bn.should.eq.BN(2);
 
                         const holdingStage = await ethersClientFund._stages(0);
                         holdingStage[0].should.equal(utils.getAddress(payment.sender.wallet));
@@ -586,14 +630,12 @@ module.exports = (glob) => {
                         holdingStage[3].should.equal(payment.currency.ct);
                         holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
 
-                        (await ethersClientFund._beneficiaryTransfersCount())._bn.should.eq.BN(1);
-
-                        const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
-                        totalFeeTransfer[0].should.equal(mocks.address0);
-                        totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
-                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
-                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
+                        const totalFeesStage = await ethersClientFund._stages(1);
+                        totalFeesStage[0].should.equal(utils.getAddress(payment.sender.wallet));
+                        totalFeesStage[1].should.equal(utils.getAddress(ethersRevenueFund.address));
+                        totalFeesStage[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
+                        totalFeesStage[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
+                        totalFeesStage[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
 
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
@@ -648,6 +690,7 @@ module.exports = (glob) => {
                 await ethersDriipSettlementState._reset({gasLimit: 1e6});
                 await ethersFraudChallenge._reset({gasLimit: 1e6});
                 await ethersWalletLocker._reset({gasLimit: 1e6});
+                await ethersPartnerBeneficiary._reset({gasLimit: 1e6});
                 await ethersRevenueFund._reset({gasLimit: 1e6});
 
                 payment = await mocks.mockPayment(glob.owner);
@@ -821,7 +864,7 @@ module.exports = (glob) => {
                         settledBalanceUpdate[2].should.equal(payment.currency.ct);
                         settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
 
-                        (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
+                        (await ethersClientFund._stagesCount())._bn.should.eq.BN(2);
 
                         const holdingStage = await ethersClientFund._stages(0);
                         holdingStage[0].should.equal(utils.getAddress(payment.sender.wallet));
@@ -830,14 +873,12 @@ module.exports = (glob) => {
                         holdingStage[3].should.equal(payment.currency.ct);
                         holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
 
-                        (await ethersClientFund._beneficiaryTransfersCount())._bn.should.eq.BN(1);
-
-                        const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
-                        totalFeeTransfer[0].should.equal(mocks.address0);
-                        totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
-                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
-                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
+                        const totalFeesStage = await ethersClientFund._stages(1);
+                        totalFeesStage[0].should.equal(utils.getAddress(payment.sender.wallet));
+                        totalFeesStage[1].should.equal(utils.getAddress(ethersRevenueFund.address));
+                        totalFeesStage[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
+                        totalFeesStage[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
+                        totalFeesStage[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
 
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
