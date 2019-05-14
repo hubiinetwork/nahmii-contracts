@@ -27,6 +27,11 @@ contract TransferController {
     view
     returns (bool);
 
+    function standard()
+    public
+    view
+    returns (string memory);
+
     /// @notice MUST be called with DELEGATECALL
     function receive(address from, address to, uint256 value, address currencyCt, uint256 currencyId)
     public;

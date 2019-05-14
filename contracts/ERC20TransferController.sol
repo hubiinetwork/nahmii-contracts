@@ -17,6 +17,11 @@ import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
  */
 contract ERC20TransferController is TransferController {
     //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant _standard = "ERC20";
+
+    //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function isFungible()
@@ -25,6 +30,14 @@ contract ERC20TransferController is TransferController {
     returns (bool)
     {
         return true;
+    }
+
+    function standard()
+    public
+    view
+    returns (string memory)
+    {
+        return _standard;
     }
 
     /// @notice MUST be called with DELEGATECALL
