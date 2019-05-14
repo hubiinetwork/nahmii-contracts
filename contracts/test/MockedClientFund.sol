@@ -45,8 +45,14 @@ contract MockedClientFund {
     // -----------------------------------------------------------------------------------------------------------------
     event LockBalancesEvent(address lockedWallet, address lockerWallet);
     event UnlockBalancesEvent(address lockedWallet, address lockerWallet);
-    event UpdateSettledBalanceEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
-    event StageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId);
+    event UpdateSettledBalanceEvent(address wallet, int256 value, address currencyCt,
+        uint256 currencyId);
+    event StageEvent(address wallet, int256 value, address currencyCt, uint256 currencyId,
+        string standard);
+    event StageToBeneficiaryEvent(address sourceWallet, Beneficiary beneficiary, int256 value,
+        address currencyCt, uint256 currencyId, string standard);
+    event TransferToBeneficiaryEvent(address wallet, Beneficiary beneficiary, int256 value,
+        address currencyCt, uint256 currencyId, string standard);
 
     //
     // Functions
@@ -99,7 +105,7 @@ contract MockedClientFund {
         );
     }
 
-    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId,
+    function stage(address wallet, int256 value, address currencyCt, uint256 currencyId,
         string memory standard)
     public
     {
@@ -108,14 +114,33 @@ contract MockedClientFund {
                 wallet,
                 address(0),
                 MonetaryTypesLib.Figure(
-                    amount,
+                    value,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
                 standard,
                 0
             )
         );
-        emit StageEvent(wallet, amount, currencyCt, currencyId);
+        emit StageEvent(wallet, value, currencyCt, currencyId, standard);
+    }
+
+    function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 value,
+        address currencyCt, uint256 currencyId, string memory standard)
+    public
+    {
+        stages.push(
+            Update(
+                wallet,
+                address(beneficiary),
+                MonetaryTypesLib.Figure(
+                    value,
+                    MonetaryTypesLib.Currency(currencyCt, currencyId)
+                ),
+                standard,
+                0
+            )
+        );
+        emit StageToBeneficiaryEvent(wallet, beneficiary, value, currencyCt, currencyId, standard);
     }
 
     function _stagesCount()
@@ -141,7 +166,7 @@ contract MockedClientFund {
         );
     }
 
-    function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
+    function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 value,
         address currencyCt, uint256 currencyId, string memory standard)
     public
     {
@@ -150,13 +175,14 @@ contract MockedClientFund {
                 wallet,
                 address(beneficiary),
                 MonetaryTypesLib.Figure(
-                    amount,
+                    value,
                     MonetaryTypesLib.Currency(currencyCt, currencyId)
                 ),
                 standard,
                 0
             )
         );
+        emit TransferToBeneficiaryEvent(wallet, beneficiary, value, currencyCt, currencyId, standard);
     }
 
     function _beneficiaryTransfersCount()

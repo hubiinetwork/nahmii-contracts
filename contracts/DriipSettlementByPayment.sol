@@ -16,8 +16,8 @@ import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
+import {PartnerBenefactorable} from "./PartnerBenefactorable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
-import {PartnerFund} from "./PartnerFund.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {Beneficiary} from "./Beneficiary.sol";
@@ -34,7 +34,7 @@ import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
  * @notice Where driip settlements pertaining to payment are finalized
  */
 contract DriipSettlementByPayment is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable,
-FraudChallengable, WalletLockable {
+FraudChallengable, WalletLockable, PartnerBenefactorable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -44,7 +44,6 @@ FraudChallengable, WalletLockable {
     DriipSettlementChallengeState public driipSettlementChallengeState;
     DriipSettlementState public driipSettlementState;
     RevenueFund public revenueFund;
-    PartnerFund public partnerFund;
 
     //
     // Events
@@ -56,7 +55,6 @@ FraudChallengable, WalletLockable {
     event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
         DriipSettlementState newDriipSettlementState);
     event SetRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
-    event SetPartnerFundEvent(PartnerFund oldPartnerFund, PartnerFund newPartnerFund);
     event StageFeesEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount,
         address currencyCt, uint256 currencyId);
 
@@ -103,18 +101,6 @@ FraudChallengable, WalletLockable {
         RevenueFund oldRevenueFund = revenueFund;
         revenueFund = newRevenueFund;
         emit SetRevenueFundEvent(oldRevenueFund, revenueFund);
-    }
-
-    /// @notice Set the partner fund contract
-    /// @param newPartnerFund The (address of) partner contract instance
-    function setPartnerFund(PartnerFund newPartnerFund)
-    public
-    onlyDeployer
-    notNullAddress(address(newPartnerFund))
-    {
-        PartnerFund oldPartnerFund = partnerFund;
-        partnerFund = newPartnerFund;
-        emit SetPartnerFundEvent(oldPartnerFund, partnerFund);
     }
 
     /// @notice Get the count of settlements
@@ -300,9 +286,22 @@ FraudChallengable, WalletLockable {
     {
         // For each origin figure...
         for (uint256 i = 0; i < fees.length; i++) {
-            // Based on originId determine if this is protocol or partner fee, and if the latter define originId as destination in beneficiary
-            (Beneficiary beneficiary, address destination) =
-            (0 == fees[i].originId) ? (protocolBeneficiary, address(0)) : (partnerFund, address(fees[i].originId));
+            // Based on originId determine the fee beneficiary
+            Beneficiary beneficiary;
+            if (0 == fees[i].originId)
+                beneficiary = protocolBeneficiary;
+            else if (
+                partnerBenefactor.registeredBeneficiariesCount() > 0 &&
+                partnerBenefactor.registeredBeneficiariesCount() <= fees[i].originId
+            )
+                beneficiary = partnerBenefactor.beneficiaries(fees[i].originId - 1);
+
+            // Continue if there is no beneficiary corresponding to the origin ID
+            if (address(0) == address(beneficiary))
+                continue;
+
+            // Define destination from origin ID
+            address destination = address(fees[i].originId);
 
             if (driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).nonce < nonce) {
                 // Get the amount previously staged
@@ -311,9 +310,9 @@ FraudChallengable, WalletLockable {
                 // Update fee total
                 driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
 
-                // Transfer to beneficiary
-                clientFund.transferToBeneficiary(
-                    destination, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, ""
+                // Stage to beneficiary
+                clientFund.stageToBeneficiary(
+                    wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, ""
                 );
 
                 // Emit event
