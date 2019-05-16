@@ -311,7 +311,7 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
                 driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
 
                 // Stage to beneficiary
-                clientFund.stageToBeneficiary(
+                clientFund.transferToBeneficiary(
                     wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, ""
                 );
 

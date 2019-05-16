@@ -621,7 +621,7 @@ module.exports = (glob) => {
                         settledBalanceUpdate[2].should.equal(payment.currency.ct);
                         settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
 
-                        (await ethersClientFund._stagesCount())._bn.should.eq.BN(2);
+                        (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
                         const holdingStage = await ethersClientFund._stages(0);
                         holdingStage[0].should.equal(utils.getAddress(payment.sender.wallet));
@@ -630,13 +630,14 @@ module.exports = (glob) => {
                         holdingStage[3].should.equal(payment.currency.ct);
                         holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
 
-                        const totalFeesStage = await ethersClientFund._stages(1);
-                        totalFeesStage[0].should.equal(utils.getAddress(payment.sender.wallet));
-                        totalFeesStage[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeesStage[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
-                        totalFeesStage[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
-                        totalFeesStage[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
+                        (await ethersClientFund._beneficiaryTransfersCount())._bn.should.eq.BN(1);
 
+                        const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
+                        totalFeeTransfer[0].should.equal(utils.getAddress(payment.sender.wallet));
+                        totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
+                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
+                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
+                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
                         const settlement = await ethersDriipSettlementState.settlements(0);
@@ -864,7 +865,7 @@ module.exports = (glob) => {
                         settledBalanceUpdate[2].should.equal(payment.currency.ct);
                         settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
 
-                        (await ethersClientFund._stagesCount())._bn.should.eq.BN(2);
+                        (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
                         const holdingStage = await ethersClientFund._stages(0);
                         holdingStage[0].should.equal(utils.getAddress(payment.sender.wallet));
@@ -873,13 +874,14 @@ module.exports = (glob) => {
                         holdingStage[3].should.equal(payment.currency.ct);
                         holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
 
-                        const totalFeesStage = await ethersClientFund._stages(1);
-                        totalFeesStage[0].should.equal(utils.getAddress(payment.sender.wallet));
-                        totalFeesStage[1].should.equal(utils.getAddress(ethersRevenueFund.address));
-                        totalFeesStage[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
-                        totalFeesStage[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
-                        totalFeesStage[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
+                        (await ethersClientFund._beneficiaryTransfersCount())._bn.should.eq.BN(1);
 
+                        const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
+                        totalFeeTransfer[0].should.equal(utils.getAddress(payment.sender.wallet));
+                        totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
+                        totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
+                        totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
+                        totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
                         const settlement = await ethersDriipSettlementState.settlements(0);
