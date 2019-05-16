@@ -24,17 +24,15 @@ module.exports = async (callback) => {
 
     const fromBlock = 7588183;
 
-    console.log(utils.Interface);
-    const iface = new utils.Interface(DriipSettlementState.abi);
-
     // Settlements
     let logs = await provider.getLogs({
         topics: [ethersDriipSettlementState.interface.events.InitSettlementEvent.topic],
-        // topics: ethersDriipSettlementState.interface.events.InitSettlementEvent.topics,
         fromBlock,
         address: ethersDriipSettlementState.address
     });
     debug(`# InitSettlementEvent: ${logs.length}`);
+
+    const iface = new utils.Interface(DriipSettlementState.abi);
 
     let logSettlements = logs.map(
         log => {
