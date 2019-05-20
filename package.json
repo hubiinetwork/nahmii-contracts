@@ -57,7 +57,7 @@
   "dependencies": {
     "async": "^2.6.0",
     "debug": "^4.1.1",
-    "ethers": "^4.0.27",
+    "ethers": "^3.0.29",
     "ganache-cli": "^6.4.3",
     "moment": "^2.23.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
