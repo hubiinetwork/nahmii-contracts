@@ -131,7 +131,7 @@ BalanceTrackable {
     public
     {
         // Require that wallet is not temporarily disqualified
-        require(!walletLocker.isLocked(msg.sender));
+        require(!walletLocker.isLocked(msg.sender), "Wallet found locked");
 
         // Start challenge for wallet
         _startChallengeFromPayment(msg.sender, payment, stageAmount, true);
@@ -486,21 +486,26 @@ BalanceTrackable {
     onlySealedPayment(payment)
     {
         // Require that current block number is beyond the earliest settlement challenge block number
-        require(block.number >= configuration.earliestSettlementBlockNumber());
+        require(
+            block.number >= configuration.earliestSettlementBlockNumber(),
+            "Current block number below earliest settlement block number"
+        );
 
         // Require that given wallet is a payment party
-        require(validator.isPaymentParty(payment, wallet));
+        require(validator.isPaymentParty(payment, wallet), "Wallet is not payment party");
 
         // Require that there is no ongoing overlapping driip settlement challenge
         require(
             !driipSettlementChallengeState.hasProposal(wallet, payment.currency) ||
-        driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency)
+        driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency),
+            "Overlapping driip settlement challenge proposal found"
         );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, payment.currency) ||
-        nullSettlementChallengeState.hasProposalTerminated(wallet, payment.currency)
+        nullSettlementChallengeState.hasProposalTerminated(wallet, payment.currency),
+            "Overlapping null settlement challenge proposal found"
         );
 
         // Deduce the concerned nonce and cumulative relative transfer
@@ -522,10 +527,8 @@ BalanceTrackable {
     private
     {
         // Require that there is an unterminated driip settlement challenge proposal
-        require(
-            driipSettlementChallengeState.hasProposal(wallet, currency) &&
-            !driipSettlementChallengeState.hasProposalTerminated(wallet, currency)
-        );
+        require(driipSettlementChallengeState.hasProposal(wallet, currency), "No proposal found");
+        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated");
 
         // Terminate driip settlement challenge proposal
         driipSettlementChallengeState.terminateProposal(wallet, currency, clearNonce, walletTerminated);

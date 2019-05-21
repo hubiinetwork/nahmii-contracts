@@ -61,25 +61,29 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     onlySealedPayment(firstPayment)
     onlySealedPayment(lastPayment)
     {
-        require(validator.isPaymentParty(firstPayment, wallet));
-        require(validator.isPaymentParty(lastPayment, wallet));
+        require(validator.isPaymentParty(firstPayment, wallet), "Wallet not party in first payment");
+        require(validator.isPaymentParty(lastPayment, wallet), "Wallet not party in last payment");
 
-        require(validator.isPaymentCurrency(firstPayment, lastPayment.currency));
+        require(validator.isPaymentCurrency(firstPayment, lastPayment.currency), "Differing payment currencies found");
 
         PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole = _paymentPartyRole(firstPayment, wallet);
         PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole = _paymentPartyRole(lastPayment, wallet);
 
-        require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
+        require(
+            validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole),
+            "Non-successive payment party nonces found"
+        );
 
         int256 deltaActiveBalance = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
             wallet, firstPayment.currency, firstPayment.blockNumber, lastPayment.blockNumber
         );
 
         // Require existence of fraud signal
-        require(!(
-        validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole, deltaActiveBalance) &&
-        validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment)
-        ));
+        require(
+            !(validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole, deltaActiveBalance) &&
+        validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment)),
+            "Fraud signal not found"
+        );
 
         // Toggle operational mode exit
         configuration.setOperationalModeExit();

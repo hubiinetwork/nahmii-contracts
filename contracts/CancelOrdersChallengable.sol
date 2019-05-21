@@ -50,7 +50,7 @@ contract CancelOrdersChallengable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier cancelOrdersChallengeInitialized() {
-        require(address(cancelOrdersChallenge) != address(0));
+        require(address(cancelOrdersChallenge) != address(0), "Cancel orders challenge not initialized");
         _;
     }
 }

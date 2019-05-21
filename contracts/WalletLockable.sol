@@ -40,7 +40,7 @@ contract WalletLockable is Ownable {
     notSameAddresses(address(newWalletLocker), address(walletLocker))
     {
         // Require that this contract has not been frozen
-        require(!walletLockerFrozen);
+        require(!walletLockerFrozen, "Wallet locker frozen");
 
         // Update fields
         WalletLocker oldWalletLocker = walletLocker;
@@ -66,7 +66,7 @@ contract WalletLockable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier walletLockerInitialized() {
-        require(address(walletLocker) != address(0));
+        require(address(walletLocker) != address(0), "Wallet locker not initialized");
         _;
     }
 }

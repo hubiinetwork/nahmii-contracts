@@ -68,7 +68,7 @@ contract SignerManager is Ownable {
     view
     returns (uint256)
     {
-        require(isSigner(_address));
+        require(isSigner(_address), "Address not signer");
         return signerIndicesMap[_address] - 1;
     }
 
@@ -98,8 +98,8 @@ contract SignerManager is Ownable {
     view
     returns (address[] memory)
     {
-        require(0 < signers.length);
-        require(low <= up);
+        require(0 < signers.length, "No signers found");
+        require(low <= up, "Bounds parameters mismatch");
 
         up = up.clampMax(signers.length - 1);
         address[] memory _signers = new address[](up - low + 1);

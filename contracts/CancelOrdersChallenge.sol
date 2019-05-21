@@ -101,8 +101,8 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
     view
     returns (bytes32[] memory)
     {
-        require(0 < walletCancelledOrderOperatorHashes[wallet].length);
-        require(low <= up);
+        require(0 < walletCancelledOrderOperatorHashes[wallet].length, "No cancelled order operator hash for wallet");
+        require(low <= up, "Bounds parameters mismatch");
 
         up = up > walletCancelledOrderOperatorHashes[wallet].length - 1 ? walletCancelledOrderOperatorHashes[wallet].length - 1 : up;
         bytes32[] memory hashes = new bytes32[](up - low + 1);
@@ -118,8 +118,8 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
     onlyOperationalModeNormal
     {
         for (uint256 i = 0; i < orders.length; i++) {
-            require(msg.sender == orders[i].wallet);
-            require(validator.isGenuineOrderSeals(orders[i]));
+            require(msg.sender == orders[i].wallet, "Message sender is not order wallet");
+            require(validator.isGenuineOrderSeals(orders[i]), "Not genuine order seals found");
 
             if (0 == walletCancelledOrderOperatorHashes[msg.sender].length)
                 cancellingWallets.push(msg.sender);
@@ -142,7 +142,7 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
     onlyOperationalModeNormal
     onlySealedTrade(trade)
     {
-        require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
+        require(block.timestamp < walletOrderCancelledTimeoutMap[wallet], "Order cancellation timer expired for wallet");
 
         bytes32 tradeOrderOperatorHash = (
         wallet == trade.buyer.wallet ?
@@ -150,7 +150,7 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
         trade.seller.order.hashes.operator
         );
 
-        require(walletOrderOperatorHashCancelledMap[wallet][tradeOrderOperatorHash]);
+        require(walletOrderOperatorHashCancelledMap[wallet][tradeOrderOperatorHash], "Order not cancelled");
 
         walletOrderOperatorHashCancelledMap[wallet][tradeOrderOperatorHash] = false;
 

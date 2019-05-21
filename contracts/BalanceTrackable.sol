@@ -40,7 +40,7 @@ contract BalanceTrackable is Ownable {
     notSameAddresses(address(newBalanceTracker), address(balanceTracker))
     {
         // Require that this contract has not been frozen
-        require(!balanceTrackerFrozen);
+        require(!balanceTrackerFrozen, "Balance tracker frozen");
 
         // Update fields
         BalanceTracker oldBalanceTracker = balanceTracker;
@@ -66,7 +66,7 @@ contract BalanceTrackable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier balanceTrackerInitialized() {
-        require(address(balanceTracker) != address(0));
+        require(address(balanceTracker) != address(0), "Balance tracker not initialized");
         _;
     }
 }

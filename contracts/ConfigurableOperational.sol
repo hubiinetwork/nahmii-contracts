@@ -19,7 +19,7 @@ contract ConfigurableOperational is Configurable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyOperationalModeNormal() {
-        require(configuration.isOperationalModeNormal());
+        require(configuration.isOperationalModeNormal(), "Operational mode is not normal");
         _;
     }
 }

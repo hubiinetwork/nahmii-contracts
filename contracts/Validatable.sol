@@ -52,27 +52,27 @@ contract Validatable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier validatorInitialized() {
-        require(address(validator) != address(0));
+        require(address(validator) != address(0), "Validator not initialized");
         _;
     }
 
     modifier onlyOperatorSealedPayment(PaymentTypesLib.Payment memory payment) {
-        require(validator.isGenuinePaymentOperatorSeal(payment));
+        require(validator.isGenuinePaymentOperatorSeal(payment), "Payment operator seal not genuine");
         _;
     }
 
     modifier onlySealedPayment(PaymentTypesLib.Payment memory payment) {
-        require(validator.isGenuinePaymentSeals(payment));
+        require(validator.isGenuinePaymentSeals(payment), "Payment seals not genuine");
         _;
     }
 
     modifier onlyPaymentParty(PaymentTypesLib.Payment memory payment, address wallet) {
-        require(validator.isPaymentParty(payment, wallet));
+        require(validator.isPaymentParty(payment, wallet), "Wallet not payment party");
         _;
     }
 
     modifier onlyPaymentSender(PaymentTypesLib.Payment memory payment, address wallet) {
-        require(validator.isPaymentSender(payment, wallet));
+        require(validator.isPaymentSender(payment, wallet), "Wallet not payment sender");
         _;
     }
 }

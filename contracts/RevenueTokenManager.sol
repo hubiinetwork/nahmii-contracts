@@ -57,7 +57,7 @@ contract RevenueTokenManager is TokenMultiTimelock {
     view
     returns (uint256)
     {
-        require(startBlock < endBlock);
+        require(startBlock < endBlock, "Bounds parameters mismatch");
 
         if (executedReleasesCount == 0 || endBlock < releases[0].blockNumber)
             return 0;

@@ -66,7 +66,8 @@ library BlockNumbReferenceCurrenciesLib {
     {
         require(
             0 == self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id].length ||
-            blockNumber > self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id][self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id].length - 1].blockNumber
+        blockNumber > self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id][self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id].length - 1].blockNumber,
+            "Later entry found for currency"
         );
 
         self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id].push(Entry(blockNumber, currency));
@@ -93,7 +94,7 @@ library BlockNumbReferenceCurrenciesLib {
     view
     returns (uint256)
     {
-        require(0 < self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id].length);
+        require(0 < self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id].length, "No entries found for currency");
         for (uint256 i = self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id].length - 1; i >= 0; i--)
             if (blockNumber >= self.entriesByCurrency[referenceCurrency.ct][referenceCurrency.id][i].blockNumber)
                 return i;

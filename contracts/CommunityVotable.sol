@@ -38,7 +38,7 @@ contract CommunityVotable is Ownable {
     notNullAddress(address(newCommunityVote))
     notSameAddresses(address(newCommunityVote), address(communityVote))
     {
-        require(!communityVoteFrozen);
+        require(!communityVoteFrozen, "Community vote frozen");
 
         // Set new community vote
         CommunityVote oldCommunityVote = communityVote;
@@ -64,7 +64,7 @@ contract CommunityVotable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier communityVoteInitialized() {
-        require(address(communityVote) != address(0));
+        require(address(communityVote) != address(0), "Community vote not initialized");
         _;
     }
 }
