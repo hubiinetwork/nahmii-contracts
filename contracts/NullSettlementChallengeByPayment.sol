@@ -113,7 +113,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     {
         // Require that wallet is not locked
-        require(!walletLocker.isLocked(msg.sender));
+        require(!walletLocker.isLocked(msg.sender), "Wallet found locked");
 
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
@@ -440,7 +440,10 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     private
     {
         // Require that current block number is beyond the earliest settlement challenge block number
-        require(block.number >= configuration.earliestSettlementBlockNumber());
+        require(
+            block.number >= configuration.earliestSettlementBlockNumber(),
+            "Current block number below earliest settlement block number"
+        );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
@@ -474,10 +477,8 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     private
     {
         // Require that there is an unterminated driip settlement challenge proposal
-        require(
-            nullSettlementChallengeState.hasProposal(wallet, currency) &&
-            !nullSettlementChallengeState.hasProposalTerminated(wallet, currency)
-        );
+        require(nullSettlementChallengeState.hasProposal(wallet, currency), "No proposal found");
+        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated");
 
         // Terminate driip settlement challenge proposal
         nullSettlementChallengeState.terminateProposal(

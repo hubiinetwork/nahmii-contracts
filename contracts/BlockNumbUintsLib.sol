@@ -61,7 +61,8 @@ library BlockNumbUintsLib {
     {
         require(
             0 == self.entries.length ||
-            blockNumber > self.entries[self.entries.length - 1].blockNumber
+        blockNumber > self.entries[self.entries.length - 1].blockNumber,
+            "Later entry found"
         );
 
         self.entries.push(Entry(blockNumber, value));
@@ -88,7 +89,7 @@ library BlockNumbUintsLib {
     view
     returns (uint256)
     {
-        require(0 < self.entries.length);
+        require(0 < self.entries.length, "No entries found");
         for (uint256 i = self.entries.length - 1; i >= 0; i--)
             if (blockNumber >= self.entries[i].blockNumber)
                 return i;

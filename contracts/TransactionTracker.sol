@@ -184,7 +184,10 @@ contract TransactionTracker is Ownable, Servable {
     view
     returns (uint256)
     {
-        require(0 < transactionLogByWalletType[wallet][_type].records.length);
+        require(
+            0 < transactionLogByWalletType[wallet][_type].records.length,
+            "No transactions found for wallet and type"
+        );
         for (uint256 i = transactionLogByWalletType[wallet][_type].records.length - 1; i >= 0; i--)
             if (blockNumber >= transactionLogByWalletType[wallet][_type].records[i].blockNumber)
                 return i;
@@ -197,7 +200,10 @@ contract TransactionTracker is Ownable, Servable {
     view
     returns (uint256)
     {
-        require(0 < transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length);
+        require(
+            0 < transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length,
+            "No transactions found for wallet, type and currency"
+        );
         for (uint256 i = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length - 1; i >= 0; i--) {
             uint256 j = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId][i];
             if (blockNumber >= transactionLogByWalletType[wallet][_type].records[j].blockNumber)

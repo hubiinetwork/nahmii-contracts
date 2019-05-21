@@ -99,25 +99,25 @@ BalanceTrackable, FraudChallengable, Servable {
     onlyPaymentSender(payment, wallet)
     {
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
+        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash), "Payment deemed fraudulent");
 
         // Require that proposal has been initiated
-        require(driipSettlementChallengeState.hasProposal(wallet, payment.currency));
+        require(driipSettlementChallengeState.hasProposal(wallet, payment.currency), "No proposal found");
 
         // Require that proposal has not expired
-        require(!driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
+        require(!driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency), "Proposal found expired");
 
         // Require that payment party's nonce is strictly greater than proposal's nonce and its current
         // disqualification nonce
         require(payment.sender.nonce > driipSettlementChallengeState.proposalNonce(
             wallet, payment.currency
-        ));
+        ), "Payment nonce not strictly greater than proposal nonce");
         require(payment.sender.nonce > driipSettlementChallengeState.proposalDisqualificationNonce(
             wallet, payment.currency
-        ));
+        ), "Payment nonce not strictly greater than proposal disqualification nonce");
 
         // Require overrun for this payment to be a valid challenge candidate
-        require(_overrun(wallet, payment));
+        require(_overrun(wallet, payment), "No overrun found");
 
         // Reward challenger
         _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger);

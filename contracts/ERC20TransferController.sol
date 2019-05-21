@@ -44,11 +44,11 @@ contract ERC20TransferController is TransferController {
     function receive(address from, address to, uint256 amount, address currencyCt, uint256 currencyId)
     public
     {
-        require(msg.sender != address(0));
-        require(amount > 0);
-        require(currencyId == 0);
+        require(msg.sender != address(0), "Message sender is null address");
+        require(amount > 0, "Amount is strictly positive");
+        require(currencyId == 0, "Currency ID is not 0");
 
-        require(IERC20(currencyCt).transferFrom(from, to, amount));
+        require(IERC20(currencyCt).transferFrom(from, to, amount), "Transfer not successful");
 
         // Emit event
         emit CurrencyTransferred(from, to, amount, currencyCt, currencyId);
@@ -58,8 +58,8 @@ contract ERC20TransferController is TransferController {
     function approve(address to, uint256 amount, address currencyCt, uint256 currencyId)
     public
     {
-        require(amount > 0);
-        require(currencyId == 0);
+        require(amount > 0, "Amount is strictly positive");
+        require(currencyId == 0, "Currency ID is not 0");
 
         require(IERC20(currencyCt).approve(to, amount));
     }
@@ -68,11 +68,11 @@ contract ERC20TransferController is TransferController {
     function dispatch(address from, address to, uint256 amount, address currencyCt, uint256 currencyId)
     public
     {
-        require(amount > 0);
-        require(currencyId == 0);
+        require(amount > 0, "Amount is strictly positive");
+        require(currencyId == 0, "Currency ID is not 0");
 
-        require(IERC20(currencyCt).approve(from, amount));
-        require(IERC20(currencyCt).transferFrom(from, to, amount));
+        require(IERC20(currencyCt).approve(from, amount), "Approval not successful");
+        require(IERC20(currencyCt).transferFrom(from, to, amount), "Transfer not successful");
 
         // Emit event
         emit CurrencyTransferred(from, to, amount, currencyCt, currencyId);

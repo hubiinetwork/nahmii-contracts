@@ -470,8 +470,8 @@ contract BalanceTracker is Ownable, Servable {
     view
     returns (address[] memory)
     {
-        require(0 < trackedWallets.length);
-        require(low <= up);
+        require(0 < trackedWallets.length, "No tracked wallets found");
+        require(low <= up, "Bounds parameters mismatch");
 
         up = up.clampMax(trackedWallets.length - 1);
         address[] memory _trackedWallets = new address[](up - low + 1);

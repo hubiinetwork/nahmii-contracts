@@ -60,7 +60,7 @@ contract TransferControllerManageable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier transferControllerManagerInitialized() {
-        require(address(transferControllerManager) != address(0));
+        require(address(transferControllerManager) != address(0), "Transfer controller manager not initialized");
         _;
     }
 }

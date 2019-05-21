@@ -43,7 +43,7 @@ contract ERC721TransferController is TransferController {
     function receive(address from, address to, uint256 id, address currencyCt, uint256 currencyId)
     public
     {
-        require(currencyId == 0);
+        require(currencyId == 0, "Currency ID is not 0");
 
         //        IERC721(currencyCt).transferFrom(from, to, id);
 
@@ -55,7 +55,7 @@ contract ERC721TransferController is TransferController {
     function approve(address /*to*/, uint256 /*id*/, address /*currencyCt*/, uint256 currencyId)
     public
     {
-        require(currencyId == 0);
+        require(currencyId == 0, "Currency ID is not 0");
 
         //        IERC721(currencyCt).approve(to, id);
     }
@@ -64,7 +64,7 @@ contract ERC721TransferController is TransferController {
     function dispatch(address from, address to, uint256 id, address currencyCt, uint256 currencyId)
     public
     {
-        require(currencyId == 0);
+        require(currencyId == 0, "Currency ID is not 0");
 
         //        IERC721(currencyCt).approve(from, id);
         //        IERC721(currencyCt).transferFrom(from, to, id);

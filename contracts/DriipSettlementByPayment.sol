@@ -181,16 +181,16 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
     onlySealedPayment(payment)
     onlyPaymentParty(payment, wallet)
     {
-        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
-        require(!communityVote.isDoubleSpenderWallet(wallet));
+        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash), "Payment deemed fradulent");
+        require(!communityVote.isDoubleSpenderWallet(wallet), "Wallet deemed double spender");
 
         // Require that wallet is not locked
-        require(!walletLocker.isLocked(wallet));
+        require(!walletLocker.isLocked(wallet), "Wallet found locked");
 
         // Require that the wallet's current driip settlement challenge proposal is defined wrt this payment
         require(payment.seals.operator.hash == driipSettlementChallengeState.proposalChallengedHash(
             wallet, payment.currency
-        ));
+        ), "Payment not challenged");
 
         // Extract properties depending on settlement role
         (
@@ -199,21 +199,22 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
         ) = _getRoleProperties(payment, wallet);
 
         // Require that driip settlement challenge proposal has been initiated
-        require(driipSettlementChallengeState.hasProposal(wallet, walletNonce, payment.currency));
+        require(driipSettlementChallengeState.hasProposal(wallet, walletNonce, payment.currency), "No proposal found");
 
         // Require that driip settlement challenge proposal has not been terminated already
-        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency));
+        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency), "Proposal found terminated");
 
         // Require that driip settlement challenge proposal has expired
-        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
+        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency), "Proposal found not expired");
 
         // Require that driip settlement challenge proposal qualified
         require(SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
             wallet, payment.currency
-        ));
+        ), "Proposal found not qualified");
 
         // Require that operational mode is normal and data is available
-        require(configuration.isOperationalModeNormal() && communityVote.isDataAvailable());
+        require(configuration.isOperationalModeNormal(), "Not normal operational mode");
+        require(communityVote.isDataAvailable(), "Data not available");
 
         // Init settlement, i.e. create one if no such settlement exists for the double pair of wallets and nonces
         driipSettlementState.initSettlement(
@@ -225,7 +226,7 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
         // If exists settlement of nonce then require that wallet has not already settled
         require(!driipSettlementState.isSettlementPartyDone(
             wallet, walletNonce, settlementRole
-        ));
+        ), "Settlement party already done");
 
         // Set address of origin or target to prevent the same settlement from being resettled by this wallet
         driipSettlementState.completeSettlementParty(

@@ -49,7 +49,7 @@ contract PaymentHashable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier paymentHasherInitialized() {
-        require(address(paymentHasher) != address(0));
+        require(address(paymentHasher) != address(0), "Payment hasher not initialized");
         _;
     }
 }

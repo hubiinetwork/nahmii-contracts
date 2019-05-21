@@ -48,7 +48,7 @@ contract ClientFundable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier clientFundInitialized() {
-        require(address(clientFund) != address(0));
+        require(address(clientFund) != address(0), "Client fund not initialized");
         _;
     }
 }

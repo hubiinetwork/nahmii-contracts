@@ -140,7 +140,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
             return;
 
         // Require that role that initialized (wallet or operator) can only cancel its own proposal
-        require(walletTerminated == proposals[index - 1].walletInitiated);
+        require(walletTerminated == proposals[index - 1].walletInitiated, "Wallet initiation and termination mismatch");
 
         // Terminate proposal
         proposals[index - 1].terminated = true;
@@ -194,7 +194,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
             return;
 
         // Require that role that initialized (wallet or operator) can only cancel its own proposal
-        require(walletTerminated == proposals[index - 1].walletInitiated);
+        require(walletTerminated == proposals[index - 1].walletInitiated, "Wallet initiation and termination mismatch");
 
         // Emit event
         emit RemoveProposalEvent(
@@ -223,7 +223,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     {
         // Get the proposal index
         uint256 index = proposalIndexByWalletCurrency[challengedWallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No settlement found for wallet and currency");
 
         // Update proposal
         proposals[index - 1].status = SettlementChallengeTypesLib.Status.Disqualified;
@@ -266,7 +266,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     {
         // 1-based index
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].terminated;
     }
 
@@ -281,7 +281,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     {
         // 1-based index
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return block.timestamp >= proposals[index - 1].expirationTime;
     }
 
@@ -295,7 +295,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].nonce;
     }
 
@@ -309,7 +309,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].referenceBlockNumber;
     }
 
@@ -323,7 +323,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].definitionBlockNumber;
     }
 
@@ -337,7 +337,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].expirationTime;
     }
 
@@ -351,7 +351,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (SettlementChallengeTypesLib.Status)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].status;
     }
 
@@ -365,7 +365,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (int256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].amounts.stage;
     }
 
@@ -379,7 +379,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (int256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].amounts.targetBalance;
     }
 
@@ -393,7 +393,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (bool)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].walletInitiated;
     }
 
@@ -407,7 +407,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (address)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].disqualification.challenger;
     }
 
@@ -421,7 +421,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].disqualification.blockNumber;
     }
 
@@ -435,7 +435,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].disqualification.nonce;
     }
 
@@ -449,7 +449,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (bytes32)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].disqualification.candidate.hash;
     }
 
@@ -463,7 +463,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     returns (string memory)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index);
+        require(0 != index, "No proposal found for wallet and currency");
         return proposals[index - 1].disqualification.candidate.kind;
     }
 
@@ -475,8 +475,8 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     private
     {
         // Require that stage and target balance amounts are positive
-        require(stageAmount.isPositiveInt256());
-        require(targetBalanceAmount.isPositiveInt256());
+        require(stageAmount.isPositiveInt256(), "Stage amount not positive");
+        require(targetBalanceAmount.isPositiveInt256(), "Target balance amount not positive");
 
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
 

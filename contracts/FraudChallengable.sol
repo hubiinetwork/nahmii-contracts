@@ -49,7 +49,7 @@ contract FraudChallengable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier fraudChallengeInitialized() {
-        require(address(fraudChallenge) != address(0));
+        require(address(fraudChallenge) != address(0), "Fraud challenge not initialized");
         _;
     }
 }

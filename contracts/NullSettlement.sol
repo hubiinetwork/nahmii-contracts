@@ -133,33 +133,35 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         // Require that there is no overlapping driip settlement challenge
         require(
             !driipSettlementChallengeState.hasProposal(wallet, currency) ||
-        driipSettlementChallengeState.hasProposalTerminated(wallet, currency)
+        driipSettlementChallengeState.hasProposalTerminated(wallet, currency),
+            "Overlapping driip settlement challenge proposal found"
         );
 
         // Require that null settlement challenge proposal has been initiated
-        require(nullSettlementChallengeState.hasProposal(wallet, currency));
+        require(nullSettlementChallengeState.hasProposal(wallet, currency), "No proposal found");
 
         // Require that null settlement challenge proposal has not been terminated already
-        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency));
+        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated");
 
         // Require that null settlement challenge proposal has expired
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, currency));
+        require(nullSettlementChallengeState.hasProposalExpired(wallet, currency), "Proposal found not expired");
 
         // Require that null settlement challenge qualified
         require(SettlementChallengeTypesLib.Status.Qualified == nullSettlementChallengeState.proposalStatus(
             wallet, currency
-        ));
+        ), "Proposal found not qualified");
 
         // Require that operational mode is normal and data is available, or that nonce is
         // smaller than max null nonce
-        require(configuration.isOperationalModeNormal() && communityVote.isDataAvailable());
+        require(configuration.isOperationalModeNormal(), "Not normal operational mode");
+        require(communityVote.isDataAvailable(), "Data not available");
 
         // Get null settlement challenge proposal nonce
         uint256 nonce = nullSettlementChallengeState.proposalNonce(wallet, currency);
 
         // If wallet has previously settled balance of the concerned currency with higher
         // null settlement nonce, then don't settle again
-        require(nonce >= nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency));
+        require(nonce >= nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency), "Nonce deemed smaller than max nonce by wallet and currency");
 
         // Update settled nonce of wallet and currency
         nullSettlementState.setMaxNonceByWalletAndCurrency(wallet, currency, nonce);
