@@ -25,6 +25,7 @@
     "exec:export_driip_settlement_state:mainnet": "truffle exec scripts/truffle/export_driip_settlement_state.js --network mainnet-hubii",
     "exec:export_null_settlement_state:mainnet": "truffle exec scripts/truffle/export_null_settlement_state.js --network mainnet-hubii",
     "exec:ganache-cli": "ganache-cli -l 8000000 -e 1000",
+    "exec:import_driip_settlement_state:mainnet": "truffle exec scripts/truffle/import_driip_settlement_state.js --network mainnet-hubii",
     "exec:import_null_settlement_state:mainnet": "truffle exec scripts/truffle/import_null_settlement_state.js --network mainnet-hubii",
     "exec:mint_erc20_tokens": "truffle exec scripts/truffle/mint_erc20_tokens.js",
     "exec:register_currency": "truffle exec scripts/truffle/register_currency.js",
