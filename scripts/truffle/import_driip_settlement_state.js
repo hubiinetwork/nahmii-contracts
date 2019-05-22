@@ -12,6 +12,77 @@ const helpers = require('../common/helpers.js');
 
 const DriipSettlementState = artifacts.require('DriipSettlementState');
 
+const inDir = 'state/DriipSettlementState';
+
+async function promoteToService(ethersDriipSettlementState, deployerAccount) {
+    if (!(await ethersDriipSettlementState.isRegisteredService(deployerAccount))) {
+        await ethersDriipSettlementState.registerService(deployerAccount);
+        await ethersDriipSettlementState.enableServiceAction(deployerAccount, await ethersDriipSettlementState.SET_MAX_NONCE_ACTION());
+        await ethersDriipSettlementState.enableServiceAction(deployerAccount, await ethersDriipSettlementState.SET_TOTAL_FEE_ACTION());
+    }
+}
+
+async function demoteFromService(ethersDriipSettlementState, deployerAccount) {
+    if (await ethersDriipSettlementState.isRegisteredService(deployerAccount)) {
+        await ethersDriipSettlementState.disableServiceAction(deployerAccount, await ethersDriipSettlementState.SET_MAX_NONCE_ACTION())
+        await ethersDriipSettlementState.disableServiceAction(deployerAccount, await ethersDriipSettlementState.SET_TOTAL_FEE_ACTION())
+        await ethersDriipSettlementState.deregisterService(deployerAccount);
+    }
+}
+
+async function importSettlements(ethersDriipSettlementState) {
+    const settlementEntries = JSON.parse(await fs.readFile(`${inDir}/settlements.json`));
+    debug(`Read settlement entries: ${JSON.stringify(settlementEntries, null, 2)}`);
+
+    console.log('Upgraded settlement by index:');
+    for (let i = 0; i < settlementEntries.length; i++) {
+
+        const settlement = settlementEntries[i];
+
+        await ethersDriipSettlementState.upgradeSettlement(
+            settlement.settledKind, settlement.settledHash,
+            settlement.origin.wallet, settlement.origin.nonce, settlement.origin.done, settlement.origin.doneBlockNumber,
+            settlement.target.wallet, settlement.target.nonce, settlement.target.done, settlement.target.doneBlockNumber
+        );
+
+        console.log(`  ${i}: ${await ethersDriipSettlementState.settlements(i)}`);
+    }
+}
+
+async function importMaxNonces(ethersDriipSettlementState) {
+    const maxNonceEntries = JSON.parse(await fs.readFile(`${inDir}/max-nonces.json`));
+    debug(`Read max nonce entries: ${JSON.stringify(maxNonceEntries, null, 2)}`);
+
+    console.log('Set max nonce by wallet and currency:');
+    for (let i = 0; i < maxNonceEntries.length; i++) {
+
+        const {wallet, currency, maxNonce} = maxNonceEntries[i];
+
+        await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(wallet, currency, maxNonce);
+
+        console.log(`  ${wallet}, (${currency.ct}, ${currency.id.toString()}): ${
+            (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(wallet, currency))
+            }`);
+    }
+}
+
+async function importTotalFees(ethersDriipSettlementState) {
+    const totalFeeEntries = JSON.parse(await fs.readFile(`${inDir}/total-fees.json`));
+    debug(`Read total fee entries: ${JSON.stringify(totalFeeEntries, null, 2)}`);
+
+    console.log('Set total fee by wallet, beneficiary, destination and currency:');
+    for (let i = 0; i < totalFeeEntries.length; i++) {
+
+        const {wallet, beneficiary, destination, currency, totalFee} = totalFeeEntries[i];
+
+        await ethersDriipSettlementState.setTotalFee(wallet, beneficiary, destination, currency, totalFee);
+
+        console.log(`  ${wallet}, ${beneficiary}, ${destination}, (${currency.ct}, ${currency.id.toString()}): (${
+            await ethersDriipSettlementState.totalFee(wallet, beneficiary, destination, currency)
+            })`);
+    }
+}
+
 module.exports = async (callback) => {
 
     let unlockable;
@@ -28,63 +99,20 @@ module.exports = async (callback) => {
         if (unlockable)
             helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 14400);
 
-        if (!(await ethersDriipSettlementState.isRegisteredService(deployerAccount))) {
-            await ethersDriipSettlementState.registerService(deployerAccount);
-            await ethersDriipSettlementState.enableServiceAction(deployerAccount, await ethersDriipSettlementState.SET_MAX_NONCE_ACTION());
-            await ethersDriipSettlementState.enableServiceAction(deployerAccount, await ethersDriipSettlementState.SET_TOTAL_FEE_ACTION());
-        }
-
-        const inDir = 'state/DriipSettlementState';
+        // Promote deployer to service
+        await promoteToService(ethersDriipSettlementState, deployerAccount);
 
         // Settlements
-        const settlementEntries = JSON.parse(await fs.readFile(`${inDir}/settlements.json`));
-        debug(`Read settlement entries: ${JSON.stringify(settlementEntries, null, 2)}`);
-
-        console.log('Upgraded settlement by index:');
-        for (let i = 0; i < settlementEntries.length; i++) {
-
-            const settlement = settlementEntries[i];
-
-            await ethersDriipSettlementState.upgradeSettlement(
-                settlement.settledKind, settlement.settledHash,
-                settlement.origin.wallet, settlement.origin.nonce, settlement.origin.done, settlement.origin.doneBlockNumber,
-                settlement.target.wallet, settlement.target.nonce, settlement.target.done, settlement.target.doneBlockNumber
-            );
-
-            console.log(`  ${i}: ${await ethersDriipSettlementState.settlements(i)}`);
-        }
+        await importSettlements(ethersDriipSettlementState);
 
         // Max nonces
-        const maxNonceEntries = JSON.parse(await fs.readFile(`${inDir}/max-nonces.json`));
-        debug(`Read max nonce entries: ${JSON.stringify(maxNonceEntries, null, 2)}`);
-
-        console.log('Set max nonce by wallet and currency:');
-        for (let i = 0; i < maxNonceEntries.length; i++) {
-
-            const {wallet, currency, maxNonce} = maxNonceEntries[i];
-
-            await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(wallet, currency, maxNonce);
-
-            console.log(`  ${wallet}, (${currency.ct}, ${currency.id.toString()}): ${
-                (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(wallet, currency))
-                }`);
-        }
+        await importMaxNonces(ethersDriipSettlementState);
 
         // Total fees
-        const totalFeeEntries = JSON.parse(await fs.readFile(`${inDir}/total-fees.json`));
-        debug(`Read total fee entries: ${JSON.stringify(totalFeeEntries, null, 2)}`);
+        await importTotalFees(ethersDriipSettlementState);
 
-        console.log('Set total fee by wallet, beneficiary, destination and currency:');
-        for (let i = 0; i < totalFeeEntries.length; i++) {
-
-            const {wallet, beneficiary, destination, currency, totalFee} = totalFeeEntries[i];
-
-            await ethersDriipSettlementState.setTotalFee(wallet, beneficiary, destination, currency, totalFee);
-
-            console.log(`  ${wallet}, ${beneficiary}, ${destination}, (${currency.ct}, ${currency.id.toString()}): (${
-                await ethersDriipSettlementState.totalFee(wallet, beneficiary, destination, currency)
-                })`);
-        }
+        // Demote deployer from service
+        await demoteFromService(ethersDriipSettlementState, deployerAccount);
 
     } catch (e) {
         callback(e);
