@@ -45,7 +45,7 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     event SetMaxNullNonceEvent(uint256 maxNullNonce);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
         uint256 maxNullNonce);
-    event updateMaxNullNonceFromCommunityVoteEvent(uint256 maxDriipNonce);
+    event UpdateMaxNullNonceFromCommunityVoteEvent(uint256 maxDriipNonce);
 
     //
     // Constructor
@@ -105,6 +105,6 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
         maxNullNonce = _maxNullNonce;
 
         // Emit event
-        emit updateMaxNullNonceFromCommunityVoteEvent(maxNullNonce);
+        emit UpdateMaxNullNonceFromCommunityVoteEvent(maxNullNonce);
     }
 }
