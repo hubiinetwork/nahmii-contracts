@@ -1,5 +1,10 @@
 const debug = require('debug')('helpers');
 
+exports.hasArg = (argName) => {
+    const arg = `--${argName}`;
+    return process.argv.some(a => a == arg);
+};
+
 exports.parseStringArg = (argName) => {
     const arg = `--${argName}`;
 
@@ -47,12 +52,16 @@ exports.parseNetworkArg = () => {
 
 exports.unlockAddress = async (web3, address, password, timeoutInSecs) => {
     const personal = web3.eth.personal || web3.personal;
-    debug(`unlock of address ${address} for ${timeoutInSecs}s: ${await personal.unlockAccount(address, password, timeoutInSecs) ? 'successful' : 'unsuccessful'}`);
+    const succeeded = await personal.unlockAccount(address, password, timeoutInSecs);
+    debug(`unlock of address ${address} for ${timeoutInSecs}s: ${succeeded ? 'successful' : 'unsuccessful'}`);
+    return succeeded;
 };
 
 exports.lockAddress = async (web3, address) => {
     const personal = web3.eth.personal || web3.personal;
-    debug(`lock of address ${address}: ${await personal.lockAccount(address) ? 'successful' : 'unsuccessful'}`);
+    const succeeded = await personal.lockAccount(address);
+    debug(`lock of address ${address}: ${succeeded ? 'successful' : 'unsuccessful'}`);
+    return succeeded;
 };
 
 exports.isTestNetwork = (network) => {

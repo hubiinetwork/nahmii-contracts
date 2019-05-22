@@ -5,20 +5,28 @@
  */
 
 const fs = require('fs').promises;
-const {Wallet, Contract, providers} = require('ethers');
+const {Contract, providers} = require('ethers');
 const provider = new providers.Web3Provider(web3.currentProvider);
 const debug = require('debug')('import_driip_settlement_state');
+const helpers = require('../common/helpers.js');
 
 const NullSettlementState = artifacts.require('NullSettlementState');
 
 module.exports = async (callback) => {
 
+    let unlockable;
+
     try {
         const web3NullSettlementState = await NullSettlementState.deployed();
         const ethersNullSettlementState = new Contract(web3NullSettlementState.address, NullSettlementState.abi, provider);
 
-        // TODO Read deployer account from cmd line arguments
-        const deployerAccount = Wallet.createRandom().address;
+        const network = helpers.parseNetworkArg();
+        const deployerAccount = helpers.parseDeployerArg();
+
+        unlockable = !helpers.isTestNetwork(network) && helpers.hasArg('password');
+
+        if (unlockable)
+            helpers.unlockAddress(web3, deployerAccount, helpers.parsePasswordArg(), 14400);
 
         if (!(await ethersNullSettlementState.isRegisteredService(deployerAccount))) {
             await ethersNullSettlementState.registerService(deployerAccount);
@@ -45,6 +53,9 @@ module.exports = async (callback) => {
 
     } catch (e) {
         callback(e);
+    } finally {
+        if (unlockable)
+            helpers.lockAddress(web3, deployerAccount);
     }
 
     callback();
