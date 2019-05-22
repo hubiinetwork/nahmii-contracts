@@ -30,7 +30,7 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
     string constant public SET_MAX_NULL_NONCE_ACTION = "set_max_null_nonce";
-    string constant public SET_MAX_NONCE_WALLET_CURRENCY_ACTION = "set_max_nonce_wallet_currency";
+    string constant public SET_MAX_NONCE_ACTION = "set_max_nonce";
 
     //
     // Variables
@@ -39,13 +39,15 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
 
     mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxNonce;
 
+    bool public upgradesFrozen;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetMaxNullNonceEvent(uint256 maxNullNonce);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
-        uint256 maxNullNonce);
-    event UpdateMaxNullNonceFromCommunityVoteEvent(uint256 maxDriipNonce);
+        uint256 maxNonce);
+    event UpdateMaxNullNonceFromCommunityVoteEvent(uint256 maxNullNonce);
 
     //
     // Constructor
@@ -62,6 +64,7 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     public
     onlyEnabledServiceAction(SET_MAX_NULL_NONCE_ACTION)
     {
+        // Update max nonce value
         maxNullNonce = _maxNullNonce;
 
         // Emit event
@@ -86,8 +89,9 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     function setMaxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency memory currency,
         uint256 _maxNullNonce)
     public
-    onlyEnabledServiceAction(SET_MAX_NONCE_WALLET_CURRENCY_ACTION)
+    onlyEnabledServiceAction(SET_MAX_NONCE_ACTION)
     {
+        // Update max nonce value
         walletCurrencyMaxNonce[wallet][currency.ct][currency.id] = _maxNullNonce;
 
         // Emit event
