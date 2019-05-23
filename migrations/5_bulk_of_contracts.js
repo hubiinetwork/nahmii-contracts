@@ -667,7 +667,7 @@ module.exports = (deployer, network, accounts) => {
                 await instance.setCommunityVote(addressStorage.get('CommunityVote'));
                 await instance.registerService(addressStorage.get('NullSettlement'));
                 await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NULL_NONCE_ACTION.call());
-                await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NONCE_WALLET_CURRENCY_ACTION.call());
+                await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NONCE_ACTION.call());
 
                 instance = await NullSettlement.at(addressStorage.get('NullSettlement'));
                 await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -1127,7 +1127,7 @@ module.exports = (deployer, network, accounts) => {
                 await instance.setCommunityVote(addressStorage.get('CommunityVote'));
                 await instance.registerService(addressStorage.get('NullSettlement'));
                 await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NULL_NONCE_ACTION.call());
-                await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NONCE_WALLET_CURRENCY_ACTION.call());
+                await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NONCE_ACTION.call());
 
                 instance = await NullSettlement.at(addressStorage.get('NullSettlement'));
                 await instance.setConfiguration(addressStorage.get('Configuration'));

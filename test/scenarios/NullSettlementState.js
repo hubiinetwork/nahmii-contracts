@@ -212,7 +212,7 @@ module.exports = (glob) => {
                 ethersCommunityVote._reset();
 
                 filter = await fromBlockTopicsFilter(
-                    ethersNullSettlementState.interface.events.updateMaxNullNonceFromCommunityVoteEvent.topics
+                    ethersNullSettlementState.interface.events.UpdateMaxNullNonceFromCommunityVoteEvent.topics
                 );
             });
 
@@ -268,7 +268,7 @@ module.exports = (glob) => {
             describe('if called by enabled service action', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementState.enableServiceAction(
-                        glob.owner, await ethersNullSettlementState.SET_MAX_NONCE_WALLET_CURRENCY_ACTION(),
+                        glob.owner, await ethersNullSettlementState.SET_MAX_NONCE_ACTION(),
                         {gasLimit: 1e6}
                     );
                 });

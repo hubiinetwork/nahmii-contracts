@@ -11,21 +11,13 @@ const debug = require('debug')('write_driip_settlement_state');
 
 const DriipSettlementState = artifacts.require('DriipSettlementState');
 
+const outDir = 'state/DriipSettlementState';
+const fromBlock = 7588183;
+
 const coder = new utils.AbiCoder();
 
-// NOTE This script requires ethers@^4.0.0
-module.exports = async (callback) => {
-
-    const web3DriipSettlementState = await DriipSettlementState.deployed();
-    const ethersDriipSettlementState = new Contract(web3DriipSettlementState.address, DriipSettlementState.abi, provider);
-
-    const outDir = 'state/DriipSettlementState';
-    await fs.mkdir(outDir, {recursive: true});
-
-    const fromBlock = 7588183;
-
-    // Settlements
-    let logs = await provider.getLogs({
+async function exportSettlements(ethersDriipSettlementState) {
+    const logs = await provider.getLogs({
         topics: [ethersDriipSettlementState.interface.events.InitSettlementEvent.topic],
         fromBlock,
         address: ethersDriipSettlementState.address
@@ -78,37 +70,37 @@ module.exports = async (callback) => {
             null, 2
         )
     );
+}
 
-    // Max nonce by wallet and currency
-    logs = await provider.getLogs({
+async function exportMaxNonces(ethersDriipSettlementState) {
+    const logs = await provider.getLogs({
         topics: [ethersDriipSettlementState.interface.events.SetMaxNonceByWalletAndCurrencyEvent.topic],
         fromBlock,
         address: ethersDriipSettlementState.address
     });
     debug(`# SetMaxNonceByWalletAndCurrencyEvent: ${logs.length}`);
 
-    // console.log(
     await fs.writeFile(
         `${outDir}/max-nonces.json`,
         JSON.stringify(
             logs.map(
                 log => coder.decode(['address', 'address', 'uint256', 'uint256'], log.data)
             ).map(
-                d => ({wallet: d[0], currency: {ct: d[1], id: d[2].toNumber()}, nonce: d[3].toNumber()})
+                d => ({wallet: d[0], currency: {ct: d[1], id: d[2].toNumber()}, maxNonce: d[3].toNumber()})
             ),
             null, 2
         )
     );
+}
 
-    // Total fee
-    logs = await provider.getLogs({
+async function exportTotalFees(ethersDriipSettlementState) {
+    const logs = await provider.getLogs({
         topics: [ethersDriipSettlementState.interface.events.SetTotalFeeEvent.topic],
         fromBlock,
         address: ethersDriipSettlementState.address
     });
     debug(`# SetTotalFeeEvent: ${logs.length}`);
 
-    // console.log(
     await fs.writeFile(
         `${outDir}/total-fees.json`,
         JSON.stringify(
@@ -126,6 +118,29 @@ module.exports = async (callback) => {
             null, 2
         )
     );
+}
+
+// NOTE This script requires ethers@^4.0.0
+module.exports = async (callback) => {
+
+    try {
+        const web3DriipSettlementState = await DriipSettlementState.deployed();
+        const ethersDriipSettlementState = new Contract(web3DriipSettlementState.address, DriipSettlementState.abi, provider);
+
+        await fs.mkdir(outDir, {recursive: true});
+
+        // Settlements
+        await exportSettlements(ethersDriipSettlementState);
+
+        // Max nonces
+        await exportMaxNonces(ethersDriipSettlementState);
+
+        // Total fee
+        await exportTotalFees(ethersDriipSettlementState);
+
+    } catch (e) {
+        callback(e);
+    }
 
     callback();
 };
