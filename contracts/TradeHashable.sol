@@ -49,7 +49,7 @@ contract TradeHashable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier tradeHasherInitialized() {
-        require(address(tradeHasher) != address(0), "Trade hasher not initialized");
+        require(address(tradeHasher) != address(0), "Trade hasher not initialized [TradeHashable.sol:52]");
         _;
     }
 }

@@ -49,7 +49,7 @@ contract PartnerBenefactorable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier partnerBenefactorInitialized() {
-        require(address(partnerBenefactor) != address(0), "Partner benefactor not initialized");
+        require(address(partnerBenefactor) != address(0), "Partner benefactor not initialized [PartnerBenefactorable.sol:52]");
         _;
     }
 }

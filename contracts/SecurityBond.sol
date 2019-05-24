@@ -142,7 +142,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         uint256 currencyId, string memory standard)
     public
     {
-        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive");
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [SecurityBond.sol:145]");
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
@@ -151,7 +151,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
             )
         );
-        require(success, "Reception by controller failed");
+        require(success, "Reception by controller failed [SecurityBond.sol:154]");
 
         // Add to balance
         deposited.add(amount, currencyCt, currencyId);
@@ -347,7 +347,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
                     controller.getApproveSignature(), address(beneficiary), uint256(claimedAmount), currencyCt, currencyId
                 )
             );
-            require(success, "Approval by controller failed");
+            require(success, "Approval by controller failed [SecurityBond.sol:350]");
             beneficiary.receiveTokensTo(msg.sender, balanceType, claimedAmount, currencyCt, currencyId, standard);
         }
 
@@ -383,7 +383,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
     public
     {
         // Require that amount is strictly positive
-        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive");
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [SecurityBond.sol:386]");
 
         // Clamp amount to the max given by staged balance
         amount = amount.clampMax(stagedByWallet[msg.sender].get(currencyCt, currencyId));
@@ -402,7 +402,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
                     controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId
                 )
             );
-            require(success, "Dispatch by controller failed");
+            require(success, "Dispatch by controller failed [SecurityBond.sol:405]");
         }
 
         // Emit event
@@ -424,7 +424,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         // Require that new claim nonce is strictly greater than current stored one
         require(
             claimNonce > claimNonceByWalletCurrency[wallet][currencyCt][currencyId],
-            "Claim nonce not strictly greater than previously claimed nonce"
+            "Claim nonce not strictly greater than previously claimed nonce [SecurityBond.sol:425]"
         );
 
         // Combine claim amount from rewards
@@ -435,7 +435,7 @@ contract SecurityBond is Ownable, Configurable, AccrualBeneficiary, Servable, Tr
         );
 
         // Require that claim amount is strictly positive, indicating that there is an amount to claim
-        require(claimAmount.isNonZeroPositiveInt256(), "Claim amount not strictly positive");
+        require(claimAmount.isNonZeroPositiveInt256(), "Claim amount not strictly positive [SecurityBond.sol:438]");
 
         // Update stored claim nonce for wallet and currency
         claimNonceByWalletCurrency[wallet][currencyCt][currencyId] = claimNonce;

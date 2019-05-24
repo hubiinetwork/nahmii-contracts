@@ -53,7 +53,7 @@ library TxHistoryLib {
     view
     returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
-        require(index < self.deposits.length, "Index ouf of bounds");
+        require(index < self.deposits.length, "Index ouf of bounds [TxHistoryLib.sol:56]");
 
         amount = self.deposits[index].amount;
         blockNumber = self.deposits[index].blockNumber;
@@ -74,7 +74,7 @@ library TxHistoryLib {
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        require(index < self.currencyDeposits[currencyCt][currencyId].length, "Index out of bounds");
+        require(index < self.currencyDeposits[currencyCt][currencyId].length, "Index out of bounds [TxHistoryLib.sol:77]");
 
         amount = self.currencyDeposits[currencyCt][currencyId][index].amount;
         blockNumber = self.currencyDeposits[currencyCt][currencyId][index].blockNumber;
@@ -95,7 +95,7 @@ library TxHistoryLib {
     view
     returns (int256 amount, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
-        require(index < self.withdrawals.length, "Index out of bounds");
+        require(index < self.withdrawals.length, "Index out of bounds [TxHistoryLib.sol:98]");
 
         amount = self.withdrawals[index].amount;
         blockNumber = self.withdrawals[index].blockNumber;
@@ -116,7 +116,7 @@ library TxHistoryLib {
     view
     returns (int256 amount, uint256 blockNumber)
     {
-        require(index < self.currencyWithdrawals[currencyCt][currencyId].length, "Index out of bounds");
+        require(index < self.currencyWithdrawals[currencyCt][currencyId].length, "Index out of bounds [TxHistoryLib.sol:119]");
 
         amount = self.currencyWithdrawals[currencyCt][currencyId][index].amount;
         blockNumber = self.currencyWithdrawals[currencyCt][currencyId][index].blockNumber;

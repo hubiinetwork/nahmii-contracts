@@ -45,7 +45,7 @@ SecurityBondable, WalletLockable {
     onlyOperationalModeNormal
     onlyOperatorSealedPayment(payment)
     {
-        require(validator.isGenuinePaymentWalletHash(payment), "Not genuine payment wallet hash found");
+        require(validator.isGenuinePaymentWalletHash(payment), "Not genuine payment wallet hash found [FraudChallengeByPayment.sol:48]");
 
         // Genuineness affected by wallet not having signed the payment
         bool genuineWalletSignature = validator.isGenuineWalletSignature(
@@ -65,7 +65,7 @@ SecurityBondable, WalletLockable {
     );
 
         // Require existence of fraud signal
-        require(!(genuineWalletSignature && genuineSenderAndFee && genuineRecipient), "Fraud signal not found");
+        require(!(genuineWalletSignature && genuineSenderAndFee && genuineRecipient), "Fraud signal not found [FraudChallengeByPayment.sol:68]");
 
         // Toggle operational mode exit
         configuration.setOperationalModeExit();

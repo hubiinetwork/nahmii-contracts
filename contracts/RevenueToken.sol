@@ -57,7 +57,7 @@ contract RevenueToken is ERC20Mintable {
     onlyMinter
     returns (bool)
     {
-        require(!mintingDisabled, "Minting disabled");
+        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:60]");
 
         // Call super's mint, including event emission
         bool minted = super.mint(to, value);
@@ -120,7 +120,7 @@ contract RevenueToken is ERC20Mintable {
         // Prevent the update of non-zero allowance
         require(
             0 == value || 0 == allowance(msg.sender, spender),
-            "Value or allowance non-zero"
+            "Value or allowance non-zero [RevenueToken.sol:121]"
         );
 
         // Call super's approve, including event emission
@@ -170,8 +170,8 @@ contract RevenueToken is ERC20Mintable {
     view
     returns (uint256)
     {
-        require(startBlock < endBlock, "Bounds parameters mismatch");
-        require(account != address(0), "Account is null address");
+        require(startBlock < endBlock, "Bounds parameters mismatch [RevenueToken.sol:173]");
+        require(account != address(0), "Account is null address [RevenueToken.sol:174]");
 
         if (balanceBlockNumbers[account].length == 0 || endBlock < balanceBlockNumbers[account][0])
             return 0;
@@ -256,7 +256,7 @@ contract RevenueToken is ERC20Mintable {
     view
     returns (address[] memory)
     {
-        require(low <= up, "Bounds parameters mismatch");
+        require(low <= up, "Bounds parameters mismatch [RevenueToken.sol:259]");
 
         up = up > holders.length - 1 ? holders.length - 1 : up;
 

@@ -49,7 +49,7 @@ contract SecurityBondable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier securityBondInitialized() {
-        require(address(securityBond) != address(0), "Security bond not initialized");
+        require(address(securityBond) != address(0), "Security bond not initialized [SecurityBondable.sol:52]");
         _;
     }
 }

@@ -712,7 +712,7 @@ contract Configuration is Modifiable, Ownable, Servable {
     public
     onlyOperator
     {
-        require(!earliestSettlementBlockNumberUpdateDisabled, "Earliest settlement block number update disabled");
+        require(!earliestSettlementBlockNumberUpdateDisabled, "Earliest settlement block number update disabled [Configuration.sol:715]");
 
         earliestSettlementBlockNumber = _earliestSettlementBlockNumber;
         emit SetEarliestSettlementBlockNumberEvent(earliestSettlementBlockNumber);
@@ -735,7 +735,7 @@ contract Configuration is Modifiable, Ownable, Servable {
         require(
             0 == updateDelayBlocksByBlockNumber.count() ||
         blockNumber >= block.number + updateDelayBlocksByBlockNumber.currentValue(),
-            "Block number not sufficiently delayed"
+            "Block number not sufficiently delayed [Configuration.sol:735]"
         );
         _;
     }

@@ -102,7 +102,7 @@ contract SignerManageable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier signerManagerInitialized() {
-        require(address(signerManager) != address(0), "Signer manager not initialized");
+        require(address(signerManager) != address(0), "Signer manager not initialized [SignerManageable.sol:105]");
         _;
     }
 }

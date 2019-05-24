@@ -49,7 +49,7 @@ contract Configurable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier configurationInitialized() {
-        require(address(configuration) != address(0), "Configuration not initialized");
+        require(address(configuration) != address(0), "Configuration not initialized [Configurable.sol:52]");
         _;
     }
 }

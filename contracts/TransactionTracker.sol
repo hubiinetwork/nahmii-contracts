@@ -186,7 +186,7 @@ contract TransactionTracker is Ownable, Servable {
     {
         require(
             0 < transactionLogByWalletType[wallet][_type].records.length,
-            "No transactions found for wallet and type"
+            "No transactions found for wallet and type [TransactionTracker.sol:187]"
         );
         for (uint256 i = transactionLogByWalletType[wallet][_type].records.length - 1; i >= 0; i--)
             if (blockNumber >= transactionLogByWalletType[wallet][_type].records[i].blockNumber)
@@ -202,7 +202,7 @@ contract TransactionTracker is Ownable, Servable {
     {
         require(
             0 < transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length,
-            "No transactions found for wallet, type and currency"
+            "No transactions found for wallet, type and currency [TransactionTracker.sol:203]"
         );
         for (uint256 i = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId].length - 1; i >= 0; i--) {
             uint256 j = transactionLogByWalletType[wallet][_type].recordIndicesByCurrency[currencyCt][currencyId][i];
