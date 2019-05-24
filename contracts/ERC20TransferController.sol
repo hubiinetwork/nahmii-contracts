@@ -61,7 +61,7 @@ contract ERC20TransferController is TransferController {
         require(amount > 0, "Amount is strictly positive");
         require(currencyId == 0, "Currency ID is not 0");
 
-        require(IERC20(currencyCt).approve(to, amount));
+        require(IERC20(currencyCt).approve(to, amount), "Approval not successful");
     }
 
     /// @notice MUST be called with DELEGATECALL

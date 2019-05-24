@@ -448,7 +448,8 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, currency) ||
-        nullSettlementChallengeState.hasProposalExpired(wallet, currency)
+        nullSettlementChallengeState.hasProposalExpired(wallet, currency),
+            "Overlapping null settlement challenge proposal found"
         );
 
         // Get the last logged active balance amount and block number, properties of overlapping DSC
