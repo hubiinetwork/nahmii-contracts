@@ -157,7 +157,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
         // Require partner index is one of registered partner
-        require(0 < partnerIndex && partnerIndex <= partners.length, "Some error message when require fails");
+        require(0 < partnerIndex && partnerIndex <= partners.length, "Some error message when require fails [PartnerFund.sol:160]");
 
         return _depositByIndices(partnerIndex - 1, depositIndex);
     }
@@ -210,7 +210,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (uint256)
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length, "Some error message when require fails");
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:213]");
 
         return _depositsCountByIndex(index - 1);
     }
@@ -262,7 +262,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (int256)
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length, "Some error message when require fails");
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:265]");
 
         return _activeBalanceByIndex(index - 1, currencyCt, currencyId);
     }
@@ -320,7 +320,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (int256)
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length, "Some error message when require fails");
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:323]");
 
         return _stagedBalanceByIndex(index - 1, currencyCt, currencyId);
     }
@@ -389,7 +389,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     onlyOperator
     {
         // Require not empty name string
-        require(bytes(name).length > 0, "Some error message when require fails");
+        require(bytes(name).length > 0, "Some error message when require fails [PartnerFund.sol:392]");
 
         // Hash name
         bytes32 nameHash = hashName(name);
@@ -428,7 +428,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (uint256)
     {
         uint256 index = _indexByNameHash[nameHash];
-        require(0 < index, "Some error message when require fails");
+        require(0 < index, "Some error message when require fails [PartnerFund.sol:431]");
         return index;
     }
 
@@ -452,7 +452,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (uint256)
     {
         uint256 index = _indexByWallet[wallet];
-        require(0 < index, "Some error message when require fails");
+        require(0 < index, "Some error message when require fails [PartnerFund.sol:455]");
         return index;
     }
 
@@ -498,7 +498,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (uint256)
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length, "Some error message when require fails");
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:501]");
 
         return _partnerFeeByIndex(index - 1);
     }
@@ -546,7 +546,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     public
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length, "Some error message when require fails");
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:549]");
 
         // Update fee
         uint256 oldFee = _setPartnerFeeByIndex(index - 1, newFee);
@@ -603,7 +603,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (address)
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length, "Some error message when require fails");
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:606]");
 
         return partners[index - 1].wallet;
     }
@@ -639,7 +639,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     public
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length, "Some error message when require fails");
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:642]");
 
         // Update wallet
         address oldWallet = _setPartnerWalletByIndex(index - 1, newWallet);
@@ -698,7 +698,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         uint256 index = indexByWallet(msg.sender);
 
         // Require positive amount
-        require(amount.isPositiveInt256(), "Some error message when require fails");
+        require(amount.isPositiveInt256(), "Some error message when require fails [PartnerFund.sol:701]");
 
         // Clamp amount to move
         amount = amount.clampMax(partners[index - 1].active.get(currencyCt, currencyId));
@@ -733,7 +733,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         uint256 index = indexByWallet(msg.sender);
 
         // Require positive amount
-        require(amount.isPositiveInt256(), "Some error message when require fails");
+        require(amount.isPositiveInt256(), "Some error message when require fails [PartnerFund.sol:736]");
 
         // Clamp amount to move
         amount = amount.clampMax(partners[index - 1].staged.get(currencyCt, currencyId));
@@ -751,7 +751,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
                     controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId
                 )
             );
-            require(success, "Some error message when require fails");
+            require(success, "Some error message when require fails [PartnerFund.sol:754]");
         }
 
         // Emit event
@@ -766,7 +766,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     private
     {
         // Require that index is within bounds
-        require(index < partners.length, "Some error message when require fails");
+        require(index < partners.length, "Some error message when require fails [PartnerFund.sol:769]");
 
         // Add to active
         partners[index].active.add(amount, address(0), 0);
@@ -791,9 +791,9 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     private
     {
         // Require that index is within bounds
-        require(index < partners.length, "Some error message when require fails");
+        require(index < partners.length, "Some error message when require fails [PartnerFund.sol:794]");
 
-        require(amount.isNonZeroPositiveInt256(), "Some error message when require fails");
+        require(amount.isNonZeroPositiveInt256(), "Some error message when require fails [PartnerFund.sol:796]");
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
@@ -802,7 +802,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
             )
         );
-        require(success, "Some error message when require fails");
+        require(success, "Some error message when require fails [PartnerFund.sol:805]");
 
         // Add to active
         partners[index].active.add(amount, currencyCt, currencyId);
@@ -827,7 +827,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     view
     returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
-        require(depositIndex < partners[partnerIndex].fullBalanceHistory.length, "Some error message when require fails");
+        require(depositIndex < partners[partnerIndex].fullBalanceHistory.length, "Some error message when require fails [PartnerFund.sol:830]");
 
         FullBalanceHistory storage entry = partners[partnerIndex].fullBalanceHistory[depositIndex];
         (,, currencyCt, currencyId) = partners[partnerIndex].txHistory.deposit(entry.listIndex);
@@ -868,10 +868,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     private
     {
         // Require that the name is not previously registered
-        require(0 == _indexByNameHash[nameHash], "Some error message when require fails");
+        require(0 == _indexByNameHash[nameHash], "Some error message when require fails [PartnerFund.sol:871]");
 
         // Require possibility to update
-        require(partnerCanUpdate || operatorCanUpdate, "Some error message when require fails");
+        require(partnerCanUpdate || operatorCanUpdate, "Some error message when require fails [PartnerFund.sol:874]");
 
         // Add new partner
         partners.length++;
@@ -903,14 +903,14 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         // If operator tries to change verify that operator has access
         if (isOperator())
-            require(partners[index].operatorCanUpdate, "Some error message when require fails");
+            require(partners[index].operatorCanUpdate, "Some error message when require fails [PartnerFund.sol:906]");
 
         else {
             // Require that msg.sender is partner
-            require(msg.sender == partners[index].wallet, "Some error message when require fails");
+            require(msg.sender == partners[index].wallet, "Some error message when require fails [PartnerFund.sol:910]");
 
             // If partner tries to change verify that partner has access
-            require(partners[index].partnerCanUpdate, "Some error message when require fails");
+            require(partners[index].partnerCanUpdate, "Some error message when require fails [PartnerFund.sol:913]");
         }
 
         // Update stored fee
@@ -928,21 +928,21 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         // If address has not been set operator is the only allowed to change it
         if (oldWallet == address(0))
-            require(isOperator(), "Some error message when require fails");
+            require(isOperator(), "Some error message when require fails [PartnerFund.sol:931]");
 
         // Else if operator tries to change verify that operator has access
         else if (isOperator())
-            require(partners[index].operatorCanUpdate, "Some error message when require fails");
+            require(partners[index].operatorCanUpdate, "Some error message when require fails [PartnerFund.sol:935]");
 
         else {
             // Require that msg.sender is partner
-            require(msg.sender == oldWallet, "Some error message when require fails");
+            require(msg.sender == oldWallet, "Some error message when require fails [PartnerFund.sol:939]");
 
             // If partner tries to change verify that partner has access
-            require(partners[index].partnerCanUpdate, "Some error message when require fails");
+            require(partners[index].partnerCanUpdate, "Some error message when require fails [PartnerFund.sol:942]");
 
             // Require that new wallet is not zero-address if it can not be changed by operator
-            require(partners[index].operatorCanUpdate || newWallet != address(0), "Some error message when require fails");
+            require(partners[index].operatorCanUpdate || newWallet != address(0), "Some error message when require fails [PartnerFund.sol:945]");
         }
 
         // Update stored wallet

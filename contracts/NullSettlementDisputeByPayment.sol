@@ -83,25 +83,25 @@ BalanceTrackable, FraudChallengable, Servable {
     onlyPaymentSender(payment, wallet)
     {
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash), "Payment deemed fraudulent");
+        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash), "Payment deemed fraudulent [NullSettlementDisputeByPayment.sol:86]");
 
         // Require that proposal has been initiated
-        require(nullSettlementChallengeState.hasProposal(wallet, payment.currency), "No proposal found");
+        require(nullSettlementChallengeState.hasProposal(wallet, payment.currency), "No proposal found [NullSettlementDisputeByPayment.sol:89]");
 
         // Require that proposal has not expired
-        require(!nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency), "Proposal found expired");
+        require(!nullSettlementChallengeState.hasProposalExpired(wallet, payment.currency), "Proposal found expired [NullSettlementDisputeByPayment.sol:92]");
 
         // Require that payment party's nonce is strictly greater than proposal's nonce and its current
         // disqualification nonce
         require(payment.sender.nonce > nullSettlementChallengeState.proposalNonce(
             wallet, payment.currency
-        ), "Payment nonce not strictly greater than proposal nonce");
+        ), "Payment nonce not strictly greater than proposal nonce [NullSettlementDisputeByPayment.sol:96]");
         require(payment.sender.nonce > nullSettlementChallengeState.proposalDisqualificationNonce(
             wallet, payment.currency
-        ), "Payment nonce not strictly greater than proposal disqualification nonce");
+        ), "Payment nonce not strictly greater than proposal disqualification nonce [NullSettlementDisputeByPayment.sol:99]");
 
         // Require overrun for this payment to be a valid challenge candidate
-        require(_overrun(wallet, payment), "No overrun found");
+        require(_overrun(wallet, payment), "No overrun found [NullSettlementDisputeByPayment.sol:104]");
 
         // Reward challenger
         _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger);

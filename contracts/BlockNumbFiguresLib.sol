@@ -65,7 +65,7 @@ library BlockNumbFiguresLib {
         require(
             0 == self.entries.length ||
         blockNumber > self.entries[self.entries.length - 1].blockNumber,
-            "Later entry found"
+            "Later entry found [BlockNumbFiguresLib.sol:65]"
         );
 
         self.entries.push(Entry(blockNumber, value));
@@ -92,7 +92,7 @@ library BlockNumbFiguresLib {
     view
     returns (uint256)
     {
-        require(0 < self.entries.length, "No entries found");
+        require(0 < self.entries.length, "No entries found [BlockNumbFiguresLib.sol:95]");
         for (uint256 i = self.entries.length - 1; i >= 0; i--)
             if (blockNumber >= self.entries[i].blockNumber)
                 return i;

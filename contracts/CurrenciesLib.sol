@@ -48,7 +48,7 @@ library CurrenciesLib {
     function removeByIndex(Currencies storage self, uint256 index)
     internal
     {
-        require(index < self.currencies.length, "Index out of bounds");
+        require(index < self.currencies.length, "Index out of bounds [CurrenciesLib.sol:51]");
 
         address currencyCt = self.currencies[index].ct;
         uint256 currencyId = self.currencies[index].id;
@@ -82,7 +82,7 @@ library CurrenciesLib {
     view
     returns (MonetaryTypesLib.Currency memory)
     {
-        require(index < self.currencies.length, "Index out of bounds");
+        require(index < self.currencies.length, "Index out of bounds [CurrenciesLib.sol:85]");
         return self.currencies[index];
     }
 
@@ -91,8 +91,8 @@ library CurrenciesLib {
     view
     returns (MonetaryTypesLib.Currency[] memory)
     {
-        require(0 < self.currencies.length, "No currencies found");
-        require(low <= up, "Bounds parameters mismatch");
+        require(0 < self.currencies.length, "No currencies found [CurrenciesLib.sol:94]");
+        require(low <= up, "Bounds parameters mismatch [CurrenciesLib.sol:95]");
 
         up = up.clampMax(self.currencies.length - 1);
         MonetaryTypesLib.Currency[] memory _currencies = new MonetaryTypesLib.Currency[](up - low + 1);

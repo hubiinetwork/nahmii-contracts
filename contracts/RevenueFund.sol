@@ -112,7 +112,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
         address currencyCt, uint256 currencyId, string memory standard)
     public
     {
-        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive");
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [RevenueFund.sol:115]");
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
@@ -121,7 +121,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
             )
         );
-        require(success, "Reception by controller failed");
+        require(success, "Reception by controller failed [RevenueFund.sol:124]");
 
         // Add to balances
         periodAccrual.add(amount, currencyCt, currencyId);
@@ -235,7 +235,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
     {
         require(
             ConstantsLib.PARTS_PER() == totalBeneficiaryFraction,
-            "Total beneficiary fraction out of bounds"
+            "Total beneficiary fraction out of bounds [RevenueFund.sol:236]"
         );
 
         // Execute transfer
@@ -271,7 +271,7 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
                                     controller.getApproveSignature(), address(beneficiary), uint256(transferable), currency.ct, currency.id
                                 )
                             );
-                            require(success, "Approval by controller failed");
+                            require(success, "Approval by controller failed [RevenueFund.sol:274]");
 
                             beneficiary.receiveTokensTo(address(0), "", transferable, currency.ct, currency.id, "");
                         }

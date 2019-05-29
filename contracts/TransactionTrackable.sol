@@ -40,7 +40,7 @@ contract TransactionTrackable is Ownable {
     notSameAddresses(address(newTransactionTracker), address(transactionTracker))
     {
         // Require that this contract has not been frozen
-        require(!transactionTrackerFrozen, "Transaction tracker frozen");
+        require(!transactionTrackerFrozen, "Transaction tracker frozen [TransactionTrackable.sol:43]");
 
         // Update fields
         TransactionTracker oldTransactionTracker = transactionTracker;
@@ -66,7 +66,7 @@ contract TransactionTrackable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier transactionTrackerInitialized() {
-        require(address(transactionTracker) != address(0), "Transaction track not initialized");
+        require(address(transactionTracker) != address(0), "Transaction track not initialized [TransactionTrackable.sol:69]");
         _;
     }
 }

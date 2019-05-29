@@ -55,10 +55,10 @@ contract TransferControllerManager is Ownable {
     onlyDeployer
     notNullAddress(controller)
     {
-        require(bytes(standard).length > 0, "Empty standard not supported");
+        require(bytes(standard).length > 0, "Empty standard not supported [TransferControllerManager.sol:58]");
         bytes32 standardHash = keccak256(abi.encodePacked(standard));
 
-        require(registeredTransferControllers[standardHash] == address(0), "Standard previously registered");
+        require(registeredTransferControllers[standardHash] == address(0), "Standard previously registered [TransferControllerManager.sol:61]");
 
         registeredTransferControllers[standardHash] = controller;
 
@@ -71,12 +71,12 @@ contract TransferControllerManager is Ownable {
     onlyDeployer
     notNullAddress(controller)
     {
-        require(bytes(newStandard).length > 0, "Empty new standard not supported");
+        require(bytes(newStandard).length > 0, "Empty new standard not supported [TransferControllerManager.sol:74]");
         bytes32 oldStandardHash = keccak256(abi.encodePacked(oldStandard));
         bytes32 newStandardHash = keccak256(abi.encodePacked(newStandard));
 
-        require(registeredTransferControllers[oldStandardHash] != address(0), "Old standard not registered");
-        require(registeredTransferControllers[newStandardHash] == address(0), "New standard previously registered");
+        require(registeredTransferControllers[oldStandardHash] != address(0), "Old standard not registered [TransferControllerManager.sol:78]");
+        require(registeredTransferControllers[newStandardHash] == address(0), "New standard previously registered [TransferControllerManager.sol:79]");
 
         registeredTransferControllers[newStandardHash] = registeredTransferControllers[oldStandardHash];
         registeredTransferControllers[oldStandardHash] = address(0);
@@ -90,10 +90,10 @@ contract TransferControllerManager is Ownable {
     onlyOperator
     notNullAddress(currencyCt)
     {
-        require(bytes(standard).length > 0, "Empty standard not supported");
+        require(bytes(standard).length > 0, "Empty standard not supported [TransferControllerManager.sol:93]");
         bytes32 standardHash = keccak256(abi.encodePacked(standard));
 
-        require(registeredCurrencies[currencyCt].standard == bytes32(0), "Currency previously registered");
+        require(registeredCurrencies[currencyCt].standard == bytes32(0), "Currency previously registered [TransferControllerManager.sol:96]");
 
         registeredCurrencies[currencyCt].standard = standardHash;
 
@@ -105,7 +105,7 @@ contract TransferControllerManager is Ownable {
     external
     onlyOperator
     {
-        require(registeredCurrencies[currencyCt].standard != 0, "Currency not registered");
+        require(registeredCurrencies[currencyCt].standard != 0, "Currency not registered [TransferControllerManager.sol:108]");
 
         registeredCurrencies[currencyCt].standard = bytes32(0);
         registeredCurrencies[currencyCt].blacklisted = false;
@@ -118,7 +118,7 @@ contract TransferControllerManager is Ownable {
     external
     onlyOperator
     {
-        require(registeredCurrencies[currencyCt].standard != bytes32(0), "Currency not registered");
+        require(registeredCurrencies[currencyCt].standard != bytes32(0), "Currency not registered [TransferControllerManager.sol:121]");
 
         registeredCurrencies[currencyCt].blacklisted = true;
 
@@ -130,7 +130,7 @@ contract TransferControllerManager is Ownable {
     external
     onlyOperator
     {
-        require(registeredCurrencies[currencyCt].standard != bytes32(0), "Currency not registered");
+        require(registeredCurrencies[currencyCt].standard != bytes32(0), "Currency not registered [TransferControllerManager.sol:133]");
 
         registeredCurrencies[currencyCt].blacklisted = false;
 
@@ -149,15 +149,15 @@ contract TransferControllerManager is Ownable {
         if (bytes(standard).length > 0) {
             bytes32 standardHash = keccak256(abi.encodePacked(standard));
 
-            require(registeredTransferControllers[standardHash] != address(0), "Standard not registered");
+            require(registeredTransferControllers[standardHash] != address(0), "Standard not registered [TransferControllerManager.sol:152]");
             return TransferController(registeredTransferControllers[standardHash]);
         }
 
-        require(registeredCurrencies[currencyCt].standard != bytes32(0), "Currency not registered");
-        require(!registeredCurrencies[currencyCt].blacklisted, "Currency blacklisted");
+        require(registeredCurrencies[currencyCt].standard != bytes32(0), "Currency not registered [TransferControllerManager.sol:156]");
+        require(!registeredCurrencies[currencyCt].blacklisted, "Currency blacklisted [TransferControllerManager.sol:157]");
 
         address controllerAddress = registeredTransferControllers[registeredCurrencies[currencyCt].standard];
-        require(controllerAddress != address(0), "No matching transfer controller");
+        require(controllerAddress != address(0), "No matching transfer controller [TransferControllerManager.sol:160]");
 
         return TransferController(controllerAddress);
     }

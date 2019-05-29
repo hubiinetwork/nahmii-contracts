@@ -52,47 +52,47 @@ contract ValidatableV2 is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier validatorInitialized() {
-        require(address(validator) != address(0), "Validator not initialized");
+        require(address(validator) != address(0), "Validator not initialized [ValidatableV2.sol:55]");
         _;
     }
 
     modifier onlySealedOrder(TradeTypesLib.Order memory order) {
-        require(validator.isGenuineOrderSeals(order), "Order seals not genuine");
+        require(validator.isGenuineOrderSeals(order), "Order seals not genuine [ValidatableV2.sol:60]");
         _;
     }
 
     modifier onlyOperatorSealedOrder(TradeTypesLib.Order memory order) {
-        require(validator.isGenuineOrderOperatorSeal(order), "Order operator seal not genuine");
+        require(validator.isGenuineOrderOperatorSeal(order), "Order operator seal not genuine [ValidatableV2.sol:65]");
         _;
     }
 
     modifier onlySealedTrade(TradeTypesLib.Trade memory trade) {
-        require(validator.isGenuineTradeSeal(trade), "Trade seal not genuine");
+        require(validator.isGenuineTradeSeal(trade), "Trade seal not genuine [ValidatableV2.sol:70]");
         _;
     }
 
     modifier onlyOperatorSealedPayment(PaymentTypesLib.Payment memory payment) {
-        require(validator.isGenuinePaymentOperatorSeal(payment), "Paymet operator seal not genuine");
+        require(validator.isGenuinePaymentOperatorSeal(payment), "Paymet operator seal not genuine [ValidatableV2.sol:75]");
         _;
     }
 
     modifier onlySealedPayment(PaymentTypesLib.Payment memory payment) {
-        require(validator.isGenuinePaymentSeals(payment), "Paymet seals not genuine");
+        require(validator.isGenuinePaymentSeals(payment), "Paymet seals not genuine [ValidatableV2.sol:80]");
         _;
     }
 
     modifier onlyTradeParty(TradeTypesLib.Trade memory trade, address wallet) {
-        require(validator.isTradeParty(trade, wallet), "Wallet not trade party");
+        require(validator.isTradeParty(trade, wallet), "Wallet not trade party [ValidatableV2.sol:85]");
         _;
     }
 
     modifier onlyPaymentParty(PaymentTypesLib.Payment memory payment, address wallet) {
-        require(validator.isPaymentParty(payment, wallet), "Wallet not payment party");
+        require(validator.isPaymentParty(payment, wallet), "Wallet not payment party [ValidatableV2.sol:90]");
         _;
     }
 
     modifier onlyPaymentSender(PaymentTypesLib.Payment memory payment, address wallet) {
-        require(validator.isPaymentSender(payment, wallet), "Wallet not payment sender");
+        require(validator.isPaymentSender(payment, wallet), "Wallet not payment sender [ValidatableV2.sol:95]");
         _;
     }
 }

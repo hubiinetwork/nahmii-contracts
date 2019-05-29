@@ -56,10 +56,10 @@ contract AccrualBenefactor is Benefactor {
     notNullAddress(address(beneficiary))
     returns (bool)
     {
-        require(fraction > 0, "Fraction not strictly positive");
+        require(fraction > 0, "Fraction not strictly positive [AccrualBenefactor.sol:59]");
         require(
             totalBeneficiaryFraction.add(fraction) <= ConstantsLib.PARTS_PER(),
-            "Total beneficiary fraction out of bounds"
+            "Total beneficiary fraction out of bounds [AccrualBenefactor.sol:60]"
         );
 
         if (!super.registerBeneficiary(beneficiary))

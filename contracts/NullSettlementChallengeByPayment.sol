@@ -113,7 +113,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     {
         // Require that wallet is not locked
-        require(!walletLocker.isLocked(msg.sender), "Wallet found locked");
+        require(!walletLocker.isLocked(msg.sender), "Wallet found locked [NullSettlementChallengeByPayment.sol:116]");
 
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
@@ -442,13 +442,14 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Require that current block number is beyond the earliest settlement challenge block number
         require(
             block.number >= configuration.earliestSettlementBlockNumber(),
-            "Current block number below earliest settlement block number"
+            "Current block number below earliest settlement block number [NullSettlementChallengeByPayment.sol:443]"
         );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, currency) ||
-        nullSettlementChallengeState.hasProposalExpired(wallet, currency)
+        nullSettlementChallengeState.hasProposalExpired(wallet, currency),
+            "Overlapping null settlement challenge proposal found [NullSettlementChallengeByPayment.sol:449]"
         );
 
         // Get the last logged active balance amount and block number, properties of overlapping DSC
@@ -477,8 +478,8 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     private
     {
         // Require that there is an unterminated driip settlement challenge proposal
-        require(nullSettlementChallengeState.hasProposal(wallet, currency), "No proposal found");
-        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated");
+        require(nullSettlementChallengeState.hasProposal(wallet, currency), "No proposal found [NullSettlementChallengeByPayment.sol:481]");
+        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated [NullSettlementChallengeByPayment.sol:482]");
 
         // Terminate driip settlement challenge proposal
         nullSettlementChallengeState.terminateProposal(

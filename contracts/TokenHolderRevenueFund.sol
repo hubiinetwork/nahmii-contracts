@@ -154,7 +154,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         uint256 currencyId, string memory standard)
     public
     {
-        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive");
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:157]");
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
@@ -163,7 +163,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
             )
         );
-        require(success, "Reception by controller failed");
+        require(success, "Reception by controller failed [TokenHolderRevenueFund.sol:166]");
 
         // Add to balances
         periodAccrual.add(amount, currencyCt, currencyId);
@@ -346,7 +346,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                     controller.getApproveSignature(), address(beneficiary), uint256(claimedAmount), currencyCt, currencyId
                 )
             );
-            require(success, "Approval by controller failed");
+            require(success, "Approval by controller failed [TokenHolderRevenueFund.sol:349]");
 
             // Transfer tokens to the beneficiary
             beneficiary.receiveTokensTo(destWallet, balanceType, claimedAmount, currencyCt, currencyId, standard);
@@ -381,7 +381,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     public
     {
         // Require that amount is strictly positive
-        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive");
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:384]");
 
         // Clamp amount to the max given by staged balance
         amount = amount.clampMax(stagedByWallet[msg.sender].get(currencyCt, currencyId));
@@ -400,7 +400,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                     controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId
                 )
             );
-            require(success, "Dispatch by controller failed");
+            require(success, "Dispatch by controller failed [TokenHolderRevenueFund.sol:403]");
         }
 
         // Emit event
@@ -415,7 +415,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     returns (int256)
     {
         // Require that at least one accrual period has terminated
-        require(0 < accrualBlockNumbersByCurrency[currencyCt][currencyId].length, "No terminated accrual period found");
+        require(0 < accrualBlockNumbersByCurrency[currencyCt][currencyId].length, "No terminated accrual period found [TokenHolderRevenueFund.sol:418]");
 
         // Calculate lower block number as last accrual block number claimed for currency c by wallet OR 0
         uint256[] storage claimedAccrualBlockNumbers = claimedAccrualBlockNumbersByWalletCurrency[wallet][currencyCt][currencyId];
@@ -425,14 +425,14 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         uint256 bnUp = accrualBlockNumbersByCurrency[currencyCt][currencyId][accrualBlockNumbersByCurrency[currencyCt][currencyId].length - 1];
 
         // Require that lower block number is below upper block number
-        require(bnLow < bnUp, "Bounds parameters mismatch");
+        require(bnLow < bnUp, "Bounds parameters mismatch [TokenHolderRevenueFund.sol:428]");
 
         // Calculate the amount that is claimable in the span between lower and upper block numbers
         int256 claimableAmount = aggregateAccrualAmountByCurrencyBlockNumber[currencyCt][currencyId][bnUp]
         - (0 == bnLow ? 0 : aggregateAccrualAmountByCurrencyBlockNumber[currencyCt][currencyId][bnLow]);
 
         // Require that claimable amount is strictly positive
-        require(claimableAmount.isNonZeroPositiveInt256(), "Claimable amount not strictly positive");
+        require(claimableAmount.isNonZeroPositiveInt256(), "Claimable amount not strictly positive [TokenHolderRevenueFund.sol:435]");
 
         // Retrieve the balance blocks of wallet
         int256 walletBalanceBlocks = int256(

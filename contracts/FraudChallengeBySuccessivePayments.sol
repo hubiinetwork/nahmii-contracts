@@ -61,17 +61,17 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     onlySealedPayment(firstPayment)
     onlySealedPayment(lastPayment)
     {
-        require(validator.isPaymentParty(firstPayment, wallet), "Wallet not party in first payment");
-        require(validator.isPaymentParty(lastPayment, wallet), "Wallet not party in last payment");
+        require(validator.isPaymentParty(firstPayment, wallet), "Wallet not party in first payment [FraudChallengeBySuccessivePayments.sol:64]");
+        require(validator.isPaymentParty(lastPayment, wallet), "Wallet not party in last payment [FraudChallengeBySuccessivePayments.sol:65]");
 
-        require(validator.isPaymentCurrency(firstPayment, lastPayment.currency), "Differing payment currencies found");
+        require(validator.isPaymentCurrency(firstPayment, lastPayment.currency), "Differing payment currencies found [FraudChallengeBySuccessivePayments.sol:67]");
 
         PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole = _paymentPartyRole(firstPayment, wallet);
         PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole = _paymentPartyRole(lastPayment, wallet);
 
         require(
             validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole),
-            "Non-successive payment party nonces found"
+            "Non-successive payment party nonces found [FraudChallengeBySuccessivePayments.sol:72]"
         );
 
         int256 deltaActiveBalance = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
@@ -82,7 +82,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
         require(
             !(validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole, deltaActiveBalance) &&
         validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment)),
-            "Fraud signal not found"
+            "Fraud signal not found [FraudChallengeBySuccessivePayments.sol:82]"
         );
 
         // Toggle operational mode exit

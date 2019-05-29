@@ -101,7 +101,7 @@ library BlockNumbDisdIntsLib {
         require(
             0 == self.entries.length ||
         blockNumber > self.entries[self.entries.length - 1].blockNumber,
-            "Later entry found"
+            "Later entry found [BlockNumbDisdIntsLib.sol:101]"
         );
 
         self.entries.length++;
@@ -115,7 +115,7 @@ library BlockNumbDisdIntsLib {
         int256[] memory discountTiers, int256[] memory discountValues)
     internal
     {
-        require(discountTiers.length == discountValues.length, "Parameter array lengths mismatch");
+        require(discountTiers.length == discountValues.length, "Parameter array lengths mismatch [BlockNumbDisdIntsLib.sol:118]");
 
         addNominalEntry(self, blockNumber, nominal);
 
@@ -145,7 +145,7 @@ library BlockNumbDisdIntsLib {
     view
     returns (uint256)
     {
-        require(0 < self.entries.length, "No entries found");
+        require(0 < self.entries.length, "No entries found [BlockNumbDisdIntsLib.sol:148]");
         for (uint256 i = self.entries.length - 1; i >= 0; i--)
             if (blockNumber >= self.entries[i].blockNumber)
                 return i;
@@ -158,7 +158,7 @@ library BlockNumbDisdIntsLib {
     pure
     returns (uint256)
     {
-        require(0 < discounts.length, "No discounts found");
+        require(0 < discounts.length, "No discounts found [BlockNumbDisdIntsLib.sol:161]");
         for (uint256 i = discounts.length; i > 0; i--)
             if (tier >= discounts[i - 1].tier)
                 return i;
