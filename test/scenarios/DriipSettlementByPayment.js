@@ -474,7 +474,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -484,7 +484,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -494,7 +494,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -504,7 +504,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -514,7 +514,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -524,7 +524,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -534,7 +534,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -544,7 +544,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -554,7 +554,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -566,7 +566,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -581,7 +581,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
 
@@ -591,13 +591,13 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
 
                 describe('if operational mode is normal and data is available', () => {
                     it('should settle payment successfully', async () => {
-                        await ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6});
+                        await ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics
@@ -620,6 +620,7 @@ module.exports = (glob) => {
                         settledBalanceUpdate[1]._bn.should.eq.BN(payment.sender.balances.current._bn);
                         settledBalanceUpdate[2].should.equal(payment.currency.ct);
                         settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
+                        settledBalanceUpdate[4].should.equal('ERCXYZ');
 
                         (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
@@ -629,6 +630,7 @@ module.exports = (glob) => {
                         holdingStage[2]._bn.should.eq.BN(payment.sender.balances.current._bn);
                         holdingStage[3].should.equal(payment.currency.ct);
                         holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
+                        holdingStage[5].should.equal('ERCXYZ');
 
                         (await ethersClientFund._beneficiaryTransfersCount())._bn.should.eq.BN(1);
 
@@ -638,6 +640,8 @@ module.exports = (glob) => {
                         totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
                         totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
                         totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
+                        totalFeeTransfer[5].should.equal('ERCXYZ');
+
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
                         const settlement = await ethersDriipSettlementState.settlements(0);
@@ -673,7 +677,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByPayment.settlePayment(payment, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
             });
@@ -708,7 +712,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -718,7 +722,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -728,7 +732,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -738,7 +742,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -748,7 +752,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -758,7 +762,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -768,7 +772,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -778,7 +782,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -788,7 +792,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -798,7 +802,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -810,7 +814,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -825,7 +829,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
 
@@ -835,13 +839,13 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
 
                 describe('if operational mode is normal and data is available', () => {
                     it('should settle payment successfully', async () => {
-                        await ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6});
+                        await ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics
@@ -864,6 +868,7 @@ module.exports = (glob) => {
                         settledBalanceUpdate[1]._bn.should.eq.BN(payment.sender.balances.current._bn);
                         settledBalanceUpdate[2].should.equal(payment.currency.ct);
                         settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
+                        settledBalanceUpdate[4].should.equal('ERCXYZ');
 
                         (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
@@ -873,6 +878,7 @@ module.exports = (glob) => {
                         holdingStage[2]._bn.should.eq.BN(payment.sender.balances.current._bn);
                         holdingStage[3].should.equal(payment.currency.ct);
                         holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
+                        holdingStage[5].should.equal('ERCXYZ');
 
                         (await ethersClientFund._beneficiaryTransfersCount())._bn.should.eq.BN(1);
 
@@ -882,6 +888,8 @@ module.exports = (glob) => {
                         totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
                         totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
                         totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
+                        totalFeeTransfer[5].should.equal('ERCXYZ');
+
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
                         const settlement = await ethersDriipSettlementState.settlements(0);
@@ -917,7 +925,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
             });

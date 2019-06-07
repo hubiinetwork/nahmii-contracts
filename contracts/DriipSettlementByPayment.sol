@@ -48,8 +48,8 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SettlePaymentEvent(address wallet, PaymentTypesLib.Payment payment);
-    event SettlePaymentByProxyEvent(address proxy, address wallet, PaymentTypesLib.Payment payment);
+    event SettlePaymentEvent(address wallet, PaymentTypesLib.Payment payment, string standard);
+    event SettlePaymentByProxyEvent(address proxy, address wallet, PaymentTypesLib.Payment payment, string standard);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
@@ -149,48 +149,50 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
 
     /// @notice Settle driip that is a payment
     /// @param payment The payment to be settled
-    function settlePayment(PaymentTypesLib.Payment memory payment)
+    /// @param standard The standard of the token to be settled
+    function settlePayment(PaymentTypesLib.Payment memory payment, string memory standard)
     public
     {
         // Settle payment
-        _settlePayment(msg.sender, payment);
+        _settlePayment(msg.sender, payment, standard);
 
         // Emit event
-        emit SettlePaymentEvent(msg.sender, payment);
+        emit SettlePaymentEvent(msg.sender, payment, standard);
     }
 
     /// @notice Settle driip that is a payment
     /// @param wallet The wallet whose side of the payment is to be settled
     /// @param payment The payment to be settled
-    function settlePaymentByProxy(address wallet, PaymentTypesLib.Payment memory payment)
+    /// @param standard The standard of the token to be settled
+    function settlePaymentByProxy(address wallet, PaymentTypesLib.Payment memory payment, string memory standard)
     public
     onlyOperator
     {
         // Settle payment for wallet
-        _settlePayment(wallet, payment);
+        _settlePayment(wallet, payment, standard);
 
         // Emit event
-        emit SettlePaymentByProxyEvent(msg.sender, wallet, payment);
+        emit SettlePaymentByProxyEvent(msg.sender, wallet, payment, standard);
     }
 
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _settlePayment(address wallet, PaymentTypesLib.Payment memory payment)
+    function _settlePayment(address wallet, PaymentTypesLib.Payment memory payment, string memory standard)
     private
     onlySealedPayment(payment)
     onlyPaymentParty(payment, wallet)
     {
-        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash), "Payment deemed fradulent [DriipSettlementByPayment.sol:184]");
-        require(!communityVote.isDoubleSpenderWallet(wallet), "Wallet deemed double spender [DriipSettlementByPayment.sol:185]");
+        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash), "Payment deemed fraudulent [DriipSettlementByPayment.sol:186]");
+        require(!communityVote.isDoubleSpenderWallet(wallet), "Wallet deemed double spender [DriipSettlementByPayment.sol:187]");
 
         // Require that wallet is not locked
-        require(!walletLocker.isLocked(wallet), "Wallet found locked [DriipSettlementByPayment.sol:188]");
+        require(!walletLocker.isLocked(wallet), "Wallet found locked [DriipSettlementByPayment.sol:190]");
 
         // Require that the wallet's current driip settlement challenge proposal is defined wrt this payment
         require(payment.seals.operator.hash == driipSettlementChallengeState.proposalChallengedHash(
             wallet, payment.currency
-        ), "Payment not challenged [DriipSettlementByPayment.sol:191]");
+        ), "Payment not challenged [DriipSettlementByPayment.sol:193]");
 
         // Extract properties depending on settlement role
         (
@@ -199,22 +201,22 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
         ) = _getRoleProperties(payment, wallet);
 
         // Require that driip settlement challenge proposal has been initiated
-        require(driipSettlementChallengeState.hasProposal(wallet, walletNonce, payment.currency), "No proposal found [DriipSettlementByPayment.sol:202]");
+        require(driipSettlementChallengeState.hasProposal(wallet, walletNonce, payment.currency), "No proposal found [DriipSettlementByPayment.sol:204]");
 
         // Require that driip settlement challenge proposal has not been terminated already
-        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency), "Proposal found terminated [DriipSettlementByPayment.sol:205]");
+        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency), "Proposal found terminated [DriipSettlementByPayment.sol:207]");
 
         // Require that driip settlement challenge proposal has expired
-        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency), "Proposal found not expired [DriipSettlementByPayment.sol:208]");
+        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency), "Proposal found not expired [DriipSettlementByPayment.sol:210]");
 
         // Require that driip settlement challenge proposal qualified
         require(SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
             wallet, payment.currency
-        ), "Proposal found not qualified [DriipSettlementByPayment.sol:211]");
+        ), "Proposal found not qualified [DriipSettlementByPayment.sol:213]");
 
         // Require that operational mode is normal and data is available
-        require(configuration.isOperationalModeNormal(), "Not normal operational mode [DriipSettlementByPayment.sol:216]");
-        require(communityVote.isDataAvailable(), "Data not available [DriipSettlementByPayment.sol:217]");
+        require(configuration.isOperationalModeNormal(), "Not normal operational mode [DriipSettlementByPayment.sol:218]");
+        require(communityVote.isDataAvailable(), "Data not available [DriipSettlementByPayment.sol:219]");
 
         // Init settlement, i.e. create one if no such settlement exists for the double pair of wallets and nonces
         driipSettlementState.initSettlement(
@@ -226,7 +228,7 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
         // If exists settlement of nonce then require that wallet has not already settled
         require(!driipSettlementState.isSettlementPartyDone(
             wallet, walletNonce, settlementRole
-        ), "Settlement party already done [DriipSettlementByPayment.sol:227]");
+        ), "Settlement party already done [DriipSettlementByPayment.sol:229]");
 
         // Set address of origin or target to prevent the same settlement from being resettled by this wallet
         driipSettlementState.completeSettlementParty(
@@ -241,19 +243,19 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
 
             // Update settled balance
             clientFund.updateSettledBalance(
-                wallet, currentBalance, payment.currency.ct, payment.currency.id, "", payment.blockNumber
+                wallet, currentBalance, payment.currency.ct, payment.currency.id, standard, payment.blockNumber
             );
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
                 wallet, driipSettlementChallengeState.proposalStageAmount(wallet, payment.currency),
-                payment.currency.ct, payment.currency.id, ""
+                payment.currency.ct, payment.currency.id, standard
             );
         }
 
         // Stage fees to revenue fund
         if (address(0) != address(revenueFund))
-            _stageFees(wallet, totalFees, revenueFund, walletNonce);
+            _stageFees(wallet, totalFees, revenueFund, walletNonce, standard);
 
         // Remove driip settlement challenge proposal
         driipSettlementChallengeState.terminateProposal(wallet, payment.currency, false);
@@ -282,7 +284,7 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
     }
 
     function _stageFees(address wallet, NahmiiTypesLib.OriginFigure[] memory fees,
-        Beneficiary protocolBeneficiary, uint256 nonce)
+        Beneficiary protocolBeneficiary, uint256 nonce, string memory standard)
     private
     {
         // For each origin figure...
@@ -313,7 +315,7 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
 
                 // Stage to beneficiary
                 clientFund.transferToBeneficiary(
-                    wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, ""
+                    wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, standard
                 );
 
                 // Emit event
