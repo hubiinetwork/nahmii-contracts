@@ -149,7 +149,7 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
 
     /// @notice Settle driip that is a payment
     /// @param payment The payment to be settled
-    /// @param standard The standard of the token to be settled
+    /// @param standard The standard of the token to be settled (discarded if settling ETH)
     function settlePayment(PaymentTypesLib.Payment memory payment, string memory standard)
     public
     {
@@ -163,7 +163,7 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
     /// @notice Settle driip that is a payment
     /// @param wallet The wallet whose side of the payment is to be settled
     /// @param payment The payment to be settled
-    /// @param standard The standard of the token to be settled
+    /// @param standard The standard of the token to be settled (discarded if settling ETH)
     function settlePaymentByProxy(address wallet, PaymentTypesLib.Payment memory payment, string memory standard)
     public
     onlyOperator

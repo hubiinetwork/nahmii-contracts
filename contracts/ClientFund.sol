@@ -237,6 +237,7 @@ BalanceTrackable, TransactionTrackable, WalletLockable {
         // Subtract unstage value from staged
         value = _subtractFromStaged(msg.sender, value, currencyCt, currencyId, fungible);
 
+        // Add to deposited
         balanceTracker.add(
             msg.sender, balanceTracker.depositedBalanceType(), value, currencyCt, currencyId, fungible
         );
