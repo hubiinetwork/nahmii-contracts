@@ -365,7 +365,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNull(mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -376,7 +376,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNull(mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -388,7 +388,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNull(mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -400,7 +400,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNull(mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -414,7 +414,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNull(mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -436,7 +436,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                        ethersNullSettlement.settleNull(mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                             .should.be.rejected;
                     });
                 });
@@ -447,14 +447,14 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                        ethersNullSettlement.settleNull(mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                             .should.be.rejected;
                     });
                 });
 
                 describe('if nonce is greater than previously settled nonce for wallet and currency', () => {
                     it('should settle successfully', async () => {
-                        await ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6});
+                        await ethersNullSettlement.settleNull(mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.StageEvent.topics
@@ -472,6 +472,7 @@ module.exports = (glob) => {
                         stage[2]._bn.should.eq.BN(10);
                         stage[3].should.equal(mocks.address0);
                         stage[4]._bn.should.eq.BN(0);
+                        stage[5].should.equal('ERCXYZ');
 
                         (await ethersNullSettlementState.maxNonceByWalletAndCurrency(
                             glob.owner, {ct: mocks.address0, id: 0}
@@ -496,7 +497,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNull(mocks.address0, 0, {gasLimit: 1e6})
+                        ethersNullSettlement.settleNull(mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                             .should.be.rejected;
                     });
                 });
@@ -528,7 +529,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -539,7 +540,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -550,7 +551,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -562,7 +563,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -574,7 +575,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -588,7 +589,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                    ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -610,7 +611,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                             .should.be.rejected;
                     });
                 });
@@ -621,14 +622,14 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                             .should.be.rejected;
                     });
                 });
 
                 describe('if nonce is greater than previously settled nonce for wallet and currency', () => {
                     it('should settle successfully', async () => {
-                        await ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6});
+                        await ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.StageEvent.topics
@@ -646,6 +647,7 @@ module.exports = (glob) => {
                         stage[2]._bn.should.eq.BN(10);
                         stage[3].should.equal(mocks.address0);
                         stage[4]._bn.should.eq.BN(0);
+                        stage[5].should.equal('ERCXYZ');
 
                         (await ethersNullSettlementState.maxNonceByWalletAndCurrency(
                             wallet, {ct: mocks.address0, id: 0}
@@ -670,7 +672,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, {gasLimit: 1e6})
+                        ethersNullSettlement.settleNullByProxy(wallet, mocks.address0, 0, 'ERCXYZ', {gasLimit: 1e6})
                             .should.be.rejected;
                     });
                 });

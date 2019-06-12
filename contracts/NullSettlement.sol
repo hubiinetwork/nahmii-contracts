@@ -47,9 +47,9 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         NullSettlementState newNullSettlementState);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
-    event SettleNullEvent(address wallet, address currencyCt, uint256 currencyId);
+    event SettleNullEvent(address wallet, address currencyCt, uint256 currencyId, string standard);
     event SettleNullByProxyEvent(address proxy, address wallet, address currencyCt,
-        uint256 currencyId);
+        uint256 currencyId, string standard);
 
     //
     // Constructor
@@ -99,35 +99,37 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     /// @notice Settle null
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function settleNull(address currencyCt, uint256 currencyId)
+    /// @param standard The standard of the token to be settled (discarded if settling ETH)
+    function settleNull(address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         // Settle null
-        _settleNull(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId));
+        _settleNull(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), standard);
 
         // Emit event
-        emit SettleNullEvent(msg.sender, currencyCt, currencyId);
+        emit SettleNullEvent(msg.sender, currencyCt, currencyId, standard);
     }
 
     /// @notice Settle null by proxy
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function settleNullByProxy(address wallet, address currencyCt, uint256 currencyId)
+    /// @param standard The standard of the token to be settled (discarded if settling ETH)
+    function settleNullByProxy(address wallet, address currencyCt, uint256 currencyId, string memory standard)
     public
     onlyOperator
     {
         // Settle null of wallet
-        _settleNull(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId));
+        _settleNull(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), standard);
 
         // Emit event
-        emit SettleNullByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
+        emit SettleNullByProxyEvent(msg.sender, wallet, currencyCt, currencyId, standard);
     }
 
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _settleNull(address wallet, MonetaryTypesLib.Currency memory currency)
+    function _settleNull(address wallet, MonetaryTypesLib.Currency memory currency, string memory standard)
     private
     {
         // Require that there is no overlapping driip settlement challenge
@@ -172,7 +174,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
             nullSettlementChallengeState.proposalStageAmount(
                 wallet, currency
             ),
-            currency.ct, currency.id, ""
+            currency.ct, currency.id, standard
         );
 
         // Remove null settlement challenge proposal
