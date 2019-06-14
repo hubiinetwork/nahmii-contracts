@@ -136,34 +136,34 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         require(
             !driipSettlementChallengeState.hasProposal(wallet, currency) ||
         driipSettlementChallengeState.hasProposalTerminated(wallet, currency),
-            "Overlapping driip settlement challenge proposal found [NullSettlement.sol:134]"
+            "Overlapping driip settlement challenge proposal found [NullSettlement.sol:136]"
         );
 
         // Require that null settlement challenge proposal has been initiated
-        require(nullSettlementChallengeState.hasProposal(wallet, currency), "No proposal found [NullSettlement.sol:141]");
+        require(nullSettlementChallengeState.hasProposal(wallet, currency), "No proposal found [NullSettlement.sol:143]");
 
         // Require that null settlement challenge proposal has not been terminated already
-        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated [NullSettlement.sol:144]");
+        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated [NullSettlement.sol:146]");
 
         // Require that null settlement challenge proposal has expired
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, currency), "Proposal found not expired [NullSettlement.sol:147]");
+        require(nullSettlementChallengeState.hasProposalExpired(wallet, currency), "Proposal found not expired [NullSettlement.sol:149]");
 
         // Require that null settlement challenge qualified
         require(SettlementChallengeTypesLib.Status.Qualified == nullSettlementChallengeState.proposalStatus(
             wallet, currency
-        ), "Proposal found not qualified [NullSettlement.sol:150]");
+        ), "Proposal found not qualified [NullSettlement.sol:152]");
 
         // Require that operational mode is normal and data is available, or that nonce is
         // smaller than max null nonce
-        require(configuration.isOperationalModeNormal(), "Not normal operational mode [NullSettlement.sol:156]");
-        require(communityVote.isDataAvailable(), "Data not available [NullSettlement.sol:157]");
+        require(configuration.isOperationalModeNormal(), "Not normal operational mode [NullSettlement.sol:158]");
+        require(communityVote.isDataAvailable(), "Data not available [NullSettlement.sol:159]");
 
         // Get null settlement challenge proposal nonce
         uint256 nonce = nullSettlementChallengeState.proposalNonce(wallet, currency);
 
         // If wallet has previously settled balance of the concerned currency with higher
         // null settlement nonce, then don't settle again
-        require(nonce >= nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency), "Nonce deemed smaller than max nonce by wallet and currency [NullSettlement.sol:164]");
+        require(nonce >= nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency), "Nonce deemed smaller than max nonce by wallet and currency [NullSettlement.sol:166]");
 
         // Update settled nonce of wallet and currency
         nullSettlementState.setMaxNonceByWalletAndCurrency(wallet, currency, nonce);
