@@ -70,7 +70,7 @@
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "openzeppelin-solidity": "^2.2.0",
     "solc": "^0.5.8",
-    "solidity-util": "github:hubiinetwork/solidity-util",
+    "solidity-util": "github:willitscale/solidity-util",
     "truffle": "^4.1.15",
     "truffle-hdwallet-provider": "0.0.6",
     "truffle-hdwallet-provider-privkey": "^0.3.0",
