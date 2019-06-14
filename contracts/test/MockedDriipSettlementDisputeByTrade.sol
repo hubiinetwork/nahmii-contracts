@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {TradeTypesLib} from "../TradeTypesLib.sol";
@@ -28,20 +28,20 @@ contract MockedDriipSettlementDisputeByTrade {
         _challengeByTradeCount = 0;
     }
 
-    function challengeByOrder(TradeTypesLib.Order, address)
+    function challengeByOrder(TradeTypesLib.Order memory, address)
     public
     {
         _challengeByOrderCount++;
     }
 
-    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order, TradeTypesLib.Trade,
+    function unchallengeOrderCandidateByTrade(TradeTypesLib.Order memory, TradeTypesLib.Trade memory,
         address)
     public
     {
         _unchallengeOrderCandidateByTradeCount++;
     }
 
-    function challengeByTrade(address, TradeTypesLib.Trade, address)
+    function challengeByTrade(address, TradeTypesLib.Trade memory, address)
     public
     {
         _challengeByTradeCount++;

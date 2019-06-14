@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -63,7 +63,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     /// @param newNullSettlementChallengeState The (address of) NullSettlementChallengeState contract instance
     function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState) public
     onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
+    notNullAddress(address(newNullSettlementChallengeState))
     {
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
@@ -75,7 +75,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     /// @param challenger The address of the challenger
     /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
     /// if (candidate) order has sell intention consider _intended_ currency and amount
-    function challengeByOrder(TradeTypesLib.Order order, address challenger)
+    function challengeByOrder(TradeTypesLib.Order memory order, address challenger)
     public
     onlyEnabledServiceAction(CHALLENGE_BY_ORDER_ACTION)
     onlySealedOrder(order)
@@ -130,7 +130,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     /// @param challenger The address of the challenger
     /// @dev If wallet is buyer in (candidate) trade consider single _conjugate_ transfer in (candidate) trade. Else
     /// if wallet is seller in (candidate) trade consider single _intended_ transfer in (candidate) trade
-    function challengeByTrade(address wallet, TradeTypesLib.Trade trade, address challenger)
+    function challengeByTrade(address wallet, TradeTypesLib.Trade memory trade, address challenger)
     public
     onlyEnabledServiceAction(CHALLENGE_BY_TRADE_ACTION)
     onlySealedTrade(trade)
@@ -191,10 +191,10 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // Get the candidate order currency
     // Buy order -> Conjugate currency
     // Sell order -> Intended currency
-    function _orderCurrency(TradeTypesLib.Order order)
+    function _orderCurrency(TradeTypesLib.Order memory order)
     private
     pure
-    returns (MonetaryTypesLib.Currency)
+    returns (MonetaryTypesLib.Currency memory)
     {
         return TradeTypesLib.Intention.Sell == order.placement.intention ?
         order.placement.currencies.intended :
@@ -204,7 +204,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // Get the candidate order transfer
     // Buy order -> Conjugate transfer
     // Sell order -> Intended transfer
-    function _orderTransferAmount(TradeTypesLib.Order order)
+    function _orderTransferAmount(TradeTypesLib.Order memory order)
     private
     pure
     returns (int256)
@@ -214,7 +214,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         order.placement.amount.div(order.placement.rate);
     }
 
-    function _tradeOrderHash(TradeTypesLib.Trade trade, address wallet)
+    function _tradeOrderHash(TradeTypesLib.Trade memory trade, address wallet)
     private
     view
     returns (bytes32)
@@ -227,10 +227,10 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // Get the candidate trade currency
     // Wallet is buyer in (candidate) trade -> Conjugate currency
     // Wallet is seller in (candidate) trade -> Intended currency
-    function _tradeCurrency(TradeTypesLib.Trade trade, address wallet)
+    function _tradeCurrency(TradeTypesLib.Trade memory trade, address wallet)
     private
     view
-    returns (MonetaryTypesLib.Currency)
+    returns (MonetaryTypesLib.Currency memory)
     {
         return validator.isTradeBuyer(trade, wallet) ?
         trade.currencies.conjugate :
@@ -240,7 +240,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // Get the candidate trade nonce
     // Wallet is buyer in (candidate) trade -> Buyer's nonce
     // Wallet is seller in (candidate) trade -> Seller's nonce
-    function _tradeNonce(TradeTypesLib.Trade trade, address wallet)
+    function _tradeNonce(TradeTypesLib.Trade memory trade, address wallet)
     private
     view
     returns (uint256)
@@ -253,7 +253,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // Get the candidate trade transfer amount
     // Wallet is buyer in (candidate) trade -> Conjugate transfer
     // Wallet is seller in (candidate) trade -> Intended transfer
-    function _tradeTransferAmount(TradeTypesLib.Trade trade, address wallet)
+    function _tradeTransferAmount(TradeTypesLib.Trade memory trade, address wallet)
     private
     view
     returns (int256)
@@ -266,7 +266,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // Get the candidate trade balance amount
     // Wallet is buyer in (candidate) trade -> Buyer's conjugate balance
     // Wallet is seller in (candidate) trade -> Seller's intended balance
-    function _tradeBalanceAmount(TradeTypesLib.Trade trade, address wallet)
+    function _tradeBalanceAmount(TradeTypesLib.Trade memory trade, address wallet)
     private
     view
     returns (int256)
@@ -276,7 +276,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         trade.seller.balances.intended.current;
     }
 
-    function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+    function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency memory currency,
         address challenger)
     private
     {
@@ -287,7 +287,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
             _settleSecurityBondReward(wallet, walletAmount, currency, challenger);
     }
 
-    function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+    function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency memory currency,
         address challenger)
     private
     {
@@ -314,7 +314,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // The second component is progressive and calculated as
     //    min(walletAmount, fraction of SecurityBond's deposited balance)
     // both amounts for the given currency
-    function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+    function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency memory currency,
         address challenger)
     private
     {
@@ -349,7 +349,7 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     function _flatReward()
     private
     view
-    returns (MonetaryTypesLib.Figure)
+    returns (MonetaryTypesLib.Figure memory)
     {
         (int256 amount, address currencyCt, uint256 currencyId) = configuration.operatorSettlementStake();
         return MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));

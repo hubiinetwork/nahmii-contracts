@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Configurable} from "./Configurable.sol";
 
@@ -19,7 +19,7 @@ contract ConfigurableOperational is Configurable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyOperationalModeNormal() {
-        require(configuration.isOperationalModeNormal());
+        require(configuration.isOperationalModeNormal(), "Operational mode is not normal [ConfigurableOperational.sol:22]");
         _;
     }
 }

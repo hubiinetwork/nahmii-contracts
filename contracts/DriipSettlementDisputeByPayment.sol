@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -69,7 +69,7 @@ BalanceTrackable, FraudChallengable, Servable {
     /// @param newDriipSettlementChallengeState The (address of) DriipSettlementChallengeState contract instance
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState) public
     onlyDeployer
-    notNullAddress(newDriipSettlementChallengeState)
+    notNullAddress(address(newDriipSettlementChallengeState))
     {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
@@ -80,7 +80,7 @@ BalanceTrackable, FraudChallengable, Servable {
     /// @param newNullSettlementChallengeState The (address of) NullSettlementChallengeState contract instance
     function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState) public
     onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
+    notNullAddress(address(newNullSettlementChallengeState))
     {
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
@@ -92,32 +92,32 @@ BalanceTrackable, FraudChallengable, Servable {
     /// @param wallet The concerned party
     /// @param payment The payment candidate that challenges the challenged driip
     /// @param challenger The address of the challenger
-    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment, address challenger)
+    function challengeByPayment(address wallet, PaymentTypesLib.Payment memory payment, address challenger)
     public
     onlyEnabledServiceAction(CHALLENGE_BY_PAYMENT_ACTION)
     onlySealedPayment(payment)
     onlyPaymentSender(payment, wallet)
     {
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
+        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash), "Payment deemed fraudulent [DriipSettlementDisputeByPayment.sol:102]");
 
         // Require that proposal has been initiated
-        require(driipSettlementChallengeState.hasProposal(wallet, payment.currency));
+        require(driipSettlementChallengeState.hasProposal(wallet, payment.currency), "No proposal found [DriipSettlementDisputeByPayment.sol:105]");
 
         // Require that proposal has not expired
-        require(!driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
+        require(!driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency), "Proposal found expired [DriipSettlementDisputeByPayment.sol:108]");
 
         // Require that payment party's nonce is strictly greater than proposal's nonce and its current
         // disqualification nonce
         require(payment.sender.nonce > driipSettlementChallengeState.proposalNonce(
             wallet, payment.currency
-        ));
+        ), "Payment nonce not strictly greater than proposal nonce [DriipSettlementDisputeByPayment.sol:112]");
         require(payment.sender.nonce > driipSettlementChallengeState.proposalDisqualificationNonce(
             wallet, payment.currency
-        ));
+        ), "Payment nonce not strictly greater than proposal disqualification nonce [DriipSettlementDisputeByPayment.sol:115]");
 
         // Require overrun for this payment to be a valid challenge candidate
-        require(_overrun(wallet, payment));
+        require(_overrun(wallet, payment), "No overrun found [DriipSettlementDisputeByPayment.sol:120]");
 
         // Reward challenger
         _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger);
@@ -140,7 +140,7 @@ BalanceTrackable, FraudChallengable, Servable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _overrun(address wallet, PaymentTypesLib.Payment payment)
+    function _overrun(address wallet, PaymentTypesLib.Payment memory payment)
     private
     view
     returns (bool)
@@ -174,7 +174,7 @@ BalanceTrackable, FraudChallengable, Servable {
     }
 
     // Lock wallet's balances or reward challenger by stake fraction
-    function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+    function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency memory currency,
         address challenger)
     private
     {
@@ -185,7 +185,7 @@ BalanceTrackable, FraudChallengable, Servable {
             _settleSecurityBondReward(wallet, walletAmount, currency, challenger);
     }
 
-    function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+    function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency memory currency,
         address challenger)
     private
     {
@@ -212,7 +212,7 @@ BalanceTrackable, FraudChallengable, Servable {
     // The second component is progressive and calculated as
     //    min(walletAmount, fraction of SecurityBond's deposited balance)
     // both amounts for the given currency
-    function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency currency,
+    function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency memory currency,
         address challenger)
     private
     {
@@ -247,7 +247,7 @@ BalanceTrackable, FraudChallengable, Servable {
     function _flatReward()
     private
     view
-    returns (MonetaryTypesLib.Figure)
+    returns (MonetaryTypesLib.Figure memory)
     {
         (int256 amount, address currencyCt, uint256 currencyId) = configuration.operatorSettlementStake();
         return MonetaryTypesLib.Figure(amount, MonetaryTypesLib.Currency(currencyCt, currencyId));

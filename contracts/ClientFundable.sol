@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {ClientFund} from "./ClientFund.sol";
@@ -33,8 +33,8 @@ contract ClientFundable is Ownable {
     /// @param newClientFund The (address of) ClientFund contract instance
     function setClientFund(ClientFund newClientFund) public
     onlyDeployer
-    notNullAddress(newClientFund)
-    notSameAddresses(newClientFund, clientFund)
+    notNullAddress(address(newClientFund))
+    notSameAddresses(address(newClientFund), address(clientFund))
     {
         // Update field
         ClientFund oldClientFund = clientFund;
@@ -48,7 +48,7 @@ contract ClientFundable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier clientFundInitialized() {
-        require(clientFund != address(0));
+        require(address(clientFund) != address(0), "Client fund not initialized [ClientFundable.sol:51]");
         _;
     }
 }

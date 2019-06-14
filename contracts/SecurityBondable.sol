@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {SecurityBond} from "./SecurityBond.sol";
@@ -34,8 +34,8 @@ contract SecurityBondable is Ownable {
     function setSecurityBond(SecurityBond newSecurityBond)
     public
     onlyDeployer
-    notNullAddress(newSecurityBond)
-    notSameAddresses(newSecurityBond, securityBond)
+    notNullAddress(address(newSecurityBond))
+    notSameAddresses(address(newSecurityBond), address(securityBond))
     {
         //set new security bond
         SecurityBond oldSecurityBond = securityBond;
@@ -49,7 +49,7 @@ contract SecurityBondable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier securityBondInitialized() {
-        require(securityBond != address(0));
+        require(address(securityBond) != address(0), "Security bond not initialized [SecurityBondable.sol:52]");
         _;
     }
 }

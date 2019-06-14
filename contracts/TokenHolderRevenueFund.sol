@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -56,7 +56,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     mapping(address => mapping(address => mapping(uint256 => uint256[]))) public claimedAccrualBlockNumbersByWalletCurrency;
 
     mapping(address => mapping(uint256 => uint256[])) public accrualBlockNumbersByCurrency;
-    mapping(address => mapping(uint256 => mapping(uint256 => int256))) aggregateAccrualAmountByCurrencyBlockNumber;
+    mapping(address => mapping(uint256 => mapping(uint256 => int256))) public aggregateAccrualAmountByCurrencyBlockNumber;
 
     mapping(address => FungibleBalanceLib.Balance) private stagedByWallet;
 
@@ -92,7 +92,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     function setRevenueTokenManager(RevenueTokenManager newRevenueTokenManager)
     public
     onlyDeployer
-    notNullAddress(newRevenueTokenManager)
+    notNullAddress(address(newRevenueTokenManager))
     {
         if (newRevenueTokenManager != revenueTokenManager) {
             // Set new revenue token
@@ -105,13 +105,13 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     }
 
     /// @notice Fallback function that deposits ethers
-    function() public payable {
+    function() external payable {
         receiveEthersTo(msg.sender, "");
     }
 
     /// @notice Receive ethers to
     /// @param wallet The concerned wallet address
-    function receiveEthersTo(address wallet, string)
+    function receiveEthersTo(address wallet, string memory)
     public
     payable
     {
@@ -137,8 +137,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of token ("ERC20", "ERC721")
-    function receiveTokens(string, int256 amount, address currencyCt, uint256 currencyId,
-        string standard)
+    function receiveTokens(string memory, int256 amount, address currencyCt, uint256 currencyId,
+        string memory standard)
     public
     {
         receiveTokensTo(msg.sender, "", amount, currencyCt, currencyId, standard);
@@ -150,19 +150,20 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of token ("ERC20", "ERC721")
-    function receiveTokensTo(address wallet, string, int256 amount, address currencyCt,
-        uint256 currencyId, string standard)
+    function receiveTokensTo(address wallet, string memory, int256 amount, address currencyCt,
+        uint256 currencyId, string memory standard)
     public
     {
-        require(amount.isNonZeroPositiveInt256());
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:157]");
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
-        require(
-            address(controller).delegatecall(
+        (bool success,) = address(controller).delegatecall(
+            abi.encodeWithSelector(
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
             )
         );
+        require(success, "Reception by controller failed [TokenHolderRevenueFund.sol:166]");
 
         // Add to balances
         periodAccrual.add(amount, currencyCt, currencyId);
@@ -221,7 +222,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     function periodCurrenciesByIndices(uint256 low, uint256 up)
     public
     view
-    returns (MonetaryTypesLib.Currency[])
+    returns (MonetaryTypesLib.Currency[] memory)
     {
         return periodCurrencies.getByIndices(low, up);
     }
@@ -243,7 +244,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     function aggregateCurrenciesByIndices(uint256 low, uint256 up)
     public
     view
-    returns (MonetaryTypesLib.Currency[])
+    returns (MonetaryTypesLib.Currency[] memory)
     {
         return aggregateCurrencies.getByIndices(low, up);
     }
@@ -283,7 +284,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
     /// @notice Close the current accrual period of the given currencies
     /// @param currencies The concerned currencies
-    function closeAccrualPeriod(MonetaryTypesLib.Currency[] currencies)
+    function closeAccrualPeriod(MonetaryTypesLib.Currency[] memory currencies)
     public
     onlyEnabledServiceAction(CLOSE_ACCRUAL_PERIOD_ACTION)
     {
@@ -326,8 +327,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function claimAndTransferToBeneficiary(Beneficiary beneficiary, address destWallet, string balanceType,
-        address currencyCt, uint256 currencyId, string standard)
+    function claimAndTransferToBeneficiary(Beneficiary beneficiary, address destWallet, string memory balanceType,
+        address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         // Claim accrual and obtain the claimed amount
@@ -340,11 +341,12 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         else {
             // Approve of beneficiary
             TransferController controller = transferController(currencyCt, standard);
-            require(
-                address(controller).delegatecall(
-                    controller.getApproveSignature(), beneficiary, uint256(claimedAmount), currencyCt, currencyId
+            (bool success,) = address(controller).delegatecall(
+                abi.encodeWithSelector(
+                    controller.getApproveSignature(), address(beneficiary), uint256(claimedAmount), currencyCt, currencyId
                 )
             );
+            require(success, "Approval by controller failed [TokenHolderRevenueFund.sol:349]");
 
             // Transfer tokens to the beneficiary
             beneficiary.receiveTokensTo(destWallet, balanceType, claimedAmount, currencyCt, currencyId, standard);
@@ -375,11 +377,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         // Require that amount is strictly positive
-        require(amount.isNonZeroPositiveInt256());
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:384]");
 
         // Clamp amount to the max given by staged balance
         amount = amount.clampMax(stagedByWallet[msg.sender].get(currencyCt, currencyId));
@@ -393,11 +395,12 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         else {
             TransferController controller = transferController(currencyCt, standard);
-            require(
-                address(controller).delegatecall(
-                    controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId
+            (bool success,) = address(controller).delegatecall(
+                abi.encodeWithSelector(
+                    controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId
                 )
             );
+            require(success, "Dispatch by controller failed [TokenHolderRevenueFund.sol:403]");
         }
 
         // Emit event
@@ -412,7 +415,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     returns (int256)
     {
         // Require that at least one accrual period has terminated
-        require(0 < accrualBlockNumbersByCurrency[currencyCt][currencyId].length);
+        require(0 < accrualBlockNumbersByCurrency[currencyCt][currencyId].length, "No terminated accrual period found [TokenHolderRevenueFund.sol:418]");
 
         // Calculate lower block number as last accrual block number claimed for currency c by wallet OR 0
         uint256[] storage claimedAccrualBlockNumbers = claimedAccrualBlockNumbersByWalletCurrency[wallet][currencyCt][currencyId];
@@ -422,18 +425,18 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         uint256 bnUp = accrualBlockNumbersByCurrency[currencyCt][currencyId][accrualBlockNumbersByCurrency[currencyCt][currencyId].length - 1];
 
         // Require that lower block number is below upper block number
-        require(bnLow < bnUp);
+        require(bnLow < bnUp, "Bounds parameters mismatch [TokenHolderRevenueFund.sol:428]");
 
         // Calculate the amount that is claimable in the span between lower and upper block numbers
         int256 claimableAmount = aggregateAccrualAmountByCurrencyBlockNumber[currencyCt][currencyId][bnUp]
         - (0 == bnLow ? 0 : aggregateAccrualAmountByCurrencyBlockNumber[currencyCt][currencyId][bnLow]);
 
         // Require that claimable amount is strictly positive
-        require(0 < claimableAmount);
+        require(claimableAmount.isNonZeroPositiveInt256(), "Claimable amount not strictly positive [TokenHolderRevenueFund.sol:435]");
 
         // Retrieve the balance blocks of wallet
         int256 walletBalanceBlocks = int256(
-            RevenueToken(revenueTokenManager.token()).balanceBlocksIn(wallet, bnLow, bnUp)
+            RevenueToken(address(revenueTokenManager.token())).balanceBlocksIn(wallet, bnLow, bnUp)
         );
 
         // Retrieve the released amount blocks
@@ -449,27 +452,5 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         // Return the claimed amount
         return claimedAmount;
-    }
-
-    function _transferToBeneficiary(Beneficiary beneficiary, address destWallet, string balanceType,
-        int256 amount, address currencyCt, uint256 currencyId, string standard)
-    private
-    {
-        // Transfer ETH to the beneficiary
-        if (address(0) == currencyCt && 0 == currencyId)
-            beneficiary.receiveEthersTo.value(uint256(amount))(destWallet, balanceType);
-
-        else {
-            // Approve of beneficiary
-            TransferController controller = transferController(currencyCt, standard);
-            require(
-                address(controller).delegatecall(
-                    controller.getApproveSignature(), beneficiary, uint256(amount), currencyCt, currencyId
-                )
-            );
-
-            // Transfer tokens to the beneficiary
-            beneficiary.receiveTokensTo(destWallet, balanceType, amount, currencyCt, currencyId, standard);
-        }
     }
 }

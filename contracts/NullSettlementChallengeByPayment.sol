@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -74,7 +74,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     function setNullSettlementDisputeByPayment(NullSettlementDisputeByPayment newNullSettlementDisputeByPayment)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementDisputeByPayment)
+    notNullAddress(address(newNullSettlementDisputeByPayment))
     {
         NullSettlementDisputeByPayment oldNullSettlementDisputeByPayment = nullSettlementDisputeByPayment;
         nullSettlementDisputeByPayment = newNullSettlementDisputeByPayment;
@@ -86,7 +86,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
+    notNullAddress(address(newNullSettlementChallengeState))
     {
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
@@ -98,7 +98,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementChallengeState)
+    notNullAddress(address(newDriipSettlementChallengeState))
     {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
@@ -113,7 +113,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     public
     {
         // Require that wallet is not locked
-        require(!walletLocker.isLocked(msg.sender));
+        require(!walletLocker.isLocked(msg.sender), "Wallet found locked [NullSettlementChallengeByPayment.sol:116]");
 
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
@@ -390,7 +390,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     function proposalDisqualificationCandidateKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         return nullSettlementChallengeState.proposalDisqualificationCandidateKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -415,7 +415,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     /// @notice Challenge the settlement by providing payment candidate
     /// @param wallet The wallet whose settlement is being challenged
     /// @param payment The payment candidate that challenges the null
-    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment)
+    function challengeByPayment(address wallet, PaymentTypesLib.Payment memory payment)
     public
     onlyOperationalModeNormal
     {
@@ -435,17 +435,21 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _startChallenge(address wallet, int256 stageAmount, MonetaryTypesLib.Currency currency,
+    function _startChallenge(address wallet, int256 stageAmount, MonetaryTypesLib.Currency memory currency,
         bool walletInitiated)
     private
     {
         // Require that current block number is beyond the earliest settlement challenge block number
-        require(block.number >= configuration.earliestSettlementBlockNumber());
+        require(
+            block.number >= configuration.earliestSettlementBlockNumber(),
+            "Current block number below earliest settlement block number [NullSettlementChallengeByPayment.sol:443]"
+        );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, currency) ||
-        nullSettlementChallengeState.hasProposalExpired(wallet, currency)
+        nullSettlementChallengeState.hasProposalExpired(wallet, currency),
+            "Overlapping null settlement challenge proposal found [NullSettlementChallengeByPayment.sol:449]"
         );
 
         // Get the last logged active balance amount and block number, properties of overlapping DSC
@@ -470,14 +474,12 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
     }
 
-    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    function _stopChallenge(address wallet, MonetaryTypesLib.Currency memory currency, bool walletTerminated)
     private
     {
         // Require that there is an unterminated driip settlement challenge proposal
-        require(
-            nullSettlementChallengeState.hasProposal(wallet, currency) &&
-            !nullSettlementChallengeState.hasProposalTerminated(wallet, currency)
-        );
+        require(nullSettlementChallengeState.hasProposal(wallet, currency), "No proposal found [NullSettlementChallengeByPayment.sol:481]");
+        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated [NullSettlementChallengeByPayment.sol:482]");
 
         // Terminate driip settlement challenge proposal
         nullSettlementChallengeState.terminateProposal(
@@ -485,7 +487,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
     }
 
-    function _externalProperties(address wallet, MonetaryTypesLib.Currency currency)
+    function _externalProperties(address wallet, MonetaryTypesLib.Currency memory currency)
     private
     view
     returns (

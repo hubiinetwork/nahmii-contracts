@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -16,8 +16,8 @@ import {ClientFundable} from "./ClientFundable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
+import {PartnerBenefactorable} from "./PartnerBenefactorable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
-import {PartnerFund} from "./PartnerFund.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {Beneficiary} from "./Beneficiary.sol";
@@ -34,7 +34,7 @@ import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
  * @notice Where driip settlements pertaining to payment are finalized
  */
 contract DriipSettlementByPayment is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable,
-FraudChallengable, WalletLockable {
+FraudChallengable, WalletLockable, PartnerBenefactorable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -44,19 +44,17 @@ FraudChallengable, WalletLockable {
     DriipSettlementChallengeState public driipSettlementChallengeState;
     DriipSettlementState public driipSettlementState;
     RevenueFund public revenueFund;
-    PartnerFund public partnerFund;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SettlePaymentEvent(address wallet, PaymentTypesLib.Payment payment);
-    event SettlePaymentByProxyEvent(address proxy, address wallet, PaymentTypesLib.Payment payment);
+    event SettlePaymentEvent(address wallet, PaymentTypesLib.Payment payment, string standard);
+    event SettlePaymentByProxyEvent(address proxy, address wallet, PaymentTypesLib.Payment payment, string standard);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
         DriipSettlementState newDriipSettlementState);
     event SetRevenueFundEvent(RevenueFund oldRevenueFund, RevenueFund newRevenueFund);
-    event SetPartnerFundEvent(PartnerFund oldPartnerFund, PartnerFund newPartnerFund);
     event StageFeesEvent(address wallet, int256 deltaAmount, int256 cumulativeAmount,
         address currencyCt, uint256 currencyId);
 
@@ -74,7 +72,7 @@ FraudChallengable, WalletLockable {
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementChallengeState)
+    notNullAddress(address(newDriipSettlementChallengeState))
     {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
@@ -86,7 +84,7 @@ FraudChallengable, WalletLockable {
     function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementState)
+    notNullAddress(address(newDriipSettlementState))
     {
         DriipSettlementState oldDriipSettlementState = driipSettlementState;
         driipSettlementState = newDriipSettlementState;
@@ -98,23 +96,11 @@ FraudChallengable, WalletLockable {
     function setRevenueFund(RevenueFund newRevenueFund)
     public
     onlyDeployer
-    notNullAddress(newRevenueFund)
+    notNullAddress(address(newRevenueFund))
     {
         RevenueFund oldRevenueFund = revenueFund;
         revenueFund = newRevenueFund;
         emit SetRevenueFundEvent(oldRevenueFund, revenueFund);
-    }
-
-    /// @notice Set the partner fund contract
-    /// @param newPartnerFund The (address of) partner contract instance
-    function setPartnerFund(PartnerFund newPartnerFund)
-    public
-    onlyDeployer
-    notNullAddress(newPartnerFund)
-    {
-        PartnerFund oldPartnerFund = partnerFund;
-        partnerFund = newPartnerFund;
-        emit SetPartnerFundEvent(oldPartnerFund, partnerFund);
     }
 
     /// @notice Get the count of settlements
@@ -144,7 +130,7 @@ FraudChallengable, WalletLockable {
     function settlementByWalletAndIndex(address wallet, uint256 index)
     public
     view
-    returns (DriipSettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement memory)
     {
         return driipSettlementState.settlementByWalletAndIndex(wallet, index);
     }
@@ -156,78 +142,81 @@ FraudChallengable, WalletLockable {
     function settlementByWalletAndNonce(address wallet, uint256 nonce)
     public
     view
-    returns (DriipSettlementTypesLib.Settlement)
+    returns (DriipSettlementTypesLib.Settlement memory)
     {
         return driipSettlementState.settlementByWalletAndNonce(wallet, nonce);
     }
 
     /// @notice Settle driip that is a payment
     /// @param payment The payment to be settled
-    function settlePayment(PaymentTypesLib.Payment payment)
+    /// @param standard The standard of the token to be settled (discarded if settling ETH)
+    function settlePayment(PaymentTypesLib.Payment memory payment, string memory standard)
     public
     {
         // Settle payment
-        _settlePayment(msg.sender, payment);
+        _settlePayment(msg.sender, payment, standard);
 
         // Emit event
-        emit SettlePaymentEvent(msg.sender, payment);
+        emit SettlePaymentEvent(msg.sender, payment, standard);
     }
 
     /// @notice Settle driip that is a payment
     /// @param wallet The wallet whose side of the payment is to be settled
     /// @param payment The payment to be settled
-    function settlePaymentByProxy(address wallet, PaymentTypesLib.Payment payment)
+    /// @param standard The standard of the token to be settled (discarded if settling ETH)
+    function settlePaymentByProxy(address wallet, PaymentTypesLib.Payment memory payment, string memory standard)
     public
     onlyOperator
     {
         // Settle payment for wallet
-        _settlePayment(wallet, payment);
+        _settlePayment(wallet, payment, standard);
 
         // Emit event
-        emit SettlePaymentByProxyEvent(msg.sender, wallet, payment);
+        emit SettlePaymentByProxyEvent(msg.sender, wallet, payment, standard);
     }
 
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _settlePayment(address wallet, PaymentTypesLib.Payment payment)
+    function _settlePayment(address wallet, PaymentTypesLib.Payment memory payment, string memory standard)
     private
     onlySealedPayment(payment)
     onlyPaymentParty(payment, wallet)
     {
-        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash));
-        require(!communityVote.isDoubleSpenderWallet(wallet));
+        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash), "Payment deemed fraudulent [DriipSettlementByPayment.sol:186]");
+        require(!communityVote.isDoubleSpenderWallet(wallet), "Wallet deemed double spender [DriipSettlementByPayment.sol:187]");
 
         // Require that wallet is not locked
-        require(!walletLocker.isLocked(wallet));
+        require(!walletLocker.isLocked(wallet), "Wallet found locked [DriipSettlementByPayment.sol:190]");
 
         // Require that the wallet's current driip settlement challenge proposal is defined wrt this payment
         require(payment.seals.operator.hash == driipSettlementChallengeState.proposalChallengedHash(
             wallet, payment.currency
-        ));
+        ), "Payment not challenged [DriipSettlementByPayment.sol:193]");
 
         // Extract properties depending on settlement role
         (
-        DriipSettlementTypesLib.SettlementRole settlementRole, uint256 walletNonce,
+        DriipSettlementTypesLib.SettlementRole settlementRole, uint256 nonce,
         NahmiiTypesLib.OriginFigure[] memory totalFees, int256 currentBalance
         ) = _getRoleProperties(payment, wallet);
 
         // Require that driip settlement challenge proposal has been initiated
-        require(driipSettlementChallengeState.hasProposal(wallet, walletNonce, payment.currency));
+        require(driipSettlementChallengeState.hasProposal(wallet, nonce, payment.currency), "No proposal found [DriipSettlementByPayment.sol:204]");
 
         // Require that driip settlement challenge proposal has not been terminated already
-        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency));
+        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency), "Proposal found terminated [DriipSettlementByPayment.sol:207]");
 
         // Require that driip settlement challenge proposal has expired
-        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency));
+        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency), "Proposal found not expired [DriipSettlementByPayment.sol:210]");
 
         // Require that driip settlement challenge proposal qualified
         require(SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
             wallet, payment.currency
-        ));
+        ), "Proposal found not qualified [DriipSettlementByPayment.sol:213]");
 
         // Require that operational mode is normal and data is available
-        require(configuration.isOperationalModeNormal() && communityVote.isDataAvailable());
+        require(configuration.isOperationalModeNormal(), "Not normal operational mode [DriipSettlementByPayment.sol:218]");
+        require(communityVote.isDataAvailable(), "Data not available [DriipSettlementByPayment.sol:219]");
 
         // Init settlement, i.e. create one if no such settlement exists for the double pair of wallets and nonces
         driipSettlementState.initSettlement(
@@ -237,46 +226,42 @@ FraudChallengable, WalletLockable {
         );
 
         // If exists settlement of nonce then require that wallet has not already settled
-        require(!driipSettlementState.isSettlementRoleDone(
-            wallet, walletNonce, settlementRole
-        ));
+        require(!driipSettlementState.isSettlementPartyDone(
+            wallet, nonce, settlementRole
+        ), "Settlement party already done [DriipSettlementByPayment.sol:229]");
 
         // Set address of origin or target to prevent the same settlement from being resettled by this wallet
-        driipSettlementState.setSettlementRoleDone(
-            wallet, walletNonce, settlementRole, true
+        driipSettlementState.completeSettlementParty(
+            wallet, nonce, settlementRole, true
         );
 
         // If wallet has previously settled balance of the concerned currency with higher wallet nonce, then don't
         // settle balance again
-        if (driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency) < walletNonce) {
+        if (driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency) < nonce) {
             // Update settled nonce of wallet and currency
-            driipSettlementState.setMaxNonceByWalletAndCurrency(wallet, payment.currency, walletNonce);
+            driipSettlementState.setMaxNonceByWalletAndCurrency(wallet, payment.currency, nonce);
 
             // Update settled balance
             clientFund.updateSettledBalance(
-                wallet, currentBalance, payment.currency.ct, payment.currency.id, "", payment.blockNumber
+                wallet, currentBalance, payment.currency.ct, payment.currency.id, standard, payment.blockNumber
             );
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
                 wallet, driipSettlementChallengeState.proposalStageAmount(wallet, payment.currency),
-                payment.currency.ct, payment.currency.id, ""
+                payment.currency.ct, payment.currency.id, standard
             );
-        }
 
-        // Stage fees to revenue fund
-        if (address(0) != address(revenueFund))
-            _stageFees(wallet, totalFees, revenueFund, walletNonce);
+            // Stage fees to revenue fund
+            if (address(0) != address(revenueFund))
+                _stageFees(wallet, totalFees, revenueFund, nonce, standard);
+        }
 
         // Remove driip settlement challenge proposal
         driipSettlementChallengeState.terminateProposal(wallet, payment.currency, false);
-
-        // If payment global nonce is beyond max driip nonce then update max driip nonce
-        if (payment.nonce > driipSettlementState.maxDriipNonce())
-            driipSettlementState.setMaxDriipNonce(payment.nonce);
     }
 
-    function _getRoleProperties(PaymentTypesLib.Payment payment, address wallet)
+    function _getRoleProperties(PaymentTypesLib.Payment memory payment, address wallet)
     private
     view
     returns (
@@ -298,15 +283,28 @@ FraudChallengable, WalletLockable {
         }
     }
 
-    function _stageFees(address wallet, NahmiiTypesLib.OriginFigure[] fees,
-        Beneficiary protocolBeneficiary, uint256 nonce)
+    function _stageFees(address wallet, NahmiiTypesLib.OriginFigure[] memory fees,
+        Beneficiary protocolBeneficiary, uint256 nonce, string memory standard)
     private
     {
         // For each origin figure...
         for (uint256 i = 0; i < fees.length; i++) {
-            // Based on originId determine if this is protocol or partner fee, and if the latter define originId as destination in beneficiary
-            (Beneficiary beneficiary, address destination) =
-            (0 == fees[i].originId) ? (protocolBeneficiary, address(0)) : (partnerFund, address(fees[i].originId));
+            // Based on originId determine the fee beneficiary
+            Beneficiary beneficiary;
+            if (0 == fees[i].originId)
+                beneficiary = protocolBeneficiary;
+            else if (
+                0 < partnerBenefactor.registeredBeneficiariesCount() &&
+                fees[i].originId <= partnerBenefactor.registeredBeneficiariesCount()
+            )
+                beneficiary = partnerBenefactor.beneficiaries(fees[i].originId - 1);
+
+            // Continue if there is no beneficiary corresponding to the origin ID
+            if (address(0) == address(beneficiary))
+                continue;
+
+            // Define destination from origin ID
+            address destination = address(fees[i].originId);
 
             if (driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).nonce < nonce) {
                 // Get the amount previously staged
@@ -315,9 +313,9 @@ FraudChallengable, WalletLockable {
                 // Update fee total
                 driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
 
-                // Transfer to beneficiary
+                // Stage to beneficiary
                 clientFund.transferToBeneficiary(
-                    destination, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, ""
+                    wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, standard
                 );
 
                 // Emit event

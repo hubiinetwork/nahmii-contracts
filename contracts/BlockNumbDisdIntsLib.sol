@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {ConstantsLib} from "./ConstantsLib.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -54,7 +54,7 @@ library BlockNumbDisdIntsLib {
     function currentEntry(BlockNumbDisdInts storage self)
     internal
     view
-    returns (Entry)
+    returns (Entry memory)
     {
         return entryAt(self, block.number);
     }
@@ -90,7 +90,7 @@ library BlockNumbDisdIntsLib {
     function entryAt(BlockNumbDisdInts storage self, uint256 _blockNumber)
     internal
     view
-    returns (Entry)
+    returns (Entry memory)
     {
         return self.entries[indexByBlockNumber(self, _blockNumber)];
     }
@@ -100,7 +100,8 @@ library BlockNumbDisdIntsLib {
     {
         require(
             0 == self.entries.length ||
-            blockNumber > self.entries[self.entries.length - 1].blockNumber
+        blockNumber > self.entries[self.entries.length - 1].blockNumber,
+            "Later entry found [BlockNumbDisdIntsLib.sol:101]"
         );
 
         self.entries.length++;
@@ -111,10 +112,10 @@ library BlockNumbDisdIntsLib {
     }
 
     function addDiscountedEntry(BlockNumbDisdInts storage self, uint256 blockNumber, int256 nominal,
-        int256[] discountTiers, int256[] discountValues)
+        int256[] memory discountTiers, int256[] memory discountValues)
     internal
     {
-        require(discountTiers.length == discountValues.length);
+        require(discountTiers.length == discountValues.length, "Parameter array lengths mismatch [BlockNumbDisdIntsLib.sol:118]");
 
         addNominalEntry(self, blockNumber, nominal);
 
@@ -134,7 +135,7 @@ library BlockNumbDisdIntsLib {
     function entries(BlockNumbDisdInts storage self)
     internal
     view
-    returns (Entry[])
+    returns (Entry[] memory)
     {
         return self.entries;
     }
@@ -144,7 +145,7 @@ library BlockNumbDisdIntsLib {
     view
     returns (uint256)
     {
-        require(0 < self.entries.length);
+        require(0 < self.entries.length, "No entries found [BlockNumbDisdIntsLib.sol:148]");
         for (uint256 i = self.entries.length - 1; i >= 0; i--)
             if (blockNumber >= self.entries[i].blockNumber)
                 return i;
@@ -152,12 +153,12 @@ library BlockNumbDisdIntsLib {
     }
 
     /// @dev The index returned here is 1-based
-    function indexByTier(Discount[] discounts, int256 tier)
+    function indexByTier(Discount[] memory discounts, int256 tier)
     internal
     pure
     returns (uint256)
     {
-        require(0 < discounts.length);
+        require(0 < discounts.length, "No discounts found [BlockNumbDisdIntsLib.sol:161]");
         for (uint256 i = discounts.length; i > 0; i--)
             if (tier >= discounts[i - 1].tier)
                 return i;

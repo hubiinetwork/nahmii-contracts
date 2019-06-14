@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -70,7 +70,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     function setNullSettlementDisputeByTrade(NullSettlementDisputeByTrade newNullSettlementDisputeByTrade)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementDisputeByTrade)
+    notNullAddress(address(newNullSettlementDisputeByTrade))
     {
         NullSettlementDisputeByTrade oldNullSettlementDisputeByTrade = nullSettlementDisputeByTrade;
         nullSettlementDisputeByTrade = newNullSettlementDisputeByTrade;
@@ -82,7 +82,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
+    notNullAddress(address(newNullSettlementChallengeState))
     {
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
@@ -94,7 +94,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     function setNullSettlementState(NullSettlementState newNullSettlementState)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementState)
+    notNullAddress(address(newNullSettlementState))
     {
         NullSettlementState oldNullSettlementState = nullSettlementState;
         nullSettlementState = newNullSettlementState;
@@ -320,7 +320,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     function proposalDisqualificationCandidateKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         return nullSettlementChallengeState.proposalDisqualificationCandidateKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -344,7 +344,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
 
     /// @notice Challenge the settlement by providing order candidate
     /// @param order The order candidate that challenges the null
-    function challengeByOrder(TradeTypesLib.Order order)
+    function challengeByOrder(TradeTypesLib.Order memory order)
     public
     onlyOperationalModeNormal
     {
@@ -354,7 +354,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     /// @notice Challenge the settlement by providing trade candidate
     /// @param wallet The wallet whose settlement is being challenged
     /// @param trade The trade candidate that challenges the null
-    function challengeByTrade(address wallet, TradeTypesLib.Trade trade)
+    function challengeByTrade(address wallet, TradeTypesLib.Trade memory trade)
     public
     onlyOperationalModeNormal
     {
@@ -364,7 +364,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _startChallenge(address wallet, int256 stageAmount, MonetaryTypesLib.Currency currency,
+    function _startChallenge(address wallet, int256 stageAmount, MonetaryTypesLib.Currency memory currency,
         bool walletInitiated)
     private
     {
@@ -388,7 +388,7 @@ contract NullSettlementChallengeByTrade is Ownable, ConfigurableOperational, Bal
         );
     }
 
-    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool walletTerminated)
+    function _stopChallenge(address wallet, MonetaryTypesLib.Currency memory currency, bool walletTerminated)
     private
     {
         // Terminate proposal

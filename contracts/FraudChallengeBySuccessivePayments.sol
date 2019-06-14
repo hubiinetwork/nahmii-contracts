@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -52,8 +52,8 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     /// @param lastPayment Fraudulent payment candidate
     /// @param wallet The address of the concerned wallet
     function challenge(
-        PaymentTypesLib.Payment firstPayment,
-        PaymentTypesLib.Payment lastPayment,
+        PaymentTypesLib.Payment memory firstPayment,
+        PaymentTypesLib.Payment memory lastPayment,
         address wallet
     )
     public
@@ -61,25 +61,29 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     onlySealedPayment(firstPayment)
     onlySealedPayment(lastPayment)
     {
-        require(validator.isPaymentParty(firstPayment, wallet));
-        require(validator.isPaymentParty(lastPayment, wallet));
+        require(validator.isPaymentParty(firstPayment, wallet), "Wallet not party in first payment [FraudChallengeBySuccessivePayments.sol:64]");
+        require(validator.isPaymentParty(lastPayment, wallet), "Wallet not party in last payment [FraudChallengeBySuccessivePayments.sol:65]");
 
-        require(validator.isPaymentCurrency(firstPayment, lastPayment.currency));
+        require(validator.isPaymentCurrency(firstPayment, lastPayment.currency), "Differing payment currencies found [FraudChallengeBySuccessivePayments.sol:67]");
 
         PaymentTypesLib.PaymentPartyRole firstPaymentPartyRole = _paymentPartyRole(firstPayment, wallet);
         PaymentTypesLib.PaymentPartyRole lastPaymentPartyRole = _paymentPartyRole(lastPayment, wallet);
 
-        require(validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole));
+        require(
+            validator.isSuccessivePaymentsPartyNonces(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole),
+            "Non-successive payment party nonces found [FraudChallengeBySuccessivePayments.sol:72]"
+        );
 
         int256 deltaActiveBalance = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
             wallet, firstPayment.currency, firstPayment.blockNumber, lastPayment.blockNumber
         );
 
         // Require existence of fraud signal
-        require(!(
-        validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole, deltaActiveBalance) &&
-        validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment)
-        ));
+        require(
+            !(validator.isGenuineSuccessivePaymentsBalances(firstPayment, firstPaymentPartyRole, lastPayment, lastPaymentPartyRole, deltaActiveBalance) &&
+        validator.isGenuineSuccessivePaymentsTotalFees(firstPayment, lastPayment)),
+            "Fraud signal not found [FraudChallengeBySuccessivePayments.sol:82]"
+        );
 
         // Toggle operational mode exit
         configuration.setOperationalModeExit();
@@ -105,7 +109,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _paymentPartyRole(PaymentTypesLib.Payment payment, address wallet)
+    function _paymentPartyRole(PaymentTypesLib.Payment memory payment, address wallet)
     private
     view
     returns (PaymentTypesLib.PaymentPartyRole)

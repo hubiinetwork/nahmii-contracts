@@ -6,11 +6,13 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Benefactor} from "./Benefactor.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
+import {Beneficiary} from "./Beneficiary.sol";
+import {AccrualBeneficiary} from "./AccrualBeneficiary.sol";
 
 /**
  * @title AccrualBenefactor
@@ -28,39 +30,42 @@ contract AccrualBenefactor is Benefactor {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event RegisterAccrualBeneficiaryEvent(address beneficiary, int256 fraction);
-    event DeregisterAccrualBeneficiaryEvent(address beneficiary);
+    event RegisterAccrualBeneficiaryEvent(Beneficiary beneficiary, int256 fraction);
+    event DeregisterAccrualBeneficiaryEvent(Beneficiary beneficiary);
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Register the given beneficiary for the entirety fraction
-    /// @param beneficiary Address of beneficiary to be registered
-    function registerBeneficiary(address beneficiary)
+    /// @notice Register the given accrual beneficiary for the entirety fraction
+    /// @param beneficiary Address of accrual beneficiary to be registered
+    function registerBeneficiary(Beneficiary beneficiary)
     public
     onlyDeployer
-    notNullAddress(beneficiary)
+    notNullAddress(address(beneficiary))
     returns (bool)
     {
-        return registerFractionalBeneficiary(beneficiary, ConstantsLib.PARTS_PER());
+        return registerFractionalBeneficiary(AccrualBeneficiary(address(beneficiary)), ConstantsLib.PARTS_PER());
     }
 
-    /// @notice Register the given beneficiary for the given fraction
-    /// @param beneficiary Address of beneficiary to be registered
+    /// @notice Register the given accrual beneficiary for the given fraction
+    /// @param beneficiary Address of accrual beneficiary to be registered
     /// @param fraction Fraction of benefits to be given
-    function registerFractionalBeneficiary(address beneficiary, int256 fraction)
+    function registerFractionalBeneficiary(AccrualBeneficiary beneficiary, int256 fraction)
     public
     onlyDeployer
-    notNullAddress(beneficiary)
+    notNullAddress(address(beneficiary))
     returns (bool)
     {
-        require(fraction > 0);
-        require(totalBeneficiaryFraction.add(fraction) <= ConstantsLib.PARTS_PER());
+        require(fraction > 0, "Fraction not strictly positive [AccrualBenefactor.sol:59]");
+        require(
+            totalBeneficiaryFraction.add(fraction) <= ConstantsLib.PARTS_PER(),
+            "Total beneficiary fraction out of bounds [AccrualBenefactor.sol:60]"
+        );
 
         if (!super.registerBeneficiary(beneficiary))
             return false;
 
-        _beneficiaryFractionMap[beneficiary] = fraction;
+        _beneficiaryFractionMap[address(beneficiary)] = fraction;
         totalBeneficiaryFraction = totalBeneficiaryFraction.add(fraction);
 
         // Emit event
@@ -69,19 +74,21 @@ contract AccrualBenefactor is Benefactor {
         return true;
     }
 
-    /// @notice Deregister the given beneficiary
-    /// @param beneficiary Address of beneficiary to be deregistered
-    function deregisterBeneficiary(address beneficiary)
+    /// @notice Deregister the given accrual beneficiary
+    /// @param beneficiary Address of accrual beneficiary to be deregistered
+    function deregisterBeneficiary(Beneficiary beneficiary)
     public
     onlyDeployer
-    notNullAddress(beneficiary)
+    notNullAddress(address(beneficiary))
     returns (bool)
     {
         if (!super.deregisterBeneficiary(beneficiary))
             return false;
 
-        totalBeneficiaryFraction = totalBeneficiaryFraction.sub(_beneficiaryFractionMap[beneficiary]);
-        _beneficiaryFractionMap[beneficiary] = 0;
+        address _beneficiary = address(beneficiary);
+
+        totalBeneficiaryFraction = totalBeneficiaryFraction.sub(_beneficiaryFractionMap[_beneficiary]);
+        _beneficiaryFractionMap[_beneficiary] = 0;
 
         // Emit event
         emit DeregisterAccrualBeneficiaryEvent(beneficiary);
@@ -89,14 +96,14 @@ contract AccrualBenefactor is Benefactor {
         return true;
     }
 
-    /// @notice Get the fraction of benefits that is granted the given beneficiary
-    /// @param beneficiary Address of beneficiary
+    /// @notice Get the fraction of benefits that is granted the given accrual beneficiary
+    /// @param beneficiary Address of accrual beneficiary
     /// @return The beneficiary's fraction
-    function beneficiaryFraction(address beneficiary)
+    function beneficiaryFraction(AccrualBeneficiary beneficiary)
     public
     view
     returns (int256)
     {
-        return _beneficiaryFractionMap[beneficiary];
+        return _beneficiaryFractionMap[address(beneficiary)];
     }
 }

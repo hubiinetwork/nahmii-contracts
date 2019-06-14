@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 library BlockNumbIntsLib {
     //
@@ -35,7 +35,7 @@ library BlockNumbIntsLib {
     function currentEntry(BlockNumbInts storage self)
     internal
     view
-    returns (Entry)
+    returns (Entry memory)
     {
         return entryAt(self, block.number);
     }
@@ -51,7 +51,7 @@ library BlockNumbIntsLib {
     function entryAt(BlockNumbInts storage self, uint256 _blockNumber)
     internal
     view
-    returns (Entry)
+    returns (Entry memory)
     {
         return self.entries[indexByBlockNumber(self, _blockNumber)];
     }
@@ -61,7 +61,8 @@ library BlockNumbIntsLib {
     {
         require(
             0 == self.entries.length ||
-            blockNumber > self.entries[self.entries.length - 1].blockNumber
+        blockNumber > self.entries[self.entries.length - 1].blockNumber,
+            "Later entry found [BlockNumbIntsLib.sol:62]"
         );
 
         self.entries.push(Entry(blockNumber, value));
@@ -78,7 +79,7 @@ library BlockNumbIntsLib {
     function entries(BlockNumbInts storage self)
     internal
     view
-    returns (Entry[])
+    returns (Entry[] memory)
     {
         return self.entries;
     }
@@ -88,7 +89,7 @@ library BlockNumbIntsLib {
     view
     returns (uint256)
     {
-        require(0 < self.entries.length);
+        require(0 < self.entries.length, "No entries found [BlockNumbIntsLib.sol:92]");
         for (uint256 i = self.entries.length - 1; i >= 0; i--)
             if (blockNumber >= self.entries[i].blockNumber)
                 return i;

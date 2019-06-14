@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -19,6 +19,7 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDisputeByPayment} from "./DriipSettlementDisputeByPayment.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
+import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
@@ -42,6 +43,7 @@ BalanceTrackable {
     DriipSettlementDisputeByPayment public driipSettlementDisputeByPayment;
     DriipSettlementChallengeState public driipSettlementChallengeState;
     NullSettlementChallengeState public nullSettlementChallengeState;
+    DriipSettlementState public driipSettlementState;
 
     //
     // Events
@@ -52,6 +54,8 @@ BalanceTrackable {
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
+    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
+        DriipSettlementState newDriipSettlementState);
     event StartChallengeFromPaymentEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
         int256 targetBalanceAmount, address currencyCt, uint256 currencyId);
     event StartChallengeFromPaymentByProxyEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount, int256 stageAmount,
@@ -77,7 +81,7 @@ BalanceTrackable {
     function setDriipSettlementDisputeByPayment(DriipSettlementDisputeByPayment newDriipSettlementDisputeByPayment)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementDisputeByPayment)
+    notNullAddress(address(newDriipSettlementDisputeByPayment))
     {
         DriipSettlementDisputeByPayment oldDriipSettlementDisputeByPayment = driipSettlementDisputeByPayment;
         driipSettlementDisputeByPayment = newDriipSettlementDisputeByPayment;
@@ -89,7 +93,7 @@ BalanceTrackable {
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementChallengeState)
+    notNullAddress(address(newDriipSettlementChallengeState))
     {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
@@ -101,21 +105,33 @@ BalanceTrackable {
     function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
+    notNullAddress(address(newNullSettlementChallengeState))
     {
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
         emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
     }
 
+    /// @notice Set the driip settlement state contract
+    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
+    function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
+    public
+    onlyDeployer
+    notNullAddress(address(newDriipSettlementState))
+    {
+        DriipSettlementState oldDriipSettlementState = driipSettlementState;
+        driipSettlementState = newDriipSettlementState;
+        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
+    }
+
     /// @notice Start settlement challenge on payment
     /// @param payment The challenged payment
     /// @param stageAmount Amount of payment currency to be staged
-    function startChallengeFromPayment(PaymentTypesLib.Payment payment, int256 stageAmount)
+    function startChallengeFromPayment(PaymentTypesLib.Payment memory payment, int256 stageAmount)
     public
     {
         // Require that wallet is not temporarily disqualified
-        require(!walletLocker.isLocked(msg.sender));
+        require(!walletLocker.isLocked(msg.sender), "Wallet found locked [DriipSettlementChallengeByPayment.sol:134]");
 
         // Start challenge for wallet
         _startChallengeFromPayment(msg.sender, payment, stageAmount, true);
@@ -135,7 +151,7 @@ BalanceTrackable {
     /// @param wallet The concerned party
     /// @param payment The challenged payment
     /// @param stageAmount Amount of payment currency to be staged
-    function startChallengeFromPaymentByProxy(address wallet, PaymentTypesLib.Payment payment, int256 stageAmount)
+    function startChallengeFromPaymentByProxy(address wallet, PaymentTypesLib.Payment memory payment, int256 stageAmount)
     public
     onlyOperator
     {
@@ -359,7 +375,7 @@ BalanceTrackable {
     function proposalChallengedKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         return driipSettlementChallengeState.proposalChallengedKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -418,7 +434,7 @@ BalanceTrackable {
     function proposalDisqualificationCandidateKind(address wallet, address currencyCt, uint256 currencyId)
     public
     view
-    returns (string)
+    returns (string memory)
     {
         return driipSettlementChallengeState.proposalDisqualificationCandidateKind(
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId)
@@ -443,7 +459,7 @@ BalanceTrackable {
     /// @notice Challenge the settlement by providing payment candidate
     /// @param wallet The wallet whose settlement is being challenged
     /// @param payment The payment candidate that challenges the challenged driip
-    function challengeByPayment(address wallet, PaymentTypesLib.Payment payment)
+    function challengeByPayment(address wallet, PaymentTypesLib.Payment memory payment)
     public
     onlyOperationalModeNormal
     {
@@ -464,50 +480,61 @@ BalanceTrackable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _startChallengeFromPayment(address wallet, PaymentTypesLib.Payment payment,
+    function _startChallengeFromPayment(address wallet, PaymentTypesLib.Payment memory payment,
         int256 stageAmount, bool walletInitiated)
     private
     onlySealedPayment(payment)
     {
         // Require that current block number is beyond the earliest settlement challenge block number
-        require(block.number >= configuration.earliestSettlementBlockNumber());
+        require(
+            block.number >= configuration.earliestSettlementBlockNumber(),
+            "Current block number below earliest settlement block number [DriipSettlementChallengeByPayment.sol:489]"
+        );
 
         // Require that given wallet is a payment party
-        require(validator.isPaymentParty(payment, wallet));
+        require(validator.isPaymentParty(payment, wallet), "Wallet is not payment party [DriipSettlementChallengeByPayment.sol:495]");
 
         // Require that there is no ongoing overlapping driip settlement challenge
         require(
             !driipSettlementChallengeState.hasProposal(wallet, payment.currency) ||
-        driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency)
+        driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency),
+            "Overlapping driip settlement challenge proposal found [DriipSettlementChallengeByPayment.sol:498]"
         );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, payment.currency) ||
-        nullSettlementChallengeState.hasProposalTerminated(wallet, payment.currency)
+        nullSettlementChallengeState.hasProposalTerminated(wallet, payment.currency),
+            "Overlapping null settlement challenge proposal found [DriipSettlementChallengeByPayment.sol:505]"
         );
 
         // Deduce the concerned nonce and cumulative relative transfer
         (uint256 nonce, int256 cumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);
 
+        // Require that the wallet nonce of the payment is higher than the highest settled wallet nonce
+        require(
+            driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency) < nonce,
+            "Wallet's nonce below highest settled nonce [DriipSettlementChallengeByPayment.sol:515]"
+        );
+
         // Initiate proposal, including assurance that there is no overlap with active proposal
         // Target balance amount is calculated as current balance - cumulativeTransferAmount - stageAmount
         driipSettlementChallengeState.initiateProposal(
             wallet, nonce, cumulativeTransferAmount, stageAmount,
-            balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency).sub(cumulativeTransferAmount.add(stageAmount)),
+            balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency).sub(
+                cumulativeTransferAmount.add(stageAmount)
+            ),
             payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
     }
 
-    function _stopChallenge(address wallet, MonetaryTypesLib.Currency currency, bool clearNonce, bool walletTerminated)
+    function _stopChallenge(address wallet, MonetaryTypesLib.Currency memory currency, bool clearNonce, bool walletTerminated)
     private
     {
         // Require that there is an unterminated driip settlement challenge proposal
-        require(
-            driipSettlementChallengeState.hasProposal(wallet, currency) &&
-            !driipSettlementChallengeState.hasProposalTerminated(wallet, currency)
-        );
+        require(driipSettlementChallengeState.hasProposal(wallet, currency), "No proposal found [DriipSettlementChallengeByPayment.sol:536]");
+        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated [DriipSettlementChallengeByPayment.sol:537]");
 
         // Terminate driip settlement challenge proposal
         driipSettlementChallengeState.terminateProposal(wallet, currency, clearNonce, walletTerminated);
@@ -516,17 +543,48 @@ BalanceTrackable {
         nullSettlementChallengeState.terminateProposal(wallet, currency);
     }
 
-    function _paymentPartyProperties(PaymentTypesLib.Payment payment, address wallet)
+    function _paymentPartyProperties(PaymentTypesLib.Payment memory payment, address wallet)
     private
     view
-    returns (uint256, int256)
+    returns (uint256 nonce, int256 correctedCumulativeTransferAmount)
     {
-        // Obtain the active balance amount at the payment block
-        int256 balanceAmountAtPaymentBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(wallet, payment.currency, payment.blockNumber);
+        // Obtain unsynchronized stage amount from previous driip settlement if existent.
+        int256 unsynchronizedStageAmount = 0;
+        if (driipSettlementChallengeState.hasProposal(wallet, payment.currency)) {
+            uint256 previousChallengeNonce = driipSettlementChallengeState.proposalNonce(wallet, payment.currency);
 
-        // Return wallet nonce and cumulative relative transfer
-        return validator.isPaymentSender(payment, wallet) ?
-        (payment.sender.nonce, balanceAmountAtPaymentBlock.sub(payment.sender.balances.current)) :
-    (payment.recipient.nonce, balanceAmountAtPaymentBlock.sub(payment.recipient.balances.current));
+            // Get settlement party done block number. The function returns 0 if the settlement party has not effectuated
+            // its side of the settlement.
+            uint256 settlementPartyDoneBlockNumber = driipSettlementState.settlementPartyDoneBlockNumber(
+                wallet, previousChallengeNonce
+            );
+
+            // If payment is not up to date wrt events affecting the wallet's balance then obtain
+            // the unsynchronized stage amount from the previous driip settlement challenge.
+            if (payment.blockNumber < settlementPartyDoneBlockNumber)
+                unsynchronizedStageAmount = driipSettlementChallengeState.proposalStageAmount(
+                    wallet, payment.currency
+                );
+        }
+
+        // Obtain the active balance amount at the payment block
+        int256 balanceAmountAtPaymentBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+            wallet, payment.currency, payment.blockNumber
+        );
+
+        // Obtain nonce and cumulative (relative) transfer amount.
+        // Correct the cumulative transfer amount for wrong value occurring from
+        // race condition of off-chain wallet rebalance resulting from completed settlement
+        if (validator.isPaymentSender(payment, wallet)) {
+            nonce = payment.sender.nonce;
+            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock
+            .sub(payment.sender.balances.current)
+            .add(unsynchronizedStageAmount);
+        } else {
+            nonce = payment.recipient.nonce;
+            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock
+            .sub(payment.recipient.balances.current)
+            .add(unsynchronizedStageAmount);
+        }
     }
 }

@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
@@ -105,7 +105,7 @@ contract BalanceTracker is Ownable, Servable {
         uint256 indexLow, uint256 indexUp)
     public
     view
-    returns (int256[])
+    returns (int256[] memory)
     {
         return walletMap[wallet].nonFungibleBalanceByType[_type].getByIndices(
             currencyCt, currencyId, indexLow, indexUp
@@ -121,7 +121,7 @@ contract BalanceTracker is Ownable, Servable {
     function getAll(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
     public
     view
-    returns (int256[])
+    returns (int256[] memory)
     {
         return walletMap[wallet].nonFungibleBalanceByType[_type].get(
             currencyCt, currencyId
@@ -196,7 +196,7 @@ contract BalanceTracker is Ownable, Servable {
     /// @param ids The ids of non-fungible) to set
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function setIds(address wallet, bytes32 _type, int256[] ids, address currencyCt, uint256 currencyId)
+    function setIds(address wallet, bytes32 _type, int256[] memory ids, address currencyCt, uint256 currencyId)
     public
     onlyActiveService
     {
@@ -385,7 +385,7 @@ contract BalanceTracker is Ownable, Servable {
         uint256 index)
     public
     view
-    returns (int256[] ids, uint256 blockNumber)
+    returns (int256[] memory ids, uint256 blockNumber)
     {
         return walletMap[wallet].nonFungibleBalanceByType[_type].recordByIndex(currencyCt, currencyId, index);
     }
@@ -402,7 +402,7 @@ contract BalanceTracker is Ownable, Servable {
         uint256 _blockNumber)
     public
     view
-    returns (int256[] ids, uint256 blockNumber)
+    returns (int256[] memory ids, uint256 blockNumber)
     {
         return walletMap[wallet].nonFungibleBalanceByType[_type].recordByBlockNumber(currencyCt, currencyId, _blockNumber);
     }
@@ -416,7 +416,7 @@ contract BalanceTracker is Ownable, Servable {
     function lastNonFungibleRecord(address wallet, bytes32 _type, address currencyCt, uint256 currencyId)
     public
     view
-    returns (int256[] ids, uint256 blockNumber)
+    returns (int256[] memory ids, uint256 blockNumber)
     {
         return walletMap[wallet].nonFungibleBalanceByType[_type].lastRecord(currencyCt, currencyId);
     }
@@ -446,7 +446,7 @@ contract BalanceTracker is Ownable, Servable {
     function allBalanceTypes()
     public
     view
-    returns (bytes32[])
+    returns (bytes32[] memory)
     {
         return _allBalanceTypes;
     }
@@ -456,7 +456,7 @@ contract BalanceTracker is Ownable, Servable {
     function activeBalanceTypes()
     public
     view
-    returns (bytes32[])
+    returns (bytes32[] memory)
     {
         return _activeBalanceTypes;
     }
@@ -468,10 +468,10 @@ contract BalanceTracker is Ownable, Servable {
     function trackedWalletsByIndices(uint256 low, uint256 up)
     public
     view
-    returns (address[])
+    returns (address[] memory)
     {
-        require(0 < trackedWallets.length);
-        require(low <= up);
+        require(0 < trackedWallets.length, "No tracked wallets found [BalanceTracker.sol:473]");
+        require(low <= up, "Bounds parameters mismatch [BalanceTracker.sol:474]");
 
         up = up.clampMax(trackedWallets.length - 1);
         address[] memory _trackedWallets = new address[](up - low + 1);

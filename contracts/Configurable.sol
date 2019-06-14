@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {Configuration} from "./Configuration.sol";
@@ -34,8 +34,8 @@ contract Configurable is Ownable {
     function setConfiguration(Configuration newConfiguration)
     public
     onlyDeployer
-    notNullAddress(newConfiguration)
-    notSameAddresses(newConfiguration, configuration)
+    notNullAddress(address(newConfiguration))
+    notSameAddresses(address(newConfiguration), address(configuration))
     {
         // Set new configuration
         Configuration oldConfiguration = configuration;
@@ -49,7 +49,7 @@ contract Configurable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier configurationInitialized() {
-        require(configuration != address(0));
+        require(address(configuration) != address(0), "Configuration not initialized [Configurable.sol:52]");
         _;
     }
 }

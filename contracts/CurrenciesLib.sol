@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -48,7 +48,7 @@ library CurrenciesLib {
     function removeByIndex(Currencies storage self, uint256 index)
     internal
     {
-        require(index < self.currencies.length);
+        require(index < self.currencies.length, "Index out of bounds [CurrenciesLib.sol:51]");
 
         address currencyCt = self.currencies[index].ct;
         uint256 currencyId = self.currencies[index].id;
@@ -80,19 +80,19 @@ library CurrenciesLib {
     function getByIndex(Currencies storage self, uint256 index)
     internal
     view
-    returns (MonetaryTypesLib.Currency)
+    returns (MonetaryTypesLib.Currency memory)
     {
-        require(index < self.currencies.length);
+        require(index < self.currencies.length, "Index out of bounds [CurrenciesLib.sol:85]");
         return self.currencies[index];
     }
 
     function getByIndices(Currencies storage self, uint256 low, uint256 up)
     internal
     view
-    returns (MonetaryTypesLib.Currency[])
+    returns (MonetaryTypesLib.Currency[] memory)
     {
-        require(0 < self.currencies.length);
-        require(low <= up);
+        require(0 < self.currencies.length, "No currencies found [CurrenciesLib.sol:94]");
+        require(low <= up, "Bounds parameters mismatch [CurrenciesLib.sol:95]");
 
         up = up.clampMax(self.currencies.length - 1);
         MonetaryTypesLib.Currency[] memory _currencies = new MonetaryTypesLib.Currency[](up - low + 1);

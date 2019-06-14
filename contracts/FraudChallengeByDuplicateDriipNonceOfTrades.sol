@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -42,8 +42,8 @@ SecurityBondable {
     /// @param trade1 First trade with duplicate driip nonce
     /// @param trade2 Second trade with duplicate driip nonce
     function challenge(
-        TradeTypesLib.Trade trade1,
-        TradeTypesLib.Trade trade2
+        TradeTypesLib.Trade memory trade1,
+        TradeTypesLib.Trade memory trade2
     )
     public
     onlyOperationalModeNormal

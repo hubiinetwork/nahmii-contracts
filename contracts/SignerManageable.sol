@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -30,8 +30,7 @@ contract SignerManageable is Ownable {
     //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
-    constructor(address manager) public {
-        require(manager != address(0));
+    constructor(address manager) public notNullAddress(manager) {
         signerManager = SignerManager(manager);
     }
 
@@ -82,7 +81,6 @@ contract SignerManageable is Ownable {
     view
     returns (bool)
     {
-        require(signerManager != address(0));
         return signerManager.isSigner(ethrecover(hash, v, r, s));
     }
 
@@ -104,7 +102,7 @@ contract SignerManageable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier signerManagerInitialized() {
-        require(signerManager != address(0));
+        require(address(signerManager) != address(0), "Signer manager not initialized [SignerManageable.sol:105]");
         _;
     }
 }

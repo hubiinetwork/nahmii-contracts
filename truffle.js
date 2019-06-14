@@ -21,7 +21,7 @@ module.exports = {
             host: "localhost",
             port: 7545,
             network_id: "*",
-            gas: 8000000
+            gas: 100000000
         },
         "ganache-cli": {
             host: "localhost",
@@ -36,7 +36,7 @@ module.exports = {
             gas: 8000000
         },
         "ropsten-infura": {
-            provider: function() {
+            provider: function () {
                 return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3");
             },
             network_id: "*",
@@ -55,10 +55,16 @@ module.exports = {
             gas: 8000000
         },
         "mainnet-infura": {
-            provider: function() {
+            provider: function () {
                 return new HDWalletProvider(mnemonic, "https://mainnet.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3");
             },
             network_id: "*",
+            gas: 8000000
+        },
+        "mainnet-hubii": {
+            host: "ethereum.hubii.com",
+            port: 8545,
+            network_id: "1",
             gas: 8000000
         }
     },

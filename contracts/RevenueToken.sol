@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import 'openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
@@ -57,7 +57,7 @@ contract RevenueToken is ERC20Mintable {
     onlyMinter
     returns (bool)
     {
-        require(!mintingDisabled);
+        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:60]");
 
         // Call super's mint, including event emission
         bool minted = super.mint(to, value);
@@ -118,7 +118,10 @@ contract RevenueToken is ERC20Mintable {
     returns (bool)
     {
         // Prevent the update of non-zero allowance
-        require(0 == value || 0 == allowance(msg.sender, spender));
+        require(
+            0 == value || 0 == allowance(msg.sender, spender),
+            "Value or allowance non-zero [RevenueToken.sol:121]"
+        );
 
         // Call super's approve, including event emission
         return super.approve(spender, value);
@@ -167,8 +170,8 @@ contract RevenueToken is ERC20Mintable {
     view
     returns (uint256)
     {
-        require(startBlock < endBlock);
-        require(account != address(0));
+        require(startBlock < endBlock, "Bounds parameters mismatch [RevenueToken.sol:173]");
+        require(account != address(0), "Account is null address [RevenueToken.sol:174]");
 
         if (balanceBlockNumbers[account].length == 0 || endBlock < balanceBlockNumbers[account][0])
             return 0;
@@ -251,9 +254,9 @@ contract RevenueToken is ERC20Mintable {
     function holdersByIndices(uint256 low, uint256 up, bool posOnly)
     public
     view
-    returns (address[])
+    returns (address[] memory)
     {
-        require(low <= up);
+        require(low <= up, "Bounds parameters mismatch [RevenueToken.sol:259]");
 
         up = up > holders.length - 1 ? holders.length - 1 : up;
 
@@ -268,7 +271,7 @@ contract RevenueToken is ERC20Mintable {
         address[] memory _holders = new address[](length);
 
         uint256 j = 0;
-        for (i = low; i <= up; i++)
+        for (uint256 i = low; i <= up; i++)
             if (!posOnly || 0 < balanceOf(holders[i]))
                 _holders[j++] = holders[i];
 

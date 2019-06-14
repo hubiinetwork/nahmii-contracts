@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
@@ -59,12 +59,13 @@ library BlockNumbFiguresLib {
         return self.entries[indexByBlockNumber(self, _blockNumber)];
     }
 
-    function addEntry(BlockNumbFigures storage self, uint256 blockNumber, MonetaryTypesLib.Figure value)
+    function addEntry(BlockNumbFigures storage self, uint256 blockNumber, MonetaryTypesLib.Figure memory value)
     internal
     {
         require(
             0 == self.entries.length ||
-            blockNumber > self.entries[self.entries.length - 1].blockNumber
+        blockNumber > self.entries[self.entries.length - 1].blockNumber,
+            "Later entry found [BlockNumbFiguresLib.sol:65]"
         );
 
         self.entries.push(Entry(blockNumber, value));
@@ -91,7 +92,7 @@ library BlockNumbFiguresLib {
     view
     returns (uint256)
     {
-        require(0 < self.entries.length);
+        require(0 < self.entries.length, "No entries found [BlockNumbFiguresLib.sol:95]");
         for (uint256 i = self.entries.length - 1; i >= 0; i--)
             if (blockNumber >= self.entries[i].blockNumber)
                 return i;

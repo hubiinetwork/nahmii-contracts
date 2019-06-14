@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {TransferController} from "./TransferController.sol";
 import {IERC721} from "openzeppelin-solidity/contracts/token/ERC721/IERC721.sol";
@@ -16,6 +16,11 @@ import {IERC721} from "openzeppelin-solidity/contracts/token/ERC721/IERC721.sol"
  * @notice Handles transfers of ERC721 tokens
  */
 contract ERC721TransferController is TransferController {
+    //
+    // Constants
+    // -----------------------------------------------------------------------------------------------------------------
+    string constant _standard = "ERC721";
+
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
@@ -27,10 +32,18 @@ contract ERC721TransferController is TransferController {
         return false;
     }
 
+    function standard()
+    public
+    view
+    returns (string memory)
+    {
+        return _standard;
+    }
+
     function receive(address from, address to, uint256 id, address currencyCt, uint256 currencyId)
     public
     {
-        require(currencyId == 0);
+        require(currencyId == 0, "Currency ID is not 0 [ERC721TransferController.sol:46]");
 
         //        IERC721(currencyCt).transferFrom(from, to, id);
 
@@ -42,7 +55,7 @@ contract ERC721TransferController is TransferController {
     function approve(address /*to*/, uint256 /*id*/, address /*currencyCt*/, uint256 currencyId)
     public
     {
-        require(currencyId == 0);
+        require(currencyId == 0, "Currency ID is not 0 [ERC721TransferController.sol:58]");
 
         //        IERC721(currencyCt).approve(to, id);
     }
@@ -51,7 +64,7 @@ contract ERC721TransferController is TransferController {
     function dispatch(address from, address to, uint256 id, address currencyCt, uint256 currencyId)
     public
     {
-        require(currencyId == 0);
+        require(currencyId == 0, "Currency ID is not 0 [ERC721TransferController.sol:67]");
 
         //        IERC721(currencyCt).approve(from, id);
         //        IERC721(currencyCt).transferFrom(from, to, id);

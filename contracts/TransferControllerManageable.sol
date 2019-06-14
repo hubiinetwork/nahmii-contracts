@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {TransferControllerManager} from "./TransferControllerManager.sol";
@@ -36,8 +36,8 @@ contract TransferControllerManageable is Ownable {
     function setTransferControllerManager(TransferControllerManager newTransferControllerManager)
     public
     onlyDeployer
-    notNullAddress(newTransferControllerManager)
-    notSameAddresses(newTransferControllerManager, transferControllerManager)
+    notNullAddress(address(newTransferControllerManager))
+    notSameAddresses(address(newTransferControllerManager), address(transferControllerManager))
     {
         //set new currency manager
         TransferControllerManager oldTransferControllerManager = transferControllerManager;
@@ -48,7 +48,7 @@ contract TransferControllerManageable is Ownable {
     }
 
     /// @notice Get the transfer controller of the given currency contract address and standard
-    function transferController(address currencyCt, string standard)
+    function transferController(address currencyCt, string memory standard)
     internal
     view
     returns (TransferController)
@@ -60,7 +60,7 @@ contract TransferControllerManageable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier transferControllerManagerInitialized() {
-        require(transferControllerManager != address(0));
+        require(address(transferControllerManager) != address(0), "Transfer controller manager not initialized [TransferControllerManageable.sol:63]");
         _;
     }
 }

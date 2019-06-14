@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
@@ -67,10 +67,10 @@ contract TokenMultiTimelock is Ownable {
     function setToken(IERC20 _token)
     public
     onlyOperator
-    notNullOrThisAddress(_token)
+    notNullOrThisAddress(address(_token))
     {
         // Require that the token has not previously been set
-        require(address(token) == address(0));
+        require(address(token) == address(0), "Token previously set [TokenMultiTimelock.sol:73]");
 
         // Update beneficiary
         token = _token;
@@ -98,15 +98,21 @@ contract TokenMultiTimelock is Ownable {
     /// @param amounts The amounts to be released
     /// @param releaseBlockNumbers The set release block numbers for releases whose earliest release time
     /// is in the past
-    function defineReleases(uint256[] earliestReleaseTimes, uint256[] amounts, uint256[] releaseBlockNumbers)
+    function defineReleases(uint256[] memory earliestReleaseTimes, uint256[] memory amounts, uint256[] memory releaseBlockNumbers)
     onlyOperator
     public
     {
-        require(earliestReleaseTimes.length == amounts.length);
-        require(earliestReleaseTimes.length >= releaseBlockNumbers.length);
+        require(
+            earliestReleaseTimes.length == amounts.length,
+            "Earliest release times and amounts lengths mismatch [TokenMultiTimelock.sol:105]"
+        );
+        require(
+            earliestReleaseTimes.length >= releaseBlockNumbers.length,
+            "Earliest release times and release block numbers lengths mismatch [TokenMultiTimelock.sol:109]"
+        );
 
         // Require that token address has been set
-        require(address(token) != address(0));
+        require(address(token) != address(0), "Token not initialized [TokenMultiTimelock.sol:115]");
 
         for (uint256 i = 0; i < earliestReleaseTimes.length; i++) {
             // Update the total amount locked by this contract
@@ -114,7 +120,7 @@ contract TokenMultiTimelock is Ownable {
 
             // Require that total amount locked is less than or equal to the token balance of
             // this contract
-            require(token.balanceOf(address(this)) >= totalLockedAmount);
+            require(token.balanceOf(address(this)) >= totalLockedAmount, "Total locked amount overrun [TokenMultiTimelock.sol:123]");
 
             // Retrieve early block number where available
             uint256 blockNumber = i < releaseBlockNumbers.length ? releaseBlockNumbers[i] : 0;
@@ -145,7 +151,7 @@ contract TokenMultiTimelock is Ownable {
     onlyBeneficiary
     {
         // Require that the release is not done
-        require(!releases[index].done);
+        require(!releases[index].done, "Release previously done [TokenMultiTimelock.sol:154]");
 
         // Update the release block number
         releases[index].blockNumber = blockNumber;
@@ -164,13 +170,13 @@ contract TokenMultiTimelock is Ownable {
         Release storage _release = releases[index];
 
         // Require that this release has been properly defined by having non-zero amount
-        require(0 < _release.amount);
+        require(0 < _release.amount, "Release amount not strictly positive [TokenMultiTimelock.sol:173]");
 
         // Require that this release has not already been executed
-        require(!_release.done);
+        require(!_release.done, "Release previously done [TokenMultiTimelock.sol:176]");
 
         // Require that the current timestamp is beyond the nominal release time
-        require(block.timestamp >= _release.earliestReleaseTime);
+        require(block.timestamp >= _release.earliestReleaseTime, "Block time stamp less than earliest release time [TokenMultiTimelock.sol:179]");
 
         // Set release done
         _release.done = true;
@@ -195,7 +201,7 @@ contract TokenMultiTimelock is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyBeneficiary() {
-        require(msg.sender == beneficiary);
+        require(msg.sender == beneficiary, "Message sender not beneficiary [TokenMultiTimelock.sol:204]");
         _;
     }
 }

@@ -15,16 +15,21 @@ chai.should();
 
 module.exports = function (glob) {
     describe('PartnerFund', function () {
+        let provider;
         let web3TransferControllerManager;
-        let web3ERC20;
+        let web3ERC20, ethersERC20;
         let web3PartnerFund, ethersPartnerFund;
 
         before(async () => {
+            provider = glob.signer_owner.provider;
+
             web3TransferControllerManager = await TransferControllerManager.deployed();
         });
 
         beforeEach(async () => {
             web3ERC20 = await ERC20Token.new();
+            ethersERC20 = new Contract(web3ERC20.address, ERC20Token.abi, glob.signer_owner);
+
             await web3ERC20.mint(glob.user_a, 1000);
 
             await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
@@ -1351,6 +1356,8 @@ module.exports = function (glob) {
                         ._bn.should.eq.BN(0);
                     (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, web3ERC20.address, 0))
                         ._bn.should.eq.BN(0);
+
+                    (await ethersERC20.balanceOf(ethersPartnerFund.address))._bn.should.eq.BN(10);
                 });
             });
         });
@@ -1414,6 +1421,8 @@ module.exports = function (glob) {
                         ._bn.should.eq.BN(0);
                     (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, web3ERC20.address, 0))
                         ._bn.should.eq.BN(0);
+
+                    (await ethersERC20.balanceOf(ethersPartnerFund.address))._bn.should.eq.BN(10);
                 });
             });
         });
@@ -1518,10 +1527,12 @@ module.exports = function (glob) {
                 });
 
                 describe('if within operational constraints', () => {
-                    let nameHash;
+                    let nameHash, balanceBefore;
 
-                    before(() => {
+                    before(async () => {
                         nameHash = cryptography.hash('SOME PARTNER');
+
+                        balanceBefore = await provider.getBalance(glob.user_a)._bn;
                     });
 
                     it('should successfully withdraw', async () => {
@@ -1543,6 +1554,8 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
                         (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, address0, 0))
                             ._bn.should.eq.BN(utils.parseEther('0.2')._bn);
+
+                        (await provider.getBalance(glob.user_a))._bn.should.be.gt.BN(balanceBefore);
                     });
                 });
             });
@@ -1576,10 +1589,12 @@ module.exports = function (glob) {
                 });
 
                 describe('if within operational constraints', () => {
-                    let nameHash;
+                    let nameHash, balanceBefore;
 
-                    before(() => {
+                    before(async () => {
                         nameHash = cryptography.hash('SOME PARTNER');
+
+                        balanceBefore = await ethersERC20.balanceOf(glob.user_a);
                     });
 
                     it('should successfully withdraw', async () => {
@@ -1601,6 +1616,8 @@ module.exports = function (glob) {
                             ._bn.should.eq.BN(2);
                         (await ethersPartnerFund.stagedBalanceByWallet(glob.user_a, web3ERC20.address, 0))
                             ._bn.should.eq.BN(2);
+
+                        (await ethersERC20.balanceOf(glob.user_a))._bn.should.eq.BN(balanceBefore.add(4)._bn);
                     });
                 });
             });

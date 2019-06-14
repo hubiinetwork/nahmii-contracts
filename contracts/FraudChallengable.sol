@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {FraudChallenge} from "./FraudChallenge.sol";
@@ -34,8 +34,8 @@ contract FraudChallengable is Ownable {
     function setFraudChallenge(FraudChallenge newFraudChallenge)
     public
     onlyDeployer
-    notNullAddress(newFraudChallenge)
-    notSameAddresses(newFraudChallenge, fraudChallenge)
+    notNullAddress(address(newFraudChallenge))
+    notSameAddresses(address(newFraudChallenge), address(fraudChallenge))
     {
         // Set new fraud challenge
         FraudChallenge oldFraudChallenge = fraudChallenge;
@@ -49,7 +49,7 @@ contract FraudChallengable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier fraudChallengeInitialized() {
-        require(fraudChallenge != address(0));
+        require(address(fraudChallenge) != address(0), "Fraud challenge not initialized [FraudChallengable.sol:52]");
         _;
     }
 }

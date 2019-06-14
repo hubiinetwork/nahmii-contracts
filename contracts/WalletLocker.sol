@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
@@ -132,7 +132,7 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param visibleTimeoutInSeconds The number of seconds until the locked ids are visible, a.o. for seizure
-    function lockNonFungibleByProxy(address lockedWallet, address lockerWallet, int256[] ids,
+    function lockNonFungibleByProxy(address lockedWallet, address lockerWallet, int256[] memory ids,
         address currencyCt, uint256 currencyId, uint256 visibleTimeoutInSeconds)
     public
     onlyAuthorizedService(lockedWallet)
@@ -346,7 +346,7 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
         uint256 low, uint256 up)
     public
     view
-    returns (int256[])
+    returns (int256[] memory)
     {
         uint256 lockIndex = lockedCurrencyLockerNonFungibleLockIndex[lockedWallet][currencyCt][currencyId][lockerWallet];
 
@@ -432,7 +432,7 @@ contract WalletLocker is Ownable, Configurable, AuthorizableServable {
 
     function _unlockNonFungible(address lockedWallet, address lockerWallet, address currencyCt, uint256 currencyId, uint256 lockIndex)
     private
-    returns (int256[])
+    returns (int256[] memory)
     {
         int256[] memory ids = walletNonFungibleLocks[lockedWallet][lockIndex - 1].ids;
 

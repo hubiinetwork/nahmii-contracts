@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -55,8 +55,8 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     function challenge(
-        PaymentTypesLib.Payment payment,
-        TradeTypesLib.Trade trade,
+        PaymentTypesLib.Payment memory payment,
+        TradeTypesLib.Trade memory trade,
         address wallet,
         address currencyCt,
         uint256 currencyId
@@ -114,8 +114,8 @@ SecurityBondable, WalletLockable, BalanceTrackable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _rolesAndDeltaActiveBalance(PaymentTypesLib.Payment payment, TradeTypesLib.Trade trade, address wallet,
-        MonetaryTypesLib.Currency currency)
+    function _rolesAndDeltaActiveBalance(PaymentTypesLib.Payment memory payment, TradeTypesLib.Trade memory trade, address wallet,
+        MonetaryTypesLib.Currency memory currency)
     private
     view
     returns (
@@ -133,7 +133,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
         );
     }
 
-    function _paymentPartyRole(PaymentTypesLib.Payment payment, address wallet)
+    function _paymentPartyRole(PaymentTypesLib.Payment memory payment, address wallet)
     private
     view
     returns (PaymentTypesLib.PaymentPartyRole)
@@ -143,7 +143,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
         PaymentTypesLib.PaymentPartyRole.Recipient;
     }
 
-    function _tradePartyRole(TradeTypesLib.Trade trade, address wallet)
+    function _tradePartyRole(TradeTypesLib.Trade memory trade, address wallet)
     private
     view
     returns (TradeTypesLib.TradePartyRole)
@@ -153,7 +153,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
         TradeTypesLib.TradePartyRole.Seller;
     }
 
-    function _tradeCurrencyRole(TradeTypesLib.Trade trade, MonetaryTypesLib.Currency currency)
+    function _tradeCurrencyRole(TradeTypesLib.Trade memory trade, MonetaryTypesLib.Currency memory currency)
     private
     view
     returns (TradeTypesLib.CurrencyRole)
@@ -163,7 +163,7 @@ SecurityBondable, WalletLockable, BalanceTrackable {
         TradeTypesLib.CurrencyRole.Conjugate;
     }
 
-    function _tradeLockAmount(TradeTypesLib.Trade trade, TradeTypesLib.TradePartyRole tradePartyRole,
+    function _tradeLockAmount(TradeTypesLib.Trade memory trade, TradeTypesLib.TradePartyRole tradePartyRole,
         TradeTypesLib.CurrencyRole currencyRole)
     private
     pure

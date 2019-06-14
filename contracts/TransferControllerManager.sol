@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {TransferController} from "./TransferController.sol";
@@ -50,15 +50,13 @@ contract TransferControllerManager is Ownable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function registerTransferController(string standard, address controller)
+    function registerTransferController(string calldata standard, address controller)
     external
     onlyDeployer
     notNullAddress(controller)
     {
-        require(bytes(standard).length > 0);
+        require(bytes(standard).length > 0, "Empty standard not supported [TransferControllerManager.sol:58]");
         bytes32 standardHash = keccak256(abi.encodePacked(standard));
-
-        require(registeredTransferControllers[standardHash] == address(0));
 
         registeredTransferControllers[standardHash] = controller;
 
@@ -66,17 +64,17 @@ contract TransferControllerManager is Ownable {
         emit RegisterTransferControllerEvent(standard, controller);
     }
 
-    function reassociateTransferController(string oldStandard, string newStandard, address controller)
+    function reassociateTransferController(string calldata oldStandard, string calldata newStandard, address controller)
     external
     onlyDeployer
     notNullAddress(controller)
     {
-        require(bytes(newStandard).length > 0);
+        require(bytes(newStandard).length > 0, "Empty new standard not supported [TransferControllerManager.sol:72]");
         bytes32 oldStandardHash = keccak256(abi.encodePacked(oldStandard));
         bytes32 newStandardHash = keccak256(abi.encodePacked(newStandard));
 
-        require(registeredTransferControllers[oldStandardHash] != address(0));
-        require(registeredTransferControllers[newStandardHash] == address(0));
+        require(registeredTransferControllers[oldStandardHash] != address(0), "Old standard not registered [TransferControllerManager.sol:76]");
+        require(registeredTransferControllers[newStandardHash] == address(0), "New standard previously registered [TransferControllerManager.sol:77]");
 
         registeredTransferControllers[newStandardHash] = registeredTransferControllers[oldStandardHash];
         registeredTransferControllers[oldStandardHash] = address(0);
@@ -85,15 +83,15 @@ contract TransferControllerManager is Ownable {
         emit ReassociateTransferControllerEvent(oldStandard, newStandard, controller);
     }
 
-    function registerCurrency(address currencyCt, string standard)
+    function registerCurrency(address currencyCt, string calldata standard)
     external
     onlyOperator
     notNullAddress(currencyCt)
     {
-        require(bytes(standard).length > 0);
+        require(bytes(standard).length > 0, "Empty standard not supported [TransferControllerManager.sol:91]");
         bytes32 standardHash = keccak256(abi.encodePacked(standard));
 
-        require(registeredCurrencies[currencyCt].standard == bytes32(0));
+        require(registeredCurrencies[currencyCt].standard == bytes32(0), "Currency previously registered [TransferControllerManager.sol:94]");
 
         registeredCurrencies[currencyCt].standard = standardHash;
 
@@ -105,7 +103,7 @@ contract TransferControllerManager is Ownable {
     external
     onlyOperator
     {
-        require(registeredCurrencies[currencyCt].standard != 0);
+        require(registeredCurrencies[currencyCt].standard != 0, "Currency not registered [TransferControllerManager.sol:106]");
 
         registeredCurrencies[currencyCt].standard = bytes32(0);
         registeredCurrencies[currencyCt].blacklisted = false;
@@ -118,7 +116,7 @@ contract TransferControllerManager is Ownable {
     external
     onlyOperator
     {
-        require(registeredCurrencies[currencyCt].standard != bytes32(0));
+        require(registeredCurrencies[currencyCt].standard != bytes32(0), "Currency not registered [TransferControllerManager.sol:119]");
 
         registeredCurrencies[currencyCt].blacklisted = true;
 
@@ -130,7 +128,7 @@ contract TransferControllerManager is Ownable {
     external
     onlyOperator
     {
-        require(registeredCurrencies[currencyCt].standard != bytes32(0));
+        require(registeredCurrencies[currencyCt].standard != bytes32(0), "Currency not registered [TransferControllerManager.sol:131]");
 
         registeredCurrencies[currencyCt].blacklisted = false;
 
@@ -141,7 +139,7 @@ contract TransferControllerManager is Ownable {
     /**
     @notice The provided standard takes priority over assigned interface to currency
     */
-    function transferController(address currencyCt, string standard)
+    function transferController(address currencyCt, string memory standard)
     public
     view
     returns (TransferController)
@@ -149,15 +147,15 @@ contract TransferControllerManager is Ownable {
         if (bytes(standard).length > 0) {
             bytes32 standardHash = keccak256(abi.encodePacked(standard));
 
-            require(registeredTransferControllers[standardHash] != address(0));
+            require(registeredTransferControllers[standardHash] != address(0), "Standard not registered [TransferControllerManager.sol:150]");
             return TransferController(registeredTransferControllers[standardHash]);
         }
 
-        require(registeredCurrencies[currencyCt].standard != bytes32(0));
-        require(!registeredCurrencies[currencyCt].blacklisted);
+        require(registeredCurrencies[currencyCt].standard != bytes32(0), "Currency not registered [TransferControllerManager.sol:154]");
+        require(!registeredCurrencies[currencyCt].blacklisted, "Currency blacklisted [TransferControllerManager.sol:155]");
 
         address controllerAddress = registeredTransferControllers[registeredCurrencies[currencyCt].standard];
-        require(controllerAddress != address(0));
+        require(controllerAddress != address(0), "No matching transfer controller [TransferControllerManager.sol:158]");
 
         return TransferController(controllerAddress);
     }

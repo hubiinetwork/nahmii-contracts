@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -40,12 +40,12 @@ SecurityBondable, WalletLockable {
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Submit a payment candidate in continuous Fraud Challenge (FC)
     /// @param payment Fraudulent payment candidate
-    function challenge(PaymentTypesLib.Payment payment)
+    function challenge(PaymentTypesLib.Payment memory payment)
     public
     onlyOperationalModeNormal
     onlyOperatorSealedPayment(payment)
     {
-        require(validator.isGenuinePaymentWalletHash(payment));
+        require(validator.isGenuinePaymentWalletHash(payment), "Not genuine payment wallet hash found [FraudChallengeByPayment.sol:48]");
 
         // Genuineness affected by wallet not having signed the payment
         bool genuineWalletSignature = validator.isGenuineWalletSignature(
@@ -65,7 +65,7 @@ SecurityBondable, WalletLockable {
     );
 
         // Require existence of fraud signal
-        require(!(genuineWalletSignature && genuineSenderAndFee && genuineRecipient));
+        require(!(genuineWalletSignature && genuineSenderAndFee && genuineRecipient), "Fraud signal not found [FraudChallengeByPayment.sol:68]");
 
         // Toggle operational mode exit
         configuration.setOperationalModeExit();

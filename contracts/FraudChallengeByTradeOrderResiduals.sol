@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -47,8 +47,8 @@ SecurityBondable, WalletLockable {
     /// @param lastTrade Fraudulent trade candidate
     /// @param wallet The address of the concerned wallet
     function challenge(
-        TradeTypesLib.Trade firstTrade,
-        TradeTypesLib.Trade lastTrade,
+        TradeTypesLib.Trade memory firstTrade,
+        TradeTypesLib.Trade memory lastTrade,
         address wallet
     )
     public
@@ -105,7 +105,7 @@ SecurityBondable, WalletLockable {
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _tradeIntendedLockAmount(TradeTypesLib.Trade trade, TradeTypesLib.TradePartyRole tradePartyRole)
+    function _tradeIntendedLockAmount(TradeTypesLib.Trade memory trade, TradeTypesLib.TradePartyRole tradePartyRole)
     private
     pure
     returns (int256)
@@ -116,7 +116,7 @@ SecurityBondable, WalletLockable {
             return trade.seller.balances.intended.current;
     }
 
-    function _tradeConjugateLockAmount(TradeTypesLib.Trade trade, TradeTypesLib.TradePartyRole tradePartyRole)
+    function _tradeConjugateLockAmount(TradeTypesLib.Trade memory trade, TradeTypesLib.TradePartyRole tradePartyRole)
     private
     pure
     returns (int256)

@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -99,10 +99,10 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
     function cancelledOrderHashesByIndices(address wallet, uint256 low, uint256 up)
     public
     view
-    returns (bytes32[])
+    returns (bytes32[] memory)
     {
-        require(0 < walletCancelledOrderOperatorHashes[wallet].length);
-        require(low <= up);
+        require(0 < walletCancelledOrderOperatorHashes[wallet].length, "No cancelled order operator hash for wallet [CancelOrdersChallenge.sol:104]");
+        require(low <= up, "Bounds parameters mismatch [CancelOrdersChallenge.sol:105]");
 
         up = up > walletCancelledOrderOperatorHashes[wallet].length - 1 ? walletCancelledOrderOperatorHashes[wallet].length - 1 : up;
         bytes32[] memory hashes = new bytes32[](up - low + 1);
@@ -113,13 +113,13 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
 
     /// @notice Cancel orders of msg.sender
     /// @param orders The orders to cancel
-    function cancelOrders(TradeTypesLib.Order[] orders)
+    function cancelOrders(TradeTypesLib.Order[] memory orders)
     public
     onlyOperationalModeNormal
     {
         for (uint256 i = 0; i < orders.length; i++) {
-            require(msg.sender == orders[i].wallet);
-            require(validator.isGenuineOrderSeals(orders[i]));
+            require(msg.sender == orders[i].wallet, "Message sender is not order wallet [CancelOrdersChallenge.sol:121]");
+            require(validator.isGenuineOrderSeals(orders[i]), "Not genuine order seals found [CancelOrdersChallenge.sol:122]");
 
             if (0 == walletCancelledOrderOperatorHashes[msg.sender].length)
                 cancellingWallets.push(msg.sender);
@@ -137,12 +137,12 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
     /// @notice Challenge cancelled order
     /// @param trade The trade that challenges a cancelled order
     /// @param wallet The address of the concerned wallet
-    function challenge(TradeTypesLib.Trade trade, address wallet)
+    function challenge(TradeTypesLib.Trade memory trade, address wallet)
     public
     onlyOperationalModeNormal
     onlySealedTrade(trade)
     {
-        require(block.timestamp < walletOrderCancelledTimeoutMap[wallet]);
+        require(block.timestamp < walletOrderCancelledTimeoutMap[wallet], "Order cancellation timer expired for wallet [CancelOrdersChallenge.sol:145]");
 
         bytes32 tradeOrderOperatorHash = (
         wallet == trade.buyer.wallet ?
@@ -150,7 +150,7 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
         trade.seller.order.hashes.operator
         );
 
-        require(walletOrderOperatorHashCancelledMap[wallet][tradeOrderOperatorHash]);
+        require(walletOrderOperatorHashCancelledMap[wallet][tradeOrderOperatorHash], "Order not cancelled [CancelOrdersChallenge.sol:153]");
 
         walletOrderOperatorHashCancelledMap[wallet][tradeOrderOperatorHash] = false;
 
@@ -174,10 +174,10 @@ contract CancelOrdersChallenge is Ownable, ConfigurableOperational, ValidatableV
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _orderOperatorHashes(TradeTypesLib.Order[] orders)
+    function _orderOperatorHashes(TradeTypesLib.Order[] memory orders)
     private
     pure
-    returns (bytes32[])
+    returns (bytes32[] memory)
     {
         bytes32[] memory operatorHashes = new bytes32[](orders.length);
         for (uint256 i = 0; i < orders.length; i++)

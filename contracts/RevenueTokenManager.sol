@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {TokenMultiTimelock} from "./TokenMultiTimelock.sol";
 import {RevenueToken} from "./RevenueToken.sol";
@@ -57,7 +57,7 @@ contract RevenueTokenManager is TokenMultiTimelock {
     view
     returns (uint256)
     {
-        require(startBlock < endBlock);
+        require(startBlock < endBlock, "Bounds parameters mismatch [RevenueTokenManager.sol:60]");
 
         if (executedReleasesCount == 0 || endBlock < releases[0].blockNumber)
             return 0;

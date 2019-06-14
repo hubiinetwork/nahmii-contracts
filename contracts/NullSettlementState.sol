@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -30,7 +30,7 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
     string constant public SET_MAX_NULL_NONCE_ACTION = "set_max_null_nonce";
-    string constant public SET_MAX_NONCE_WALLET_CURRENCY_ACTION = "set_max_nonce_wallet_currency";
+    string constant public SET_MAX_NONCE_ACTION = "set_max_nonce";
 
     //
     // Variables
@@ -44,8 +44,8 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     // -----------------------------------------------------------------------------------------------------------------
     event SetMaxNullNonceEvent(uint256 maxNullNonce);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
-        uint256 maxNullNonce);
-    event updateMaxNullNonceFromCommunityVoteEvent(uint256 maxDriipNonce);
+        uint256 maxNonce);
+    event UpdateMaxNullNonceFromCommunityVoteEvent(uint256 maxNullNonce);
 
     //
     // Constructor
@@ -62,6 +62,7 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     public
     onlyEnabledServiceAction(SET_MAX_NULL_NONCE_ACTION)
     {
+        // Update max nonce value
         maxNullNonce = _maxNullNonce;
 
         // Emit event
@@ -72,7 +73,7 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @return The max nonce
-    function maxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency)
+    function maxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency memory currency)
     public
     view
     returns (uint256) {
@@ -83,11 +84,12 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @param _maxNullNonce The max nonce
-    function setMaxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency currency,
+    function setMaxNonceByWalletAndCurrency(address wallet, MonetaryTypesLib.Currency memory currency,
         uint256 _maxNullNonce)
     public
-    onlyEnabledServiceAction(SET_MAX_NONCE_WALLET_CURRENCY_ACTION)
+    onlyEnabledServiceAction(SET_MAX_NONCE_ACTION)
     {
+        // Update max nonce value
         walletCurrencyMaxNonce[wallet][currency.ct][currency.id] = _maxNullNonce;
 
         // Emit event
@@ -105,6 +107,6 @@ contract NullSettlementState is Ownable, Servable, CommunityVotable {
         maxNullNonce = _maxNullNonce;
 
         // Emit event
-        emit updateMaxNullNonceFromCommunityVoteEvent(maxNullNonce);
+        emit UpdateMaxNullNonceFromCommunityVoteEvent(maxNullNonce);
     }
 }

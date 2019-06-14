@@ -81,8 +81,6 @@ contract('Unit tests', function () {
     require('./scenarios/FraudChallengeByTradeOrderResiduals')(glob);
     require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
-    require('./scenarios/FraudChallengeByDuplicateDriipNonceOfPayments')(glob);
-    require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTradeAndPayment')(glob);
     require('./scenarios/NullSettlement')(glob);
     require('./scenarios/NullSettlementChallengeByPayment')(glob);
     require('./scenarios/NullSettlementChallengeByTrade')(glob);
@@ -90,6 +88,7 @@ contract('Unit tests', function () {
     require('./scenarios/NullSettlementDisputeByPayment')(glob);
     require('./scenarios/NullSettlementDisputeByTrade')(glob);
     require('./scenarios/NullSettlementState')(glob);
+    require('./scenarios/PartnerBenefactor')(glob);
     require('./scenarios/PartnerFund')(glob);
     require('./scenarios/PaymentHasher')(glob);
     require('./scenarios/RevenueFund1')(glob);

@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "../Ownable.sol";
@@ -28,27 +28,27 @@ contract MockedClientFundService is Ownable, ClientFundable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     function updateSettledBalance(address wallet, int256 amount, address currencyCt, uint256 currencyId,
-        string standard, uint256 blockNumber)
+        string memory standard, uint256 blockNumber)
     public
     {
         clientFund.updateSettledBalance(wallet, amount, currencyCt, currencyId, standard, blockNumber);
     }
 
-    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId, string standard)
+    function stage(address wallet, int256 amount, address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         clientFund.stage(wallet, amount, currencyCt, currencyId, standard);
     }
 
     function stageToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId, string standard)
+        address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         clientFund.stageToBeneficiary(wallet, beneficiary, amount, currencyCt, currencyId, standard);
     }
 
     function transferToBeneficiary(address wallet, Beneficiary beneficiary, int256 amount,
-        address currencyCt, uint256 currencyId, string standard)
+        address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         clientFund.transferToBeneficiary(wallet, beneficiary, amount, currencyCt, currencyId, standard);

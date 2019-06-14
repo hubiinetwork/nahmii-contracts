@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {TradeTypesLib} from "../TradeTypesLib.sol";
@@ -45,7 +45,7 @@ contract MockedCancelOrdersChallenge {
         cancelledOrderHashes.length = 0;
     }
 
-    function cancelOrders(TradeTypesLib.Order[] orders)
+    function cancelOrders(TradeTypesLib.Order[] memory orders)
     public
     {
         for (uint256 i = 0; i < orders.length; i++) {
@@ -56,7 +56,7 @@ contract MockedCancelOrdersChallenge {
         emit CancelOrdersEvent(orders, msg.sender);
     }
 
-    function cancelOrdersByHash(bytes32[] orderHashes)
+    function cancelOrdersByHash(bytes32[] memory orderHashes)
     public
     {
         for (uint256 i = 0; i < orderHashes.length; i++) {

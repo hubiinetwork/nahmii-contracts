@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {CancelOrdersChallenge} from "./CancelOrdersChallenge.sol";
@@ -35,8 +35,8 @@ contract CancelOrdersChallengable is Ownable {
     function setCancelOrdersChallenge(CancelOrdersChallenge newCancelOrdersChallenge)
     public
     onlyDeployer
-    notNullAddress(newCancelOrdersChallenge)
-    notSameAddresses(newCancelOrdersChallenge, cancelOrdersChallenge)
+    notNullAddress(address(newCancelOrdersChallenge))
+    notSameAddresses(address(newCancelOrdersChallenge), address(cancelOrdersChallenge))
     {
         // Set new cancel orders challenge
         CancelOrdersChallenge oldCancelOrdersChallenge = cancelOrdersChallenge;
@@ -50,7 +50,7 @@ contract CancelOrdersChallengable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier cancelOrdersChallengeInitialized() {
-        require(cancelOrdersChallenge != address(0));
+        require(address(cancelOrdersChallenge) != address(0), "Cancel orders challenge not initialized [CancelOrdersChallengable.sol:53]");
         _;
     }
 }

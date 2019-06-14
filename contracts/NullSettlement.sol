@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
@@ -47,9 +47,9 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
         NullSettlementState newNullSettlementState);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
-    event SettleNullEvent(address wallet, address currencyCt, uint256 currencyId);
+    event SettleNullEvent(address wallet, address currencyCt, uint256 currencyId, string standard);
     event SettleNullByProxyEvent(address proxy, address wallet, address currencyCt,
-        uint256 currencyId);
+        uint256 currencyId, string standard);
 
     //
     // Constructor
@@ -65,7 +65,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementChallengeState)
+    notNullAddress(address(newNullSettlementChallengeState))
     {
         NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
         nullSettlementChallengeState = newNullSettlementChallengeState;
@@ -77,7 +77,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     function setNullSettlementState(NullSettlementState newNullSettlementState)
     public
     onlyDeployer
-    notNullAddress(newNullSettlementState)
+    notNullAddress(address(newNullSettlementState))
     {
         NullSettlementState oldNullSettlementState = nullSettlementState;
         nullSettlementState = newNullSettlementState;
@@ -89,7 +89,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     function setDriipSettlementChallengeState(DriipSettlementChallengeState newDriipSettlementChallengeState)
     public
     onlyDeployer
-    notNullAddress(newDriipSettlementChallengeState)
+    notNullAddress(address(newDriipSettlementChallengeState))
     {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
@@ -99,67 +99,71 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
     /// @notice Settle null
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function settleNull(address currencyCt, uint256 currencyId)
+    /// @param standard The standard of the token to be settled (discarded if settling ETH)
+    function settleNull(address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         // Settle null
-        _settleNull(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId));
+        _settleNull(msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), standard);
 
         // Emit event
-        emit SettleNullEvent(msg.sender, currencyCt, currencyId);
+        emit SettleNullEvent(msg.sender, currencyCt, currencyId, standard);
     }
 
     /// @notice Settle null by proxy
     /// @param wallet The address of the concerned wallet
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function settleNullByProxy(address wallet, address currencyCt, uint256 currencyId)
+    /// @param standard The standard of the token to be settled (discarded if settling ETH)
+    function settleNullByProxy(address wallet, address currencyCt, uint256 currencyId, string memory standard)
     public
     onlyOperator
     {
         // Settle null of wallet
-        _settleNull(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId));
+        _settleNull(wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), standard);
 
         // Emit event
-        emit SettleNullByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
+        emit SettleNullByProxyEvent(msg.sender, wallet, currencyCt, currencyId, standard);
     }
 
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _settleNull(address wallet, MonetaryTypesLib.Currency currency)
+    function _settleNull(address wallet, MonetaryTypesLib.Currency memory currency, string memory standard)
     private
     {
         // Require that there is no overlapping driip settlement challenge
         require(
             !driipSettlementChallengeState.hasProposal(wallet, currency) ||
-        driipSettlementChallengeState.hasProposalTerminated(wallet, currency)
+        driipSettlementChallengeState.hasProposalTerminated(wallet, currency),
+            "Overlapping driip settlement challenge proposal found [NullSettlement.sol:136]"
         );
 
         // Require that null settlement challenge proposal has been initiated
-        require(nullSettlementChallengeState.hasProposal(wallet, currency));
+        require(nullSettlementChallengeState.hasProposal(wallet, currency), "No proposal found [NullSettlement.sol:143]");
 
         // Require that null settlement challenge proposal has not been terminated already
-        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency));
+        require(!nullSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated [NullSettlement.sol:146]");
 
         // Require that null settlement challenge proposal has expired
-        require(nullSettlementChallengeState.hasProposalExpired(wallet, currency));
+        require(nullSettlementChallengeState.hasProposalExpired(wallet, currency), "Proposal found not expired [NullSettlement.sol:149]");
 
         // Require that null settlement challenge qualified
         require(SettlementChallengeTypesLib.Status.Qualified == nullSettlementChallengeState.proposalStatus(
             wallet, currency
-        ));
+        ), "Proposal found not qualified [NullSettlement.sol:152]");
 
         // Require that operational mode is normal and data is available, or that nonce is
         // smaller than max null nonce
-        require(configuration.isOperationalModeNormal() && communityVote.isDataAvailable());
+        require(configuration.isOperationalModeNormal(), "Not normal operational mode [NullSettlement.sol:158]");
+        require(communityVote.isDataAvailable(), "Data not available [NullSettlement.sol:159]");
 
         // Get null settlement challenge proposal nonce
         uint256 nonce = nullSettlementChallengeState.proposalNonce(wallet, currency);
 
         // If wallet has previously settled balance of the concerned currency with higher
         // null settlement nonce, then don't settle again
-        require(nonce >= nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency));
+        require(nonce >= nullSettlementState.maxNonceByWalletAndCurrency(wallet, currency), "Nonce deemed smaller than max nonce by wallet and currency [NullSettlement.sol:166]");
 
         // Update settled nonce of wallet and currency
         nullSettlementState.setMaxNonceByWalletAndCurrency(wallet, currency, nonce);
@@ -170,7 +174,7 @@ contract NullSettlement is Ownable, Configurable, ClientFundable, CommunityVotab
             nullSettlementChallengeState.proposalStageAmount(
                 wallet, currency
             ),
-            currency.ct, currency.id, ""
+            currency.ct, currency.id, standard
         );
 
         // Remove null settlement challenge proposal

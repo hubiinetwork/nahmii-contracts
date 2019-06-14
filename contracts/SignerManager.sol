@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
@@ -68,7 +68,7 @@ contract SignerManager is Ownable {
     view
     returns (uint256)
     {
-        require(isSigner(_address));
+        require(isSigner(_address), "Address not signer [SignerManager.sol:71]");
         return signerIndicesMap[_address] - 1;
     }
 
@@ -96,10 +96,10 @@ contract SignerManager is Ownable {
     function signersByIndices(uint256 low, uint256 up)
     public
     view
-    returns (address[])
+    returns (address[] memory)
     {
-        require(0 < signers.length);
-        require(low <= up);
+        require(0 < signers.length, "No signers found [SignerManager.sol:101]");
+        require(low <= up, "Bounds parameters mismatch [SignerManager.sol:102]");
 
         up = up.clampMax(signers.length - 1);
         address[] memory _signers = new address[](up - low + 1);

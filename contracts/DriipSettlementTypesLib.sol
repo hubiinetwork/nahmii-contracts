@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 /**
@@ -23,6 +23,7 @@ library DriipSettlementTypesLib {
         uint256 nonce;
         address wallet;
         bool done;
+        uint256 doneBlockNumber;
     }
 
     struct Settlement {

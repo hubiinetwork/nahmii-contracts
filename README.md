@@ -4,7 +4,7 @@ This is the home of code for smart contracts for hubii's 2nd layer solution call
 
 ## Whitepaper
 
-Please see the release page (https://github.com/hubiinetwork/nahmii-contracts/releases) to download the whitepaper.
+An elaborate outline of the nahmii protocol can be found in the [nahmii whitepaper](https://www.hubii.com/wp-content/uploads/2018/09/nahmii-whitepaper.pdf). We suggest you read this document before diving into the details of the supporting smart contracts in this repository.
 
 ## Tests
 

@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
@@ -90,7 +90,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Fallback function that deposits ethers
-    function() public payable {
+    function() external payable {
         _receiveEthersTo(
             indexByWallet(msg.sender) - 1, SafeMathIntLib.toNonZeroInt256(msg.value)
         );
@@ -98,7 +98,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
     /// @notice Receive ethers to
     /// @param tag The tag of the concerned partner
-    function receiveEthersTo(address tag, string)
+    function receiveEthersTo(address tag, string memory)
     public
     payable
     {
@@ -112,8 +112,8 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of token ("ERC20", "ERC721")
-    function receiveTokens(string, int256 amount, address currencyCt,
-        uint256 currencyId, string standard)
+    function receiveTokens(string memory, int256 amount, address currencyCt,
+        uint256 currencyId, string memory standard)
     public
     {
         _receiveTokensTo(
@@ -127,8 +127,8 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of token ("ERC20", "ERC721")
-    function receiveTokensTo(address tag, string, int256 amount, address currencyCt,
-        uint256 currencyId, string standard)
+    function receiveTokensTo(address tag, string memory, int256 amount, address currencyCt,
+        uint256 currencyId, string memory standard)
     public
     {
         _receiveTokensTo(
@@ -139,7 +139,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @notice Hash name
     /// @param name The name to be hashed
     /// @return The hash value
-    function hashName(string name)
+    function hashName(string memory name)
     public
     pure
     returns (bytes32)
@@ -157,7 +157,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
         // Require partner index is one of registered partner
-        require(0 < partnerIndex && partnerIndex <= partners.length);
+        require(0 < partnerIndex && partnerIndex <= partners.length, "Some error message when require fails [PartnerFund.sol:160]");
 
         return _depositByIndices(partnerIndex - 1, depositIndex);
     }
@@ -166,7 +166,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @param name The name of the concerned partner
     /// @param depositIndex The index of the concerned deposit
     /// return The deposit parameters
-    function depositByName(string name, uint depositIndex)
+    function depositByName(string memory name, uint depositIndex)
     public
     view
     returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
@@ -210,7 +210,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (uint256)
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length);
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:213]");
 
         return _depositsCountByIndex(index - 1);
     }
@@ -218,7 +218,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @notice Get deposits count by partner name
     /// @param name The name of the concerned partner
     /// return The deposits count
-    function depositsCountByName(string name)
+    function depositsCountByName(string memory name)
     public
     view
     returns (uint256)
@@ -262,7 +262,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (int256)
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length);
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:265]");
 
         return _activeBalanceByIndex(index - 1, currencyCt, currencyId);
     }
@@ -272,7 +272,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// return The active balance
-    function activeBalanceByName(string name, address currencyCt, uint256 currencyId)
+    function activeBalanceByName(string memory name, address currencyCt, uint256 currencyId)
     public
     view
     returns (int256)
@@ -320,7 +320,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (int256)
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length);
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:323]");
 
         return _stagedBalanceByIndex(index - 1, currencyCt, currencyId);
     }
@@ -330,7 +330,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// return The staged balance
-    function stagedBalanceByName(string name, address currencyCt, uint256 currencyId)
+    function stagedBalanceByName(string memory name, address currencyCt, uint256 currencyId)
     public
     view
     returns (int256)
@@ -383,13 +383,13 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @param wallet The partner's wallet
     /// @param partnerCanUpdate Indicator of whether partner can update fee and wallet
     /// @param operatorCanUpdate Indicator of whether operator can update fee and wallet
-    function registerByName(string name, uint256 fee, address wallet,
+    function registerByName(string memory name, uint256 fee, address wallet,
         bool partnerCanUpdate, bool operatorCanUpdate)
     public
     onlyOperator
     {
         // Require not empty name string
-        require(bytes(name).length > 0);
+        require(bytes(name).length > 0, "Some error message when require fails [PartnerFund.sol:392]");
 
         // Hash name
         bytes32 nameHash = hashName(name);
@@ -428,14 +428,14 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (uint256)
     {
         uint256 index = _indexByNameHash[nameHash];
-        require(0 < index);
+        require(0 < index, "Some error message when require fails [PartnerFund.sol:431]");
         return index;
     }
 
     /// @notice Gets the 1-based index of partner by its name
     /// @dev Reverts if name does not correspond to registered partner
     /// @return Index of partner by given name
-    function indexByName(string name)
+    function indexByName(string memory name)
     public
     view
     returns (uint256)
@@ -452,14 +452,14 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (uint256)
     {
         uint256 index = _indexByWallet[wallet];
-        require(0 < index);
+        require(0 < index, "Some error message when require fails [PartnerFund.sol:455]");
         return index;
     }
 
     /// @notice Gauge whether a partner by the given name is registered
     /// @param name The name of the concerned partner
     /// @return true if partner is registered, else false
-    function isRegisteredByName(string name)
+    function isRegisteredByName(string memory name)
     public
     view
     returns (bool)
@@ -498,7 +498,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (uint256)
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length);
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:501]");
 
         return _partnerFeeByIndex(index - 1);
     }
@@ -506,7 +506,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @notice Get the partner fee fraction by the given partner name
     /// @param name The name of the concerned partner
     /// @return The fee fraction
-    function feeByName(string name)
+    function feeByName(string memory name)
     public
     view
     returns (uint256)
@@ -546,7 +546,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     public
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length);
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:549]");
 
         // Update fee
         uint256 oldFee = _setPartnerFeeByIndex(index - 1, newFee);
@@ -558,7 +558,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @notice Set the partner fee fraction by the given partner name
     /// @param name The name of the concerned partner
     /// @param newFee The partner's fee fraction
-    function setFeeByName(string name, uint256 newFee)
+    function setFeeByName(string memory name, uint256 newFee)
     public
     {
         // Update fee, implicitly requiring that partner name is registered
@@ -603,7 +603,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     returns (address)
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length);
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:606]");
 
         return partners[index - 1].wallet;
     }
@@ -611,7 +611,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @notice Get the partner wallet by the given partner name
     /// @param name The name of the concerned partner
     /// @return The wallet
-    function walletByName(string name)
+    function walletByName(string memory name)
     public
     view
     returns (address)
@@ -639,7 +639,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     public
     {
         // Require partner index is one of registered partner
-        require(0 < index && index <= partners.length);
+        require(0 < index && index <= partners.length, "Some error message when require fails [PartnerFund.sol:642]");
 
         // Update wallet
         address oldWallet = _setPartnerWalletByIndex(index - 1, newWallet);
@@ -651,7 +651,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @notice Set the partner wallet by the given partner name
     /// @param name The name of the concerned partner
     /// @return newWallet The partner's wallet
-    function setWalletByName(string name, address newWallet)
+    function setWalletByName(string memory name, address newWallet)
     public
     {
         // Update wallet
@@ -698,7 +698,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
         uint256 index = indexByWallet(msg.sender);
 
         // Require positive amount
-        require(amount.isPositiveInt256());
+        require(amount.isPositiveInt256(), "Some error message when require fails [PartnerFund.sol:701]");
 
         // Clamp amount to move
         amount = amount.clampMax(partners[index - 1].active.get(currencyCt, currencyId));
@@ -726,14 +726,14 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
     /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
-    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string standard)
+    function withdraw(int256 amount, address currencyCt, uint256 currencyId, string memory standard)
     public
     {
         // Get index, implicitly requiring that msg.sender is wallet of registered partner
         uint256 index = indexByWallet(msg.sender);
 
         // Require positive amount
-        require(amount.isPositiveInt256());
+        require(amount.isPositiveInt256(), "Some error message when require fails [PartnerFund.sol:736]");
 
         // Clamp amount to move
         amount = amount.clampMax(partners[index - 1].staged.get(currencyCt, currencyId));
@@ -746,11 +746,12 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         else {
             TransferController controller = transferController(currencyCt, standard);
-            require(
-                address(controller).delegatecall(
-                    controller.getDispatchSignature(), this, msg.sender, uint256(amount), currencyCt, currencyId
+            (bool success,) = address(controller).delegatecall(
+                abi.encodeWithSelector(
+                    controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId
                 )
             );
+            require(success, "Some error message when require fails [PartnerFund.sol:754]");
         }
 
         // Emit event
@@ -765,7 +766,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     private
     {
         // Require that index is within bounds
-        require(index < partners.length);
+        require(index < partners.length, "Some error message when require fails [PartnerFund.sol:769]");
 
         // Add to active
         partners[index].active.add(amount, address(0), 0);
@@ -786,21 +787,22 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
     /// @dev index is 0-based
     function _receiveTokensTo(uint256 index, int256 amount, address currencyCt,
-        uint256 currencyId, string standard)
+        uint256 currencyId, string memory standard)
     private
     {
         // Require that index is within bounds
-        require(index < partners.length);
+        require(index < partners.length, "Some error message when require fails [PartnerFund.sol:794]");
 
-        require(amount.isNonZeroPositiveInt256());
+        require(amount.isNonZeroPositiveInt256(), "Some error message when require fails [PartnerFund.sol:796]");
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
-        require(
-            address(controller).delegatecall(
+        (bool success,) = address(controller).delegatecall(
+            abi.encodeWithSelector(
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
             )
         );
+        require(success, "Some error message when require fails [PartnerFund.sol:805]");
 
         // Add to active
         partners[index].active.add(amount, currencyCt, currencyId);
@@ -825,7 +827,7 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     view
     returns (int256 balance, uint256 blockNumber, address currencyCt, uint256 currencyId)
     {
-        require(depositIndex < partners[partnerIndex].fullBalanceHistory.length);
+        require(depositIndex < partners[partnerIndex].fullBalanceHistory.length, "Some error message when require fails [PartnerFund.sol:830]");
 
         FullBalanceHistory storage entry = partners[partnerIndex].fullBalanceHistory[depositIndex];
         (,, currencyCt, currencyId) = partners[partnerIndex].txHistory.deposit(entry.listIndex);
@@ -866,10 +868,10 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
     private
     {
         // Require that the name is not previously registered
-        require(0 == _indexByNameHash[nameHash]);
+        require(0 == _indexByNameHash[nameHash], "Some error message when require fails [PartnerFund.sol:871]");
 
         // Require possibility to update
-        require(partnerCanUpdate || operatorCanUpdate);
+        require(partnerCanUpdate || operatorCanUpdate, "Some error message when require fails [PartnerFund.sol:874]");
 
         // Add new partner
         partners.length++;
@@ -901,14 +903,14 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         // If operator tries to change verify that operator has access
         if (isOperator())
-            require(partners[index].operatorCanUpdate);
+            require(partners[index].operatorCanUpdate, "Some error message when require fails [PartnerFund.sol:906]");
 
         else {
             // Require that msg.sender is partner
-            require(msg.sender == partners[index].wallet);
+            require(msg.sender == partners[index].wallet, "Some error message when require fails [PartnerFund.sol:910]");
 
             // If partner tries to change verify that partner has access
-            require(partners[index].partnerCanUpdate);
+            require(partners[index].partnerCanUpdate, "Some error message when require fails [PartnerFund.sol:913]");
         }
 
         // Update stored fee
@@ -926,21 +928,21 @@ contract PartnerFund is Ownable, Beneficiary, TransferControllerManageable {
 
         // If address has not been set operator is the only allowed to change it
         if (oldWallet == address(0))
-            require(isOperator());
+            require(isOperator(), "Some error message when require fails [PartnerFund.sol:931]");
 
         // Else if operator tries to change verify that operator has access
         else if (isOperator())
-            require(partners[index].operatorCanUpdate);
+            require(partners[index].operatorCanUpdate, "Some error message when require fails [PartnerFund.sol:935]");
 
         else {
             // Require that msg.sender is partner
-            require(msg.sender == oldWallet);
+            require(msg.sender == oldWallet, "Some error message when require fails [PartnerFund.sol:939]");
 
             // If partner tries to change verify that partner has access
-            require(partners[index].partnerCanUpdate);
+            require(partners[index].partnerCanUpdate, "Some error message when require fails [PartnerFund.sol:942]");
 
             // Require that new wallet is not zero-address if it can not be changed by operator
-            require(partners[index].operatorCanUpdate || newWallet != address(0));
+            require(partners[index].operatorCanUpdate || newWallet != address(0), "Some error message when require fails [PartnerFund.sol:945]");
         }
 
         // Update stored wallet

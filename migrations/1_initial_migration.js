@@ -35,14 +35,14 @@ module.exports = (deployer, network, accounts) => {
         debug(`deployerAccount: ${deployerAccount}`);
 
         try {
-            // if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
-            instance = await deployer.deploy(Migrations, {from: deployerAccount});
-            addressStorage.set('Migrations', instance.address);
+            if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
+                instance = await deployer.deploy(Migrations, {from: deployerAccount});
+                addressStorage.set('Migrations', instance.address);
 
-            // } else {
-            //     Migrations.address = '0x355c39f9f709dee1ddfa8e236edcbb29e35287ba';
-            //     addressStorage.set('Migrations', '0x355c39f9f709dee1ddfa8e236edcbb29e35287ba');
-            // }
+            } else {
+                Migrations.address = '0x14b641a8263c7a2ec41f117a3c82e2a61567a799';
+                addressStorage.set('Migrations', '0x14b641a8263c7a2ec41f117a3c82e2a61567a799');
+            }
 
         } finally {
             if (!helpers.isTestNetwork(network))

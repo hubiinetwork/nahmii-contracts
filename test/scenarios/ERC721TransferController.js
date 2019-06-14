@@ -29,6 +29,12 @@ module.exports = function (glob) {
             });
         });
 
+        describe('standard()', () => {
+            it('should return \'ERC20\'', async () => {
+                (await web3ERC721TransferController.standard.call()).should.equal('ERC721');
+            });
+        });
+
         describe('receive()', () => {
             beforeEach(async () => {
                 await web3ERC721.mint(glob.user_a, 10);

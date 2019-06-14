@@ -6,7 +6,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-pragma solidity ^0.4.25;
+pragma solidity >=0.4.25 <0.6.0;
 
 import {Ownable} from "./Ownable.sol";
 import {PaymentHasher} from "./PaymentHasher.sol";
@@ -34,8 +34,8 @@ contract PaymentHashable is Ownable {
     function setPaymentHasher(PaymentHasher newPaymentHasher)
     public
     onlyDeployer
-    notNullAddress(newPaymentHasher)
-    notSameAddresses(newPaymentHasher, paymentHasher)
+    notNullAddress(address(newPaymentHasher))
+    notSameAddresses(address(newPaymentHasher), address(paymentHasher))
     {
         // Set new payment hasher
         PaymentHasher oldPaymentHasher = paymentHasher;
@@ -49,7 +49,7 @@ contract PaymentHashable is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier paymentHasherInitialized() {
-        require(paymentHasher != address(0));
+        require(address(paymentHasher) != address(0), "Payment hasher not initialized [PaymentHashable.sol:52]");
         _;
     }
 }
