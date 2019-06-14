@@ -274,7 +274,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -286,7 +286,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -298,7 +298,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -310,7 +310,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -323,7 +323,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -336,7 +336,21 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if payment\'s nonce is not greater than highest nonce settled', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
+                        payment.sender.wallet, payment.currency, payment.sender.nonce
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
+                        payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -536,7 +550,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
-                        payment.sender.wallet, payment, payment.sender.balances.current
+                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -548,7 +562,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
-                        payment.sender.wallet, payment, payment.sender.balances.current
+                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -560,7 +574,7 @@ module.exports = (glob) => {
 
                 it('should revert', async () => {
                     ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
-                        payment.sender.wallet, payment, payment.sender.balances.current
+                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -572,8 +586,8 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                    ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
+                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
@@ -585,8 +599,22 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementChallengeByPayment.startChallengeFromPayment(
-                        payment, payment.sender.balances.current
+                    ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
+                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if payment\'s nonce is not greater than highest nonce settled', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
+                        payment.sender.wallet, payment.currency, payment.sender.nonce
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeByPayment.startChallengeFromPaymentByProxy(
+                        payment.sender.wallet, payment, payment.sender.balances.current, {gasLimit: 3e6}
                     ).should.be.rejected;
                 });
             });
