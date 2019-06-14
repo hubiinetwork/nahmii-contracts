@@ -12,8 +12,6 @@ async function enumerateFiles(...fileNames) {
 }
 
 async function enumerateFile(inputFile, options = {}) {
-    debug(`Processing ${inputFile}`);
-
     const inputLiner = new nReadlines(inputFile);
 
     const quote = (options.defaultQuote) || '"';
@@ -57,6 +55,9 @@ function processLine(file, line, liner, lineNo, quote) {
         newLine = `${result[1]} ${enumerator}${result[2]}`;
     } else
         throw Error(`Failed replacement at line ${lineNo} of ${file}: '${line}'`);
+
+    if (line != newLine)
+        debug(`Update in ${file}:${lineNo}`);
 
     lineNo += wrapsCount;
 
