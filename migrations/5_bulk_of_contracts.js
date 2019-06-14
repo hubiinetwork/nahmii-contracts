@@ -465,7 +465,7 @@ module.exports = (deployer, network, accounts) => {
                 await instance.authorizeInitialService(addressStorage.get('DriipSettlementByTrade'));
                 await instance.registerService(addressStorage.get('NullSettlement'));
                 await instance.authorizeInitialService(addressStorage.get('NullSettlement'));
-                await instance.disableInitialServiceAuthorization();
+                // await instance.disableInitialServiceAuthorization();
 
                 instance = await Configuration.at(addressStorage.get('Configuration'));
                 await instance.setConfirmationBlocks((await web3.eth.getBlockNumberPromise()) + delayBlocks, 12);
@@ -855,18 +855,17 @@ module.exports = (deployer, network, accounts) => {
                 // await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
                 addressStorage.set('ClientFund', '0xcc8d82f6ba952966e63001c7b320eef2ae729099');
                 await execDeploy(ctl, 'CommunityVote', '', CommunityVote);
-                // addressStorage.set('Configuration', '0x3dc79902b8f6b2e35e8307bb4238743f8a8e05cb');
                 await execDeploy(ctl, 'Configuration', '', Configuration);
                 await execDeploy(ctl, 'DriipSettlementByPayment', '', DriipSettlementByPayment);
                 // await execDeploy(ctl, 'DriipSettlementByTrade', '', DriipSettlementByTrade);
                 await execDeploy(ctl, 'DriipSettlementChallengeByPayment', '', DriipSettlementChallengeByPayment);
                 // await execDeploy(ctl, 'DriipSettlementChallengeByTrade', '', DriipSettlementChallengeByTrade);
-                await execDeploy(ctl, 'DriipSettlementChallengeState', '', DriipSettlementChallengeState);
+                addressStorage.set('DriipSettlementChallengeState', '0x9b5b87ad686a55b59354f88a6a048c03b0495b62');
                 await execDeploy(ctl, 'DriipSettlementDisputeByPayment', '', DriipSettlementDisputeByPayment);
                 // await execDeploy(ctl, 'DriipSettlementDisputeByTrade', '', DriipSettlementDisputeByTrade);
                 await execDeploy(ctl, 'DriipSettlementState', '', DriipSettlementState);
-                addressStorage.set('ERC20TransferController', '0x42aa8205bfa075d52f904602e631a897fea8651e');
-                addressStorage.set('ERC721TransferController', '0x40732b9658431723ac13b132d0430282c7877238');
+                await execDeploy(ctl, 'ERC20TransferController', '', ERC20TransferController);
+                await execDeploy(ctl, 'ERC721TransferController', '', ERC721TransferController);
                 await execDeploy(ctl, 'FraudChallenge', '', FraudChallenge);
                 // await execDeploy(ctl, 'FraudChallengeByDoubleSpentOrders', '', FraudChallengeByDoubleSpentOrders);
                 // await execDeploy(ctl, 'FraudChallengeByOrder', '', FraudChallengeByOrder);
@@ -880,24 +879,23 @@ module.exports = (deployer, network, accounts) => {
                 await execDeploy(ctl, 'NullSettlement', '', NullSettlement);
                 await execDeploy(ctl, 'NullSettlementChallengeByPayment', '', NullSettlementChallengeByPayment);
                 // await execDeploy(ctl, 'NullSettlementChallengeByTrade', '', NullSettlementChallengeByTrade);
-                await execDeploy(ctl, 'NullSettlementChallengeState', '', NullSettlementChallengeState);
+                addressStorage.set('NullSettlementChallengeState', '0xb4379689bc570e5e2a415fcc700fd562cec0f123');
                 await execDeploy(ctl, 'NullSettlementDisputeByPayment', '', NullSettlementDisputeByPayment);
                 // await execDeploy(ctl, 'NullSettlementDisputeByTrade', '', NullSettlementDisputeByTrade);
                 await execDeploy(ctl, 'NullSettlementState', '', NullSettlementState);
                 await execDeploy(ctl, 'PartnerBenefactor', '', PartnerBenefactor);
                 await execDeploy(ctl, 'PaymentHasher', '', PaymentHasher);
-                await execDeploy(ctl, 'RevenueFund1', '', RevenueFund1);
-                await execDeploy(ctl, 'SecurityBond', '', SecurityBond);
+                addressStorage.set('RevenueFund1', '0x7f11c2e1b54650c9064e202eb46e6113f8e6cab7');
+                addressStorage.set('SecurityBond', '0xc0354bdaf2966bffe4e7237166be42ef2ad252af');
                 await execDeploy(ctl, 'SignerManager', '', SignerManager);
                 await execDeploy(ctl, 'TokenHolderRevenueFund', '', TokenHolderRevenueFund);
-                addressStorage.set('TransferControllerManager', '0x375cccb1d483088d3d13c6b7536f0ca28622ba7e');
+                await execDeploy(ctl, 'TransferControllerManager', '', TransferControllerManager);
                 addressStorage.set('TransactionTracker', '0x8adfe445750937cefe42d9fb428563d61ea1aa02');
                 // await execDeploy(ctl, 'TradeHasher', '', TradeHasher);
                 await execDeploy(ctl, 'Validator', '', Validator, true);
                 // await execDeploy(ctl, 'ValidatorV2', '', ValidatorV2, true);
-                await execDeploy(ctl, 'WalletLocker', '', WalletLocker);
+                addressStorage.set('WalletLocker', '0x0e3b42f7c307a9b0541b46e9a2be320caafd1da4');
 
-                // NOTE Fully configured in v1.0.0
                 // instance = await BalanceTracker.at(addressStorage.get('BalanceTracker'));
                 // await instance.registerService(addressStorage.get('ClientFund'));
 
@@ -905,17 +903,16 @@ module.exports = (deployer, network, accounts) => {
                 // await instance.setValidator(addressStorage.get('ValidatorV2'));
                 // await instance.setConfiguration(addressStorage.get('Configuration'));
 
-                // NOTE Partially configured in v1.0.0
                 instance = await ClientFund.at(addressStorage.get('ClientFund'));
-                // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
+                await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
                 // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
                 // await instance.freezeBalanceTracker();
                 // await instance.setTransactionTracker(addressStorage.get('TransactionTracker'));
                 // await instance.freezeTransactionTracker();
-                await instance.setWalletLocker(addressStorage.get('WalletLocker'));
+                // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
                 // await instance.freezeWalletLocker();
                 await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
-                await instance.registerBeneficiary(addressStorage.get('RevenueFund1'));
+                // await instance.registerBeneficiary(addressStorage.get('RevenueFund1'));
                 // await instance.registerBeneficiary(addressStorage.get('PartnerFund'));
                 await instance.registerService(addressStorage.get('DriipSettlementByPayment'));
                 await instance.authorizeInitialService(addressStorage.get('DriipSettlementByPayment'));
@@ -1062,7 +1059,7 @@ module.exports = (deployer, network, accounts) => {
 
                 instance = await NullSettlementChallengeState.at(addressStorage.get('NullSettlementChallengeState'));
                 await instance.setConfiguration(addressStorage.get('Configuration'));
-                await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
+                // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
                 await instance.registerService(addressStorage.get('NullSettlement'));
                 await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.TERMINATE_PROPOSAL_ACTION.call());
                 await instance.registerService(addressStorage.get('NullSettlementChallengeByPayment'));
@@ -1228,8 +1225,8 @@ module.exports = (deployer, network, accounts) => {
 
                 instance = await RevenueFund1.at(addressStorage.get('RevenueFund1'));
                 await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
-                await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
-                await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
+                // await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
+                // await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
 
                 instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
                 await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -1271,14 +1268,12 @@ module.exports = (deployer, network, accounts) => {
                 await instance.registerService(addressStorage.get('RevenueFund1'));
                 await instance.enableServiceAction(addressStorage.get('RevenueFund1'), await instance.CLOSE_ACCRUAL_PERIOD_ACTION.call());
 
-                // NOTE Fully configured in v1.0.0
                 // instance = await TransactionTracker.at(addressStorage.get('TransactionTracker'));
                 // await instance.registerService(addressStorage.get('ClientFund'));
 
-                // NOTE Fully configured in v1.0.0
-                // instance = await TransferControllerManager.at(addressStorage.get('TransferControllerManager'));
-                // await instance.registerTransferController('ERC20', addressStorage.get('ERC20TransferController'), {from: deployerAccount});
-                // await instance.registerTransferController('ERC721', addressStorage.get('ERC721TransferController'), {from: deployerAccount});
+                instance = await TransferControllerManager.at(addressStorage.get('TransferControllerManager'));
+                await instance.registerTransferController('ERC20', addressStorage.get('ERC20TransferController'), {from: deployerAccount});
+                await instance.registerTransferController('ERC721', addressStorage.get('ERC721TransferController'), {from: deployerAccount});
 
                 instance = await Validator.at(addressStorage.get('Validator'));
                 await instance.setPaymentHasher(addressStorage.get('PaymentHasher'));
