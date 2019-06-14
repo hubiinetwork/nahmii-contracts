@@ -196,12 +196,12 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
 
         // Extract properties depending on settlement role
         (
-        DriipSettlementTypesLib.SettlementRole settlementRole, uint256 walletNonce,
+        DriipSettlementTypesLib.SettlementRole settlementRole, uint256 nonce,
         NahmiiTypesLib.OriginFigure[] memory totalFees, int256 currentBalance
         ) = _getRoleProperties(payment, wallet);
 
         // Require that driip settlement challenge proposal has been initiated
-        require(driipSettlementChallengeState.hasProposal(wallet, walletNonce, payment.currency), "No proposal found [DriipSettlementByPayment.sol:204]");
+        require(driipSettlementChallengeState.hasProposal(wallet, nonce, payment.currency), "No proposal found [DriipSettlementByPayment.sol:204]");
 
         // Require that driip settlement challenge proposal has not been terminated already
         require(!driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency), "Proposal found terminated [DriipSettlementByPayment.sol:207]");
@@ -227,19 +227,19 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
 
         // If exists settlement of nonce then require that wallet has not already settled
         require(!driipSettlementState.isSettlementPartyDone(
-            wallet, walletNonce, settlementRole
+            wallet, nonce, settlementRole
         ), "Settlement party already done [DriipSettlementByPayment.sol:229]");
 
         // Set address of origin or target to prevent the same settlement from being resettled by this wallet
         driipSettlementState.completeSettlementParty(
-            wallet, walletNonce, settlementRole, true
+            wallet, nonce, settlementRole, true
         );
 
         // If wallet has previously settled balance of the concerned currency with higher wallet nonce, then don't
         // settle balance again
-        if (driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency) < walletNonce) {
+        if (driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency) < nonce) {
             // Update settled nonce of wallet and currency
-            driipSettlementState.setMaxNonceByWalletAndCurrency(wallet, payment.currency, walletNonce);
+            driipSettlementState.setMaxNonceByWalletAndCurrency(wallet, payment.currency, nonce);
 
             // Update settled balance
             clientFund.updateSettledBalance(
@@ -251,11 +251,11 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
                 wallet, driipSettlementChallengeState.proposalStageAmount(wallet, payment.currency),
                 payment.currency.ct, payment.currency.id, standard
             );
-        }
 
-        // Stage fees to revenue fund
-        if (address(0) != address(revenueFund))
-            _stageFees(wallet, totalFees, revenueFund, walletNonce, standard);
+            // Stage fees to revenue fund
+            if (address(0) != address(revenueFund))
+                _stageFees(wallet, totalFees, revenueFund, nonce, standard);
+        }
 
         // Remove driip settlement challenge proposal
         driipSettlementChallengeState.terminateProposal(wallet, payment.currency, false);
