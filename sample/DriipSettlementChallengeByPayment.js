@@ -7,6 +7,7 @@ const SignerManager = artifacts.require('SignerManager');
 const MockedDriipSettlementDisputeByPayment = artifacts.require('MockedDriipSettlementDisputeByPayment');
 const MockedDriipSettlementChallengeState = artifacts.require('MockedDriipSettlementChallengeState');
 const MockedNullSettlementChallengeState = artifacts.require('MockedNullSettlementChallengeState');
+const MockedDriipSettlementState = artifacts.require('MockedDriipSettlementState');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
 const MockedWalletLocker = artifacts.require('MockedWalletLocker');
@@ -25,6 +26,7 @@ contract('DriipSettlementChallengeByPayment', (accounts) => {
     let web3DriipSettlementDisputeByPayment, ethersDriipSettlementDisputeByPayment;
     let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
     let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
+    let web3DriipSettlementState, ethersDriipSettlementState;
 
     before(async () => {
         eventSampler.mkdir();
@@ -45,6 +47,8 @@ contract('DriipSettlementChallengeByPayment', (accounts) => {
         ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, MockedDriipSettlementChallengeState.abi, operatorSigner);
         web3NullSettlementChallengeState = await MockedNullSettlementChallengeState.new();
         ethersNullSettlementChallengeState = new Contract(web3NullSettlementChallengeState.address, MockedNullSettlementChallengeState.abi, operatorSigner);
+        web3DriipSettlementState = await MockedDriipSettlementState.new();
+        ethersDriipSettlementState = new Contract(web3DriipSettlementState.address, MockedDriipSettlementState.abi, operatorSigner);
         web3Configuration = await MockedConfiguration.new(operator);
         ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, operatorSigner);
         web3Validator = await MockedValidator.new(operator, web3SignerManager.address);
@@ -68,12 +72,14 @@ contract('DriipSettlementChallengeByPayment', (accounts) => {
         await ethersDriipSettlementChallengeByPayment.setDriipSettlementDisputeByPayment(ethersDriipSettlementDisputeByPayment.address);
         await ethersDriipSettlementChallengeByPayment.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
         await ethersDriipSettlementChallengeByPayment.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
+        await ethersDriipSettlementChallengeByPayment.setDriipSettlementState(ethersDriipSettlementState.address);
 
         await ethersValidator._reset({gasLimit: 1e6});
         await ethersWalletLocker._reset({gasLimit: 1e6});
         await ethersBalanceTracker._reset({gasLimit: 1e6});
         await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
         await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+        await ethersDriipSettlementState._reset({gasLimit: 1e6});
     });
 
     describe('startChallengeFromPayment()', () => {
