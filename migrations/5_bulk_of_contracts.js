@@ -362,29 +362,29 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(Strings, [
                 PartnerFund
             ]);
-            // await deployer.link(TradeTypesLib, [
-            //     CancelOrdersChallenge,
-            //     DriipSettlementByTrade,
-            //     DriipSettlementChallengeByTrade,
-            //     DriipSettlementDisputeByTrade,
-            //     FraudChallengeByDoubleSpentOrders,
-            //     FraudChallengeByOrder,
-            //     FraudChallengeByPaymentSucceedingTrade,
-            //     FraudChallengeBySuccessiveTrades,
-            //     FraudChallengeByTrade,
-            //     FraudChallengeByTradeOrderResiduals,
-            //     FraudChallengeByTradeSucceedingPayment,
-            //     MockedCancelOrdersChallenge,
-            //     MockedDriipSettlementDisputeByTrade,
-            //     MockedValidator,
-            //     NullSettlementChallengeByTrade,
-            //     NullSettlementDisputeByTrade,
-            //     TradeHasher,
-            //     Validatable,
-            //     ValidatableV2,
-            //     Validator,
-            //     ValidatorV2
-            // ]);
+            await deployer.link(TradeTypesLib, [
+                CancelOrdersChallenge,
+                DriipSettlementByTrade,
+                DriipSettlementChallengeByTrade,
+                DriipSettlementDisputeByTrade,
+                FraudChallengeByDoubleSpentOrders,
+                FraudChallengeByOrder,
+                FraudChallengeByPaymentSucceedingTrade,
+                FraudChallengeBySuccessiveTrades,
+                FraudChallengeByTrade,
+                FraudChallengeByTradeOrderResiduals,
+                FraudChallengeByTradeSucceedingPayment,
+                MockedCancelOrdersChallenge,
+                MockedDriipSettlementDisputeByTrade,
+                MockedValidator,
+                NullSettlementChallengeByTrade,
+                NullSettlementDisputeByTrade,
+                TradeHasher,
+                Validatable,
+                ValidatableV2,
+                Validator,
+                ValidatorV2
+            ]);
             await deployer.link(TxHistoryLib, [
                 ClientFund,
                 PartnerFund,

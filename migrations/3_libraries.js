@@ -132,7 +132,7 @@ module.exports = (deployer, network, accounts) => {
                 addressStorage.set('BlockNumbIntsLib', '0x278243860d8502fdee4fa4e7cace4a2471fd88c7');
                 addressStorage.set('BlockNumbUintsLib', '0x3853145139641bc7cb723c2c476d1887157734b7');
                 addressStorage.set('ConstantsLib', '0x5fcf3704016b90ded3c81d75613ceab0a6a26025');
-                await execDeploy(ctl, 'DriipSettlementTypesLib', '', DriipSettlementTypesLib);
+                addressStorage.set('DriipSettlementTypesLib', '0xf20c875ff24087dd3395342901870b855eddab20');
                 addressStorage.set('MonetaryTypesLib', '0x73b58f0d337b596e534a8385399f6bcce1f2ce0e');
                 addressStorage.set('SafeMathIntLib', '0x2fcb98529d58669e229c453de4b4705bb6b2d414');
                 addressStorage.set('SafeMathUintLib', '0x0ff948c236c8d4dfcd0168bf243314c8ff8ec967');
