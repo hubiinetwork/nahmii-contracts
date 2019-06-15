@@ -140,7 +140,6 @@ module.exports = (deployer, network, accounts) => {
             NahmiiTypesLib.address = addressStorage.get('NahmiiTypesLib');
             NonFungibleBalanceLib.address = addressStorage.get('NonFungibleBalanceLib');
             PaymentTypesLib.address = addressStorage.get('PaymentTypesLib');
-            // TradeTypesLib.address = addressStorage.get('TradeTypesLib');
             SafeMathIntLib.address = addressStorage.get('SafeMathIntLib');
             SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
             SettlementChallengeTypesLib.address = addressStorage.get('SettlementChallengeTypesLib');
@@ -362,29 +361,6 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(Strings, [
                 PartnerFund
             ]);
-            await deployer.link(TradeTypesLib, [
-                CancelOrdersChallenge,
-                DriipSettlementByTrade,
-                DriipSettlementChallengeByTrade,
-                DriipSettlementDisputeByTrade,
-                FraudChallengeByDoubleSpentOrders,
-                FraudChallengeByOrder,
-                FraudChallengeByPaymentSucceedingTrade,
-                FraudChallengeBySuccessiveTrades,
-                FraudChallengeByTrade,
-                FraudChallengeByTradeOrderResiduals,
-                FraudChallengeByTradeSucceedingPayment,
-                MockedCancelOrdersChallenge,
-                MockedDriipSettlementDisputeByTrade,
-                MockedValidator,
-                NullSettlementChallengeByTrade,
-                NullSettlementDisputeByTrade,
-                TradeHasher,
-                Validatable,
-                ValidatableV2,
-                Validator,
-                ValidatorV2
-            ]);
             await deployer.link(TxHistoryLib, [
                 ClientFund,
                 PartnerFund,
@@ -396,6 +372,32 @@ module.exports = (deployer, network, accounts) => {
             const delayBlocks = helpers.isTestNetwork(network) ? 1 : 10;
 
             if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
+                TradeTypesLib.address = addressStorage.get('TradeTypesLib');
+
+                await deployer.link(TradeTypesLib, [
+                    CancelOrdersChallenge,
+                    DriipSettlementByTrade,
+                    DriipSettlementChallengeByTrade,
+                    DriipSettlementDisputeByTrade,
+                    FraudChallengeByDoubleSpentOrders,
+                    FraudChallengeByOrder,
+                    FraudChallengeByPaymentSucceedingTrade,
+                    FraudChallengeBySuccessiveTrades,
+                    FraudChallengeByTrade,
+                    FraudChallengeByTradeOrderResiduals,
+                    FraudChallengeByTradeSucceedingPayment,
+                    MockedCancelOrdersChallenge,
+                    MockedDriipSettlementDisputeByTrade,
+                    MockedValidator,
+                    NullSettlementChallengeByTrade,
+                    NullSettlementDisputeByTrade,
+                    TradeHasher,
+                    Validatable,
+                    ValidatableV2,
+                    Validator,
+                    ValidatorV2
+                ]);
+
                 await execDeploy(ctl, 'BalanceTracker', '', BalanceTracker);
                 await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
                 await execDeploy(ctl, 'ClientFund', '', ClientFund);
