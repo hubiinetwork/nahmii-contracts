@@ -10,6 +10,7 @@ const SignerManager = artifacts.require('SignerManager');
 const MockedDriipSettlementDisputeByTrade = artifacts.require('MockedDriipSettlementDisputeByTrade');
 const MockedDriipSettlementChallengeState = artifacts.require('MockedDriipSettlementChallengeState');
 const MockedNullSettlementChallengeState = artifacts.require('MockedNullSettlementChallengeState');
+const MockedDriipSettlementState = artifacts.require('MockedDriipSettlementState');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedValidator = artifacts.require('MockedValidator');
 const MockedWalletLocker = artifacts.require('MockedWalletLocker');
@@ -29,6 +30,7 @@ module.exports = (glob) => {
         let web3DriipSettlementDisputeByTrade, ethersDriipSettlementDisputeByTrade;
         let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
         let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
+        let web3DriipSettlementState, ethersDriipSettlementState;
         let provider;
 
         before(async () => {
@@ -42,6 +44,8 @@ module.exports = (glob) => {
             ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, MockedDriipSettlementChallengeState.abi, glob.signer_owner);
             web3NullSettlementChallengeState = await MockedNullSettlementChallengeState.new();
             ethersNullSettlementChallengeState = new Contract(web3NullSettlementChallengeState.address, MockedNullSettlementChallengeState.abi, glob.signer_owner);
+            web3DriipSettlementState = await MockedDriipSettlementState.new();
+            ethersDriipSettlementState = new Contract(web3DriipSettlementState.address, MockedDriipSettlementState.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
@@ -60,6 +64,7 @@ module.exports = (glob) => {
             await ethersDriipSettlementChallengeByTrade.setDriipSettlementDisputeByTrade(ethersDriipSettlementDisputeByTrade.address);
             await ethersDriipSettlementChallengeByTrade.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
             await ethersDriipSettlementChallengeByTrade.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
+            await ethersDriipSettlementChallengeByTrade.setDriipSettlementState(ethersDriipSettlementState.address);
 
             await ethersConfiguration.setEarliestSettlementBlockNumber(0);
         });
@@ -240,6 +245,40 @@ module.exports = (glob) => {
             });
         });
 
+        describe('driipSettlementState()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersDriipSettlementChallengeByTrade.driipSettlementState())
+                    .should.equal(utils.getAddress(ethersDriipSettlementState.address));
+            });
+        });
+
+        describe('setDriipSettlementState()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called by deployer', () => {
+                it('should set new value and emit event', async () => {
+                    const result = await web3DriipSettlementChallengeByTrade.setDriipSettlementState(address);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetDriipSettlementStateEvent');
+
+                    (await ethersDriipSettlementChallengeByTrade.driipSettlementState())
+                        .should.equal(address);
+                });
+            });
+
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3DriipSettlementChallengeByTrade.setDriipSettlementState(address, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+        });
+
         describe('startChallengeFromTrade()', () => {
             let trade;
 
@@ -248,6 +287,8 @@ module.exports = (glob) => {
                 await ethersWalletLocker._reset();
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+                await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+                await ethersDriipSettlementState._reset({gasLimit: 1e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
             });
@@ -318,6 +359,36 @@ module.exports = (glob) => {
                 });
             });
 
+            describe('if trade party\'s nonce is not greater than highest nonce settled of intended currency', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
+                        trade.buyer.wallet, trade.currencies.intended, trade.buyer.nonce
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTrade(
+                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current,
+                        {gasLimit: 3e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if trade party\'s nonce is not greater than highest nonce settled of conjugate currency', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
+                        trade.buyer.wallet, trade.currencies.conjugate, trade.buyer.nonce
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTrade(
+                        trade, trade.buyer.balances.intended.current, trade.buyer.balances.conjugate.current,
+                        {gasLimit: 3e6}
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if within operational constraints', () => {
                 let filter;
 
@@ -372,6 +443,7 @@ module.exports = (glob) => {
                 await ethersWalletLocker._reset();
                 await ethersDriipSettlementChallengeState._reset({gasLimit: 1e6});
                 await ethersNullSettlementChallengeState._reset({gasLimit: 1e6});
+                await ethersDriipSettlementState._reset({gasLimit: 1e6});
 
                 trade = await mocks.mockTrade(glob.owner, {buyer: {wallet: glob.owner}});
             });
@@ -419,6 +491,36 @@ module.exports = (glob) => {
                 beforeEach(async () => {
                     await web3NullSettlementChallengeState._setProposal(true);
                     await web3NullSettlementChallengeState._setProposalTerminated(false);
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTradeByProxy(
+                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if trade party\'s nonce is not greater than highest nonce settled of intended currency', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
+                        trade.buyer.wallet, trade.currencies.intended, trade.buyer.nonce
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementChallengeByTrade.startChallengeFromTradeByProxy(
+                        trade.buyer.wallet, trade, trade.buyer.balances.intended.current,
+                        trade.buyer.balances.conjugate.current, {gasLimit: 3e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if trade party\'s nonce is not greater than highest nonce settled of conjugate currency', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
+                        trade.buyer.wallet, trade.currencies.conjugate, trade.buyer.nonce
+                    );
                 });
 
                 it('should revert', async () => {

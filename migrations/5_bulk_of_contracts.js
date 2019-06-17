@@ -144,6 +144,7 @@ module.exports = (deployer, network, accounts) => {
             SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
             SettlementChallengeTypesLib.address = addressStorage.get('SettlementChallengeTypesLib');
             Strings.address = addressStorage.get('Strings');
+            TradeTypesLib.address = addressStorage.get('TradeTypesLib');
             TxHistoryLib.address = addressStorage.get('TxHistoryLib');
 
             await deployer.link(BalanceTrackerLib, [
@@ -361,6 +362,29 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(Strings, [
                 PartnerFund
             ]);
+            await deployer.link(TradeTypesLib, [
+                CancelOrdersChallenge,
+                DriipSettlementByTrade,
+                DriipSettlementChallengeByTrade,
+                DriipSettlementDisputeByTrade,
+                FraudChallengeByDoubleSpentOrders,
+                FraudChallengeByOrder,
+                FraudChallengeByPaymentSucceedingTrade,
+                FraudChallengeBySuccessiveTrades,
+                FraudChallengeByTrade,
+                FraudChallengeByTradeOrderResiduals,
+                FraudChallengeByTradeSucceedingPayment,
+                MockedCancelOrdersChallenge,
+                MockedDriipSettlementDisputeByTrade,
+                MockedValidator,
+                NullSettlementChallengeByTrade,
+                NullSettlementDisputeByTrade,
+                TradeHasher,
+                Validatable,
+                ValidatableV2,
+                Validator,
+                ValidatorV2
+            ]);
             await deployer.link(TxHistoryLib, [
                 ClientFund,
                 PartnerFund,
@@ -372,32 +396,6 @@ module.exports = (deployer, network, accounts) => {
             const delayBlocks = helpers.isTestNetwork(network) ? 1 : 10;
 
             if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
-                TradeTypesLib.address = addressStorage.get('TradeTypesLib');
-
-                await deployer.link(TradeTypesLib, [
-                    CancelOrdersChallenge,
-                    DriipSettlementByTrade,
-                    DriipSettlementChallengeByTrade,
-                    DriipSettlementDisputeByTrade,
-                    FraudChallengeByDoubleSpentOrders,
-                    FraudChallengeByOrder,
-                    FraudChallengeByPaymentSucceedingTrade,
-                    FraudChallengeBySuccessiveTrades,
-                    FraudChallengeByTrade,
-                    FraudChallengeByTradeOrderResiduals,
-                    FraudChallengeByTradeSucceedingPayment,
-                    MockedCancelOrdersChallenge,
-                    MockedDriipSettlementDisputeByTrade,
-                    MockedValidator,
-                    NullSettlementChallengeByTrade,
-                    NullSettlementDisputeByTrade,
-                    TradeHasher,
-                    Validatable,
-                    ValidatableV2,
-                    Validator,
-                    ValidatorV2
-                ]);
-
                 await execDeploy(ctl, 'BalanceTracker', '', BalanceTracker);
                 await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
                 await execDeploy(ctl, 'ClientFund', '', ClientFund);
@@ -538,7 +536,8 @@ module.exports = (deployer, network, accounts) => {
                 // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
                 await instance.setDriipSettlementDisputeByTrade(addressStorage.get('DriipSettlementDisputeByTrade'));
                 await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
-                // await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+                await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+                await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
 
                 instance = await DriipSettlementDisputeByPayment.at(addressStorage.get('DriipSettlementDisputeByPayment'));
                 await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -996,6 +995,7 @@ module.exports = (deployer, network, accounts) => {
                 // await instance.setDriipSettlementDisputeByTrade(addressStorage.get('DriipSettlementDisputeByTrade'));
                 // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
                 // await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+                // await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
 
                 instance = await DriipSettlementDisputeByPayment.at(addressStorage.get('DriipSettlementDisputeByPayment'));
                 await instance.setConfiguration(addressStorage.get('Configuration'));
