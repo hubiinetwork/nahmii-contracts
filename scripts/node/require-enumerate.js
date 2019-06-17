@@ -43,24 +43,16 @@ function processLine(file, line, liner, lineNo, quote) {
 
     const enumerator = `[${path.basename(file)}:${++lineNo}]`;
 
-    const reMsgMltLn = /(.*require[\w\W\s]*['"][^\[]*?)\s*(?:\[[^\]]*\])?(['"])(\n\s*\);)/;
-    const reMsgSglLn = /(.*require[\w\W\s]*['"][^\[]*?)\s*(?:\[[^\]]*\])?(['"])(\s*\);)/;
-    const reNoMsgMltLn = /(.*require[\w\W\s]*[^'"])(\n\s*\);)/;
-    const reNoMsgSglLn = /(.*require[\w\W\s]*[^'"])(\s*\);)/;
+    const reNoMsg = /(.*require.*[^'"])\);/;
+    const reMsg = /(.*require[\w\W\s]*['"][^\]]*?)\s*(?:\[.*\])?(['"][\w\W\s]*)/;
 
     let newLine;
-    if (reMsgMltLn.test(line)) {
-        const result = reMsgMltLn.exec(line);
-        newLine = `${result[1]} ${enumerator}${result[2]}${result[3]}`;
-    } else if (reMsgSglLn.test(line)) {
-        const result = reMsgSglLn.exec(line);
-        newLine = `${result[1]}${enumerator}${result[2]}${result[3]}`;
-    } else if (reNoMsgMltLn.test(line)) {
-        const result = reNoMsgMltLn.exec(line);
-        newLine = `${result[1]},\n${quote}${enumerator}${quote}${result[2]}`;
-    } else if (reNoMsgSglLn.test(line)) {
-        const result = reNoMsgSglLn.exec(line);
-        newLine = `${result[1]}, ${quote}${enumerator}${quote}${result[2]}`;
+    if (reNoMsg.test(line)) {
+        const result = reNoMsg.exec(line);
+        newLine = `${result[1]}, ${quote}${enumerator}${quote});`;
+    } else if (reMsg.test(line)) {
+        const result = reMsg.exec(line);
+        newLine = `${result[1]} ${enumerator}${result[2]}`;
     } else
         throw Error(`Failed replacement at line ${lineNo} of ${file}: '${line}'`);
 
