@@ -108,6 +108,7 @@
     "Configuration.sol",
     "CurrenciesLib.sol",
     "DriipSettlementByPayment.sol",
+    "DriipSettlementByTrade.sol",
     "DriipSettlementChallengeByPayment.sol",
     "DriipSettlementChallengeByTrade.sol",
     "DriipSettlementChallengeState.sol",

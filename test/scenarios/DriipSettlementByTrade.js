@@ -466,7 +466,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -476,7 +476,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -486,7 +486,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -496,7 +496,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -506,7 +506,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -516,7 +516,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -526,7 +526,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -536,7 +536,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -546,7 +546,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -558,7 +558,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -573,7 +573,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
 
@@ -583,13 +583,13 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
 
                 describe('if operational mode is normal and data is available', () => {
                     it('should settle trade successfully', async () => {
-                        await ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6});
+                        await ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics
@@ -612,6 +612,7 @@ module.exports = (glob) => {
                         intendedSettledBalanceUpdate[1]._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                         intendedSettledBalanceUpdate[2].should.equal(trade.currencies.intended.ct);
                         intendedSettledBalanceUpdate[3]._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                        intendedSettledBalanceUpdate[4].should.equal('ERCXYZ');
 
                         // const conjugateSettledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(1);
                         // conjugateSettledBalanceUpdate[0].should.equal(utils.getAddress(trade.buyer.wallet));
@@ -627,6 +628,7 @@ module.exports = (glob) => {
                         intendedHoldingStage[2]._bn.should.eq.BN(1000);
                         intendedHoldingStage[3].should.equal(trade.currencies.intended.ct);
                         intendedHoldingStage[4]._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                        intendedHoldingStage[5].should.equal('ERCXYZ');
 
                         // const conjugateHoldingStage = await ethersClientFund._stages(1);
                         // conjugateHoldingStage[0].should.equal(utils.getAddress(trade.buyer.wallet));
@@ -643,6 +645,7 @@ module.exports = (glob) => {
                         totalFeeTransfer[2]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.amount._bn);
                         totalFeeTransfer[3].should.equal(trade.buyer.fees.total[0].figure.currency.ct);
                         totalFeeTransfer[4]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.currency.id._bn);
+                        totalFeeTransfer[5].should.equal('ERCXYZ');
 
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
@@ -659,9 +662,6 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                 trade.buyer.wallet, trade.currencies.intended)
                         )._bn.should.eq.BN(trade.buyer.nonce._bn);
-
-                        (await ethersDriipSettlementState.maxDriipNonce())
-                            ._bn.should.eq.BN(trade.nonce._bn);
                     });
                 });
 
@@ -673,7 +673,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByTrade.settleTrade(trade, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByTrade.settleTrade(trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
             });
@@ -710,7 +710,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -720,7 +720,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -730,7 +730,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -740,7 +740,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -750,7 +750,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -760,7 +760,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -770,7 +770,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -780,7 +780,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -790,7 +790,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -800,7 +800,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -812,7 +812,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                    ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                 });
             });
 
@@ -827,7 +827,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
 
@@ -837,13 +837,13 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
 
                 describe('if operational mode is normal and data is available', () => {
                     it('should settle trade successfully', async () => {
-                        await ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6});
+                        await ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6});
 
                         (await provider.getLogs(await fromBlockTopicsFilter(
                             ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics
@@ -866,6 +866,7 @@ module.exports = (glob) => {
                         intendedSettledBalanceUpdate[1]._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                         intendedSettledBalanceUpdate[2].should.equal(trade.currencies.intended.ct);
                         intendedSettledBalanceUpdate[3]._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                        intendedSettledBalanceUpdate[4].should.equal('ERCXYZ');
 
                         // const conjugateSettledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(1);
                         // conjugateSettledBalanceUpdate[0].should.equal(utils.getAddress(trade.buyer.wallet));
@@ -881,6 +882,7 @@ module.exports = (glob) => {
                         intendedHoldingStage[2]._bn.should.eq.BN(1000);
                         intendedHoldingStage[3].should.equal(trade.currencies.intended.ct);
                         intendedHoldingStage[4]._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                        intendedHoldingStage[5].should.equal('ERCXYZ');
 
                         // const conjugateHoldingStage = await ethersClientFund._stages(1);
                         // conjugateHoldingStage[0].should.equal(utils.getAddress(trade.buyer.wallet));
@@ -897,6 +899,7 @@ module.exports = (glob) => {
                         totalFeeTransfer[2]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.amount._bn);
                         totalFeeTransfer[3].should.equal(trade.buyer.fees.total[0].figure.currency.ct);
                         totalFeeTransfer[4]._bn.should.eq.BN(trade.buyer.fees.total[0].figure.currency.id._bn);
+                        totalFeeTransfer[5].should.equal('ERCXYZ');
 
                         (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
 
@@ -913,9 +916,6 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                 trade.buyer.wallet, trade.currencies.intended)
                         )._bn.should.eq.BN(trade.buyer.nonce._bn);
-
-                        (await ethersDriipSettlementState.maxDriipNonce())
-                            ._bn.should.eq.BN(trade.nonce._bn);
                     });
                 });
 
@@ -927,7 +927,7 @@ module.exports = (glob) => {
                     });
 
                     it('should revert', async () => {
-                        ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, {gasLimit: 5e6}).should.be.rejected;
+                        ethersDriipSettlementByTrade.settleTradeByProxy(trade.buyer.wallet, trade, 'ERCXYZ', {gasLimit: 5e6}).should.be.rejected;
                     });
                 });
             });
