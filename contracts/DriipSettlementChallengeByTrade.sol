@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {ConfigurableOperational} from "./ConfigurableOperational.sol";
 import {ValidatableV2} from "./ValidatableV2.sol";
 import {WalletLockable} from "./WalletLockable.sol";
+import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDisputeByTrade} from "./DriipSettlementDisputeByTrade.sol";
@@ -23,14 +24,18 @@ import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
+import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
  * @title DriipSettlementChallengeByTrade
  * @notice Where driip settlements pertaining to trades are started and disputed
  */
-contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, ValidatableV2, WalletLockable {
+contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, ValidatableV2, WalletLockable,
+BalanceTrackable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using BalanceTrackerLib for BalanceTracker;
 
     //
     // Variables
@@ -124,11 +129,12 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     public
     {
         // Require that wallet is not temporarily disqualified
-        require(!walletLocker.isLocked(msg.sender), "[DriipSettlementChallengeByTrade.sol:127]");
+        require(!walletLocker.isLocked(msg.sender), "Wallet found locked [DriipSettlementChallengeByTrade.sol:127]");
 
         // Start challenge
         _startChallengeFromTrade(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
 
+        // TODO Update event signature
         // Emit event
         emit StartChallengeFromTradeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
     }
@@ -146,6 +152,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         // Start challenge for wallet
         _startChallengeFromTrade(wallet, trade, intendedStageAmount, conjugateStageAmount, false);
 
+        // TODO Update event signature
         // Emit event
         emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
     }
@@ -161,6 +168,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
             msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true, true
         );
 
+        // TODO Update event signature
         // Emit event
         emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
     }
@@ -178,6 +186,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), true, false
         );
 
+        // TODO Update event signature
         // Emit event
         emit StopChallengeByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
     }
@@ -429,10 +438,16 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     onlySealedTrade(trade)
     {
         // Require that current block number is beyond the earliest settlement challenge block number
-        require(block.number >= configuration.earliestSettlementBlockNumber(), "[DriipSettlementChallengeByTrade.sol:432]");
+        require(
+            block.number >= configuration.earliestSettlementBlockNumber(),
+            "Current block number below earliest settlement block number [DriipSettlementChallengeByTrade.sol:432]"
+        );
 
         // Require that given wallet is a trade party
-        require(validator.isTradeParty(trade, wallet), "[DriipSettlementChallengeByTrade.sol:435]");
+        require(
+            validator.isTradeParty(trade, wallet),
+            "Wallet is not trade party [DriipSettlementChallengeByTrade.sol:438]"
+        );
 
         // Create proposals
         _addIntendedProposalFromTrade(wallet, trade, intendedStageAmount, walletInitiated);
@@ -442,66 +457,170 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     function _addIntendedProposalFromTrade(address wallet, TradeTypesLib.Trade memory trade, int256 stageAmount, bool walletInitiated)
     private
     {
+        // Require that there is no ongoing overlapping driip settlement challenge
+        require(
+            !driipSettlementChallengeState.hasProposal(wallet, trade.currencies.intended) ||
+        driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended),
+            "Overlapping driip settlement challenge proposal in intended currency found [DriipSettlementChallengeByTrade.sol:452]"
+        );
+
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, trade.currencies.intended) ||
         nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended),
-            "[DriipSettlementChallengeByTrade.sol:446]"
+            "Overlapping null settlement challenge proposal in intended currency found [DriipSettlementChallengeByTrade.sol:459]"
         );
 
-        // Deduce the concerned trade party
-        TradeTypesLib.TradeParty memory party = _tradeParty(trade, wallet);
+        // Deduce the concerned nonce and cumulative relative transfer
+        (uint256 nonce, int256 cumulativeTransferAmount, int256 targetBalanceAmount) =
+        _tradePartyIntendedProperties(trade, wallet, stageAmount);
 
         // Require that the wallet nonce of the trade is higher than the highest settled wallet nonce
         require(
-            driipSettlementState.maxNonceByWalletAndCurrency(wallet, trade.currencies.intended) < party.nonce,
-            "Wallet's nonce below highest settled nonce [DriipSettlementChallengeByTrade.sol:455]"
+            driipSettlementState.maxNonceByWalletAndCurrency(wallet, trade.currencies.intended) < nonce,
+            "Wallet's nonce below highest settled nonce in intended currency [DriipSettlementChallengeByTrade.sol:473]"
         );
-
-        // Require that intended balance amount is not less than stage amount
-        require(party.balances.intended.current >= stageAmount, "[DriipSettlementChallengeByTrade.sol:461]");
 
         // Initiate proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.initiateProposal(
-            wallet, party.nonce, 0, stageAmount, party.balances.intended.current.sub(stageAmount), trade.currencies.intended,
-            trade.blockNumber, walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_KIND()
+            wallet, nonce, cumulativeTransferAmount, stageAmount, targetBalanceAmount,
+            trade.currencies.intended, trade.blockNumber,
+            walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_KIND()
         );
     }
 
     function _addConjugateProposalFromTrade(address wallet, TradeTypesLib.Trade memory trade, int256 stageAmount, bool walletInitiated)
     private
     {
+        // Require that there is no ongoing overlapping driip settlement challenge
+        require(
+            !driipSettlementChallengeState.hasProposal(wallet, trade.currencies.conjugate) ||
+        driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate),
+            "Overlapping driip settlement challenge proposal in conjugate currency found [DriipSettlementChallengeByTrade.sol:503]"
+        );
+
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, trade.currencies.conjugate) ||
         nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate),
-            "[DriipSettlementChallengeByTrade.sol:474]"
+            "Overlapping null settlement challenge proposal in conjugate currency found [DriipSettlementChallengeByTrade.sol:510]"
         );
 
-        // Deduce the concerned trade party
-        TradeTypesLib.TradeParty memory party = _tradeParty(trade, wallet);
+        // Deduce the concerned nonce and cumulative relative transfer
+        (uint256 nonce, int256 cumulativeTransferAmount, int256 targetBalanceAmount) =
+        _tradePartyConjugateProperties(trade, wallet, stageAmount);
 
         // Require that the wallet nonce of the trade is higher than the highest settled wallet nonce
         require(
-            driipSettlementState.maxNonceByWalletAndCurrency(wallet, trade.currencies.conjugate) < party.nonce,
-            "Wallet's nonce below highest settled nonce [DriipSettlementChallengeByTrade.sol:483]"
+            driipSettlementState.maxNonceByWalletAndCurrency(wallet, trade.currencies.conjugate) < nonce,
+            "Wallet's nonce below highest settled nonce in conjugate currency [DriipSettlementChallengeByTrade.sol:524]"
         );
-
-        // Require that conjugate balance amount is not less than stage amount
-        require(party.balances.conjugate.current >= stageAmount, "[DriipSettlementChallengeByTrade.sol:489]");
 
         // Initiate proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.initiateProposal(
-            wallet, party.nonce, 0, stageAmount, party.balances.conjugate.current.sub(stageAmount), trade.currencies.conjugate,
-            trade.blockNumber, walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_KIND()
+            wallet, nonce, cumulativeTransferAmount, stageAmount, targetBalanceAmount,
+            trade.currencies.conjugate, trade.blockNumber,
+            walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_KIND()
         );
     }
 
-    function _tradeParty(TradeTypesLib.Trade memory trade, address wallet)
+    function _tradePartyIntendedProperties(TradeTypesLib.Trade memory trade, address wallet, int256 stageAmount)
     private
     view
-    returns (TradeTypesLib.TradeParty memory)
+    returns (uint nonce, int256 correctedCumulativeTransferAmount, int256 targetBalanceAmount)
     {
-        return validator.isTradeBuyer(trade, wallet) ? trade.buyer : trade.seller;
+        // Obtain unsynchronized stage amount from previous driip settlement if existent.
+        int256 unsynchronizedStageAmount = 0;
+        if (driipSettlementChallengeState.hasProposal(wallet, trade.currencies.intended)) {
+            uint256 previousChallengeNonce = driipSettlementChallengeState.proposalNonce(wallet, trade.currencies.intended);
+
+            // Get settlement party done block number. The function returns 0 if the settlement party has not effectuated
+            // its side of the settlement.
+            uint256 settlementPartyDoneBlockNumber = driipSettlementState.settlementPartyDoneBlockNumber(
+                wallet, previousChallengeNonce
+            );
+
+            // If trade is not up to date wrt events affecting the wallet's balance then obtain
+            // the unsynchronized stage amount from the previous driip settlement challenge.
+            if (trade.blockNumber < settlementPartyDoneBlockNumber)
+                unsynchronizedStageAmount = driipSettlementChallengeState.proposalStageAmount(
+                    wallet, trade.currencies.intended
+                );
+        }
+
+        // Obtain the active balance amount at the trade block
+        int256 balanceAmountAtTradeBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+            wallet, trade.currencies.intended, trade.blockNumber
+        );
+
+        // Obtain nonce and (base of) cumulative (relative) transfer amount.
+        if (validator.isTradeBuyer(trade, wallet)) {
+            nonce = trade.buyer.nonce;
+            correctedCumulativeTransferAmount = trade.buyer.balances.intended.current;
+        } else {
+            nonce = trade.seller.nonce;
+            correctedCumulativeTransferAmount = trade.seller.balances.intended.current;
+        }
+
+        // Correct the cumulative transfer amount for wrong value occurring from
+        // race condition of off-chain wallet rebalance resulting from completed settlement
+        correctedCumulativeTransferAmount = correctedCumulativeTransferAmount.sub(
+            balanceAmountAtTradeBlock.add(unsynchronizedStageAmount)
+        );
+
+        // Calculate target balance amount from current active balance, corrected cumulative transfer amount
+        // and stage amount
+        targetBalanceAmount = balanceTracker.fungibleActiveBalanceAmount(wallet, trade.currencies.intended)
+        .add(correctedCumulativeTransferAmount).sub(stageAmount);
+    }
+
+    function _tradePartyConjugateProperties(TradeTypesLib.Trade memory trade, address wallet, int256 stageAmount)
+    private
+    view
+    returns (uint nonce, int256 correctedCumulativeTransferAmount, int256 targetBalanceAmount)
+    {
+        // Obtain unsynchronized stage amount from previous driip settlement if existent.
+        int256 unsynchronizedStageAmount = 0;
+        if (driipSettlementChallengeState.hasProposal(wallet, trade.currencies.conjugate)) {
+            uint256 previousChallengeNonce = driipSettlementChallengeState.proposalNonce(wallet, trade.currencies.conjugate);
+
+            // Get settlement party done block number. The function returns 0 if the settlement party has not effectuated
+            // its side of the settlement.
+            uint256 settlementPartyDoneBlockNumber = driipSettlementState.settlementPartyDoneBlockNumber(
+                wallet, previousChallengeNonce
+            );
+
+            // If trade is not up to date wrt events affecting the wallet's balance then obtain
+            // the unsynchronized stage amount from the previous driip settlement challenge.
+            if (trade.blockNumber < settlementPartyDoneBlockNumber)
+                unsynchronizedStageAmount = driipSettlementChallengeState.proposalStageAmount(
+                    wallet, trade.currencies.conjugate
+                );
+        }
+
+        // Obtain the active balance amount at the trade block
+        int256 balanceAmountAtTradeBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+            wallet, trade.currencies.conjugate, trade.blockNumber
+        );
+
+        // Obtain nonce and (base of) cumulative (relative) transfer amount.
+        if (validator.isTradeBuyer(trade, wallet)) {
+            nonce = trade.buyer.nonce;
+            correctedCumulativeTransferAmount = trade.buyer.balances.conjugate.current;
+        } else {
+            nonce = trade.seller.nonce;
+            correctedCumulativeTransferAmount = trade.seller.balances.conjugate.current;
+        }
+
+        // Correct the cumulative transfer amount for wrong value occurring from
+        // race condition of off-chain wallet rebalance resulting from completed settlement
+        correctedCumulativeTransferAmount = correctedCumulativeTransferAmount.sub(
+            balanceAmountAtTradeBlock.add(unsynchronizedStageAmount)
+        );
+
+        // Calculate target balance amount from current active balance, corrected cumulative transfer amount
+        // and stage amount
+        targetBalanceAmount = balanceTracker.fungibleActiveBalanceAmount(wallet, trade.currencies.conjugate)
+        .add(correctedCumulativeTransferAmount).sub(stageAmount);
     }
 }
