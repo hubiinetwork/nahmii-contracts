@@ -43,8 +43,8 @@ function processLine(file, line, liner, lineNo, quote) {
 
     const enumerator = `[${path.basename(file)}:${++lineNo}]`;
 
-    const reMsgMltLn = /(.*require[\w\W\s]*['"][^\[]*)(?:\[[^\]]*\])?(['"])(\n\s*\);)/;
-    const reMsgSglLn = /(.*require[\w\W\s]*['"][^\[]*)(?:\[[^\]]*\])?(['"])(\s*\);)/;
+    const reMsgMltLn = /(.*require[\w\W\s]*['"][^\[]*?)\s*(?:\[[^\]]*\])?(['"])(\n\s*\);)/;
+    const reMsgSglLn = /(.*require[\w\W\s]*['"][^\[]*?)\s*(?:\[[^\]]*\])?(['"])(\s*\);)/;
     const reNoMsgMltLn = /(.*require[\w\W\s]*[^'"])(\n\s*\);)/;
     const reNoMsgSglLn = /(.*require[\w\W\s]*[^'"])(\s*\);)/;
 
