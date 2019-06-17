@@ -18,6 +18,7 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {DriipSettlementDisputeByTrade} from "./DriipSettlementDisputeByTrade.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
+import {DriipSettlementState} from "./DriipSettlementState.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
@@ -37,6 +38,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     DriipSettlementDisputeByTrade public driipSettlementDisputeByTrade;
     DriipSettlementChallengeState public driipSettlementChallengeState;
     NullSettlementChallengeState public nullSettlementChallengeState;
+    DriipSettlementState public driipSettlementState;
 
     //
     // Events
@@ -47,6 +49,8 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
+    event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
+        DriipSettlementState newDriipSettlementState);
     event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
         int256 intendedStageAmount, int256 conjugateStageAmount);
     event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
@@ -99,6 +103,18 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
     }
 
+    /// @notice Set the driip settlement state contract
+    /// @param newDriipSettlementState The (address of) DriipSettlementState contract instance
+    function setDriipSettlementState(DriipSettlementState newDriipSettlementState)
+    public
+    onlyDeployer
+    notNullAddress(address(newDriipSettlementState))
+    {
+        DriipSettlementState oldDriipSettlementState = driipSettlementState;
+        driipSettlementState = newDriipSettlementState;
+        emit SetDriipSettlementStateEvent(oldDriipSettlementState, driipSettlementState);
+    }
+
     /// @notice Start settlement challenge on trade
     /// @param trade The challenged trade
     /// @param intendedStageAmount Amount of intended currency to be staged
@@ -108,7 +124,7 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     public
     {
         // Require that wallet is not temporarily disqualified
-        require(!walletLocker.isLocked(msg.sender));
+        require(!walletLocker.isLocked(msg.sender), "[DriipSettlementChallengeByTrade.sol:127]");
 
         // Start challenge
         _startChallengeFromTrade(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
@@ -413,10 +429,10 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
     onlySealedTrade(trade)
     {
         // Require that current block number is beyond the earliest settlement challenge block number
-        require(block.number >= configuration.earliestSettlementBlockNumber());
+        require(block.number >= configuration.earliestSettlementBlockNumber(), "[DriipSettlementChallengeByTrade.sol:432]");
 
         // Require that given wallet is a trade party
-        require(validator.isTradeParty(trade, wallet));
+        require(validator.isTradeParty(trade, wallet), "[DriipSettlementChallengeByTrade.sol:435]");
 
         // Create proposals
         _addIntendedProposalFromTrade(wallet, trade, intendedStageAmount, walletInitiated);
@@ -429,14 +445,21 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, trade.currencies.intended) ||
-        nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended)
+        nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended),
+            "[DriipSettlementChallengeByTrade.sol:446]"
         );
 
         // Deduce the concerned trade party
         TradeTypesLib.TradeParty memory party = _tradeParty(trade, wallet);
 
+        // Require that the wallet nonce of the trade is higher than the highest settled wallet nonce
+        require(
+            driipSettlementState.maxNonceByWalletAndCurrency(wallet, trade.currencies.intended) < party.nonce,
+            "Wallet's nonce below highest settled nonce [DriipSettlementChallengeByTrade.sol:455]"
+        );
+
         // Require that intended balance amount is not less than stage amount
-        require(party.balances.intended.current >= stageAmount);
+        require(party.balances.intended.current >= stageAmount, "[DriipSettlementChallengeByTrade.sol:461]");
 
         // Initiate proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.initiateProposal(
@@ -451,14 +474,21 @@ contract DriipSettlementChallengeByTrade is Ownable, ConfigurableOperational, Va
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, trade.currencies.conjugate) ||
-        nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate)
+        nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate),
+            "[DriipSettlementChallengeByTrade.sol:474]"
         );
 
         // Deduce the concerned trade party
         TradeTypesLib.TradeParty memory party = _tradeParty(trade, wallet);
 
+        // Require that the wallet nonce of the trade is higher than the highest settled wallet nonce
+        require(
+            driipSettlementState.maxNonceByWalletAndCurrency(wallet, trade.currencies.conjugate) < party.nonce,
+            "Wallet's nonce below highest settled nonce [DriipSettlementChallengeByTrade.sol:483]"
+        );
+
         // Require that conjugate balance amount is not less than stage amount
-        require(party.balances.conjugate.current >= stageAmount);
+        require(party.balances.conjugate.current >= stageAmount, "[DriipSettlementChallengeByTrade.sol:489]");
 
         // Initiate proposal, including assurance that there is no overlap with active proposal
         driipSettlementChallengeState.initiateProposal(

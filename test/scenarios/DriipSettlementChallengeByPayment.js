@@ -341,7 +341,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if payment\'s nonce is not greater than highest nonce settled', () => {
+            describe('if payment party\'s nonce is not greater than highest nonce settled', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
                         payment.sender.wallet, payment.currency, payment.sender.nonce
@@ -605,7 +605,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if payment\'s nonce is not greater than highest nonce settled', () => {
+            describe('if payment party\'s nonce is not greater than highest nonce settled', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
                         payment.sender.wallet, payment.currency, payment.sender.nonce
