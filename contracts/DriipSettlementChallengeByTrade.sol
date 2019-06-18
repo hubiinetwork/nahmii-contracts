@@ -481,9 +481,10 @@ BalanceTrackable {
             "Wallet's nonce below highest settled nonce in intended currency [DriipSettlementChallengeByTrade.sol:473]"
         );
 
-        // Initiate proposal, including assurance that there is no overlap with active proposal
+        // Initiate proposal, including assurance that there is no overlap with active proposal,
+        // cumulative transfer amount with negative sign
         driipSettlementChallengeState.initiateProposal(
-            wallet, nonce, cumulativeTransferAmount, stageAmount, targetBalanceAmount,
+            wallet, nonce, cumulativeTransferAmount.mul(-1), stageAmount, targetBalanceAmount,
             trade.currencies.intended, trade.blockNumber,
             walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_KIND()
         );
@@ -516,9 +517,10 @@ BalanceTrackable {
             "Wallet's nonce below highest settled nonce in conjugate currency [DriipSettlementChallengeByTrade.sol:524]"
         );
 
-        // Initiate proposal, including assurance that there is no overlap with active proposal
+        // Initiate proposal, including assurance that there is no overlap with active proposal,
+        // cumulative transfer amount with negative sign
         driipSettlementChallengeState.initiateProposal(
-            wallet, nonce, cumulativeTransferAmount, stageAmount, targetBalanceAmount,
+            wallet, nonce, cumulativeTransferAmount.mul(-1), stageAmount, targetBalanceAmount,
             trade.currencies.conjugate, trade.blockNumber,
             walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_KIND()
         );

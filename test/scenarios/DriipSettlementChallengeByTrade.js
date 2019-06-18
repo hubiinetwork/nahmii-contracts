@@ -445,11 +445,11 @@ module.exports = (glob) => {
                     const intendedProposal = await ethersDriipSettlementChallengeState._proposals(0);
                     intendedProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     intendedProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        trade.buyer.balances.intended.current.sub(utils.parseUnits('10000', 18))._bn
+                        trade.buyer.balances.intended.current.sub(utils.parseUnits('10000', 18)).mul(-1)._bn
                     );
                     intendedProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.intended.current)._bn
                     );
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
@@ -463,11 +463,11 @@ module.exports = (glob) => {
                     const conjugateProposal = await ethersDriipSettlementChallengeState._proposals(1);
                     conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     conjugateProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        trade.buyer.balances.conjugate.current.sub(utils.parseUnits('10000', 18))._bn
+                        trade.buyer.balances.conjugate.current.sub(utils.parseUnits('10000', 18)).mul(-1)._bn
                     );
                     conjugateProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.conjugate.current)._bn
                     );
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
@@ -530,11 +530,11 @@ module.exports = (glob) => {
                     const intendedProposal = await ethersDriipSettlementChallengeState._proposals(1);
                     intendedProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     intendedProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        trade.buyer.balances.intended.current.sub(utils.parseUnits('10000', 18))._bn
+                        trade.buyer.balances.intended.current.sub(utils.parseUnits('10000', 18)).mul(-1)._bn
                     );
                     intendedProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.intended.current)._bn
                     );
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
@@ -548,11 +548,11 @@ module.exports = (glob) => {
                     const conjugateProposal = await ethersDriipSettlementChallengeState._proposals(2);
                     conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     conjugateProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        trade.buyer.balances.conjugate.current.sub(utils.parseUnits('10000', 18))._bn
+                        trade.buyer.balances.conjugate.current.sub(utils.parseUnits('10000', 18)).mul(-1)._bn
                     );
                     conjugateProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.conjugate.current)._bn
                     );
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
@@ -618,11 +618,11 @@ module.exports = (glob) => {
                     intendedProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
                         trade.buyer.balances.intended.current.sub(
                             utils.parseUnits('10000', 18).add(utils.parseUnits('100', 18))
-                        )._bn
+                        ).mul(-1)._bn
                     );
                     intendedProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.intended.current)._bn
                     );
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
@@ -638,11 +638,11 @@ module.exports = (glob) => {
                     conjugateProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
                         trade.buyer.balances.conjugate.current.sub(
                             utils.parseUnits('10000', 18).add(intendedProposal.amounts.stage) // 100 units set as proposal stage amount are overridden in mocked contract
-                        )._bn
+                        ).mul(-1)._bn
                     );
                     conjugateProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.conjugate.current)._bn
                     );
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
@@ -804,11 +804,11 @@ module.exports = (glob) => {
                     const intendedProposal = await ethersDriipSettlementChallengeState._proposals(0);
                     intendedProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     intendedProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        trade.buyer.balances.intended.current.sub(utils.parseUnits('10000', 18))._bn
+                        trade.buyer.balances.intended.current.sub(utils.parseUnits('10000', 18)).mul(-1)._bn
                     );
                     intendedProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.intended.current)._bn
                     );
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
@@ -822,11 +822,11 @@ module.exports = (glob) => {
                     const conjugateProposal = await ethersDriipSettlementChallengeState._proposals(1);
                     conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     conjugateProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        trade.buyer.balances.conjugate.current.sub(utils.parseUnits('10000', 18))._bn
+                        trade.buyer.balances.conjugate.current.sub(utils.parseUnits('10000', 18)).mul(-1)._bn
                     );
                     conjugateProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.conjugate.current)._bn
                     );
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
@@ -889,11 +889,11 @@ module.exports = (glob) => {
                     const intendedProposal = await ethersDriipSettlementChallengeState._proposals(1);
                     intendedProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     intendedProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        trade.buyer.balances.intended.current.sub(utils.parseUnits('10000', 18))._bn
+                        trade.buyer.balances.intended.current.sub(utils.parseUnits('10000', 18)).mul(-1)._bn
                     );
                     intendedProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.intended.current)._bn
                     );
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
@@ -907,11 +907,11 @@ module.exports = (glob) => {
                     const conjugateProposal = await ethersDriipSettlementChallengeState._proposals(2);
                     conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
                     conjugateProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        trade.buyer.balances.conjugate.current.sub(utils.parseUnits('10000', 18))._bn
+                        trade.buyer.balances.conjugate.current.sub(utils.parseUnits('10000', 18)).mul(-1)._bn
                     );
                     conjugateProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.conjugate.current)._bn
                     );
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
@@ -977,11 +977,11 @@ module.exports = (glob) => {
                     intendedProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
                         trade.buyer.balances.intended.current.sub(
                             utils.parseUnits('10000', 18).add(utils.parseUnits('100', 18))
-                        )._bn
+                        ).mul(-1)._bn
                     );
                     intendedProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                     intendedProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(intendedProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.intended.current)._bn
                     );
                     intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
@@ -997,11 +997,11 @@ module.exports = (glob) => {
                     conjugateProposal.amounts.cumulativeTransfer._bn.should.eq.BN(
                         trade.buyer.balances.conjugate.current.sub(
                             utils.parseUnits('10000', 18).add(intendedProposal.amounts.stage) // 100 units set as proposal stage amount are overridden in mocked contract
-                        )._bn
+                        ).mul(-1)._bn
                     );
                     conjugateProposal.amounts.stage._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                     conjugateProposal.amounts.targetBalance._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer)
+                        utils.parseUnits('10000', 18).add(conjugateProposal.amounts.cumulativeTransfer.mul(-1))
                             .sub(trade.buyer.balances.conjugate.current)._bn
                     );
                     conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
