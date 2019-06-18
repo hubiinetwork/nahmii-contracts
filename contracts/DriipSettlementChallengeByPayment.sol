@@ -492,7 +492,10 @@ BalanceTrackable {
         );
 
         // Require that given wallet is a payment party
-        require(validator.isPaymentParty(payment, wallet), "Wallet is not payment party [DriipSettlementChallengeByPayment.sol:495]");
+        require(
+            validator.isPaymentParty(payment, wallet),
+            "Wallet is not payment party [DriipSettlementChallengeByPayment.sol:495]"
+        );
 
         // Require that there is no ongoing overlapping driip settlement challenge
         require(

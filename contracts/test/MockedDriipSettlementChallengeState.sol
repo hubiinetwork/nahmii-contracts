@@ -18,7 +18,7 @@ import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
  */
 contract MockedDriipSettlementChallengeState {
 
-    uint256 public _addProposalsCount;
+    uint256 public _initiateProposalsCount;
     uint256 public _terminateProposalsCount;
     uint256 public _removeProposalsCount;
     SettlementChallengeTypesLib.Proposal[] public _proposals;
@@ -29,7 +29,7 @@ contract MockedDriipSettlementChallengeState {
     function _reset()
     public
     {
-        delete _addProposalsCount;
+        delete _initiateProposalsCount;
         delete _terminateProposalsCount;
         delete _removeProposalsCount;
         delete _proposals;
@@ -58,7 +58,7 @@ contract MockedDriipSettlementChallengeState {
         _proposals[index].challenged.hash = challengedHash;
         _proposals[index].challenged.kind = challengedKind;
 
-        _addProposalsCount++;
+        _initiateProposalsCount++;
     }
 
     function terminateProposal(address wallet, MonetaryTypesLib.Currency memory currency, bool)
@@ -432,5 +432,13 @@ contract MockedDriipSettlementChallengeState {
     returns (uint256)
     {
         return _proposals.length > 0 ? _proposals.length - 1 : _proposals.length++;
+    }
+
+    function _proposalsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return _proposals.length;
     }
 }
