@@ -203,7 +203,7 @@ BalanceTrackable {
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
-        // Terminate driip settlement challenge proposal
+        // Stop challenge
         _stopChallenge(wallet, currency, true, false);
 
         // Emit event
@@ -501,14 +501,14 @@ BalanceTrackable {
         require(
             !driipSettlementChallengeState.hasProposal(wallet, payment.currency) ||
         driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency),
-            "Overlapping driip settlement challenge proposal found [DriipSettlementChallengeByPayment.sol:498]"
+            "Overlapping driip settlement challenge proposal found [DriipSettlementChallengeByPayment.sol:501]"
         );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, payment.currency) ||
         nullSettlementChallengeState.hasProposalTerminated(wallet, payment.currency),
-            "Overlapping null settlement challenge proposal found [DriipSettlementChallengeByPayment.sol:505]"
+            "Overlapping null settlement challenge proposal found [DriipSettlementChallengeByPayment.sol:508]"
         );
 
         // Deduce the concerned nonce and cumulative relative transfer
@@ -517,7 +517,7 @@ BalanceTrackable {
         // Require that the wallet nonce of the payment is higher than the highest settled wallet nonce
         require(
             driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency) < nonce,
-            "Wallet's nonce below highest settled nonce [DriipSettlementChallengeByPayment.sol:515]"
+            "Wallet's nonce below highest settled nonce [DriipSettlementChallengeByPayment.sol:518]"
         );
 
         // Initiate proposal, including assurance that there is no overlap with active proposal
@@ -536,8 +536,14 @@ BalanceTrackable {
     private
     {
         // Require that there is an unterminated driip settlement challenge proposal
-        require(driipSettlementChallengeState.hasProposal(wallet, currency), "No proposal found [DriipSettlementChallengeByPayment.sol:536]");
-        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated [DriipSettlementChallengeByPayment.sol:537]");
+        require(
+            driipSettlementChallengeState.hasProposal(wallet, currency),
+            "No proposal found [DriipSettlementChallengeByPayment.sol:539]"
+        );
+        require(
+            !driipSettlementChallengeState.hasProposalTerminated(wallet, currency),
+            "Proposal found terminated [DriipSettlementChallengeByPayment.sol:543]"
+        );
 
         // Terminate driip settlement challenge proposal
         driipSettlementChallengeState.terminateProposal(wallet, currency, clearNonce, walletTerminated);
