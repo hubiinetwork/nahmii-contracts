@@ -56,12 +56,27 @@ BalanceTrackable {
         NullSettlementChallengeState newNullSettlementChallengeState);
     event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
         DriipSettlementState newDriipSettlementState);
-    event StartChallengeFromTradeEvent(address wallet, bytes32 tradeHash,
-        int256 intendedStageAmount, int256 conjugateStageAmount);
-    event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, bytes32 tradeHash,
-        int256 intendedStageAmount, int256 conjugateStageAmount);
-    event StopChallengeEvent(address wallet, address currencyCt, uint256 currencyId);
-    event StopChallengeByProxyEvent(address proxy, address wallet, address currencyCt, uint256 currencyId);
+    event StartChallengeFromTradeEvent(address wallet, uint256 intendedNonce, int256 intendedStageAmount,
+        int256 intendedTargetBalanceAmount, address intendedCurrencyCt, uint256 intendedCurrencyId,
+        uint256 conjugateNonce, int256 conjugateStageAmount, int256 conjugateTargetBalanceAmount,
+        address conjugateCurrencyCt, uint256 conjugateCurrencyId);
+    event StartChallengeFromTradeByProxyEvent(address proxy, address wallet, uint256 intendedNonce, int256 intendedStageAmount,
+        int256 intendedTargetBalanceAmount, address intendedCurrencyCt, uint256 intendedCurrencyId,
+        uint256 conjugateNonce, int256 conjugateStageAmount, int256 conjugateTargetBalanceAmount,
+        address conjugateCurrencyCt, uint256 conjugateCurrencyId);
+    event StopChallengeEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount,
+        int256 stageAmount, int256 targetBalanceAmount, address currencyCt, uint256 currencyId);
+    event StopChallengeByProxyEvent(address proxy, address wallet, uint256 nonce, int256 cumulativeTransferAmount,
+        int256 stageAmount, int256 targetBalanceAmount, address currencyCt, uint256 currencyId);
+    event ChallengeByOrderEvent(address challengedWallet, uint256 nonce, int256 cumulativeTransferAmount,
+        int256 stageAmount, int256 targetBalanceAmount, address currencyCt, uint256 currencyId,
+        address challengerWallet);
+    event UnchallengeOrderByTradeEvent(address challengedWallet, uint256 nonce, int256 cumulativeTransferAmount,
+        int256 stageAmount, int256 targetBalanceAmount, address currencyCt, uint256 currencyId,
+        address challengerWallet);
+    event ChallengeByTradeEvent(address challengedWallet, uint256 nonce, int256 cumulativeTransferAmount,
+        int256 stageAmount, int256 targetBalanceAmount, address currencyCt, uint256 currencyId,
+        address challengerWallet);
 
     //
     // Constructor
@@ -134,9 +149,18 @@ BalanceTrackable {
         // Start challenge
         _startChallengeFromTrade(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
 
-        // TODO Update event signature
         // Emit event
-        emit StartChallengeFromTradeEvent(msg.sender, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeFromTradeEvent(
+            msg.sender,
+            driipSettlementChallengeState.proposalNonce(msg.sender, trade.currencies.intended),
+            intendedStageAmount,
+            driipSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, trade.currencies.intended),
+            trade.currencies.intended.ct, trade.currencies.intended.id,
+            driipSettlementChallengeState.proposalNonce(msg.sender, trade.currencies.conjugate),
+            conjugateStageAmount,
+            driipSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, trade.currencies.conjugate),
+            trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+        );
     }
 
     /// @notice Start settlement challenge on trade by proxy
@@ -152,9 +176,18 @@ BalanceTrackable {
         // Start challenge for wallet
         _startChallengeFromTrade(wallet, trade, intendedStageAmount, conjugateStageAmount, false);
 
-        // TODO Update event signature
         // Emit event
-        emit StartChallengeFromTradeByProxyEvent(msg.sender, wallet, trade.seal.hash, intendedStageAmount, conjugateStageAmount);
+        emit StartChallengeFromTradeByProxyEvent(
+            msg.sender, wallet,
+            driipSettlementChallengeState.proposalNonce(wallet, trade.currencies.intended),
+            driipSettlementChallengeState.proposalStageAmount(wallet, trade.currencies.intended),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, trade.currencies.intended),
+            trade.currencies.intended.ct, trade.currencies.intended.id,
+            driipSettlementChallengeState.proposalNonce(wallet, trade.currencies.conjugate),
+            driipSettlementChallengeState.proposalStageAmount(wallet, trade.currencies.conjugate),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, trade.currencies.conjugate),
+            trade.currencies.conjugate.ct, trade.currencies.conjugate.id
+        );
     }
 
     /// @notice Stop settlement challenge
@@ -168,9 +201,18 @@ BalanceTrackable {
             msg.sender, MonetaryTypesLib.Currency(currencyCt, currencyId), true, true
         );
 
-        // TODO Update event signature
+        // Define currency
+        MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
+
         // Emit event
-        emit StopChallengeEvent(msg.sender, currencyCt, currencyId);
+        emit StopChallengeEvent(
+            msg.sender,
+            driipSettlementChallengeState.proposalNonce(msg.sender, currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(msg.sender, currency),
+            driipSettlementChallengeState.proposalStageAmount(msg.sender, currency),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, currency),
+            currencyCt, currencyId
+        );
     }
 
     /// @notice Stop settlement challenge
@@ -186,9 +228,18 @@ BalanceTrackable {
             wallet, MonetaryTypesLib.Currency(currencyCt, currencyId), true, false
         );
 
-        // TODO Update event signature
+        // Define currency
+        MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
+
         // Emit event
-        emit StopChallengeByProxyEvent(msg.sender, wallet, currencyCt, currencyId);
+        emit StopChallengeByProxyEvent(
+            msg.sender, wallet,
+            driipSettlementChallengeState.proposalNonce(wallet, currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, currency),
+            driipSettlementChallengeState.proposalStageAmount(wallet, currency),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
+            currencyCt, currencyId
+        );
     }
 
     /// @notice Gauge whether the proposal for the given wallet and currency has expired
@@ -406,7 +457,22 @@ BalanceTrackable {
     public
     onlyOperationalModeNormal
     {
+        // Challenge by order
         driipSettlementDisputeByTrade.challengeByOrder(order, msg.sender);
+
+        // Get concerned currency
+        MonetaryTypesLib.Currency memory currency = _orderCurrency(order);
+
+        // Emit event
+        emit ChallengeByOrderEvent(
+            order.wallet,
+            driipSettlementChallengeState.proposalNonce(order.wallet, currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(order.wallet, currency),
+            driipSettlementChallengeState.proposalStageAmount(order.wallet, currency),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(order.wallet, currency),
+            currency.ct, currency.id,
+            msg.sender
+        );
     }
 
     /// @notice Unchallenge settlement by providing trade that shows that challenge order candidate has been filled
@@ -416,7 +482,22 @@ BalanceTrackable {
     public
     onlyOperationalModeNormal
     {
+        // Unchallenge by trade
         driipSettlementDisputeByTrade.unchallengeOrderCandidateByTrade(order, trade, msg.sender);
+
+        // Get concerned currency
+        MonetaryTypesLib.Currency memory currency = _orderCurrency(order);
+
+        // Emit event
+        emit UnchallengeOrderByTradeEvent(
+            order.wallet,
+            driipSettlementChallengeState.proposalNonce(order.wallet, currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(order.wallet, currency),
+            driipSettlementChallengeState.proposalStageAmount(order.wallet, currency),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(order.wallet, currency),
+            currency.ct, currency.id,
+            msg.sender
+        );
     }
 
     /// @notice Challenge the settlement by providing trade candidate
@@ -426,7 +507,22 @@ BalanceTrackable {
     public
     onlyOperationalModeNormal
     {
+        // Challenge by trade
         driipSettlementDisputeByTrade.challengeByTrade(wallet, trade, msg.sender);
+
+        // Get concerned currency
+        MonetaryTypesLib.Currency memory currency = _tradeCurrency(trade, wallet);
+
+        // Emit event
+        emit ChallengeByTradeEvent(
+            wallet,
+            driipSettlementChallengeState.proposalNonce(wallet, currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, currency),
+            driipSettlementChallengeState.proposalStageAmount(wallet, currency),
+            driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
+            currency.ct, currency.id,
+            msg.sender
+        );
     }
 
     //
@@ -484,7 +580,7 @@ BalanceTrackable {
         // Initiate proposal, including assurance that there is no overlap with active proposal,
         // cumulative transfer amount with negative sign
         driipSettlementChallengeState.initiateProposal(
-            wallet, nonce, cumulativeTransferAmount.mul(-1), stageAmount, targetBalanceAmount,
+            wallet, nonce, cumulativeTransferAmount.mul(- 1), stageAmount, targetBalanceAmount,
             trade.currencies.intended, trade.blockNumber,
             walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_KIND()
         );
@@ -520,7 +616,7 @@ BalanceTrackable {
         // Initiate proposal, including assurance that there is no overlap with active proposal,
         // cumulative transfer amount with negative sign
         driipSettlementChallengeState.initiateProposal(
-            wallet, nonce, cumulativeTransferAmount.mul(-1), stageAmount, targetBalanceAmount,
+            wallet, nonce, cumulativeTransferAmount.mul(- 1), stageAmount, targetBalanceAmount,
             trade.currencies.conjugate, trade.blockNumber,
             walletInitiated, trade.seal.hash, TradeTypesLib.TRADE_KIND()
         );
@@ -624,5 +720,31 @@ BalanceTrackable {
         // and stage amount
         targetBalanceAmount = balanceTracker.fungibleActiveBalanceAmount(wallet, trade.currencies.conjugate)
         .add(correctedCumulativeTransferAmount).sub(stageAmount);
+    }
+
+    // Get the candidate order currency
+    // Buy order -> Conjugate currency
+    // Sell order -> Intended currency
+    function _orderCurrency(TradeTypesLib.Order memory order)
+    private
+    pure
+    returns (MonetaryTypesLib.Currency memory)
+    {
+        return TradeTypesLib.Intention.Sell == order.placement.intention ?
+        order.placement.currencies.intended :
+        order.placement.currencies.conjugate;
+    }
+
+    // Get the candidate trade currency
+    // Wallet is buyer in (candidate) trade -> Conjugate currency
+    // Wallet is seller in (candidate) trade -> Intended currency
+    function _tradeCurrency(TradeTypesLib.Trade memory trade, address wallet)
+    private
+    view
+    returns (MonetaryTypesLib.Currency memory)
+    {
+        return validator.isTradeBuyer(trade, wallet) ?
+        trade.currencies.conjugate :
+        trade.currencies.intended;
     }
 }

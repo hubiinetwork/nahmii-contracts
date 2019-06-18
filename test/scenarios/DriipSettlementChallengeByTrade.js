@@ -1246,15 +1246,26 @@ module.exports = (glob) => {
         });
 
         describe('challengeByOrder()', () => {
-            let order;
+            let order, filter;
 
-            before(async () => {
+            beforeEach(async () => {
                 await ethersDriipSettlementDisputeByTrade._reset();
+
+                await ethersDriipSettlementChallengeState._setProposalNonce(0);
+
                 order = await mocks.mockOrder(glob.owner);
+
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: ethersDriipSettlementChallengeByTrade.interface.events['ChallengeByOrderEvent'].topics
+                };
             });
 
             it('should call challengeByOrder() of its settlement challenge dispute instance', async () => {
-                await ethersDriipSettlementChallengeByTrade.challengeByOrder(order);
+                await ethersDriipSettlementChallengeByTrade.challengeByOrder(order, {gasLimit: 2e6});
+
+                const logs = await provider.getLogs(filter);
+                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
                 (await ethersDriipSettlementDisputeByTrade._challengeByOrderCount())
                     ._bn.should.eq.BN(1);
@@ -1262,16 +1273,27 @@ module.exports = (glob) => {
         });
 
         describe('unchallengeOrderCandidateByTrade()', () => {
-            let order, trade;
+            let order, trade, filter;
 
-            before(async () => {
+            beforeEach(async () => {
                 await ethersDriipSettlementDisputeByTrade._reset();
+
+                await ethersDriipSettlementChallengeState._setProposalNonce(0);
+
                 order = await mocks.mockOrder(glob.owner);
                 trade = await mocks.mockTrade(glob.owner);
+
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: ethersDriipSettlementChallengeByTrade.interface.events['UnchallengeOrderByTradeEvent'].topics
+                };
             });
 
             it('should call challengeByTrade() of its settlement challenge dispute instance', async () => {
                 await ethersDriipSettlementChallengeByTrade.unchallengeOrderCandidateByTrade(order, trade, {gasLimit: 2e6});
+
+                const logs = await provider.getLogs(filter);
+                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
                 (await ethersDriipSettlementDisputeByTrade._unchallengeOrderCandidateByTradeCount())
                     ._bn.should.eq.BN(1);
@@ -1279,15 +1301,26 @@ module.exports = (glob) => {
         });
 
         describe('challengeByTrade()', () => {
-            let trade;
+            let trade, filter;
 
-            before(async () => {
+            beforeEach(async () => {
                 await ethersDriipSettlementDisputeByTrade._reset();
+
+                await ethersDriipSettlementChallengeState._setProposalNonce(0);
+
                 trade = await mocks.mockTrade(glob.owner);
+
+                filter = {
+                    fromBlock: await provider.getBlockNumber(),
+                    topics: ethersDriipSettlementChallengeByTrade.interface.events['ChallengeByTradeEvent'].topics
+                };
             });
 
             it('should call challengeByTrade() of its settlement challenge dispute instance', async () => {
                 await ethersDriipSettlementChallengeByTrade.challengeByTrade(trade.buyer.wallet, trade, {gasLimit: 2e6});
+
+                const logs = await provider.getLogs(filter);
+                logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
                 (await ethersDriipSettlementDisputeByTrade._challengeByTradeCount())
                     ._bn.should.eq.BN(1);
