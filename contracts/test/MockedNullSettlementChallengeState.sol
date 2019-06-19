@@ -363,4 +363,12 @@ contract MockedNullSettlementChallengeState {
     {
         return _proposals.length > 0 ? _proposals.length - 1 : _proposals.length++;
     }
+
+    function _proposalsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return _proposals.length;
+    }
 }
