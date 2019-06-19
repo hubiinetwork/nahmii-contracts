@@ -6,6 +6,7 @@ const mocks = require('../mocks');
 const DriipSettlementDisputeByTrade = artifacts.require('DriipSettlementDisputeByTrade');
 const SignerManager = artifacts.require('SignerManager');
 const MockedDriipSettlementChallengeState = artifacts.require('MockedDriipSettlementChallengeState');
+const MockedNullSettlementChallengeState = artifacts.require('MockedNullSettlementChallengeState');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const MockedFraudChallenge = artifacts.require('MockedFraudChallenge');
 const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallenge');
@@ -26,6 +27,7 @@ module.exports = (glob) => {
         let web3SecurityBond, ethersSecurityBond;
         let web3WalletLocker, ethersWalletLocker;
         let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
+        let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
         let provider;
@@ -37,6 +39,8 @@ module.exports = (glob) => {
 
             web3DriipSettlementChallengeState = await MockedDriipSettlementChallengeState.new(glob.owner);
             ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, MockedDriipSettlementChallengeState.abi, glob.signer_owner);
+            web3NullSettlementChallengeState = await MockedNullSettlementChallengeState.new(glob.owner);
+            ethersNullSettlementChallengeState = new Contract(web3NullSettlementChallengeState.address, MockedNullSettlementChallengeState.abi, glob.signer_owner);
             web3Configuration = await MockedConfiguration.new(glob.owner);
             ethersConfiguration = new Contract(web3Configuration.address, MockedConfiguration.abi, glob.signer_owner);
             web3Validator = await MockedValidator.new(glob.owner, web3SignerManager.address);
@@ -67,6 +71,8 @@ module.exports = (glob) => {
             await ethersDriipSettlementDisputeByTrade.setFraudChallenge(ethersFraudChallenge.address);
             await ethersDriipSettlementDisputeByTrade.setCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
             await ethersDriipSettlementDisputeByTrade.setDriipSettlementChallengeState(ethersDriipSettlementChallengeState.address);
+            await ethersDriipSettlementDisputeByTrade.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
+
         });
 
         describe('constructor', () => {
@@ -322,6 +328,7 @@ module.exports = (glob) => {
                 await web3FraudChallenge._reset();
                 await web3CancelOrdersChallenge._reset();
                 await web3DriipSettlementChallengeState._reset({gasLimit: 1e6});
+                await web3NullSettlementChallengeState._reset({gasLimit: 1e6});
                 await web3SecurityBond._reset();
                 await web3WalletLocker._reset();
 
@@ -546,6 +553,15 @@ module.exports = (glob) => {
 
                     (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
+
+                    (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                        ._bn.should.eq.BN(1);
+
+                    const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                    nscProposal.wallet.should.equal(order.wallet);
+                    nscProposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
+                    nscProposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
+                    nscProposal.terminated.should.be.true;
                 });
             });
 
@@ -608,6 +624,15 @@ module.exports = (glob) => {
 
                     (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
+
+                    (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                        ._bn.should.eq.BN(1);
+
+                    const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                    nscProposal.wallet.should.equal(order.wallet);
+                    nscProposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
+                    nscProposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
+                    nscProposal.terminated.should.be.true;
                 });
             });
 
@@ -671,6 +696,15 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(1000);
+
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(order.wallet);
+                        nscProposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
 
@@ -723,6 +757,15 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(1000);
+
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(order.wallet);
+                        nscProposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
             });
@@ -796,6 +839,15 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(1000);
+
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(order.wallet);
+                        nscProposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
 
@@ -851,6 +903,15 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(1000);
+
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(order.wallet);
+                        nscProposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
             });
@@ -1278,6 +1339,7 @@ module.exports = (glob) => {
                 await web3FraudChallenge._reset();
                 await web3CancelOrdersChallenge._reset();
                 await web3DriipSettlementChallengeState._reset({gasLimit: 1e6});
+                await web3NullSettlementChallengeState._reset({gasLimit: 1e6});
                 await web3SecurityBond._reset();
                 await web3WalletLocker._reset();
 
@@ -1539,6 +1601,15 @@ module.exports = (glob) => {
 
                     (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
+
+                    (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                        ._bn.should.eq.BN(1);
+
+                    const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                    nscProposal.wallet.should.equal(trade.buyer.wallet);
+                    nscProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                    nscProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                    nscProposal.terminated.should.be.true;
                 });
             });
 
@@ -1601,6 +1672,15 @@ module.exports = (glob) => {
 
                     (await ethersSecurityBond._fractionalRewardsCount())
                         ._bn.should.eq.BN(0);
+
+                    (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                        ._bn.should.eq.BN(1);
+
+                    const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                    nscProposal.wallet.should.equal(trade.buyer.wallet);
+                    nscProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                    nscProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                    nscProposal.terminated.should.be.true;
                 });
             });
 
@@ -1663,6 +1743,15 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(trade.currencies.conjugate.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
+
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(trade.buyer.wallet);
+                        nscProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
 
@@ -1714,6 +1803,15 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(trade.currencies.conjugate.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
+
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(trade.buyer.wallet);
+                        nscProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
             });
@@ -1786,6 +1884,15 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(trade.currencies.conjugate.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
+
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(trade.buyer.wallet);
+                        nscProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
 
@@ -1840,6 +1947,15 @@ module.exports = (glob) => {
                         progressiveReward.currency.ct.should.equal(trade.currencies.conjugate.ct);
                         progressiveReward.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
                         progressiveReward.unlockTime._bn.should.eq.BN(0);
+
+                        (await ethersNullSettlementChallengeState._terminateProposalsCount())
+                            ._bn.should.eq.BN(1);
+
+                        const nscProposal = await ethersNullSettlementChallengeState._proposals(0);
+                        nscProposal.wallet.should.equal(trade.buyer.wallet);
+                        nscProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                        nscProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                        nscProposal.terminated.should.be.true;
                     });
                 });
             });

@@ -25,6 +25,7 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
+import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
 
 /**
  * @title DriipSettlementDisputeByTrade
@@ -47,12 +48,15 @@ FraudChallengable, CancelOrdersChallengable, Servable {
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     DriipSettlementChallengeState public driipSettlementChallengeState;
+    NullSettlementChallengeState public nullSettlementChallengeState;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
+    event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
+        NullSettlementChallengeState newNullSettlementChallengeState);
     event ChallengeByOrderEvent(uint256 nonce, TradeTypesLib.Order order, address challenger);
     event UnchallengeOrderCandidateByTradeEvent(uint256 nonce, TradeTypesLib.Order order,
         TradeTypesLib.Trade trade, address unchallenger);
@@ -74,6 +78,17 @@ FraudChallengable, CancelOrdersChallengable, Servable {
         DriipSettlementChallengeState oldDriipSettlementChallengeState = driipSettlementChallengeState;
         driipSettlementChallengeState = newDriipSettlementChallengeState;
         emit SetDriipSettlementChallengeStateEvent(oldDriipSettlementChallengeState, driipSettlementChallengeState);
+    }
+
+    /// @notice Set the null settlement state contract
+    /// @param newNullSettlementChallengeState The (address of) NullSettlementChallengeState contract instance
+    function setNullSettlementChallengeState(NullSettlementChallengeState newNullSettlementChallengeState) public
+    onlyDeployer
+    notNullAddress(address(newNullSettlementChallengeState))
+    {
+        NullSettlementChallengeState oldNullSettlementChallengeState = nullSettlementChallengeState;
+        nullSettlementChallengeState = newNullSettlementChallengeState;
+        emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
     }
 
     /// @notice Challenge the driip settlement by providing order candidate
@@ -125,6 +140,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
             order.wallet, currency, challenger, order.blockNumber,
             order.nonce, order.seals.operator.hash, TradeTypesLib.ORDER_KIND()
         );
+
+        // Terminate dependent null settlement challenge proposal if existent
+        nullSettlementChallengeState.terminateProposal(order.wallet, currency);
 
         // Emit event
         emit ChallengeByOrderEvent(
@@ -258,6 +276,9 @@ FraudChallengable, CancelOrdersChallengable, Servable {
             wallet, currency, challenger, trade.blockNumber,
             nonce, trade.seal.hash, TradeTypesLib.TRADE_KIND()
         );
+
+        // Terminate dependent null settlement challenge proposal if existent
+        nullSettlementChallengeState.terminateProposal(wallet, currency);
 
         // Emit event
         emit ChallengeByTradeEvent(
