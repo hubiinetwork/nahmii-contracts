@@ -128,7 +128,7 @@ BalanceTrackable, FraudChallengable, Servable {
             payment.sender.nonce, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
 
-        // Cancel dependent null settlement challenge if existent
+        // Terminate dependent null settlement challenge proposal if existent
         nullSettlementChallengeState.terminateProposal(wallet, payment.currency);
 
         // Emit event
