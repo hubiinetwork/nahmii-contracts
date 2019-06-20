@@ -505,13 +505,13 @@ BalanceTrackable {
         // Require that current block number is beyond the earliest settlement challenge block number
         require(
             block.number >= configuration.earliestSettlementBlockNumber(),
-            "Current block number below earliest settlement block number [DriipSettlementChallengeByTrade.sol:510]"
+            "Current block number below earliest settlement block number [DriipSettlementChallengeByTrade.sol:506]"
         );
 
         // Require that given wallet is a trade party
         require(
             validator.isTradeParty(trade, wallet),
-            "Wallet is not trade party [DriipSettlementChallengeByTrade.sol:516]"
+            "Wallet is not trade party [DriipSettlementChallengeByTrade.sol:512]"
         );
 
         // Create proposals
@@ -525,11 +525,11 @@ BalanceTrackable {
         // Require that there is an unterminated driip settlement challenge proposal
         require(
             driipSettlementChallengeState.hasProposal(wallet, currency),
-            "No proposal found [DriipSettlementChallengeByTrade.sol:530]"
+            "No proposal found [DriipSettlementChallengeByTrade.sol:526]"
         );
         require(
             !driipSettlementChallengeState.hasProposalTerminated(wallet, currency),
-            "Proposal found terminated [DriipSettlementChallengeByTrade.sol:534]"
+            "Proposal found terminated [DriipSettlementChallengeByTrade.sol:530]"
         );
 
         // Terminate driip settlement challenge proposal
@@ -546,14 +546,14 @@ BalanceTrackable {
         require(
             !driipSettlementChallengeState.hasProposal(wallet, trade.currencies.intended) ||
         driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended),
-            "Overlapping driip settlement challenge proposal in intended currency found [DriipSettlementChallengeByTrade.sol:550]"
+            "Overlapping driip settlement challenge proposal in intended currency found [DriipSettlementChallengeByTrade.sol:546]"
         );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, trade.currencies.intended) ||
         nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended),
-            "Overlapping null settlement challenge proposal in intended currency found [DriipSettlementChallengeByTrade.sol:557]"
+            "Overlapping null settlement challenge proposal in intended currency found [DriipSettlementChallengeByTrade.sol:553]"
         );
 
         // Deduce the concerned nonce and cumulative relative transfer
@@ -563,7 +563,7 @@ BalanceTrackable {
         // Require that the wallet nonce of the trade is higher than the highest settled wallet nonce
         require(
             driipSettlementState.maxNonceByWalletAndCurrency(wallet, trade.currencies.intended) < nonce,
-            "Wallet's nonce below highest settled nonce in intended currency [DriipSettlementChallengeByTrade.sol:568]"
+            "Wallet's nonce below highest settled nonce in intended currency [DriipSettlementChallengeByTrade.sol:564]"
         );
 
         // Initiate proposal, including assurance that there is no overlap with active proposal,
@@ -582,14 +582,14 @@ BalanceTrackable {
         require(
             !driipSettlementChallengeState.hasProposal(wallet, trade.currencies.conjugate) ||
         driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate),
-            "Overlapping driip settlement challenge proposal in conjugate currency found [DriipSettlementChallengeByTrade.sol:586]"
+            "Overlapping driip settlement challenge proposal in conjugate currency found [DriipSettlementChallengeByTrade.sol:582]"
         );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, trade.currencies.conjugate) ||
         nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate),
-            "Overlapping null settlement challenge proposal in conjugate currency found [DriipSettlementChallengeByTrade.sol:593]"
+            "Overlapping null settlement challenge proposal in conjugate currency found [DriipSettlementChallengeByTrade.sol:589]"
         );
 
         // Deduce the concerned nonce and cumulative relative transfer
@@ -599,7 +599,7 @@ BalanceTrackable {
         // Require that the wallet nonce of the trade is higher than the highest settled wallet nonce
         require(
             driipSettlementState.maxNonceByWalletAndCurrency(wallet, trade.currencies.conjugate) < nonce,
-            "Wallet's nonce below highest settled nonce in conjugate currency [DriipSettlementChallengeByTrade.sol:604]"
+            "Wallet's nonce below highest settled nonce in conjugate currency [DriipSettlementChallengeByTrade.sol:600]"
         );
 
         // Initiate proposal, including assurance that there is no overlap with active proposal,
