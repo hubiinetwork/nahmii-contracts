@@ -330,6 +330,10 @@ FraudChallengable, WalletLockable {
         // Stage fees to revenue fund
         if (address(0) != address(revenueFund))
             _stageFees(wallet, party.fees.total, revenueFund, party.nonce, standard);
+
+        // Remove driip settlement challenge proposals
+        driipSettlementChallengeState.terminateProposal(wallet, trade.currencies.intended, false);
+        driipSettlementChallengeState.terminateProposal(wallet, trade.currencies.conjugate, false);
     }
 
     function _getRoleProperties(TradeTypesLib.Trade memory trade, address wallet)
