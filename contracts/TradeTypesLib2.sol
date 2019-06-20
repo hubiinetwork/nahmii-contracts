@@ -11,12 +11,11 @@ pragma solidity >=0.4.25 <0.6.0;
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 
-// TODO Replace the contents of this library with the one of TradeTypesLib2
 /**
- * @title     TradeTypesLib
+ * @title     TradeTypesLib2
  * @dev       Data types centered around trade
  */
-library TradeTypesLib {
+library TradeTypesLib2 {
     //
     // Enums
     // -----------------------------------------------------------------------------------------------------------------
@@ -28,25 +27,46 @@ library TradeTypesLib {
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
+    struct Operator {
+        uint256 id;
+        string data;
+    }
+
+    struct OrderParty {
+        uint256 nonce;
+        address wallet;
+
+        NahmiiTypesLib.IntendedConjugateInt256 balances;
+
+        string data;
+    }
+
     struct OrderPlacement {
         Intention intention;
 
         int256 amount;
         NahmiiTypesLib.IntendedConjugateCurrency currencies;
         int256 rate;
-
-        NahmiiTypesLib.CurrentPreviousInt256 residuals;
     }
 
     struct Order {
-        uint256 nonce;
-        address wallet;
+        OrderParty party;
 
         OrderPlacement placement;
 
         NahmiiTypesLib.WalletOperatorSeal seals;
         uint256 blockNumber;
-        uint256 operatorId;
+
+        Operator operator;
+    }
+
+    struct OrderCancellation {
+        OrderParty party;
+
+        NahmiiTypesLib.WalletOperatorSeal seals;
+        uint256 blockNumber;
+
+        Operator operator;
     }
 
     struct TradeOrder {
@@ -68,11 +88,11 @@ library TradeTypesLib {
         NahmiiTypesLib.IntendedConjugateCurrentPreviousInt256 balances;
 
         NahmiiTypesLib.SingleFigureTotalOriginFigures fees;
+
+        string data;
     }
 
     struct Trade {
-        uint256 nonce;
-
         int256 amount;
         NahmiiTypesLib.IntendedConjugateCurrency currencies;
         int256 rate;
@@ -80,13 +100,15 @@ library TradeTypesLib {
         TradeParty buyer;
         TradeParty seller;
 
+        // TODO Consider the need after updating overrun logics when challenging NSC and DSC by trade
         // Positive intended transfer is always in direction from seller to buyer
         // Positive conjugate transfer is always in direction from buyer to seller
         NahmiiTypesLib.IntendedConjugateSingleTotalInt256 transfers;
 
         NahmiiTypesLib.Seal seal;
         uint256 blockNumber;
-        uint256 operatorId;
+
+        Operator operator;
     }
 
     //
