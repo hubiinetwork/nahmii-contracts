@@ -63,9 +63,11 @@ contract('Unit tests', function () {
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/DriipSettlementByPayment')(glob);
     require('./scenarios/DriipSettlementByTrade')(glob);
+    require('./scenarios/DriipSettlementChallengeByOrder')(glob);
     require('./scenarios/DriipSettlementChallengeByPayment')(glob);
     require('./scenarios/DriipSettlementChallengeByTrade')(glob);
     require('./scenarios/DriipSettlementChallengeState')(glob);
+    require('./scenarios/DriipSettlementDisputeByOrder')(glob);
     require('./scenarios/DriipSettlementDisputeByPayment')(glob);
     require('./scenarios/DriipSettlementDisputeByTrade')(glob);
     require('./scenarios/DriipSettlementState')(glob);
@@ -82,9 +84,11 @@ contract('Unit tests', function () {
     require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
     require('./scenarios/NullSettlement')(glob);
+    require('./scenarios/NullSettlementChallengeByOrder')(glob);
     require('./scenarios/NullSettlementChallengeByPayment')(glob);
     require('./scenarios/NullSettlementChallengeByTrade')(glob);
     require('./scenarios/NullSettlementChallengeState')(glob);
+    require('./scenarios/NullSettlementDisputeByOrder')(glob);
     require('./scenarios/NullSettlementDisputeByPayment')(glob);
     require('./scenarios/NullSettlementDisputeByTrade')(glob);
     require('./scenarios/NullSettlementState')(glob);

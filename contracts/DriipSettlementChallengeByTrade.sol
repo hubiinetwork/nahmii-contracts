@@ -64,13 +64,10 @@ BalanceTrackable {
         int256 intendedTargetBalanceAmount, address intendedCurrencyCt, uint256 intendedCurrencyId,
         uint256 conjugateNonce, int256 conjugateStageAmount, int256 conjugateTargetBalanceAmount,
         address conjugateCurrencyCt, uint256 conjugateCurrencyId, address proxy);
-    event StopChallengeEvent(address wallet, uint256 nonce, /*int256 cumulativeTransferAmount,
-        int256 stageAmount,*/ int256 targetBalanceAmount, address currencyCt, uint256 currencyId);
-    event StopChallengeByProxyEvent(address wallet, uint256 nonce, /*int256 cumulativeTransferAmount,
-        int256 stageAmount,*/ int256 targetBalanceAmount, address currencyCt, uint256 currencyId, address proxy);
-    event ChallengeByOrderEvent(address challengedWallet, uint256 nonce, int256 cumulativeTransferAmount,
-        int256 stageAmount, int256 targetBalanceAmount, address currencyCt, uint256 currencyId,
-        address challengerWallet);
+    event StopChallengeEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount,
+        int256 stageAmount, int256 targetBalanceAmount, address currencyCt, uint256 currencyId);
+    event StopChallengeByProxyEvent(address wallet, uint256 nonce, int256 cumulativeTransferAmount,
+        int256 stageAmount, int256 targetBalanceAmount, address currencyCt, uint256 currencyId, address proxy);
     event UnchallengeOrderByTradeEvent(address challengedWallet, uint256 nonce, int256 cumulativeTransferAmount,
         int256 stageAmount, int256 targetBalanceAmount, address currencyCt, uint256 currencyId,
         address challengerWallet);
@@ -144,7 +141,7 @@ BalanceTrackable {
     public
     {
         // Require that wallet is not temporarily disqualified
-        require(!walletLocker.isLocked(msg.sender), "Wallet found locked [DriipSettlementChallengeByTrade.sol:147]");
+        require(!walletLocker.isLocked(msg.sender), "Wallet found locked [DriipSettlementChallengeByTrade.sol:144]");
 
         // Start challenge
         _startChallengeFromTrade(msg.sender, trade, intendedStageAmount, conjugateStageAmount, true);
@@ -202,14 +199,12 @@ BalanceTrackable {
         // Stop challenge
         _stopChallenge(msg.sender, currency, true, true);
 
-        // TODO Augment event signature to include more monetary amounts. Currently more than one
-        // amount leads to out-of-gas exception.
         // Emit event
         emit StopChallengeEvent(
             msg.sender,
             driipSettlementChallengeState.proposalNonce(msg.sender, currency),
-        //            driipSettlementChallengeState.proposalCumulativeTransferAmount(msg.sender, currency),
-        //            driipSettlementChallengeState.proposalStageAmount(msg.sender, currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(msg.sender, currency),
+            driipSettlementChallengeState.proposalStageAmount(msg.sender, currency),
             driipSettlementChallengeState.proposalTargetBalanceAmount(msg.sender, currency),
             currencyCt, currencyId
         );
@@ -229,14 +224,12 @@ BalanceTrackable {
         // Stop challenge
         _stopChallenge(wallet, currency, true, false);
 
-        // TODO Augment event signature to include more monetary amounts. Currently more than one
-        // amount leads to out-of-gas exception.
         // Emit event
         emit StopChallengeByProxyEvent(
             wallet,
             driipSettlementChallengeState.proposalNonce(wallet, currency),
-        //            driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, currency),
-        //            driipSettlementChallengeState.proposalStageAmount(wallet, currency),
+            driipSettlementChallengeState.proposalCumulativeTransferAmount(wallet, currency),
+            driipSettlementChallengeState.proposalStageAmount(wallet, currency),
             driipSettlementChallengeState.proposalTargetBalanceAmount(wallet, currency),
             currencyCt, currencyId, msg.sender
         );
@@ -451,30 +444,6 @@ BalanceTrackable {
         );
     }
 
-    /// @notice Challenge the settlement by providing order candidate
-    /// @param order The order candidate that challenges the challenged driip
-    function challengeByOrder(TradeTypesLib.Order memory order)
-    public
-    onlyOperationalModeNormal
-    {
-        // Challenge by order
-        driipSettlementDisputeByTrade.challengeByOrder(order, msg.sender);
-
-        // Get concerned currency
-        MonetaryTypesLib.Currency memory currency = _orderCurrency(order);
-
-        // Emit event
-        emit ChallengeByOrderEvent(
-            order.wallet,
-            driipSettlementChallengeState.proposalNonce(order.wallet, currency),
-            driipSettlementChallengeState.proposalCumulativeTransferAmount(order.wallet, currency),
-            driipSettlementChallengeState.proposalStageAmount(order.wallet, currency),
-            driipSettlementChallengeState.proposalTargetBalanceAmount(order.wallet, currency),
-            currency.ct, currency.id,
-            msg.sender
-        );
-    }
-
     /// @notice Unchallenge settlement by providing trade that shows that challenge order candidate has been filled
     /// @param order The order candidate that challenged driip
     /// @param trade The trade in which order has been filled
@@ -536,13 +505,13 @@ BalanceTrackable {
         // Require that current block number is beyond the earliest settlement challenge block number
         require(
             block.number >= configuration.earliestSettlementBlockNumber(),
-            "Current block number below earliest settlement block number [DriipSettlementChallengeByTrade.sol:537]"
+            "Current block number below earliest settlement block number [DriipSettlementChallengeByTrade.sol:506]"
         );
 
         // Require that given wallet is a trade party
         require(
             validator.isTradeParty(trade, wallet),
-            "Wallet is not trade party [DriipSettlementChallengeByTrade.sol:543]"
+            "Wallet is not trade party [DriipSettlementChallengeByTrade.sol:512]"
         );
 
         // Create proposals
@@ -556,11 +525,11 @@ BalanceTrackable {
         // Require that there is an unterminated driip settlement challenge proposal
         require(
             driipSettlementChallengeState.hasProposal(wallet, currency),
-            "No proposal found [DriipSettlementChallengeByTrade.sol:557]"
+            "No proposal found [DriipSettlementChallengeByTrade.sol:526]"
         );
         require(
             !driipSettlementChallengeState.hasProposalTerminated(wallet, currency),
-            "Proposal found terminated [DriipSettlementChallengeByTrade.sol:561]"
+            "Proposal found terminated [DriipSettlementChallengeByTrade.sol:530]"
         );
 
         // Terminate driip settlement challenge proposal
@@ -577,14 +546,14 @@ BalanceTrackable {
         require(
             !driipSettlementChallengeState.hasProposal(wallet, trade.currencies.intended) ||
         driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended),
-            "Overlapping driip settlement challenge proposal in intended currency found [DriipSettlementChallengeByTrade.sol:577]"
+            "Overlapping driip settlement challenge proposal in intended currency found [DriipSettlementChallengeByTrade.sol:546]"
         );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, trade.currencies.intended) ||
         nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended),
-            "Overlapping null settlement challenge proposal in intended currency found [DriipSettlementChallengeByTrade.sol:584]"
+            "Overlapping null settlement challenge proposal in intended currency found [DriipSettlementChallengeByTrade.sol:553]"
         );
 
         // Deduce the concerned nonce and cumulative relative transfer
@@ -594,7 +563,7 @@ BalanceTrackable {
         // Require that the wallet nonce of the trade is higher than the highest settled wallet nonce
         require(
             driipSettlementState.maxNonceByWalletAndCurrency(wallet, trade.currencies.intended) < nonce,
-            "Wallet's nonce below highest settled nonce in intended currency [DriipSettlementChallengeByTrade.sol:595]"
+            "Wallet's nonce below highest settled nonce in intended currency [DriipSettlementChallengeByTrade.sol:564]"
         );
 
         // Initiate proposal, including assurance that there is no overlap with active proposal,
@@ -613,14 +582,14 @@ BalanceTrackable {
         require(
             !driipSettlementChallengeState.hasProposal(wallet, trade.currencies.conjugate) ||
         driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate),
-            "Overlapping driip settlement challenge proposal in conjugate currency found [DriipSettlementChallengeByTrade.sol:613]"
+            "Overlapping driip settlement challenge proposal in conjugate currency found [DriipSettlementChallengeByTrade.sol:582]"
         );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, trade.currencies.conjugate) ||
         nullSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate),
-            "Overlapping null settlement challenge proposal in conjugate currency found [DriipSettlementChallengeByTrade.sol:620]"
+            "Overlapping null settlement challenge proposal in conjugate currency found [DriipSettlementChallengeByTrade.sol:589]"
         );
 
         // Deduce the concerned nonce and cumulative relative transfer
@@ -630,7 +599,7 @@ BalanceTrackable {
         // Require that the wallet nonce of the trade is higher than the highest settled wallet nonce
         require(
             driipSettlementState.maxNonceByWalletAndCurrency(wallet, trade.currencies.conjugate) < nonce,
-            "Wallet's nonce below highest settled nonce in conjugate currency [DriipSettlementChallengeByTrade.sol:631]"
+            "Wallet's nonce below highest settled nonce in conjugate currency [DriipSettlementChallengeByTrade.sol:600]"
         );
 
         // Initiate proposal, including assurance that there is no overlap with active proposal,
