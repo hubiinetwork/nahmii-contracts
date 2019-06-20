@@ -662,6 +662,22 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                 trade.buyer.wallet, trade.currencies.intended)
                         )._bn.should.eq.BN(trade.buyer.nonce._bn);
+
+                        (await ethersDriipSettlementChallengeState._terminateProposalsCount())
+                            ._bn.should.eq.BN(2);
+
+                        // The intended proposal is shadowed by the conjugate one in the implementation of MockedDriipSettlementChallengeState
+                        // const intendedProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        // intendedProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                        // intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
+                        // intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                        // intendedProposal.terminated.should.be.true;
+
+                        const conjugateProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                        conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                        conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                        conjugateProposal.terminated.should.be.true;
                     });
                 });
 
@@ -916,6 +932,22 @@ module.exports = (glob) => {
                         (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                 trade.buyer.wallet, trade.currencies.intended)
                         )._bn.should.eq.BN(trade.buyer.nonce._bn);
+
+                        (await ethersDriipSettlementChallengeState._terminateProposalsCount())
+                            ._bn.should.eq.BN(2);
+
+                        // The intended proposal is shadowed by the conjugate one in the implementation of MockedDriipSettlementChallengeState
+                        // const intendedProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        // intendedProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                        // intendedProposal.currency.ct.should.equal(trade.currencies.intended.ct);
+                        // intendedProposal.currency.id._bn.should.eq.BN(trade.currencies.intended.id._bn);
+                        // intendedProposal.terminated.should.be.true;
+
+                        const conjugateProposal = await ethersDriipSettlementChallengeState._proposals(0);
+                        conjugateProposal.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
+                        conjugateProposal.currency.ct.should.equal(trade.currencies.conjugate.ct);
+                        conjugateProposal.currency.id._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                        conjugateProposal.terminated.should.be.true;
                     });
                 });
 
