@@ -28,10 +28,10 @@ import {BalanceTracker} from "./BalanceTracker.sol";
 import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
- * @title NullSettlementDisputeByTrade
- * @notice The where trade related disputes of null settlement challenge happens
+ * @title NullSettlementDisputeByOrder
+ * @notice The where order related disputes of null settlement challenge happens
  */
-contract NullSettlementDisputeByTrade is Ownable, Configurable, ValidatableV2, SecurityBondable, WalletLockable,
+contract NullSettlementDisputeByOrder is Ownable, Configurable, ValidatableV2, SecurityBondable, WalletLockable,
 BalanceTrackable, FraudChallengable, CancelOrdersChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
@@ -40,7 +40,7 @@ BalanceTrackable, FraudChallengable, CancelOrdersChallengable, Servable {
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public CHALLENGE_BY_TRADE_ACTION = "challenge_by_trade";
+    string constant public CHALLENGE_BY_ORDER_ACTION = "challenge_by_order";
 
     //
     // Variables
@@ -53,8 +53,6 @@ BalanceTrackable, FraudChallengable, CancelOrdersChallengable, Servable {
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
     event ChallengeByOrderEvent(uint256 nonce, TradeTypesLib.Order order, address challenger);
-    event ChallengeByTradeEvent(address wallet, uint256 nonce, TradeTypesLib.Trade trade,
-        address challenger);
 
     //
     // Constructor
@@ -73,161 +71,146 @@ BalanceTrackable, FraudChallengable, CancelOrdersChallengable, Servable {
         emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
     }
 
-    /// @notice Challenge the settlement by providing trade candidate
-    /// @param wallet The wallet whose settlement is being challenged
-    /// @param trade The trade candidate that challenges
+    /// @notice Challenge the settlement by providing order candidate
+    /// @param order The order candidate that challenges
     /// @param challenger The address of the challenger
-    /// @dev If wallet is buyer in (candidate) trade consider single _conjugate_ transfer in (candidate) trade. Else
-    /// if wallet is seller in (candidate) trade consider single _intended_ transfer in (candidate) trade
-    function challengeByTrade(address wallet, TradeTypesLib.Trade memory trade, address challenger)
+    /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
+    /// if (candidate) order has sell intention consider _intended_ currency and amount
+    function challengeByOrder(TradeTypesLib.Order memory order, address challenger)
     public
-    onlyEnabledServiceAction(CHALLENGE_BY_TRADE_ACTION)
-    onlySealedTrade(trade)
-    onlyTradeParty(trade, wallet)
+    onlyEnabledServiceAction(CHALLENGE_BY_ORDER_ACTION)
+    onlySealedOrder(order)
     {
-        // Require that trade candidate is not labelled fraudulent
+        // Require that candidate order is not labelled fraudulent
         require(
-            !fraudChallenge.isFraudulentTradeHash(trade.seal.hash),
-            "Trade deemed fraudulent [NullSettlementDisputeByTrade.sol:89]"
+            !fraudChallenge.isFraudulentOrderHash(order.seals.operator.hash),
+            "Order deemed fraudulent [NullSettlementDisputeByOrder.sol:85]"
         );
 
-        // Require that wallet's order in trade is not labelled fraudulent
+        // Require that candidate order is not labelled cancelled
         require(
-            !fraudChallenge.isFraudulentOrderHash(_tradeOrderHash(wallet, trade)),
-            "Order deemed fraudulent [NullSettlementDisputeByTrade.sol:95]"
-        );
-
-        // Require that wallet's order in trade is not labelled cancelled
-        require(
-            !cancelOrdersChallenge.isOrderCancelled(wallet, _tradeOrderHash(wallet, trade)),
-            "Order deemed cancelled [NullSettlementDisputeByTrade.sol:101]"
+            !cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.operator.hash),
+            "Order deemed cancelled [NullSettlementDisputeByOrder.sol:91]"
         );
 
         // Get the relevant currency
-        MonetaryTypesLib.Currency memory currency = _tradeCurrency(wallet, trade);
+        MonetaryTypesLib.Currency memory currency = _orderCurrency(order);
 
         // Require that proposal has been initiated
         require(
-            nullSettlementChallengeState.hasProposal(wallet, currency),
-            "No proposal found [NullSettlementDisputeByTrade.sol:110]"
+            nullSettlementChallengeState.hasProposal(order.wallet, currency),
+            "No proposal found [NullSettlementDisputeByOrder.sol:100]"
         );
 
         // Require that proposal has not expired
         require(
-            !nullSettlementChallengeState.hasProposalExpired(wallet, currency),
-            "Proposal found expired [NullSettlementDisputeByTrade.sol:116]"
+            !nullSettlementChallengeState.hasProposalExpired(order.wallet, currency),
+            "Proposal found expired [NullSettlementDisputeByOrder.sol:106]"
         );
 
-        // Get the relevant nonce
-        uint256 nonce = _tradeNonce(wallet, trade);
-
-        // Require that trade party's nonce is strictly greater than proposal's nonce and its current
+        // Require that orders's nonce is strictly greater than proposal's nonce and its current
         // disqualification nonce
         require(
-            nonce > nullSettlementChallengeState.proposalNonce(wallet, currency),
-            "Trade nonce not strictly greater than proposal nonce [NullSettlementDisputeByTrade.sol:126]"
+            order.nonce > nullSettlementChallengeState.proposalNonce(order.wallet, currency),
+            "Order nonce not strictly greater than proposal nonce [NullSettlementDisputeByOrder.sol:113]"
         );
         require(
-            nonce > nullSettlementChallengeState.proposalDisqualificationNonce(wallet, currency),
-            "Trade nonce not strictly greater than proposal disqualification nonce [NullSettlementDisputeByTrade.sol:130]"
+            order.nonce > nullSettlementChallengeState.proposalDisqualificationNonce(order.wallet, currency),
+            "Order nonce not strictly greater than proposal disqualification nonce [NullSettlementDisputeByOrder.sol:117]"
         );
 
         // Require overrun for this trade to be a valid challenge candidate
-        require(_tradeOverrun(wallet, trade, currency), "No trade overrun found [NullSettlementDisputeByTrade.sol:136]");
+        require(_orderOverrun(order, currency), "No order overrun found [NullSettlementDisputeByOrder.sol:123]");
 
+        // TODO Adjust when TradeTypesLib.OrderParty has been furnished with balances
         // Reward challenger
-        _settleRewards(wallet, _tradeCurrentBalanceAmount(wallet, trade), currency, challenger);
+        _settleRewards(order.wallet, _orderTransferAmount(order), currency, challenger);
 
         // Disqualify proposal, effectively overriding any previous disqualification
         nullSettlementChallengeState.disqualifyProposal(
-            wallet, currency, challenger, trade.blockNumber,
-            nonce, trade.seal.hash, TradeTypesLib.TRADE_KIND()
+            order.wallet, currency, challenger, order.blockNumber,
+            order.nonce, order.seals.operator.hash, TradeTypesLib.ORDER_KIND()
         );
 
         // Emit event
-        emit ChallengeByTradeEvent(
-            wallet, nullSettlementChallengeState.proposalNonce(wallet, currency), trade, challenger
+        emit ChallengeByOrderEvent(
+            nullSettlementChallengeState.proposalNonce(order.wallet, currency), order, challenger
         );
     }
 
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _tradeOverrun(address wallet, TradeTypesLib.Trade memory trade, MonetaryTypesLib.Currency memory currency)
+    function _orderOverrun(TradeTypesLib.Order memory order, MonetaryTypesLib.Currency memory currency)
     private
     view
     returns (bool)
     {
         // Get the target balance amount from the proposal
         int targetBalanceAmount = nullSettlementChallengeState.proposalTargetBalanceAmount(
-            wallet, currency
+            order.wallet, currency
         );
 
         // Get the change in active balance since the start of the challenge
         int256 deltaBalanceSinceStart = balanceTracker.fungibleActiveBalanceAmount(
-            wallet, currency
+            order.wallet, currency
         ).sub(
             balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
-                wallet, currency,
-                nullSettlementChallengeState.proposalReferenceBlockNumber(wallet, currency)
+                order.wallet, currency,
+                nullSettlementChallengeState.proposalReferenceBlockNumber(order.wallet, currency)
             )
         );
 
         // Get the cumulative transfer of the trade
-        int256 cumulativeTransfer = _tradeCurrentBalanceAmount(wallet, trade).sub(
-            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(wallet, currency, trade.blockNumber)
-        );
+        // TODO Remove when TradeTypesLib.OrderParty has been furnished with balances
+        int256 orderCumulativeTransfer = _orderTransferAmount(order).mul(- 1);
+        // TODO Uncomment when TradeTypesLib.OrderParty has been furnished with balances
+        //        int256 orderCumulativeTransfer = _orderBalanceAmount(order.wallet, trade).sub(
+        //            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(order.wallet, currency, trade.blockNumber)
+        //        );
 
-        return targetBalanceAmount.add(deltaBalanceSinceStart) < cumulativeTransfer.mul(- 1);
+        return targetBalanceAmount.add(deltaBalanceSinceStart) < orderCumulativeTransfer.mul(- 1);
     }
 
-    function _tradeOrderHash(address wallet, TradeTypesLib.Trade memory trade)
+    // Get the candidate order currency
+    // Buy order -> Conjugate currency
+    // Sell order -> Intended currency
+    function _orderCurrency(TradeTypesLib.Order memory order)
     private
-    view
-    returns (bytes32)
-    {
-        return validator.isTradeBuyer(trade, wallet) ?
-        trade.buyer.order.hashes.operator :
-        trade.seller.order.hashes.operator;
-    }
-
-    // Get the candidate trade currency
-    // Wallet is buyer in (candidate) trade -> Conjugate currency
-    // Wallet is seller in (candidate) trade -> Intended currency
-    function _tradeCurrency(address wallet, TradeTypesLib.Trade memory trade)
-    private
-    view
+    pure
     returns (MonetaryTypesLib.Currency memory)
     {
-        return validator.isTradeBuyer(trade, wallet) ?
-        trade.currencies.conjugate :
-        trade.currencies.intended;
+        return TradeTypesLib.Intention.Sell == order.placement.intention ?
+        order.placement.currencies.intended :
+        order.placement.currencies.conjugate;
     }
 
-    // Get the candidate trade nonce
-    // Wallet is buyer in (candidate) trade -> Buyer's nonce
-    // Wallet is seller in (candidate) trade -> Seller's nonce
-    function _tradeNonce(address wallet, TradeTypesLib.Trade memory trade)
-    private
-    view
-    returns (uint256)
-    {
-        return validator.isTradeBuyer(trade, wallet) ?
-        trade.buyer.nonce :
-        trade.seller.nonce;
-    }
+    // TODO Uncomment when TradeTypesLib.OrderParty has been furnished with balances
+    // Get the candidate order balance amount
+    // Buy order -> Conjugate balance
+    // Sell order -> Intended balance
+    //    function _orderBalanceAmount(TradeTypesLib.Order memory order)
+    //    private
+    //    pure
+    //    returns (MonetaryTypesLib.Currency memory)
+    //    {
+    //        return TradeTypesLib.Intention.Sell == order.placement.intention ?
+    //        order.party.balances.intended :
+    //        order.party.balances.conjugate;
+    //    }
 
-    // Get the candidate trade current balance amount
-    // Wallet is buyer in (candidate) trade -> Buyer's conjugate balance
-    // Wallet is seller in (candidate) trade -> Seller's intended balance
-    function _tradeCurrentBalanceAmount(address wallet, TradeTypesLib.Trade memory trade)
+    // TODO Remove when TradeTypesLib.OrderParty has been furnished with balances
+    // Get the candidate order transfer
+    // Buy order -> Conjugate transfer
+    // Sell order -> Intended transfer
+    function _orderTransferAmount(TradeTypesLib.Order memory order)
     private
-    view
+    pure
     returns (int256)
     {
-        return validator.isTradeBuyer(trade, wallet) ?
-        trade.buyer.balances.conjugate.current :
-        trade.seller.balances.intended.current;
+        return TradeTypesLib.Intention.Sell == order.placement.intention ?
+        order.placement.amount :
+        order.placement.amount.div(order.placement.rate);
     }
 
     function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency memory currency,
