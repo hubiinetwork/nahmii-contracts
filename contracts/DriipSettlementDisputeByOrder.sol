@@ -11,17 +11,19 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
-import {Validatable} from "./Validatable.sol";
+import {ValidatableV2} from "./ValidatableV2.sol";
 import {SecurityBondable} from "./SecurityBondable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
+import {CancelOrdersChallengable} from "./CancelOrdersChallengable.sol";
 import {Servable} from "./Servable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
+import {Strings} from "solidity-util/lib/Strings.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
-import {PaymentTypesLib} from "./PaymentTypesLib.sol";
+import {TradeTypesLib} from "./TradeTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
 import {DriipSettlementChallengeState} from "./DriipSettlementChallengeState.sol";
 import {NullSettlementChallengeState} from "./NullSettlementChallengeState.sol";
@@ -29,19 +31,20 @@ import {BalanceTracker} from "./BalanceTracker.sol";
 import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
- * @title DriipSettlementDisputeByPayment
- * @notice The where payment related disputes of driip settlement challenge happens
+ * @title DriipSettlementDisputeByOrder
+ * @notice The where order related disputes of driip settlement challenge happens
  */
-contract DriipSettlementDisputeByPayment is Ownable, Configurable, Validatable, SecurityBondable, WalletLockable,
-BalanceTrackable, FraudChallengable, Servable {
+contract DriipSettlementDisputeByOrder is Ownable, Configurable, ValidatableV2, SecurityBondable, WalletLockable,
+BalanceTrackable, FraudChallengable, CancelOrdersChallengable, Servable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using Strings for string;
     using BalanceTrackerLib for BalanceTracker;
 
     //
     // Constants
     // -----------------------------------------------------------------------------------------------------------------
-    string constant public CHALLENGE_BY_PAYMENT_ACTION = "challenge_by_payment";
+    string constant public CHALLENGE_BY_ORDER_ACTION = "challenge_by_order";
 
     //
     // Variables
@@ -56,8 +59,9 @@ BalanceTrackable, FraudChallengable, Servable {
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetNullSettlementChallengeStateEvent(NullSettlementChallengeState oldNullSettlementChallengeState,
         NullSettlementChallengeState newNullSettlementChallengeState);
-    event ChallengeByPaymentEvent(address wallet, uint256 nonce, PaymentTypesLib.Payment payment,
-        address challenger);
+    event ChallengeByOrderEvent(uint256 nonce, TradeTypesLib.Order order, address challenger);
+    event UnchallengeOrderCandidateByTradeEvent(uint256 nonce, TradeTypesLib.Order order,
+        TradeTypesLib.Trade trade, address unchallenger);
 
     //
     // Constructor
@@ -87,113 +91,167 @@ BalanceTrackable, FraudChallengable, Servable {
         emit SetNullSettlementChallengeStateEvent(oldNullSettlementChallengeState, nullSettlementChallengeState);
     }
 
-    /// @notice Challenge the driip settlement by providing payment candidate
-    /// @dev This challenges the payment sender's side of things
-    /// @param wallet The concerned party
-    /// @param payment The payment candidate that challenges the challenged driip
+    /// @notice Challenge the driip settlement by providing order candidate
+    /// @param order The order candidate that challenges the challenged driip
     /// @param challenger The address of the challenger
-    function challengeByPayment(address wallet, PaymentTypesLib.Payment memory payment, address challenger)
-    public
-    onlyEnabledServiceAction(CHALLENGE_BY_PAYMENT_ACTION)
-    onlySealedPayment(payment)
-    onlyPaymentSender(payment, wallet)
+    /// @dev If (candidate) order has buy intention consider _conjugate_ currency and amount, else
+    /// if (candidate) order has sell intention consider _intended_ currency and amount
+    function challengeByOrder(TradeTypesLib.Order memory order, address challenger) public
+    onlyEnabledServiceAction(CHALLENGE_BY_ORDER_ACTION)
+    onlySealedOrder(order)
     {
-        // Require that payment candidate is not labelled fraudulent
+        // Require that candidate order is not labelled fraudulent
         require(
-            !fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash),
-            "Payment deemed fraudulent [DriipSettlementDisputeByPayment.sol:102]"
+            !fraudChallenge.isFraudulentOrderHash(order.seals.operator.hash),
+            "Order deemed fraudulent [DriipSettlementDisputeByOrder.sol:104]"
         );
+
+        // Require that candidate order is not labelled cancelled
+        require(
+            !cancelOrdersChallenge.isOrderCancelled(order.wallet, order.seals.operator.hash),
+            "Order deemed cancelled [DriipSettlementDisputeByOrder.sol:110]"
+        );
+
+        // Get the relevant currency
+        MonetaryTypesLib.Currency memory currency = _orderCurrency(order);
 
         // Require that proposal has been initiated
         require(
-            driipSettlementChallengeState.hasProposal(wallet, payment.currency),
-            "No proposal found [DriipSettlementDisputeByPayment.sol:108]"
+            driipSettlementChallengeState.hasProposal(order.wallet, currency),
+            "No proposal found [DriipSettlementDisputeByOrder.sol:119]"
         );
 
         // Require that proposal has not expired
         require(
-            !driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency),
-            "Proposal found expired [DriipSettlementDisputeByPayment.sol:114]"
+            !driipSettlementChallengeState.hasProposalExpired(order.wallet, currency),
+            "Proposal found expired [DriipSettlementDisputeByOrder.sol:125]"
         );
 
-        // Require that payment party's nonce is strictly greater than proposal's nonce and its current
+        // Require that orders's nonce is strictly greater than proposal's nonce and its current
         // disqualification nonce
         require(
-            payment.sender.nonce > driipSettlementChallengeState.proposalNonce(wallet, payment.currency),
-            "Payment nonce not strictly greater than proposal nonce [DriipSettlementDisputeByPayment.sol:121]"
+            order.nonce > driipSettlementChallengeState.proposalNonce(order.wallet, currency),
+            "Order nonce not strictly greater than proposal nonce [DriipSettlementDisputeByOrder.sol:132]"
         );
         require(
-            payment.sender.nonce > driipSettlementChallengeState.proposalDisqualificationNonce(wallet, payment.currency),
-            "Payment nonce not strictly greater than proposal disqualification nonce [DriipSettlementDisputeByPayment.sol:125]"
+            order.nonce > driipSettlementChallengeState.proposalDisqualificationNonce(order.wallet, currency),
+            "Order nonce not strictly greater than proposal disqualification nonce [DriipSettlementDisputeByOrder.sol:136]"
         );
 
-        // Require overrun for this payment to be a valid challenge candidate
-        require(_overrun(wallet, payment), "No overrun found [DriipSettlementDisputeByPayment.sol:131]");
+        // Require overrun for this trade to be a valid challenge candidate
+        require(_orderOverrun(order, currency), "No order overrun found [DriipSettlementDisputeByOrder.sol:142]");
 
+        // TODO Adjust when TradeTypesLib.OrderParty has been furnished with balances
         // Reward challenger
-        _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger);
+        _settleRewards(
+            order.wallet, _orderTransferAmount(order), currency, challenger,
+            configuration.settlementChallengeTimeout()
+        );
 
         // Disqualify proposal, effectively overriding any previous disqualification
         driipSettlementChallengeState.disqualifyProposal(
-            wallet, payment.currency, challenger, payment.blockNumber,
-            payment.sender.nonce, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
+            order.wallet, currency, challenger, order.blockNumber,
+            order.nonce, order.seals.operator.hash, TradeTypesLib.ORDER_KIND()
         );
 
         // Terminate dependent null settlement challenge proposal if existent
-        nullSettlementChallengeState.terminateProposal(wallet, payment.currency);
+        nullSettlementChallengeState.terminateProposal(order.wallet, currency);
 
         // Emit event
-        emit ChallengeByPaymentEvent(
-            wallet, driipSettlementChallengeState.proposalNonce(wallet, payment.currency), payment, challenger
+        emit ChallengeByOrderEvent(
+            driipSettlementChallengeState.proposalNonce(order.wallet, currency), order, challenger
         );
     }
 
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _overrun(address wallet, PaymentTypesLib.Payment memory payment)
+    function _orderOverrun(TradeTypesLib.Order memory order, MonetaryTypesLib.Currency memory currency)
     private
     view
     returns (bool)
     {
         // Get the target balance amount from the proposal
         int targetBalanceAmount = driipSettlementChallengeState.proposalTargetBalanceAmount(
-            wallet, payment.currency
+            order.wallet, currency
         );
 
         // Get the change in active balance since the start of the challenge
         int256 deltaBalanceSinceStart = balanceTracker.fungibleActiveBalanceAmount(
-            wallet, payment.currency
+            order.wallet, currency
         ).sub(
             balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
-                wallet, payment.currency,
-                driipSettlementChallengeState.proposalReferenceBlockNumber(wallet, payment.currency)
+                order.wallet, currency,
+                driipSettlementChallengeState.proposalReferenceBlockNumber(order.wallet, currency)
             )
         );
 
-        // Get the cumulative transfer of the payment
-        int256 paymentCumulativeTransfer = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
-            wallet, payment.currency, payment.blockNumber
-        ).sub(payment.sender.balances.current);
+        // Get the cumulative transfer of the trade
+        // TODO Remove when TradeTypesLib.OrderParty has been furnished with balances
+        int256 orderCumulativeTransfer = _orderTransferAmount(order).mul(- 1);
+        // TODO Uncomment when TradeTypesLib.OrderParty has been furnished with balances
+        //        int256 orderCumulativeTransfer = _orderBalanceAmount(order.wallet, trade).sub(
+        //            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(order.wallet, currency, trade.blockNumber)
+        //        );
 
-        // Get the cumulative transfer of the proposal (i.e. of challenged payment)
+        // Get the cumulative transfer of the proposal
         int proposalCumulativeTransfer = driipSettlementChallengeState.proposalCumulativeTransferAmount(
-            wallet, payment.currency
-        );
+            order.wallet, currency
+        ).mul(- 1);
 
-        return targetBalanceAmount.add(deltaBalanceSinceStart) < paymentCumulativeTransfer.sub(proposalCumulativeTransfer);
+        return targetBalanceAmount.add(deltaBalanceSinceStart) < proposalCumulativeTransfer.sub(orderCumulativeTransfer);
     }
 
-    // Lock wallet's balances or reward challenger by stake fraction
+    // Get the candidate order currency
+    // Buy order -> Conjugate currency
+    // Sell order -> Intended currency
+    function _orderCurrency(TradeTypesLib.Order memory order)
+    private
+    pure
+    returns (MonetaryTypesLib.Currency memory)
+    {
+        return TradeTypesLib.Intention.Sell == order.placement.intention ?
+        order.placement.currencies.intended :
+        order.placement.currencies.conjugate;
+    }
+
+    // TODO Uncomment when TradeTypesLib.OrderParty has been furnished with balances
+    // Get the candidate order balance amount
+    // Buy order -> Conjugate balance
+    // Sell order -> Intended balance
+    //    function _orderBalanceAmount(TradeTypesLib.Order memory order)
+    //    private
+    //    pure
+    //    returns (MonetaryTypesLib.Currency memory)
+    //    {
+    //        return TradeTypesLib.Intention.Sell == order.placement.intention ?
+    //        order.party.balances.intended :
+    //        order.party.balances.conjugate;
+    //    }
+
+    // TODO Remove when TradeTypesLib.OrderParty has been furnished with balances
+    // Get the candidate order transfer
+    // Buy order -> Conjugate transfer
+    // Sell order -> Intended transfer
+    function _orderTransferAmount(TradeTypesLib.Order memory order)
+    private
+    pure
+    returns (int256)
+    {
+        return TradeTypesLib.Intention.Sell == order.placement.intention ?
+        order.placement.amount :
+        order.placement.amount.div(order.placement.rate);
+    }
+
     function _settleRewards(address wallet, int256 walletAmount, MonetaryTypesLib.Currency memory currency,
-        address challenger)
+        address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
         if (driipSettlementChallengeState.proposalWalletInitiated(wallet, currency))
             _settleBalanceReward(wallet, walletAmount, currency, challenger);
 
         else
-            _settleSecurityBondReward(wallet, walletAmount, currency, challenger);
+            _settleSecurityBondReward(wallet, walletAmount, currency, challenger, unlockTimeoutInSeconds);
     }
 
     function _settleBalanceReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency memory currency,
@@ -224,7 +282,7 @@ BalanceTrackable, FraudChallengable, Servable {
     //    min(walletAmount, fraction of SecurityBond's deposited balance)
     // both amounts for the given currency
     function _settleSecurityBondReward(address wallet, int256 walletAmount, MonetaryTypesLib.Currency memory currency,
-        address challenger)
+        address challenger, uint256 unlockTimeoutInSeconds)
     private
     {
         // Deprive existing challenger of reward if previously locked
@@ -241,7 +299,7 @@ BalanceTrackable, FraudChallengable, Servable {
         // Reward the flat component
         MonetaryTypesLib.Figure memory flatReward = _flatReward();
         securityBond.rewardAbsolute(
-            challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, 0
+            challenger, flatReward.amount, flatReward.currency.ct, flatReward.currency.id, unlockTimeoutInSeconds
         );
 
         // Reward the progressive component
@@ -251,7 +309,7 @@ BalanceTrackable, FraudChallengable, Servable {
             )
         );
         securityBond.rewardAbsolute(
-            challenger, progressiveRewardAmount, currency.ct, currency.id, 0
+            challenger, progressiveRewardAmount, currency.ct, currency.id, unlockTimeoutInSeconds
         );
     }
 
