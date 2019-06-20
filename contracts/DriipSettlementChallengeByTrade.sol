@@ -199,8 +199,6 @@ BalanceTrackable {
         // Stop challenge
         _stopChallenge(msg.sender, currency, true, true);
 
-        // TODO Augment event signature to include more monetary amounts. Currently more than one
-        // amount leads to too big contract for deployment
         // Emit event
         emit StopChallengeEvent(
             msg.sender,
@@ -226,8 +224,6 @@ BalanceTrackable {
         // Stop challenge
         _stopChallenge(wallet, currency, true, false);
 
-        // TODO Augment event signature to include more monetary amounts. Currently more than one
-        // amount leads to too big contract for deployment
         // Emit event
         emit StopChallengeByProxyEvent(
             wallet,
