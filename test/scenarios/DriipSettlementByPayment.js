@@ -615,12 +615,15 @@ module.exports = (glob) => {
                             ethersDriipSettlementByPayment.interface.events.SettlePaymentEvent.topics
                         ))).should.have.lengthOf(1);
 
+                        (await ethersClientFund._settledBalanceUpdatesCount())._bn.should.eq.BN(1);
+
                         const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
                         settledBalanceUpdate[0].should.equal(utils.getAddress(payment.sender.wallet));
                         settledBalanceUpdate[1]._bn.should.eq.BN(payment.sender.balances.current._bn);
                         settledBalanceUpdate[2].should.equal(payment.currency.ct);
                         settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
                         settledBalanceUpdate[4].should.equal('ERCXYZ');
+                        settledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
 
                         (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
@@ -863,12 +866,15 @@ module.exports = (glob) => {
                             ethersDriipSettlementByPayment.interface.events.SettlePaymentByProxyEvent.topics
                         ))).should.have.lengthOf(1);
 
+                        (await ethersClientFund._settledBalanceUpdatesCount())._bn.should.eq.BN(1);
+
                         const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
                         settledBalanceUpdate[0].should.equal(utils.getAddress(payment.sender.wallet));
                         settledBalanceUpdate[1]._bn.should.eq.BN(payment.sender.balances.current._bn);
                         settledBalanceUpdate[2].should.equal(payment.currency.ct);
                         settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
                         settledBalanceUpdate[4].should.equal('ERCXYZ');
+                        settledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
 
                         (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 

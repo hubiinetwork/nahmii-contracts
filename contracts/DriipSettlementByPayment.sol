@@ -248,7 +248,7 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
             "Settlement party already done [DriipSettlementByPayment.sol:246]"
         );
 
-        // Set address of origin or target to prevent the same settlement from being resettled by this wallet
+        // Set wallet's completion of this payment to prevent the same settlement from being resettled by this wallet
         driipSettlementState.completeSettlementParty(
             wallet, nonce, settlementRole, true
         );
@@ -261,7 +261,7 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
 
             // Update settled balance
             clientFund.updateSettledBalance(
-                wallet, currentBalance, payment.currency.ct, payment.currency.id, standard, payment.blockNumber
+                wallet, currentBalance, payment.currency.ct, payment.currency.id, standard, block.number
             );
 
             // Stage (stage function assures positive amount only)
