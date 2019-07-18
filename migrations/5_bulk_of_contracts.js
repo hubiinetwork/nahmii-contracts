@@ -638,6 +638,7 @@ module.exports = (deployer, network, accounts) => {
 
                 instance = await DriipSettlementByPayment.at(addressStorage.get('DriipSettlementByPayment'));
                 await instance.setClientFund(addressStorage.get('ClientFund'));
+                await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
                 await instance.setValidator(addressStorage.get('Validator'));
                 await instance.setCommunityVote(addressStorage.get('CommunityVote'));
                 await instance.setConfiguration(addressStorage.get('Configuration'));
