@@ -323,17 +323,17 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
             totalFees = payment.recipient.fees.total;
         }
 
-        (int256 lastSettledBalanceAmount,) = balanceTracker.lastFungibleRecord(
-            wallet, balanceTracker.settledBalanceType(),
+        (int256 lastStagedBalanceAmount,) = balanceTracker.lastFungibleRecord(
+            wallet, balanceTracker.stagedBalanceType(),
             payment.currency.ct, payment.currency.id
         );
-        (int256 settledBalanceAmountAtPaymentBlock,) = balanceTracker.fungibleRecordByBlockNumber(
-            wallet, balanceTracker.settledBalanceType(),
+        (int256 stagedBalanceAmountAtPaymentBlock,) = balanceTracker.fungibleRecordByBlockNumber(
+            wallet, balanceTracker.stagedBalanceType(),
             payment.currency.ct, payment.currency.id,
             payment.blockNumber
         );
 
-        currentBalance = currentBalance + lastSettledBalanceAmount - settledBalanceAmountAtPaymentBlock;
+        currentBalance = currentBalance.sub(lastStagedBalanceAmount).add(stagedBalanceAmountAtPaymentBlock);
     }
 
     function _stageFees(address wallet, NahmiiTypesLib.OriginFigure[] memory fees,
