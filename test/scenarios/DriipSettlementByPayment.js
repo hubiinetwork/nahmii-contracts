@@ -630,7 +630,7 @@ module.exports = (glob) => {
                             settledBalanceUpdate[2].should.equal(payment.currency.ct);
                             settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
                             settledBalanceUpdate[4].should.equal('ERCXYZ');
-                            settledBalanceUpdate[5]._bn.should.eq.BN(payment.blockNumber._bn);
+                            settledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
 
                             (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
@@ -713,7 +713,7 @@ module.exports = (glob) => {
                             settledBalanceUpdate[2].should.equal(payment.currency.ct);
                             settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
                             settledBalanceUpdate[4].should.equal('ERCXYZ');
-                            settledBalanceUpdate[5]._bn.should.eq.BN(payment.blockNumber._bn);
+                            settledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
 
                             (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
@@ -967,7 +967,7 @@ module.exports = (glob) => {
                             settledBalanceUpdate[2].should.equal(payment.currency.ct);
                             settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
                             settledBalanceUpdate[4].should.equal('ERCXYZ');
-                            settledBalanceUpdate[5]._bn.should.eq.BN(payment.blockNumber._bn);
+                            settledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
 
                             (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
@@ -1050,7 +1050,7 @@ module.exports = (glob) => {
                             settledBalanceUpdate[2].should.equal(payment.currency.ct);
                             settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
                             settledBalanceUpdate[4].should.equal('ERCXYZ');
-                            settledBalanceUpdate[5]._bn.should.eq.BN(payment.blockNumber._bn);
+                            settledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
 
                             (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 

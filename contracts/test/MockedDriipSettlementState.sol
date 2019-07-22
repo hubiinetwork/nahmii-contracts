@@ -24,6 +24,7 @@ contract MockedDriipSettlementState {
     DriipSettlementTypesLib.Settlement[] public settlements;
     uint256 public _maxNonceByWalletAndCurrency;
     uint256 public maxDriipNonce;
+    int256 public _settledAmount;
     MonetaryTypesLib.NoncedAmount public _totalFee;
 
     function _reset()
@@ -32,6 +33,7 @@ contract MockedDriipSettlementState {
         delete settlements;
         delete _maxNonceByWalletAndCurrency;
         delete maxDriipNonce;
+        delete _settledAmount;
         delete _totalFee;
     }
 
@@ -182,6 +184,19 @@ contract MockedDriipSettlementState {
     public
     {
         maxDriipNonce = _maxDriipNonce;
+    }
+
+    function settledAmount(address, MonetaryTypesLib.Currency memory)
+    public
+    view
+    returns (int256) {
+        return _settledAmount;
+    }
+
+    function setSettledAmount(address, MonetaryTypesLib.Currency memory, int256 amount)
+    public
+    {
+        _settledAmount = amount;
     }
 
     function totalFee(address, Beneficiary, address, MonetaryTypesLib.Currency memory)
