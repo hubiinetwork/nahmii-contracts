@@ -170,6 +170,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         }
     }
 
+    // TODO Consider renaming function to completeSettlement
     /// @notice Set the done of the given settlement role in the given settlement
     /// @param wallet The address of the concerned wallet
     /// @param nonce The nonce of the concerned wallet
@@ -178,7 +179,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     function completeSettlementParty(address wallet, uint256 nonce,
         DriipSettlementTypesLib.SettlementRole settlementRole, bool done)
     public
-    onlyEnabledServiceAction(SET_SETTLEMENT_ROLE_DONE_ACTION)
+    onlyEnabledServiceAction(SET_SETTLEMENT_ROLE_DONE_ACTION) // TODO Consider renaming to COMPLETE_SETTLEMENT_ACTION
     {
         // Get the 1-based index of the settlement
         uint256 index = walletNonceSettlementIndex[wallet][nonce];
