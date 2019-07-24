@@ -607,18 +607,22 @@ module.exports = (glob) => {
                             ethersDriipSettlementByTrade.interface.events.SettleTradeEvent.topics
                         ))).should.have.lengthOf(1);
 
+                        (await ethersClientFund._settledBalanceUpdatesCount())._bn.should.eq.BN(1);
+
                         const intendedSettledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
                         intendedSettledBalanceUpdate[0].should.equal(utils.getAddress(trade.buyer.wallet));
                         intendedSettledBalanceUpdate[1]._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                         intendedSettledBalanceUpdate[2].should.equal(trade.currencies.intended.ct);
                         intendedSettledBalanceUpdate[3]._bn.should.eq.BN(trade.currencies.intended.id._bn);
                         intendedSettledBalanceUpdate[4].should.equal('ERCXYZ');
+                        intendedSettledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
 
                         // const conjugateSettledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(1);
                         // conjugateSettledBalanceUpdate[0].should.equal(utils.getAddress(trade.buyer.wallet));
                         // conjugateSettledBalanceUpdate[1]._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                         // conjugateSettledBalanceUpdate[2].should.equal(trade.currencies.conjugate.ct);
                         // conjugateSettledBalanceUpdate[3]._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                        // conjugateSettledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
 
                         (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
@@ -877,18 +881,22 @@ module.exports = (glob) => {
                             ethersDriipSettlementByTrade.interface.events.SettleTradeByProxyEvent.topics
                         ))).should.have.lengthOf(1);
 
+                        (await ethersClientFund._settledBalanceUpdatesCount())._bn.should.eq.BN(1);
+
                         const intendedSettledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
                         intendedSettledBalanceUpdate[0].should.equal(utils.getAddress(trade.buyer.wallet));
                         intendedSettledBalanceUpdate[1]._bn.should.eq.BN(trade.buyer.balances.intended.current._bn);
                         intendedSettledBalanceUpdate[2].should.equal(trade.currencies.intended.ct);
                         intendedSettledBalanceUpdate[3]._bn.should.eq.BN(trade.currencies.intended.id._bn);
                         intendedSettledBalanceUpdate[4].should.equal('ERCXYZ');
+                        intendedSettledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
 
                         // const conjugateSettledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(1);
                         // conjugateSettledBalanceUpdate[0].should.equal(utils.getAddress(trade.buyer.wallet));
                         // conjugateSettledBalanceUpdate[1]._bn.should.eq.BN(trade.buyer.balances.conjugate.current._bn);
                         // conjugateSettledBalanceUpdate[2].should.equal(trade.currencies.conjugate.ct);
                         // conjugateSettledBalanceUpdate[3]._bn.should.eq.BN(trade.currencies.conjugate.id._bn);
+                        // conjugateSettledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
 
                         (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
 
