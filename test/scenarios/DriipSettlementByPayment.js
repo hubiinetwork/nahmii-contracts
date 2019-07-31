@@ -602,7 +602,7 @@ module.exports = (glob) => {
                 });
 
                 describe('if operational mode is normal and data is available', () => {
-                    describe('if no amount has previously been staged', () => {
+                    describe('if there is no delta in active or settled balances', () => {
                         it('should settle payment successfully without correcting payment balance', async () => {
                             await ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6});
 
@@ -679,14 +679,14 @@ module.exports = (glob) => {
                         });
                     });
 
-                    describe('if an amount has previously been staged', () => {
+                    describe('if there is delta in active balance', () => {
                         beforeEach(async () => {
                             await ethersBalanceTracker._setFungibleRecord(
-                                await ethersBalanceTracker.stagedBalanceType(), utils.parseUnits('100', 18), 0, {gasLimit: 1e6}
+                                await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('100', 18), 0, {gasLimit: 1e6}
                             );
                         });
 
-                        it('should settle payment successfully with corrected payment balance', async () => {
+                        it('should settle payment successfully with payment balance corrected for delta in active balance', async () => {
                             await ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6});
 
                             (await provider.getLogs(await fromBlockTopicsFilter(
@@ -709,7 +709,92 @@ module.exports = (glob) => {
 
                             const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
                             settledBalanceUpdate[0].should.equal(utils.getAddress(payment.sender.wallet));
-                            settledBalanceUpdate[1]._bn.should.eq.BN(payment.sender.balances.current._bn);
+                            settledBalanceUpdate[1]._bn.should.eq.BN(payment.sender.balances.current._bn); // TODO Correct
+                            settledBalanceUpdate[2].should.equal(payment.currency.ct);
+                            settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
+                            settledBalanceUpdate[4].should.equal('ERCXYZ');
+                            settledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
+
+                            (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
+
+                            const holdingStage = await ethersClientFund._stages(0);
+                            holdingStage[0].should.equal(utils.getAddress(payment.sender.wallet));
+                            holdingStage[1].should.equal(mocks.address0);
+                            holdingStage[2]._bn.should.eq.BN(payment.sender.balances.current._bn);
+                            holdingStage[3].should.equal(payment.currency.ct);
+                            holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
+                            holdingStage[5].should.equal('ERCXYZ');
+
+                            (await ethersClientFund._beneficiaryTransfersCount())._bn.should.eq.BN(1);
+
+                            const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
+                            totalFeeTransfer[0].should.equal(utils.getAddress(payment.sender.wallet));
+                            totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
+                            totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
+                            totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
+                            totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
+                            totalFeeTransfer[5].should.equal('ERCXYZ');
+
+                            (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
+
+                            const settlement = await ethersDriipSettlementState.settlements(0);
+                            settlement.settledKind.should.equal('payment');
+                            settlement.settledHash.should.equal(payment.seals.operator.hash);
+                            settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                            settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                            settlement.origin.done.should.be.true;
+                            settlement.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
+                            settlement.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
+                            settlement.target.done.should.be.false;
+
+                            (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
+                                    payment.sender.wallet, payment.currency)
+                            )._bn.should.eq.BN(payment.sender.nonce._bn);
+
+                            (await ethersDriipSettlementChallengeState._terminateProposalsCount())
+                                ._bn.should.eq.BN(1);
+
+                            const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                            proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                            proposal.currency.ct.should.equal(payment.currency.ct);
+                            proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                            proposal.terminated.should.be.true;
+                        });
+                    });
+
+                    describe('if there is delta in settled balance', () => {
+                        beforeEach(async () => {
+                            await ethersDriipSettlementState.addSettledAmount(
+                                payment.sender.wallet, utils.parseUnits('100', 18), payment.currency, payment.blockNumber
+                            );
+                        });
+
+                        it('should settle payment successfully with payment balance corrected for delta in settled balance', async () => {
+                            await ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6});
+
+                            (await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics
+                            ))).should.have.lengthOf(1);
+
+                            (await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersClientFund.interface.events.StageEvent.topics
+                            ))).should.have.lengthOf(1);
+
+                            (await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersDriipSettlementByPayment.interface.events.StageFeesEvent.topics
+                            ))).should.have.lengthOf(1);
+
+                            (await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersDriipSettlementByPayment.interface.events.SettlePaymentEvent.topics
+                            ))).should.have.lengthOf(1);
+
+                            (await ethersClientFund._settledBalanceUpdatesCount())._bn.should.eq.BN(1);
+
+                            const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
+                            settledBalanceUpdate[0].should.equal(utils.getAddress(payment.sender.wallet));
+                            settledBalanceUpdate[1]._bn.should.eq.BN(payment.sender.balances.current.sub(
+                                utils.parseUnits('100', 18)
+                            )._bn);
                             settledBalanceUpdate[2].should.equal(payment.currency.ct);
                             settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
                             settledBalanceUpdate[4].should.equal('ERCXYZ');
@@ -939,7 +1024,7 @@ module.exports = (glob) => {
                 });
 
                 describe('if operational mode is normal and data is available', () => {
-                    describe('if no amount has previously been staged', () => {
+                    describe('if there is no delta in active or settled balances', () => {
                         it('should settle payment successfully without correcting payment balance', async () => {
                             await ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6});
 
@@ -1016,14 +1101,14 @@ module.exports = (glob) => {
                         });
                     });
 
-                    describe('if an amount has previously been staged', () => {
+                    describe('if there is delta in active balance', () => {
                         beforeEach(async () => {
                             await ethersBalanceTracker._setFungibleRecord(
-                                await ethersBalanceTracker.stagedBalanceType(), utils.parseUnits('100', 18), 0, {gasLimit: 1e6}
+                                await ethersBalanceTracker.depositedBalanceType(), utils.parseUnits('100', 18), 0, {gasLimit: 1e6}
                             );
                         });
 
-                        it('should settle payment successfully with corrected payment balance', async () => {
+                        it('should settle payment successfully with payment balance corrected for delta in active balance', async () => {
                             await ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6});
 
                             (await provider.getLogs(await fromBlockTopicsFilter(
@@ -1047,6 +1132,91 @@ module.exports = (glob) => {
                             const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
                             settledBalanceUpdate[0].should.equal(utils.getAddress(payment.sender.wallet));
                             settledBalanceUpdate[1]._bn.should.eq.BN(payment.sender.balances.current._bn);
+                            settledBalanceUpdate[2].should.equal(payment.currency.ct);
+                            settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
+                            settledBalanceUpdate[4].should.equal('ERCXYZ');
+                            settledBalanceUpdate[5]._bn.should.eq.BN(await provider.getBlockNumber());
+
+                            (await ethersClientFund._stagesCount())._bn.should.eq.BN(1);
+
+                            const holdingStage = await ethersClientFund._stages(0);
+                            holdingStage[0].should.equal(utils.getAddress(payment.sender.wallet));
+                            holdingStage[1].should.equal(mocks.address0);
+                            holdingStage[2]._bn.should.eq.BN(payment.sender.balances.current._bn);
+                            holdingStage[3].should.equal(payment.currency.ct);
+                            holdingStage[4]._bn.should.eq.BN(payment.currency.id._bn);
+                            holdingStage[5].should.equal('ERCXYZ');
+
+                            (await ethersClientFund._beneficiaryTransfersCount())._bn.should.eq.BN(1);
+
+                            const totalFeeTransfer = await ethersClientFund._beneficiaryTransfers(0);
+                            totalFeeTransfer[0].should.equal(utils.getAddress(payment.sender.wallet));
+                            totalFeeTransfer[1].should.equal(utils.getAddress(ethersRevenueFund.address));
+                            totalFeeTransfer[2]._bn.should.eq.BN(payment.sender.fees.total[0].figure.amount._bn);
+                            totalFeeTransfer[3].should.equal(payment.sender.fees.total[0].figure.currency.ct);
+                            totalFeeTransfer[4]._bn.should.eq.BN(payment.sender.fees.total[0].figure.currency.id._bn);
+                            totalFeeTransfer[5].should.equal('ERCXYZ');
+
+                            (await ethersDriipSettlementState.settlementsCount())._bn.should.eq.BN(1);
+
+                            const settlement = await ethersDriipSettlementState.settlements(0);
+                            settlement.settledKind.should.equal('payment');
+                            settlement.settledHash.should.equal(payment.seals.operator.hash);
+                            settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
+                            settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                            settlement.origin.done.should.be.true;
+                            settlement.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
+                            settlement.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
+                            settlement.target.done.should.be.false;
+
+                            (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
+                                    payment.sender.wallet, payment.currency)
+                            )._bn.should.eq.BN(payment.sender.nonce._bn);
+
+                            (await ethersDriipSettlementChallengeState._terminateProposalsCount())
+                                ._bn.should.eq.BN(1);
+
+                            const proposal = await ethersDriipSettlementChallengeState._proposals(0);
+                            proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
+                            proposal.currency.ct.should.equal(payment.currency.ct);
+                            proposal.currency.id._bn.should.eq.BN(payment.currency.id._bn);
+                            proposal.terminated.should.be.true;
+                        });
+                    });
+                    
+                    describe('if there is delta in settled balance', () => {
+                        beforeEach(async () => {
+                            await ethersDriipSettlementState.addSettledAmount(
+                                payment.sender.wallet, utils.parseUnits('100', 18), payment.currency, payment.blockNumber
+                            );
+                        });
+
+                        it('should settle payment successfully with payment balance corrected for delta in settled balance', async () => {
+                            await ethersDriipSettlementByPayment.settlePaymentByProxy(payment.sender.wallet, payment, 'ERCXYZ', {gasLimit: 5e6});
+
+                            (await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersClientFund.interface.events.UpdateSettledBalanceEvent.topics
+                            ))).should.have.lengthOf(1);
+
+                            (await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersClientFund.interface.events.StageEvent.topics
+                            ))).should.have.lengthOf(1);
+
+                            (await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersDriipSettlementByPayment.interface.events.StageFeesEvent.topics
+                            ))).should.have.lengthOf(1);
+
+                            (await provider.getLogs(await fromBlockTopicsFilter(
+                                ethersDriipSettlementByPayment.interface.events.SettlePaymentByProxyEvent.topics
+                            ))).should.have.lengthOf(1);
+
+                            (await ethersClientFund._settledBalanceUpdatesCount())._bn.should.eq.BN(1);
+
+                            const settledBalanceUpdate = await ethersClientFund._settledBalanceUpdates(0);
+                            settledBalanceUpdate[0].should.equal(utils.getAddress(payment.sender.wallet));
+                            settledBalanceUpdate[1]._bn.should.eq.BN(payment.sender.balances.current.sub(
+                                utils.parseUnits('100', 18)
+                            )._bn);
                             settledBalanceUpdate[2].should.equal(payment.currency.ct);
                             settledBalanceUpdate[3]._bn.should.eq.BN(payment.currency.id._bn);
                             settledBalanceUpdate[4].should.equal('ERCXYZ');

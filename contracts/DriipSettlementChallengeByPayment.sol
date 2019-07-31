@@ -563,7 +563,7 @@ BalanceTrackable {
 
         // Obtain the settled amount
         int256 settledBalanceAmount = driipSettlementState.settledAmount(
-            wallet, payment.currency
+            wallet, payment.currency, block.number
         );
 
         // Obtain nonce and cumulative (relative) transfer amount.
