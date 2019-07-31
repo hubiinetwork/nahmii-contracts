@@ -370,22 +370,26 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
             // Define destination from origin ID
             address destination = address(fees[i].originId);
 
+            // If the nonce of the last total fee update is smaller then the current nonce...
             if (driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).nonce < nonce) {
                 // Get the amount previously staged
                 int256 deltaAmount = fees[i].figure.amount - driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount;
 
-                // Update fee total
-                driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
+                // If the fee delta is strictly positive...
+                if (deltaAmount.isNonZeroPositiveInt256()) {
+                    // Update total fee
+                    driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
 
-                // Stage to beneficiary
-                clientFund.transferToBeneficiary(
-                    wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, standard
-                );
+                    // Stage to beneficiary
+                    clientFund.transferToBeneficiary(
+                        wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, standard
+                    );
 
-                // Emit event
-                emit StageFeesEvent(
-                    wallet, deltaAmount, fees[i].figure.amount, fees[i].figure.currency.ct, fees[i].figure.currency.id
-                );
+                    // Emit event
+                    emit StageFeesEvent(
+                        wallet, deltaAmount, fees[i].figure.amount, fees[i].figure.currency.ct, fees[i].figure.currency.id
+                    );
+                }
             }
         }
     }
