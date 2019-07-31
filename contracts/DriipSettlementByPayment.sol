@@ -278,8 +278,8 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
                 wallet, correctedCurrentBalance, payment.currency.ct, payment.currency.id, standard, block.number
             );
 
-            // Update total settled amount
-            driipSettlementState.setSettledAmount(wallet, payment.currency, settleAmount);
+            // Update settled amount
+            driipSettlementState.addSettledAmount(wallet, settleAmount, payment.currency, payment.blockNumber);
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
@@ -306,7 +306,6 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
         if (validator.isPaymentSender(payment, wallet)) {
             settlementRole = DriipSettlementTypesLib.SettlementRole.Origin;
             nonce = payment.sender.nonce;
-
         } else {
             settlementRole = DriipSettlementTypesLib.SettlementRole.Target;
             nonce = payment.recipient.nonce;
@@ -322,27 +321,30 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
         if (validator.isPaymentSender(payment, wallet)) {
             currentBalance = payment.sender.balances.current;
             totalFees = payment.sender.fees.total;
-
         } else {
             currentBalance = payment.recipient.balances.current;
             totalFees = payment.recipient.fees.total;
         }
 
+        // Calculate settle amount by this payment
         settleAmount = currentBalance.sub(balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
                 wallet, payment.currency, payment.blockNumber
             ));
 
+        // Obtain delta in active balance amount since payment's block number
         int256 deltaActiveBalanceAmount = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
             wallet, payment.currency, payment.blockNumber, block.number
         );
 
-        int256 settledBalanceAmount = driipSettlementState.settledAmount(
-            wallet, payment.currency
+        // Obtain delta in settled balance amount
+        int256 deltaSettledBalanceAmount = driipSettlementState.settledAmount(
+            wallet, payment.currency, block.number
         );
 
+        // Correct the payment's balance by on-chain deltas
         currentBalance = currentBalance
         .add(deltaActiveBalanceAmount)
-        .sub(settledBalanceAmount);
+        .sub(deltaSettledBalanceAmount);
     }
 
     function _stageFees(address wallet, NahmiiTypesLib.OriginFigure[] memory fees,
@@ -368,22 +370,26 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
             // Define destination from origin ID
             address destination = address(fees[i].originId);
 
+            // If the nonce of the last total fee update is smaller then the current nonce...
             if (driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).nonce < nonce) {
                 // Get the amount previously staged
                 int256 deltaAmount = fees[i].figure.amount - driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount;
 
-                // Update fee total
-                driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
+                // If the fee delta is strictly positive...
+                if (deltaAmount.isNonZeroPositiveInt256()) {
+                    // Update total fee
+                    driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
 
-                // Stage to beneficiary
-                clientFund.transferToBeneficiary(
-                    wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, standard
-                );
+                    // Stage to beneficiary
+                    clientFund.transferToBeneficiary(
+                        wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, standard
+                    );
 
-                // Emit event
-                emit StageFeesEvent(
-                    wallet, deltaAmount, fees[i].figure.amount, fees[i].figure.currency.ct, fees[i].figure.currency.id
-                );
+                    // Emit event
+                    emit StageFeesEvent(
+                        wallet, deltaAmount, fees[i].figure.amount, fees[i].figure.currency.ct, fees[i].figure.currency.id
+                    );
+                }
             }
         }
     }

@@ -714,6 +714,59 @@ module.exports = (glob) => {
             });
         });
 
+        describe('settledAmount()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersDriipSettlementState.settledAmount(
+                    glob.user_a, {ct: mocks.address0, id: 0}, 10
+                ))._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('addSettledAmount()', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersDriipSettlementState.registerService(glob.owner);
+
+                filter = await fromBlockTopicsFilter(
+                    ethersDriipSettlementState.interface.events.AddSettledAmountEvent.topics
+                );
+            });
+
+            describe('if called by non-enabled service action', () => {
+                it('should revert', async () => {
+                    ethersDriipSettlementState.addSettledAmount(
+                        glob.user_a, 100, {ct: mocks.address0, id: 0}, 10, {gasLimit: 1e6}
+                    ).should.be.rejected
+                });
+            });
+
+            describe('if called by enabled service action', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementState.ADD_SETTLED_AMOUNT_ACTION(),
+                        {gasLimit: 1e6}
+                    );
+                });
+
+                it('should successfully add settled amount record at the given block number', async () => {
+                    ethersDriipSettlementState.addSettledAmount(
+                        glob.user_a, 100, {ct: mocks.address0, id: 0}, 10, {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    (await ethersDriipSettlementState.settledAmount(
+                        glob.user_a, {ct: mocks.address0, id: 0}, 0
+                    ))._bn.should.eq.BN(0);
+                    (await ethersDriipSettlementState.settledAmount(
+                        glob.user_a, {ct: mocks.address0, id: 0}, 10
+                    ))._bn.should.eq.BN(100);
+                });
+            });
+        });
+
         describe('totalFee()', () => {
             it('should equal value initialized', async () => {
                 const totalFee = await ethersDriipSettlementState.totalFee(
