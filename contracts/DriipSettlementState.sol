@@ -20,6 +20,7 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {DriipSettlementTypesLib} from "./DriipSettlementTypesLib.sol";
+import {FungibleBalanceLib} from "./FungibleBalanceLib.sol";
 
 /**
  * @title DriipSettlementState
@@ -28,6 +29,7 @@ import {DriipSettlementTypesLib} from "./DriipSettlementTypesLib.sol";
 contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using FungibleBalanceLib for FungibleBalanceLib.Balance;
 
     //
     // Constants
@@ -35,7 +37,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     string constant public INIT_SETTLEMENT_ACTION = "init_settlement";
     string constant public SET_SETTLEMENT_ROLE_DONE_ACTION = "set_settlement_role_done";
     string constant public SET_MAX_NONCE_ACTION = "set_max_nonce";
-    string constant public SET_SETTLED_AMOUNT_ACTION = "set_settled_amount";
+    string constant public ADD_SETTLED_AMOUNT_ACTION = "add_settled_amount";
     string constant public SET_FEE_TOTAL_ACTION = "set_fee_total";
 
     //
@@ -48,7 +50,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
     mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxNonce;
 
-    mapping(address => mapping(address => mapping(uint256 => int256))) private walletCurrencySettledAmount;
+    mapping(address => FungibleBalanceLib.Balance) private walletSettledAmount;
 
     mapping(address => mapping(address => mapping(address => mapping(address => mapping(uint256 => MonetaryTypesLib.NoncedAmount))))) public totalFeesMap;
 
@@ -60,10 +62,12 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     event InitSettlementEvent(DriipSettlementTypesLib.Settlement settlement);
     event CompleteSettlementPartyEvent(address wallet, uint256 nonce, DriipSettlementTypesLib.SettlementRole settlementRole,
         bool done, uint256 doneBlockNumber);
-    event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
-        uint256 maxNonce);
     event SetMaxDriipNonceEvent(uint256 maxDriipNonce);
     event UpdateMaxDriipNonceFromCommunityVoteEvent(uint256 maxDriipNonce);
+    event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
+        uint256 maxNonce);
+    event AddSettledAmountEvent(address wallet, int256 amount, MonetaryTypesLib.Currency currency,
+        uint256 blockNumber);
     event SetTotalFeeEvent(address wallet, Beneficiary beneficiary, address destination,
         MonetaryTypesLib.Currency currency, MonetaryTypesLib.NoncedAmount totalFee);
     event FreezeUpgradesEvent();
@@ -107,7 +111,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     view
     returns (DriipSettlementTypesLib.Settlement memory)
     {
-        require(walletSettlementIndices[wallet].length > index, "Index out of bounds [DriipSettlementState.sol:110]");
+        require(walletSettlementIndices[wallet].length > index, "Index out of bounds [DriipSettlementState.sol:114]");
         return settlements[walletSettlementIndices[wallet][index] - 1];
     }
 
@@ -120,7 +124,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     view
     returns (DriipSettlementTypesLib.Settlement memory)
     {
-        require(0 != walletNonceSettlementIndex[wallet][nonce], "No settlement found for wallet and nonce [DriipSettlementState.sol:123]");
+        require(0 != walletNonceSettlementIndex[wallet][nonce], "No settlement found for wallet and nonce [DriipSettlementState.sol:127]");
         return settlements[walletNonceSettlementIndex[wallet][nonce] - 1];
     }
 
@@ -181,7 +185,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         uint256 index = walletNonceSettlementIndex[wallet][nonce];
 
         // Require the existence of settlement
-        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:184]");
+        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:188]");
 
         // Get the settlement party
         DriipSettlementTypesLib.SettlementParty storage party =
@@ -246,7 +250,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         settlements[index - 1].origin : settlements[index - 1].target;
 
         // Require that wallet is party of the right role
-        require(wallet == settlementParty.wallet, "Wallet has wrong settlement role [DriipSettlementState.sol:249]");
+        require(wallet == settlementParty.wallet, "Wallet has wrong settlement role [DriipSettlementState.sol:253]");
 
         // Return done
         return settlementParty.done;
@@ -265,7 +269,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         uint256 index = walletNonceSettlementIndex[wallet][nonce];
 
         // Require the existence of settlement
-        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:268]");
+        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:272]");
 
         // Return done block number
         return (
@@ -290,7 +294,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         uint256 index = walletNonceSettlementIndex[wallet][nonce];
 
         // Require the existence of settlement
-        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:293]");
+        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:297]");
 
         // Get the settlement party
         DriipSettlementTypesLib.SettlementParty storage settlementParty =
@@ -298,7 +302,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         settlements[index - 1].origin : settlements[index - 1].target;
 
         // Require that wallet is party of the right role
-        require(wallet == settlementParty.wallet, "Wallet has wrong settlement role [DriipSettlementState.sol:301]");
+        require(wallet == settlementParty.wallet, "Wallet has wrong settlement role [DriipSettlementState.sol:305]");
 
         // Return done block number
         return settlementParty.doneBlockNumber;
@@ -358,26 +362,34 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         emit SetMaxNonceByWalletAndCurrencyEvent(wallet, currency, maxNonce);
     }
 
-    /// @notice Get the value of settled amount
+    /// @notice Get the value of settled amount at the given block number
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
-    function settledAmount(address wallet, MonetaryTypesLib.Currency memory currency)
+    /// @param blockNumber The block number of calculation
+    function settledAmount(address wallet, MonetaryTypesLib.Currency memory currency,
+        uint256 blockNumber)
     public
     view
     returns (int256)
     {
-        return walletCurrencySettledAmount[wallet][currency.ct][currency.id];
+        return walletSettledAmount[wallet].getByBlockNumber(currency.ct, currency.id, blockNumber);
     }
 
-    /// @notice Set the new value of settled amount
+    /// @notice Add to the settled amount at the given block number
     /// @param wallet The address of the concerned wallet
-    /// @param currency The concerned currency
     /// @param amount The new settled amount
-    function setSettledAmount(address wallet, MonetaryTypesLib.Currency memory currency, int256 amount)
+    /// @param currency The concerned currency
+    /// @param blockNumber The concerned block number
+    function addSettledAmount(address wallet, int256 amount, MonetaryTypesLib.Currency memory currency,
+        uint256 blockNumber)
     public
-    onlyEnabledServiceAction(SET_SETTLED_AMOUNT_ACTION)
+    onlyEnabledServiceAction(ADD_SETTLED_AMOUNT_ACTION)
     {
-        walletCurrencySettledAmount[wallet][currency.ct][currency.id] = amount;
+        // Add amount record at the given block number
+        walletSettledAmount[wallet].addByBlockNumber(amount, currency.ct, currency.id, blockNumber);
+
+        // Emit event
+        emit AddSettledAmountEvent(wallet, amount, currency, blockNumber);
     }
 
     /// @notice Get the total fee payed by the given wallet to the given beneficiary and destination
@@ -435,11 +447,11 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     onlyDeployer
     {
         // Require that upgrades have not been frozen
-        require(!upgradesFrozen, "Upgrades have been frozen [DriipSettlementState.sol:438]");
+        require(!upgradesFrozen, "Upgrades have been frozen [DriipSettlementState.sol:450]");
 
         // Require that settlement has not been initialized/upgraded already
-        require(0 == walletNonceSettlementIndex[originWallet][originNonce], "Settlement exists for origin wallet and nonce [DriipSettlementState.sol:441]");
-        require(0 == walletNonceSettlementIndex[targetWallet][targetNonce], "Settlement exists for target wallet and nonce [DriipSettlementState.sol:442]");
+        require(0 == walletNonceSettlementIndex[originWallet][originNonce], "Settlement exists for origin wallet and nonce [DriipSettlementState.sol:453]");
+        require(0 == walletNonceSettlementIndex[targetWallet][targetNonce], "Settlement exists for target wallet and nonce [DriipSettlementState.sol:454]");
 
         // Create new settlement
         settlements.length++;
