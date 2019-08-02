@@ -512,7 +512,7 @@ BalanceTrackable {
         );
 
         // Deduce the concerned nonce and cumulative relative transfer
-        (uint256 nonce, int256 cumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);
+        (uint256 nonce, int256 correctedCumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);
 
         // Require that the wallet nonce of the payment is higher than the highest settled wallet nonce
         require(
@@ -521,11 +521,11 @@ BalanceTrackable {
         );
 
         // Initiate proposal, including assurance that there is no overlap with active proposal
-        // Target balance amount is calculated as current balance - cumulativeTransferAmount - stageAmount
+        // Target balance amount is calculated as current (payment) balance - cumulativeTransferAmount - stageAmount
         driipSettlementChallengeState.initiateProposal(
-            wallet, nonce, cumulativeTransferAmount, stageAmount,
+            wallet, nonce, correctedCumulativeTransferAmount, stageAmount,
             balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency)
-            .sub(cumulativeTransferAmount.add(stageAmount)),
+            .sub(correctedCumulativeTransferAmount.add(stageAmount)),
             payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
@@ -561,23 +561,23 @@ BalanceTrackable {
             wallet, payment.currency, payment.blockNumber
         );
 
-        // Obtain the settled amount
-        int256 settledBalanceAmount = driipSettlementState.settledAmount(
-            wallet, payment.currency, block.number
+        // Obtain the delta settled amount
+        int256 deltaSettledBalanceAmount = driipSettlementState.settledAmountByBlockNumber(
+            wallet, payment.currency, payment.blockNumber
         );
 
         // Obtain nonce and cumulative (relative) transfer amount.
         // Correct the cumulative transfer amount by the amount that has already been settled
         if (validator.isPaymentSender(payment, wallet)) {
             nonce = payment.sender.nonce;
-            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock
+            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock // TODO Consider reverting sign of cumulative transfer amount
             .sub(payment.sender.balances.current)
-            .add(settledBalanceAmount);
+            .add(deltaSettledBalanceAmount);
         } else {
             nonce = payment.recipient.nonce;
-            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock
+            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock // TODO Consider reverting sign of cumulative transfer amount
             .sub(payment.recipient.balances.current)
-            .add(settledBalanceAmount);
+            .add(deltaSettledBalanceAmount);
         }
     }
 }

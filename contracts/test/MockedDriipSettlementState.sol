@@ -186,14 +186,14 @@ contract MockedDriipSettlementState {
         maxDriipNonce = _maxDriipNonce;
     }
 
-    function settledAmount(address, MonetaryTypesLib.Currency memory, uint256)
+    function settledAmountByBlockNumber(address, MonetaryTypesLib.Currency memory, uint256)
     public
     view
     returns (int256) {
         return _settledAmount;
     }
 
-    function addSettledAmount(address, int256 amount, MonetaryTypesLib.Currency memory, uint256)
+    function addSettledAmountByBlockNumber(address, int256 amount, MonetaryTypesLib.Currency memory, uint256)
     public
     {
         _settledAmount += amount;

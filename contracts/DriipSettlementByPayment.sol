@@ -262,7 +262,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
     {
         // Extract current balance and total fees
         (int256 correctedCurrentBalance, int settleAmount, NahmiiTypesLib.OriginFigure[] memory totalFees) =
-        _getCorrectedCurrentBalanceSettledAmountTotalFees(payment, wallet);
+        _paymentPartyProperties(payment, wallet);
 
         // Get max nonce for wallet and currency
         uint256 maxNonce = driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency);
@@ -279,7 +279,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
             );
 
             // Update settled amount
-            driipSettlementState.addSettledAmount(wallet, settleAmount, payment.currency, payment.blockNumber);
+            driipSettlementState.addSettledAmountByBlockNumber(wallet, settleAmount, payment.currency, payment.blockNumber);
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
@@ -312,24 +312,19 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
         }
     }
 
-    function _getCorrectedCurrentBalanceSettledAmountTotalFees(PaymentTypesLib.Payment memory payment,
+    function _paymentPartyProperties(PaymentTypesLib.Payment memory payment,
         address wallet)
     private
     view
-    returns (int256 currentBalance, int settleAmount, NahmiiTypesLib.OriginFigure[] memory totalFees)
+    returns (int256 correctedCurrentBalance, int settleAmount, NahmiiTypesLib.OriginFigure[] memory totalFees)
     {
         if (validator.isPaymentSender(payment, wallet)) {
-            currentBalance = payment.sender.balances.current;
+            correctedCurrentBalance = payment.sender.balances.current;
             totalFees = payment.sender.fees.total;
         } else {
-            currentBalance = payment.recipient.balances.current;
+            correctedCurrentBalance = payment.recipient.balances.current;
             totalFees = payment.recipient.fees.total;
         }
-
-        // Calculate settle amount by this payment
-        settleAmount = currentBalance.sub(balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
-                wallet, payment.currency, payment.blockNumber
-            ));
 
         // Obtain delta in active balance amount since payment's block number
         int256 deltaActiveBalanceAmount = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
@@ -337,12 +332,19 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
         );
 
         // Obtain delta in settled balance amount
-        int256 deltaSettledBalanceAmount = driipSettlementState.settledAmount(
-            wallet, payment.currency, block.number
+        int256 deltaSettledBalanceAmount = driipSettlementState.settledAmountByBlockNumber(
+            wallet, payment.currency, payment.blockNumber
         );
 
+        // Calculate settle amount by this payment
+        settleAmount = correctedCurrentBalance.sub(
+            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+                wallet, payment.currency, payment.blockNumber
+            )
+        ).sub(deltaSettledBalanceAmount);
+
         // Correct the payment's balance by on-chain deltas
-        currentBalance = currentBalance
+        correctedCurrentBalance = correctedCurrentBalance
         .add(deltaActiveBalanceAmount)
         .sub(deltaSettledBalanceAmount);
     }
