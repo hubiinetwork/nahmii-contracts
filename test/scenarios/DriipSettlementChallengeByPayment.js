@@ -410,7 +410,7 @@ module.exports = (glob) => {
                     await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalTerminated(true);
 
-                    await ethersDriipSettlementState.addSettledAmount(
+                    await ethersDriipSettlementState.addSettledAmountByBlockNumber(
                         payment.sender.wallet, utils.parseUnits('100', 18), payment.currency, payment.blockNumber,
                         {gasLimit: 1e6}
                     );
@@ -607,7 +607,7 @@ module.exports = (glob) => {
                     await ethersDriipSettlementChallengeState._setProposal(true);
                     await ethersDriipSettlementChallengeState._setProposalTerminated(true);
 
-                    await ethersDriipSettlementState.addSettledAmount(
+                    await ethersDriipSettlementState.addSettledAmountByBlockNumber(
                         payment.sender.wallet, utils.parseUnits('100', 18), payment.currency, payment.blockNumber,
                         {gasLimit: 1e6}
                     );

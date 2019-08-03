@@ -764,7 +764,7 @@ module.exports = (glob) => {
 
                     describe('if there is delta in settled balance', () => {
                         beforeEach(async () => {
-                            await ethersDriipSettlementState.addSettledAmount(
+                            await ethersDriipSettlementState.addSettledAmountByBlockNumber(
                                 payment.sender.wallet, utils.parseUnits('100', 18), payment.currency, payment.blockNumber
                             );
                         });
@@ -1186,7 +1186,7 @@ module.exports = (glob) => {
                     
                     describe('if there is delta in settled balance', () => {
                         beforeEach(async () => {
-                            await ethersDriipSettlementState.addSettledAmount(
+                            await ethersDriipSettlementState.addSettledAmountByBlockNumber(
                                 payment.sender.wallet, utils.parseUnits('100', 18), payment.currency, payment.blockNumber
                             );
                         });
