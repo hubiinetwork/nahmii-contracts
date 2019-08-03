@@ -714,15 +714,15 @@ module.exports = (glob) => {
             });
         });
 
-        describe('settledAmount()', () => {
+        describe('settledAmountByBlockNumber()', () => {
             it('should equal value initialized', async () => {
-                (await ethersDriipSettlementState.settledAmount(
+                (await ethersDriipSettlementState.settledAmountByBlockNumber(
                     glob.user_a, {ct: mocks.address0, id: 0}, 10
                 ))._bn.should.eq.BN(0);
             });
         });
 
-        describe('addSettledAmount()', () => {
+        describe('addSettledAmountByBlockNumber()', () => {
             let filter;
 
             beforeEach(async () => {
@@ -735,7 +735,7 @@ module.exports = (glob) => {
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.addSettledAmount(
+                    ethersDriipSettlementState.addSettledAmountByBlockNumber(
                         glob.user_a, 100, {ct: mocks.address0, id: 0}, 10, {gasLimit: 1e6}
                     ).should.be.rejected
                 });
@@ -750,17 +750,17 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully add settled amount record at the given block number', async () => {
-                    ethersDriipSettlementState.addSettledAmount(
+                    ethersDriipSettlementState.addSettledAmountByBlockNumber(
                         glob.user_a, 100, {ct: mocks.address0, id: 0}, 10, {gasLimit: 1e6}
                     );
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    (await ethersDriipSettlementState.settledAmount(
+                    (await ethersDriipSettlementState.settledAmountByBlockNumber(
                         glob.user_a, {ct: mocks.address0, id: 0}, 0
                     ))._bn.should.eq.BN(0);
-                    (await ethersDriipSettlementState.settledAmount(
+                    (await ethersDriipSettlementState.settledAmountByBlockNumber(
                         glob.user_a, {ct: mocks.address0, id: 0}, 10
                     ))._bn.should.eq.BN(100);
                 });
