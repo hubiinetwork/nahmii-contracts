@@ -455,10 +455,10 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Get the last logged active balance amount and block number, properties of overlapping DSC
         // and the baseline nonce
         (
-        int256 activeBalanceAmount, uint256 activeBalanceBlockNumber,
+        int256 currentActiveBalanceAmount, uint256 currentActiveBalanceBlockNumber,
         int256 dscCumulativeTransferAmount, int256 dscStageAmount,
         uint256 nonce
-        ) = _externalProperties(
+        ) = _walletProperties(
             wallet, currency
         );
 
@@ -466,11 +466,11 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Target balance amount is calculated as current balance - DSC cumulativeTransferAmount - DSC stage amount - NSC stageAmount
         nullSettlementChallengeState.initiateProposal(
             wallet, nonce, stageAmount,
-            activeBalanceAmount.sub(
+            currentActiveBalanceAmount.sub(
                 dscCumulativeTransferAmount.add(dscStageAmount).add(stageAmount)
             ),
             currency,
-            activeBalanceBlockNumber, walletInitiated
+            currentActiveBalanceBlockNumber, walletInitiated
         );
     }
 
@@ -487,7 +487,7 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
     }
 
-    function _externalProperties(address wallet, MonetaryTypesLib.Currency memory currency)
+    function _walletProperties(address wallet, MonetaryTypesLib.Currency memory currency)
     private
     view
     returns (
