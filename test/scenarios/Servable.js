@@ -97,7 +97,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe.skip('registerServiceDeferred()', () => {
+        describe('registerServiceDeferred()', () => {
             let address;
 
             beforeEach(async () => {
