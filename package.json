@@ -65,7 +65,7 @@
     "async": "^2.6.0",
     "debug": "^4.1.1",
     "ethers": "^3.0.29",
-    "ganache-cli": "^6.4.3",
+    "ganache-cli": "~6.4.3",
     "moment": "^2.23.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "openzeppelin-solidity": "^2.2.0",
