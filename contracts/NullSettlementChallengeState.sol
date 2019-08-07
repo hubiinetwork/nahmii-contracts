@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 import {Configurable} from "./Configurable.sol";
 import {BalanceTrackable} from "./BalanceTrackable.sol";
+import {Upgradable} from "./Upgradable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
@@ -23,7 +24,7 @@ import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
  * @title NullSettlementChallengeState
  * @notice Where null settlements challenge state is managed
  */
-contract NullSettlementChallengeState is Ownable, Servable, Configurable, BalanceTrackable {
+contract NullSettlementChallengeState is Ownable, Servable, Configurable, BalanceTrackable, Upgradable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -53,6 +54,7 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
     event DisqualifyProposalEvent(address challengedWallet, uint256 challangedNonce, int256 stageAmount,
         int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber, bool walletInitiated,
         address challengerWallet, uint256 candidateNonce, bytes32 candidateHash, string candidateKind);
+    event UpgradeProposalEvent(SettlementChallengeTypesLib.Proposal proposal);
 
     //
     // Constructor
@@ -466,6 +468,32 @@ contract NullSettlementChallengeState is Ownable, Servable, Configurable, Balanc
         require(0 != index, "No proposal found for wallet and currency [NullSettlementChallengeState.sol:466]");
         return proposals[index - 1].disqualification.candidate.kind;
     }
+
+    /// @notice Upgrade proposal
+    /// @param proposal The concerned proposal
+    function upgradeProposal(SettlementChallengeTypesLib.Proposal memory proposal)
+    public
+    onlyWhenUpgrading
+    {
+        // Require that proposal has not been initialized/upgraded already
+        require(
+            0 == proposalIndexByWalletCurrency[proposal.wallet][proposal.currency.ct][proposal.currency.id],
+            "Proposal exists for wallet and currency"
+        );
+
+        // Push the settlement
+        proposals.push(proposal);
+
+        // Get the 1-based index
+        uint256 index = proposals.length;
+
+        // Update indices
+        proposalIndexByWalletCurrency[proposal.wallet][proposal.currency.ct][proposal.currency.id] = index;
+
+        // Emit event
+        emit UpgradeProposalEvent(proposal);
+    }
+
 
     //
     // Private functions

@@ -12,6 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
+import {Upgradable} from "./Upgradable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
 import {PartnerFund} from "./PartnerFund.sol";
 import {Beneficiary} from "./Beneficiary.sol";
@@ -25,7 +26,7 @@ import {DriipSettlementTypesLib} from "./DriipSettlementTypesLib.sol";
  * @title DriipSettlementState
  * @notice Where driip settlement state is managed
  */
-contract DriipSettlementState is Ownable, Servable, CommunityVotable {
+contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -53,8 +54,6 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
 
     mapping(address => mapping(address => mapping(address => mapping(address => mapping(uint256 => MonetaryTypesLib.NoncedAmount))))) public totalFeesMap;
 
-    bool public upgradesFrozen;
-
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -69,7 +68,6 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         uint256 blockNumber);
     event SetTotalFeeEvent(address wallet, Beneficiary beneficiary, address destination,
         MonetaryTypesLib.Currency currency, MonetaryTypesLib.NoncedAmount totalFee);
-    event FreezeUpgradesEvent();
     event UpgradeSettlementEvent(DriipSettlementTypesLib.Settlement settlement);
 
     //
@@ -398,6 +396,14 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
             walletSettledAmount[wallet][currency.ct][currency.id][blockNumber] = amount;
         }
 
+        //        // Update settled amount at the settled block number
+        //        walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber] =
+        //        walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber].add(amount);
+        //
+        //        // If no settled block number was found make this call's block number a settled block number
+        //        if (0 == settledBlockNumber)
+        //            walletSettledBlockNumbers[wallet][currency.ct][currency.id].push(blockNumber);
+
         // Emit event
         emit AddSettledAmountEvent(wallet, amount, currency, blockNumber);
     }
@@ -436,58 +442,36 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         emit SetTotalFeeEvent(wallet, beneficiary, destination, currency, _totalFee);
     }
 
-    /// @notice Freeze all future settlement upgrades
-    /// @dev This operation can not be undone
-    function freezeUpgrades()
+    /// @notice Upgrade settlement
+    /// @param settlement The concerned settlement
+    function upgradeSettlement(DriipSettlementTypesLib.Settlement memory settlement)
     public
-    onlyDeployer
+    onlyWhenUpgrading
     {
-        // Freeze upgrade
-        upgradesFrozen = true;
-
-        // Emit event
-        emit FreezeUpgradesEvent();
-    }
-
-    /// @notice Upgrade settlement from other driip settlement state instance
-    function upgradeSettlement(string memory settledKind, bytes32 settledHash,
-        address originWallet, uint256 originNonce, bool /*originDone*/, uint256 originDoneBlockNumber,
-        address targetWallet, uint256 targetNonce, bool /*targetDone*/, uint256 targetDoneBlockNumber)
-    public
-    onlyDeployer
-    {
-        // Require that upgrades have not been frozen
-        require(!upgradesFrozen, "Upgrades have been frozen [DriipSettlementState.sol:460]");
-
         // Require that settlement has not been initialized/upgraded already
-        require(0 == walletNonceSettlementIndex[originWallet][originNonce], "Settlement exists for origin wallet and nonce [DriipSettlementState.sol:463]");
-        require(0 == walletNonceSettlementIndex[targetWallet][targetNonce], "Settlement exists for target wallet and nonce [DriipSettlementState.sol:464]");
+        require(
+            0 == walletNonceSettlementIndex[settlement.origin.wallet][settlement.origin.nonce],
+            "Settlement exists for origin wallet and nonce [DriipSettlementState.sol:463]"
+        );
+        require(
+            0 == walletNonceSettlementIndex[settlement.target.wallet][settlement.target.nonce],
+            "Settlement exists for target wallet and nonce [DriipSettlementState.sol:464]"
+        );
 
-        // Create new settlement
-        settlements.length++;
+        // Push the settlement
+        settlements.push(settlement);
 
-        // Get the 0-based index
-        uint256 index = settlements.length - 1;
+        // Get the 1-based index
+        uint256 index = settlements.length;
 
-        // Update settlement
-        settlements[index].settledKind = settledKind;
-        settlements[index].settledHash = settledHash;
-        settlements[index].origin.nonce = originNonce;
-        settlements[index].origin.wallet = originWallet;
-        settlements[index].origin.doneBlockNumber = originDoneBlockNumber;
-        settlements[index].target.nonce = targetNonce;
-        settlements[index].target.wallet = targetWallet;
-        settlements[index].target.doneBlockNumber = targetDoneBlockNumber;
+        // Update indices
+        walletSettlementIndices[settlement.origin.wallet].push(index);
+        walletSettlementIndices[settlement.target.wallet].push(index);
+        walletNonceSettlementIndex[settlement.origin.wallet][settlement.origin.nonce] = index;
+        walletNonceSettlementIndex[settlement.target.wallet][settlement.target.nonce] = index;
 
         // Emit event
-        emit UpgradeSettlementEvent(settlements[index]);
-
-        // Store 1-based index value
-        index++;
-        walletSettlementIndices[originWallet].push(index);
-        walletSettlementIndices[targetWallet].push(index);
-        walletNonceSettlementIndex[originWallet][originNonce] = index;
-        walletNonceSettlementIndex[targetWallet][targetNonce] = index;
+        emit UpgradeSettlementEvent(settlement);
     }
 
     //

@@ -12,6 +12,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from "./Ownable.sol";
 import {Servable} from "./Servable.sol";
 import {Configurable} from "./Configurable.sol";
+import {Upgradable} from "./Upgradable.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
@@ -22,7 +23,7 @@ import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
  * @title DriipSettlementChallengeState
  * @notice Where driip settlement challenge state is managed
  */
-contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
+contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgradable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
 
@@ -62,6 +63,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         int256 stageAmount, int256 targetBalanceAmount, MonetaryTypesLib.Currency currency, uint256 blockNumber,
         bool walletInitiated, address challengerWallet, uint256 candidateNonce, bytes32 candidateHash,
         string candidateKind);
+    event UpgradeProposalEvent(SettlementChallengeTypesLib.Proposal proposal);
 
     //
     // Constructor
@@ -578,6 +580,32 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
         require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:579]");
         return proposals[index - 1].disqualification.candidate.kind;
+    }
+
+    /// @notice Upgrade proposal
+    /// @param proposal The concerned proposal
+    function upgradeProposal(SettlementChallengeTypesLib.Proposal memory proposal)
+    public
+    onlyWhenUpgrading
+    {
+        // Require that proposal has not been initialized/upgraded already
+        require(
+            0 == proposalIndexByWalletNonceCurrency[proposal.wallet][proposal.nonce][proposal.currency.ct][proposal.currency.id],
+            "Proposal exists for wallet, nonce and currency"
+        );
+
+        // Push the settlement
+        proposals.push(proposal);
+
+        // Get the 1-based index
+        uint256 index = proposals.length;
+
+        // Update indices
+        proposalIndexByWalletCurrency[proposal.wallet][proposal.currency.ct][proposal.currency.id] = index;
+        proposalIndexByWalletNonceCurrency[proposal.wallet][proposal.nonce][proposal.currency.ct][proposal.currency.id] = index;
+
+        // Emit event
+        emit UpgradeProposalEvent(proposal);
     }
 
     //
