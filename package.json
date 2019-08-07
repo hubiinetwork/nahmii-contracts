@@ -159,6 +159,7 @@
     "TransferControllerManageable.sol",
     "TransferControllerManager.sol",
     "TxHistoryLib.sol",
+    "Upgradable.sol",
     "Validatable.sol",
     "ValidatableV2.sol",
     "WalletLockable.sol"
