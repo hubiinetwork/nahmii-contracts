@@ -1,0 +1,92 @@
+[
+  {
+    "wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
+    "blockNumber": 7591197,
+    "blockTimestamp": 1555583922,
+    "data": {
+      "nonce": 1,
+      "cumulativeTransferAmount": "-1000000000000000",
+      "stageAmount": "1000000000000000",
+      "targetBalanceAmount": "0",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      }
+    }
+  },
+  {
+    "wallet": "0x77354ee440e930b7a256c8a15afb5b575e490aef",
+    "blockNumber": 7594121,
+    "blockTimestamp": 1555623186,
+    "data": {
+      "nonce": 5,
+      "cumulativeTransferAmount": "-1509168465009579509182",
+      "stageAmount": "1000000000000000",
+      "targetBalanceAmount": "1509167465009579509182",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      }
+    }
+  },
+  {
+    "wallet": "0x9713fe8824c70c2987cd7c649a319f6cf8977165",
+    "blockNumber": 7596540,
+    "blockTimestamp": 1555655440,
+    "data": {
+      "nonce": 4,
+      "cumulativeTransferAmount": "85085000000000000",
+      "stageAmount": "32000000000000000",
+      "targetBalanceAmount": "32915000000000000",
+      "currency": {
+        "ct": "0xdd6c68bb32462e01705011a4e2ad1a60740f217f",
+        "id": 0
+      }
+    }
+  },
+  {
+    "wallet": "0x16e7a2d13a967f4467de8dc2f574a2003d3f6a2b",
+    "blockNumber": 7597033,
+    "blockTimestamp": 1555662185,
+    "data": {
+      "nonce": 3,
+      "cumulativeTransferAmount": "-14650608013966569496",
+      "stageAmount": "1465000000000000000",
+      "targetBalanceAmount": "13185608013966569496",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      }
+    }
+  },
+  {
+    "wallet": "0xe1dddbd012f6a9f3f0a346a2b418aecd03b058e7",
+    "blockNumber": 7627159,
+    "blockTimestamp": 1556068422,
+    "data": {
+      "nonce": 8,
+      "cumulativeTransferAmount": "-10012213803116833945266",
+      "stageAmount": "5000000000000000000000",
+      "targetBalanceAmount": "5012213803116833945266",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      }
+    }
+  },
+  {
+    "wallet": "0x79cdb8174e097db3a391d29aefc988581456cf00",
+    "blockNumber": 7632718,
+    "blockTimestamp": 1556144234,
+    "data": {
+      "nonce": 5,
+      "cumulativeTransferAmount": "-7589343545554329092614",
+      "stageAmount": "100000000000000000",
+      "targetBalanceAmount": "7589243545554329092614",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      }
+    }
+  }
+]

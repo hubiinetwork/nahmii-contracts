@@ -1,0 +1,296 @@
+[
+  {
+    "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+    "blockNumber": 7114035,
+    "blockTimestamp": 1548250892,
+    "data": {
+      "balanceType": "",
+      "value": "1000000000000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+    "blockNumber": 7118487,
+    "blockTimestamp": 1548325914,
+    "data": {
+      "balanceType": "",
+      "value": "1000000000000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+    "blockNumber": 7158127,
+    "blockTimestamp": 1549014583,
+    "data": {
+      "balanceType": "",
+      "value": "1000000000000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+    "blockNumber": 7284133,
+    "blockTimestamp": 1551446957,
+    "data": {
+      "balanceType": "",
+      "value": "1000000000000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0xe1dddbd012f6a9f3f0a346a2b418aecd03b058e7",
+    "blockNumber": 7284698,
+    "blockTimestamp": 1551455277,
+    "data": {
+      "balanceType": "deposited",
+      "value": "1000000000000000",
+      "currency": {
+        "ct": "0x0000000000000000000000000000000000000000",
+        "id": 0
+      },
+      "standard": ""
+    }
+  },
+  {
+    "wallet": "0x9713fe8824c70c2987cd7c649a319f6cf8977165",
+    "blockNumber": 7437166,
+    "blockTimestamp": 1553507825,
+    "data": {
+      "balanceType": "",
+      "value": "100000000000000000",
+      "currency": {
+        "ct": "0xdd6c68bb32462e01705011a4e2ad1a60740f217f",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0x9713fe8824c70c2987cd7c649a319f6cf8977165",
+    "blockNumber": 7441390,
+    "blockTimestamp": 1553564579,
+    "data": {
+      "balanceType": "",
+      "value": "50000000000000000",
+      "currency": {
+        "ct": "0xdd6c68bb32462e01705011a4e2ad1a60740f217f",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+    "blockNumber": 7481646,
+    "blockTimestamp": 1554109098,
+    "data": {
+      "balanceType": "",
+      "value": "1000000000000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0xfbd431706498d51b6f028623bdbb2af9b874fe38",
+    "blockNumber": 7592061,
+    "blockTimestamp": 1555595640,
+    "data": {
+      "balanceType": "",
+      "value": "6000000000000000",
+      "currency": {
+        "ct": "0xdd6c68bb32462e01705011a4e2ad1a60740f217f",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
+    "blockNumber": 7609217,
+    "blockTimestamp": 1555826696,
+    "data": {
+      "balanceType": "deposited",
+      "value": "10000000000000000",
+      "currency": {
+        "ct": "0x0000000000000000000000000000000000000000",
+        "id": 0
+      },
+      "standard": ""
+    }
+  },
+  {
+    "wallet": "0x97011966498df22923cd8f72dc4d63d75e785b17",
+    "blockNumber": 7618153,
+    "blockTimestamp": 1555945534,
+    "data": {
+      "balanceType": "deposited",
+      "value": "1000000000000000",
+      "currency": {
+        "ct": "0x0000000000000000000000000000000000000000",
+        "id": 0
+      },
+      "standard": ""
+    }
+  },
+  {
+    "wallet": "0x79cdb8174e097db3a391d29aefc988581456cf00",
+    "blockNumber": 7631417,
+    "blockTimestamp": 1556126927,
+    "data": {
+      "balanceType": "deposited",
+      "value": "28990000000000000",
+      "currency": {
+        "ct": "0x0000000000000000000000000000000000000000",
+        "id": 0
+      },
+      "standard": ""
+    }
+  },
+  {
+    "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+    "blockNumber": 7682324,
+    "blockTimestamp": 1556809077,
+    "data": {
+      "balanceType": "",
+      "value": "1000000000000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0x4381b63991ad7ca0071a3de6889b1ea588824c27",
+    "blockNumber": 7741463,
+    "blockTimestamp": 1557607816,
+    "data": {
+      "balanceType": "",
+      "value": "1000000000000000000",
+      "currency": {
+        "ct": "0xdd6c68bb32462e01705011a4e2ad1a60740f217f",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+    "blockNumber": 7885426,
+    "blockTimestamp": 1559551169,
+    "data": {
+      "balanceType": "",
+      "value": "1000000000000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0x4381b63991ad7ca0071a3de6889b1ea588824c27",
+    "blockNumber": 7965161,
+    "blockTimestamp": 1560628983,
+    "data": {
+      "balanceType": "deposited",
+      "value": "100000000000000000",
+      "currency": {
+        "ct": "0x0000000000000000000000000000000000000000",
+        "id": 0
+      },
+      "standard": ""
+    }
+  },
+  {
+    "wallet": "0x2c940d0889f8261e0f6b4d23f253a4c6cb862780",
+    "blockNumber": 7989678,
+    "blockTimestamp": 1560959976,
+    "data": {
+      "balanceType": "deposited",
+      "value": "100000000000000000",
+      "currency": {
+        "ct": "0x0000000000000000000000000000000000000000",
+        "id": 0
+      },
+      "standard": ""
+    }
+  },
+  {
+    "wallet": "0xf7ca4ffecfd4e33ff5fbf612d9e3f09763ed2563",
+    "blockNumber": 8000315,
+    "blockTimestamp": 1561104018,
+    "data": {
+      "balanceType": "deposited",
+      "value": "10000000000000000",
+      "currency": {
+        "ct": "0x0000000000000000000000000000000000000000",
+        "id": 0
+      },
+      "standard": ""
+    }
+  },
+  {
+    "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+    "blockNumber": 8065778,
+    "blockTimestamp": 1561986119,
+    "data": {
+      "balanceType": "",
+      "value": "1000000000000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  },
+  {
+    "wallet": "0x2be61271469a736e1fe1f75fb8fd24ed9996675b",
+    "blockNumber": 8112817,
+    "blockTimestamp": 1562618137,
+    "data": {
+      "balanceType": "deposited",
+      "value": "50000000000000000",
+      "currency": {
+        "ct": "0x0000000000000000000000000000000000000000",
+        "id": 0
+      },
+      "standard": ""
+    }
+  },
+  {
+    "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+    "blockNumber": 8264830,
+    "blockTimestamp": 1564662824,
+    "data": {
+      "balanceType": "",
+      "value": "1000000000000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "standard": "ERC20"
+    }
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
+    "nonce": 0,
+    "referenceBlockNumber": 7609217,
+    "definitionBlockNumber": 7609255,
+    "expirationTime": 1556259116,
+    "status": 1,
+    "currency": {
+      "ct": "0x0000000000000000000000000000000000000000",
+      "id": 0
+    },
+    "amounts": {
+      "stage": "100000000000000",
+      "targetBalance": "9900000000000000"
+    },
+    "terminated": true
+  },
+  {
+    "wallet": "0x2c940d0889f8261e0f6b4d23f253a4c6cb862780",
+    "nonce": 0,
+    "referenceBlockNumber": 8033842,
+    "definitionBlockNumber": 8086459,
+    "expirationTime": 1562696865,
+    "status": 1,
+    "currency": {
+      "ct": "0x0000000000000000000000000000000000000000",
+      "id": 0
+    },
+    "amounts": {
+      "stage": "1000000000000000",
+      "targetBalance": "49000000000000000"
+    },
+    "terminated": false
+  },
+  {
+    "wallet": "0xe1dddbd012f6a9f3f0a346a2b418aecd03b058e7",
+    "nonce": 8,
+    "referenceBlockNumber": 0,
+    "definitionBlockNumber": 7627286,
+    "expirationTime": 1556502034,
+    "status": 1,
+    "currency": {
+      "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+      "id": 0
+    },
+    "amounts": {
+      "stage": "10000000000000000000",
+      "targetBalance": "5002213803116833945266"
+    },
+    "terminated": false
+  }
+]

@@ -1,0 +1,614 @@
+[
+  {
+    "wallet": "0x7344328668927e8b25ee00751a072f751cbf4993",
+    "blockNumber": 8024441,
+    "blockTimestamp": 1561429035,
+    "data": {
+      "amount": "5394605394605394605395",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "sender": {
+        "nonce": 16246,
+        "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+        "balances": {
+          "current": "10975469147015513696790",
+          "previous": "16375469147015513696790"
+        },
+        "fees": {
+          "single": {
+            "amount": "5394605394605394605",
+            "currency": {
+              "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+              "id": 0
+            }
+          },
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "6982042488364619858162",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "recipient": {
+        "nonce": 10,
+        "wallet": "0x7344328668927e8b25ee00751a072f751cbf4993",
+        "balances": {
+          "current": "26153834161836163836169",
+          "previous": "20759228767230769230774"
+        },
+        "fees": {
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "10000002000000000000",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "seals": {
+        "wallet": {
+          "hash": "0x62e2961b262fb0467264cd6b83fd5328897dd973832f8fdaaf1118d74f09f95b",
+          "signature": {
+            "r": "0x68e32617860e09caaf775b929b58e03ace62fb1ea40c59bd442653acd3101e2d",
+            "s": "0x5fa2aefe6f0fce6d1d867f4aed846135704b04ca19687e16a1b64c0307f136cb",
+            "v": 28
+          }
+        },
+        "operator": {
+          "hash": "0xa6b3ef1d56bc12264bffe5e10c161e47302c60d5bda6e3f717eb5be973cc73df",
+          "signature": {
+            "r": "0xf3f65a045d24177f439777ab2138af4327f7cb63740099869272287e8d04ecf5",
+            "s": "0x739c754d7a9d4ce64f44e72be22b00403ef55c27b2164cbdba9729c5ab804e5f",
+            "v": 27
+          }
+        }
+      },
+      "blockNumber": 7887555
+    }
+  },
+  {
+    "wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
+    "blockNumber": 8024498,
+    "blockTimestamp": 1561429747,
+    "data": {
+      "amount": "1000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "sender": {
+        "nonce": 140,
+        "wallet": "0x473a47d4ae5b86bc5897a8af1c8bea297a1399dc",
+        "balances": {
+          "current": "1000100000000061862",
+          "previous": "1000100000000062863"
+        },
+        "fees": {
+          "single": {
+            "amount": "1",
+            "currency": {
+              "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+              "id": 0
+            }
+          },
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "138",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "recipient": {
+        "nonce": 2,
+        "wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
+        "balances": {
+          "current": "1000",
+          "previous": "0"
+        },
+        "fees": {
+          "total": []
+        }
+      },
+      "seals": {
+        "wallet": {
+          "hash": "0x5a7b3f793ef3f74048d7067c18e46ec2827bfe7806040685501e5cdb01cf8be0",
+          "signature": {
+            "r": "0xc7685eb097bfa8f815152dc8cd3b3e84d510fa167daac2effddcb0c68b6d05a8",
+            "s": "0x0beabbbc63e4b7d05f039e33226d8d8dee270baa461c94cbf86536214e7fb8df",
+            "v": 27
+          }
+        },
+        "operator": {
+          "hash": "0x3c5e874a1755668927592210648811fc2017354974cc33ee36d91b2f87d3abfb",
+          "signature": {
+            "r": "0x25858943e07ac0b333f179877ffb727ae5a73b8c4a0bed5cf2155f7f2da2acd7",
+            "s": "0x44bc4337bcd26b2cf5ce441d2c8b49361619a63b91e9595b64a9b716a6d3d3cd",
+            "v": 27
+          }
+        }
+      },
+      "blockNumber": 7892963
+    }
+  },
+  {
+    "wallet": "0x2c940d0889f8261e0f6b4d23f253a4c6cb862780",
+    "blockNumber": 8025951,
+    "blockTimestamp": 1561450012,
+    "data": {
+      "amount": "93314448047489603255",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "sender": {
+        "nonce": 14084,
+        "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+        "balances": {
+          "current": "825479118122465060646642",
+          "previous": "825572525884960597739500"
+        },
+        "fees": {
+          "single": {
+            "amount": "93314448047489603",
+            "currency": {
+              "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+              "id": 0
+            }
+          },
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "6168352529348186745382",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "recipient": {
+        "nonce": 8,
+        "wallet": "0x2c940d0889f8261e0f6b4d23f253a4c6cb862780",
+        "balances": {
+          "current": "433599947686682604427",
+          "previous": "340285499639193001172"
+        },
+        "fees": {
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "10200",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "seals": {
+        "wallet": {
+          "hash": "0x4007cd2f3f875c91865d84ff7d2e8713956a905585985fb8b94049d7c8266667",
+          "signature": {
+            "r": "0x9a8e14c4ff608fc3b7bdc7ec4002a17e256f24e165030e92b95b8778617bed2e",
+            "s": "0x511cfe35f06d2f860fbf4fdd059c757857f6ed62bb3c13ec60e4cf59695d16aa",
+            "v": 27
+          }
+        },
+        "operator": {
+          "hash": "0x8f8120368a4be755ce14675a2d04f5a9996c3bf7461919b5ddbca9a5e578d895",
+          "signature": {
+            "r": "0x0021376e89da589df35ecdae338cb76cc0a5544fa3ab84acf99b95ae0b0c0640",
+            "s": "0x6328137106671beffa5f3b1958eeadc08cda7d4e9f19a2473e97ea8153ccc5ba",
+            "v": 28
+          }
+        }
+      },
+      "blockNumber": 7887359
+    }
+  },
+  {
+    "wallet": "0x86348f6d11893768fc8cbad8084d021c33895cec",
+    "blockNumber": 8038739,
+    "blockTimestamp": 1561621720,
+    "data": {
+      "amount": "20095835922685173978",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "sender": {
+        "nonce": 14024,
+        "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+        "balances": {
+          "current": "916289282826591447216929",
+          "previous": "916309398758350055076080"
+        },
+        "fees": {
+          "single": {
+            "amount": "20095835922685173",
+            "currency": {
+              "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+              "id": 0
+            }
+          },
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "6077633084089319226362",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "recipient": {
+        "nonce": 13,
+        "wallet": "0x86348f6d11893768fc8cbad8084d021c33895cec",
+        "balances": {
+          "current": "413553921278170796387",
+          "previous": "393458085355485622409"
+        },
+        "fees": {
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "354019609179",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "seals": {
+        "wallet": {
+          "hash": "0x3b706fc967601ccab017a0070b197eb9f3d7ea739725e458a7c9e94a0f1b31df",
+          "signature": {
+            "r": "0x028967e4c23451a4ac36ceee6df1fa57e13715c4b668c65a3fc0a6384693c444",
+            "s": "0x0d66946d688cd68518bb9296897803233dc2263cac95b7c872171a4517c16e4f",
+            "v": 27
+          }
+        },
+        "operator": {
+          "hash": "0x6819ce725bb09da66ef561731fbe36e8708b9454e322ede7bb93ce8e22b68568",
+          "signature": {
+            "r": "0xcccd2943fc18179e63fb2bafe8b225f211ffca55b857246e983d1acf49f281f6",
+            "s": "0x0cc4bd06f70ec7e0ad36445cdb5bc7ad01408d1c97d23c237a0259b25fdd2a82",
+            "v": 27
+          }
+        }
+      },
+      "blockNumber": 7887355
+    }
+  },
+  {
+    "wallet": "0x7344328668927e8b25ee00751a072f751cbf4993",
+    "blockNumber": 8083208,
+    "blockTimestamp": 1562221501,
+    "data": {
+      "amount": "1000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "sender": {
+        "nonce": 12,
+        "wallet": "0x7344328668927e8b25ee00751a072f751cbf4993",
+        "balances": {
+          "current": "26153834160836163836169",
+          "previous": "26153835161836163836169"
+        },
+        "fees": {
+          "single": {
+            "amount": "1000000000000",
+            "currency": {
+              "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+              "id": 0
+            }
+          },
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "10000003000000000000",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "recipient": {
+        "nonce": 12,
+        "wallet": "0xe1dddbd012f6a9f3f0a346a2b418aecd03b058e7",
+        "balances": {
+          "current": "10041901469420812912189",
+          "previous": "10041900469420812912189"
+        },
+        "fees": {
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "2000000000000",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "seals": {
+        "wallet": {
+          "hash": "0xb64a8e436e66b81e6f9a20e51d9bd3dbd13798e38d9233f545ba40ef01c023c1",
+          "signature": {
+            "r": "0x6db2f23024266bdf2acbdce5e71543d5579eaa03f1f36887bf832cee35c63719",
+            "s": "0x4e236be2e4e8e5721d96fd336adde64bdac8041a937189670b3cf1bcce08ed42",
+            "v": 28
+          }
+        },
+        "operator": {
+          "hash": "0xd99fbee5643cc5ed0bcf46d4d52940c3fd9b0a0374e647f94624cae3000afe97",
+          "signature": {
+            "r": "0x3aedb36b179ab779bfe3cae2d0f58780b7257570d48ebcfb2882daf170386566",
+            "s": "0x7438540ae7fdcdbbf247ce72ba3fc90e50a4d143770c6a8586c8b5e0cc338147",
+            "v": 27
+          }
+        }
+      },
+      "blockNumber": 8032463
+    }
+  },
+  {
+    "wallet": "0x0d117250cc44896b5dfb1a46f6b012d672459ae3",
+    "blockNumber": 8208030,
+    "blockTimestamp": 1563899829,
+    "data": {
+      "amount": "184475071500960711635",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "sender": {
+        "nonce": 16302,
+        "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+        "balances": {
+          "current": "948150996840422987570105",
+          "previous": "948335656386995449242451"
+        },
+        "fees": {
+          "single": {
+            "amount": "184475071500960711",
+            "currency": {
+              "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+              "id": 0
+            }
+          },
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "7044804198960616387729",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "recipient": {
+        "nonce": 12,
+        "wallet": "0x0d117250cc44896b5dfb1a46f6b012d672459ae3",
+        "balances": {
+          "current": "1381935930370884298384",
+          "previous": "1197460858869923586749"
+        },
+        "fees": {
+          "total": []
+        }
+      },
+      "seals": {
+        "wallet": {
+          "hash": "0xd8197713ae53c04d5e663c1b6fd93006f12b4a96e397d83228b086e40f2b8cda",
+          "signature": {
+            "r": "0x7f5ebaf4b7aea5b7a2d09da10104f4b759d222bc2f243e2de322d58591271c64",
+            "s": "0x2886a1e288256f295c7277c817adfba4beb11d3d93ad893d5d0c744b3285bccb",
+            "v": 28
+          }
+        },
+        "operator": {
+          "hash": "0x365fdc699efa0ddf1b09890dcda9888da86e9c19d9747bfc550fc968186c52a1",
+          "signature": {
+            "r": "0x7559689de8ee0ea5825feb210bec6fbfaf862e0623ed808be13e0b6910b32173",
+            "s": "0x389d451b41ad2ad8fdb4d6f21336f42d4cf6e8c831a9d40cfcd601347993bfcf",
+            "v": 27
+          }
+        }
+      },
+      "blockNumber": 8066224
+    }
+  },
+  {
+    "wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
+    "blockNumber": 8210561,
+    "blockTimestamp": 1563933338,
+    "data": {
+      "amount": "1000000000000000000000",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "sender": {
+        "nonce": 14,
+        "wallet": "0x7344328668927e8b25ee00751a072f751cbf4993",
+        "balances": {
+          "current": "29547439555441558441564",
+          "previous": "30548439555441558441564"
+        },
+        "fees": {
+          "single": {
+            "amount": "1000000000000000000",
+            "currency": {
+              "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+              "id": 0
+            }
+          },
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "11000003000000000000",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "recipient": {
+        "nonce": 3,
+        "wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
+        "balances": {
+          "current": "1000000000000000000900",
+          "previous": "900"
+        },
+        "fees": {
+          "total": []
+        }
+      },
+      "seals": {
+        "wallet": {
+          "hash": "0x3e6908d5af4bda76183e27378d0334240f050583babe5add8ce1c52828988011",
+          "signature": {
+            "r": "0x57c3d6a4ecac81ef391dfcf23d0020cc2a3317e2fb029bbc88462fff38de4249",
+            "s": "0x7ffe7822bc25f77528ac38869be0b5974d3f3f4b59a7bf04ed94530a86bedd43",
+            "v": 27
+          }
+        },
+        "operator": {
+          "hash": "0x36177f19f0e6d1e1bd5f733f8bee9cf30f7000f62d194f81742a1d1b45867829",
+          "signature": {
+            "r": "0xc8f3ce847271573d9515a8777f87541d48b34c451fd6496ed5f302b5682e7ffc",
+            "s": "0x6b9d27b7ada4c881e14791fe45238dfb88ebbc6f36b5192c50add85b67b7e253",
+            "v": 28
+          }
+        }
+      },
+      "blockNumber": 8083051
+    }
+  },
+  {
+    "wallet": "0x9713fe8824c70c2987cd7c649a319f6cf8977165",
+    "blockNumber": 8259041,
+    "blockTimestamp": 1564584724,
+    "data": {
+      "amount": "6636783902891640913",
+      "currency": {
+        "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+        "id": 0
+      },
+      "sender": {
+        "nonce": 18202,
+        "wallet": "0xe8575e787e28bcb0ee3046605f795bf883e82e84",
+        "balances": {
+          "current": "115928118599064920596700",
+          "previous": "115934762019751715129253"
+        },
+        "fees": {
+          "single": {
+            "amount": "6636783902891640",
+            "currency": {
+              "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+              "id": 0
+            }
+          },
+          "total": [
+            {
+              "originId": 0,
+              "figure": {
+                "amount": "7876195685715219850273",
+                "currency": {
+                  "ct": "0xac4f2f204b38390b92d0540908447d5ed352799a",
+                  "id": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "recipient": {
+        "nonce": 7,
+        "wallet": "0x9713fe8824c70c2987cd7c649a319f6cf8977165",
+        "balances": {
+          "current": "34908929199254574723",
+          "previous": "28272145296362933810"
+        },
+        "fees": {
+          "total": []
+        }
+      },
+      "seals": {
+        "wallet": {
+          "hash": "0xf48d21e0dde22485a68d64c5a2dd1f17a08c486d5b9742b083c3a5bde674bac5",
+          "signature": {
+            "r": "0xc03441716877d23b02bdea5f0db4229384a5c067ce0feb633508ef479ec51355",
+            "s": "0x75b17c4f105c01e8c1cefd423c6c0ad2a114a9c159ca567cf4933a49762c268c",
+            "v": 28
+          }
+        },
+        "operator": {
+          "hash": "0x41c58c5f6e661ecc771efa0f4d5a2177ff757f3b1866db393eb66ca63c060c1d",
+          "signature": {
+            "r": "0xf6897b0012c99f57e8a1a863f2ee530952850e4d9930c6c73c7586b398f103c4",
+            "s": "0x2b982669092d7ac95a517afc3074ebf2396ebc19f2f90ab830da74c1a0c201c3",
+            "v": 28
+          }
+        }
+      },
+      "blockNumber": 8066409
+    }
+  }
+]
