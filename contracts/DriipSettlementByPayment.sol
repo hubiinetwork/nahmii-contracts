@@ -279,7 +279,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
             );
 
             // Update settled amount
-            driipSettlementState.addSettledAmountByBlockNumber(wallet, settleAmount, payment.currency, payment.blockNumber);
+            driipSettlementState.addSettledAmountByBlockNumber(wallet, settleAmount, payment.currency, block.number);
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(

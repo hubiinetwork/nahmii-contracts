@@ -370,7 +370,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     returns (int256)
     {
         uint256 settledBlockNumber = _walletSettledBlockNumber(wallet, currency, blockNumber);
-        return 0 < settledBlockNumber ? walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber] : 0;
+        return walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber];
     }
 
     /// @notice Add to the settled amount at the given block number
@@ -386,23 +386,12 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         // Get the current settled block number
         uint256 settledBlockNumber = _walletSettledBlockNumber(wallet, currency, blockNumber);
 
-        // Update at settled block number if found
-        if (0 < settledBlockNumber)
-            walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber] =
-            walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber].add(amount);
-        // Else update at new block number
-        else {
-            walletSettledBlockNumbers[wallet][currency.ct][currency.id].push(blockNumber);
-            walletSettledAmount[wallet][currency.ct][currency.id][blockNumber] = amount;
-        }
+        // Add to the settled amount for the found settled block number
+        walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber] =
+        walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber].add(amount);
 
-        //        // Update settled amount at the settled block number
-        //        walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber] =
-        //        walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber].add(amount);
-        //
-        //        // If no settled block number was found make this call's block number a settled block number
-        //        if (0 == settledBlockNumber)
-        //            walletSettledBlockNumbers[wallet][currency.ct][currency.id].push(blockNumber);
+        // Add the current block number to the set of settled block numbers
+        walletSettledBlockNumbers[wallet][currency.ct][currency.id].push(block.number);
 
         // Emit event
         emit AddSettledAmountEvent(wallet, amount, currency, blockNumber);
