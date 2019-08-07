@@ -162,6 +162,37 @@ module.exports = (glob) => {
             });
         });
 
+        describe('upgradeAgent()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersDriipSettlementState.upgradeAgent())
+                    .should.equal(mocks.address0);
+            });
+        });
+
+        describe('setUpgradeAgent()', () => {
+            describe('if called once', () => {
+                let address, filter;
+
+                before(async () => {
+                    address = Wallet.createRandom().address;
+
+                    filter = await fromBlockTopicsFilter(
+                        ethersDriipSettlementState.interface.events.SetUpgradeAgentEvent.topics
+                    );
+                });
+
+                it('should successfully set agent', async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(address);
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    (await ethersDriipSettlementState.upgradeAgent())
+                        .should.equal(address);
+                });
+            });
+        });
+
         describe('upgradesFrozen()', () => {
             it('should equal value initialized', async () => {
                 (await ethersDriipSettlementState.upgradesFrozen())
@@ -170,32 +201,45 @@ module.exports = (glob) => {
         });
 
         describe('freezeUpgrades()', () => {
-            describe('if called by non-deployer', () => {
+            describe('if called by non-agent', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementState.freezeUpgrades({from: glob.user_a})
+                    ethersDriipSettlementState.freezeUpgrades()
                         .should.be.rejected;
                 });
             });
 
-            describe('if called by deployer', () => {
-                let address, filter;
+            describe('if called by agent', () => {
+                let filter;
 
                 beforeEach(async () => {
-                    address = Wallet.createRandom().address;
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
 
                     filter = await fromBlockTopicsFilter(
                         ethersDriipSettlementState.interface.events.FreezeUpgradesEvent.topics
                     );
                 });
 
-                it('should disable changing community vote', async () => {
-                    await web3DriipSettlementState.freezeUpgrades();
+                it('should successfully set the upgrades frozen flag', async () => {
+                    await ethersDriipSettlementState.freezeUpgrades();
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
                     (await ethersDriipSettlementState.upgradesFrozen())
                         .should.be.true;
+                });
+            });
+
+            describe('if upgrades are frozen', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
+
+                    await ethersDriipSettlementState.freezeUpgrades();
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementState.freezeUpgrades()
+                        .should.be.rejected;
                 });
             });
         });
@@ -758,11 +802,15 @@ module.exports = (glob) => {
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
                     (await ethersDriipSettlementState.settledAmountByBlockNumber(
-                        glob.user_a, {ct: mocks.address0, id: 0}, 0
-                    ))._bn.should.eq.BN(0);
-                    (await ethersDriipSettlementState.settledAmountByBlockNumber(
                         glob.user_a, {ct: mocks.address0, id: 0}, 10
                     ))._bn.should.eq.BN(100);
+                    (await ethersDriipSettlementState.settledAmountByBlockNumber(
+                        glob.user_a, {ct: mocks.address0, id: 0}, await provider.getBlockNumber()
+                    ))._bn.should.eq.BN(0);
+
+                    // TODO Remove
+                    // (await ethersDriipSettlementState.walletSettledBlockNumbers(glob.user_a, mocks.address0, 0, 0))
+                    //     .should.eq.BN(10);
                 });
             });
         });
@@ -826,25 +874,41 @@ module.exports = (glob) => {
         });
 
         describe('upgradeSettlement', () => {
-            describe('if called by non-deployer', () => {
+            let settlement;
+
+            before(() => {
+                settlement = {
+                    settledKind: 'payment',
+                    settledHash: mocks.hash1,
+                    origin: {
+                        nonce: 1,
+                        wallet: mocks.address1,
+                        doneBlockNumber: 1234
+                    },
+                    target: {
+                        nonce: 2,
+                        wallet: mocks.address2,
+                        doneBlockNumber: 5678
+                    }
+                }
+            });
+
+            describe('if called by non-agent', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementState.upgradeSettlement(
-                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
-                        {from: glob.user_a, gas: 1e6}
-                    ).should.be.rejected;
+                    ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
             });
 
-            describe('if called after settlement upgrades have been frozen', () => {
+            describe('if called after upgrades have been frozen', () => {
                 beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
                     await ethersDriipSettlementState.freezeUpgrades();
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementState.upgradeSettlement(
-                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
-                        {gasLimit: 1e6}
-                    ).should.be.rejected;
+                    ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
             });
 
@@ -852,45 +916,39 @@ module.exports = (glob) => {
                 let filter;
 
                 beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
                     filter = await fromBlockTopicsFilter(
                         ethersDriipSettlementState.interface.events.UpgradeSettlementEvent.topics
                     );
                 });
 
                 it('should successfully upgrade settlement', async () => {
-                    await ethersDriipSettlementState.upgradeSettlement(
-                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
-                        {gasLimit: 1e6}
-                    );
+                    await ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6});
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    const settlement = await ethersDriipSettlementState.settlements(0);
-                    settlement.settledKind.should.equal('some_kind');
-                    settlement.settledHash.should.equal(mocks.hash1);
-                    settlement.origin.nonce._bn.should.eq.BN(1);
-                    settlement.origin.wallet.should.equal(utils.getAddress(glob.user_a));
-                    settlement.origin.doneBlockNumber._bn.should.be.eq.BN(100);
-                    settlement.target.nonce._bn.should.eq.BN(2);
-                    settlement.target.wallet.should.equal(utils.getAddress(glob.user_b));
-                    settlement.target.doneBlockNumber._bn.should.be.eq.BN(200);
+                    const _settlement = await ethersDriipSettlementState.settlements(0);
+                    _settlement.settledKind.should.equal('payment');
+                    _settlement.settledHash.should.equal(mocks.hash1);
+                    _settlement.origin.nonce._bn.should.eq.BN(1);
+                    _settlement.origin.wallet.should.equal(utils.getAddress(mocks.address1));
+                    _settlement.origin.doneBlockNumber._bn.should.be.eq.BN(1234);
+                    _settlement.target.nonce._bn.should.eq.BN(2);
+                    _settlement.target.wallet.should.equal(utils.getAddress(mocks.address2));
+                    _settlement.target.doneBlockNumber._bn.should.be.eq.BN(5678);
                 });
             });
 
             describe('if upgrading existing settlement', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementState.upgradeSettlement(
-                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
-                        {gasLimit: 1e6}
-                    );
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
+                    await ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6});
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementState.upgradeSettlement(
-                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
-                        {gasLimit: 1e6}
-                    ).should.be.rejected;
+                    ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
             });
         });
