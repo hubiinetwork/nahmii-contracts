@@ -162,7 +162,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
             return;
 
         // Require that role that initialized (wallet or operator) can only cancel its own proposal
-        require(walletTerminated == proposals[index - 1].walletInitiated, "Wallet initiation and termination mismatch [DriipSettlementChallengeState.sol:163]");
+        require(walletTerminated == proposals[index - 1].walletInitiated, "Wallet initiation and termination mismatch [DriipSettlementChallengeState.sol:165]");
 
         // Clear wallet-nonce-currency triplet entry, which enables reinitiation of proposal for that triplet
         if (clearNonce)
@@ -222,7 +222,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
             return;
 
         // Require that role that initialized (wallet or operator) can only cancel its own proposal
-        require(walletTerminated == proposals[index - 1].walletInitiated, "Wallet initiation and termination mismatch [DriipSettlementChallengeState.sol:223]");
+        require(walletTerminated == proposals[index - 1].walletInitiated, "Wallet initiation and termination mismatch [DriipSettlementChallengeState.sol:225]");
 
         // Emit event
         emit RemoveProposalEvent(
@@ -252,7 +252,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     {
         // Get the proposal index
         uint256 index = proposalIndexByWalletCurrency[challengedWallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:253]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:255]");
 
         // Update proposal
         proposals[index - 1].status = SettlementChallengeTypesLib.Status.Disqualified;
@@ -281,7 +281,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     {
         // Get the proposal index
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:282]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:284]");
 
         // Emit event
         emit QualifyProposalEvent(
@@ -339,7 +339,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     {
         // 1-based index
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:340]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:342]");
         return proposals[index - 1].terminated;
     }
 
@@ -354,7 +354,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     {
         // 1-based index
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:355]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:357]");
         return block.timestamp >= proposals[index - 1].expirationTime;
     }
 
@@ -368,7 +368,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:369]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:371]");
         return proposals[index - 1].nonce;
     }
 
@@ -382,7 +382,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:383]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:385]");
         return proposals[index - 1].referenceBlockNumber;
     }
 
@@ -396,7 +396,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:397]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:399]");
         return proposals[index - 1].definitionBlockNumber;
     }
 
@@ -410,7 +410,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:411]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:413]");
         return proposals[index - 1].expirationTime;
     }
 
@@ -424,7 +424,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (SettlementChallengeTypesLib.Status)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:425]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:427]");
         return proposals[index - 1].status;
     }
 
@@ -438,7 +438,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (int256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:439]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:441]");
         return proposals[index - 1].amounts.cumulativeTransfer;
     }
 
@@ -452,7 +452,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (int256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:453]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:455]");
         return proposals[index - 1].amounts.stage;
     }
 
@@ -466,7 +466,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (int256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:467]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:469]");
         return proposals[index - 1].amounts.targetBalance;
     }
 
@@ -480,7 +480,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (bytes32)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:481]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:483]");
         return proposals[index - 1].challenged.hash;
     }
 
@@ -494,7 +494,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (string memory)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:495]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:497]");
         return proposals[index - 1].challenged.kind;
     }
 
@@ -508,7 +508,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (bool)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:509]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:511]");
         return proposals[index - 1].walletInitiated;
     }
 
@@ -522,7 +522,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (address)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:523]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:525]");
         return proposals[index - 1].disqualification.challenger;
     }
 
@@ -536,7 +536,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:537]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:539]");
         return proposals[index - 1].disqualification.nonce;
     }
 
@@ -550,7 +550,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (uint256)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:551]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:553]");
         return proposals[index - 1].disqualification.blockNumber;
     }
 
@@ -564,7 +564,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (bytes32)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:565]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:567]");
         return proposals[index - 1].disqualification.candidate.hash;
     }
 
@@ -578,7 +578,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
     returns (string memory)
     {
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
-        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:579]");
+        require(0 != index, "No proposal found for wallet and currency [DriipSettlementChallengeState.sol:581]");
         return proposals[index - 1].disqualification.candidate.kind;
     }
 
@@ -591,7 +591,7 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
         // Require that proposal has not been initialized/upgraded already
         require(
             0 == proposalIndexByWalletNonceCurrency[proposal.wallet][proposal.nonce][proposal.currency.ct][proposal.currency.id],
-            "Proposal exists for wallet, nonce and currency"
+            "Proposal exists for wallet, nonce and currency [DriipSettlementChallengeState.sol:592]"
         );
 
         // Push the settlement
@@ -619,12 +619,12 @@ contract DriipSettlementChallengeState is Ownable, Servable, Configurable, Upgra
         // Require that there is no other proposal on the given wallet-nonce-currency triplet
         require(
             0 == proposalIndexByWalletNonceCurrency[wallet][nonce][currency.ct][currency.id],
-            "Existing proposal found for wallet, nonce and currency [DriipSettlementChallengeState.sol:592]"
+            "Existing proposal found for wallet, nonce and currency [DriipSettlementChallengeState.sol:620]"
         );
 
         // Require that stage and target balance amounts are positive
-        require(stageAmount.isPositiveInt256(), "Stage amount not positive [DriipSettlementChallengeState.sol:598]");
-        require(targetBalanceAmount.isPositiveInt256(), "Target balance amount not positive [DriipSettlementChallengeState.sol:599]");
+        require(stageAmount.isPositiveInt256(), "Stage amount not positive [DriipSettlementChallengeState.sol:626]");
+        require(targetBalanceAmount.isPositiveInt256(), "Target balance amount not positive [DriipSettlementChallengeState.sol:627]");
 
         uint256 index = proposalIndexByWalletCurrency[wallet][currency.ct][currency.id];
 

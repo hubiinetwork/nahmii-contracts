@@ -108,7 +108,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     view
     returns (DriipSettlementTypesLib.Settlement memory)
     {
-        require(walletSettlementIndices[wallet].length > index, "Index out of bounds [DriipSettlementState.sol:113]");
+        require(walletSettlementIndices[wallet].length > index, "Index out of bounds [DriipSettlementState.sol:111]");
         return settlements[walletSettlementIndices[wallet][index] - 1];
     }
 
@@ -121,7 +121,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     view
     returns (DriipSettlementTypesLib.Settlement memory)
     {
-        require(0 != walletNonceSettlementIndex[wallet][nonce], "No settlement found for wallet and nonce [DriipSettlementState.sol:126]");
+        require(0 != walletNonceSettlementIndex[wallet][nonce], "No settlement found for wallet and nonce [DriipSettlementState.sol:124]");
         return settlements[walletNonceSettlementIndex[wallet][nonce] - 1];
     }
 
@@ -183,7 +183,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         uint256 index = walletNonceSettlementIndex[wallet][nonce];
 
         // Require the existence of settlement
-        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:187]");
+        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:186]");
 
         // Get the settlement party
         DriipSettlementTypesLib.SettlementParty storage party =
@@ -440,11 +440,11 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         // Require that settlement has not been initialized/upgraded already
         require(
             0 == walletNonceSettlementIndex[settlement.origin.wallet][settlement.origin.nonce],
-            "Settlement exists for origin wallet and nonce [DriipSettlementState.sol:463]"
+            "Settlement exists for origin wallet and nonce [DriipSettlementState.sol:443]"
         );
         require(
             0 == walletNonceSettlementIndex[settlement.target.wallet][settlement.target.nonce],
-            "Settlement exists for target wallet and nonce [DriipSettlementState.sol:464]"
+            "Settlement exists for target wallet and nonce [DriipSettlementState.sol:447]"
         );
 
         // Push the settlement
