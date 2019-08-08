@@ -659,10 +659,10 @@ module.exports = (glob) => {
                             settlement.settledHash.should.equal(payment.seals.operator.hash);
                             settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                             settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                            settlement.origin.done.should.be.true;
+                            settlement.origin.doneBlockNumber._bn.should.eq.BN(await provider.getBlockNumber());
                             settlement.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
                             settlement.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
-                            settlement.target.done.should.be.false;
+                            settlement.target.doneBlockNumber._bn.should.eq.BN(0);
 
                             (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                     payment.sender.wallet, payment.currency)
@@ -742,10 +742,10 @@ module.exports = (glob) => {
                             settlement.settledHash.should.equal(payment.seals.operator.hash);
                             settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                             settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                            settlement.origin.done.should.be.true;
+                            settlement.origin.doneBlockNumber._bn.should.eq.BN(await provider.getBlockNumber());
                             settlement.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
                             settlement.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
-                            settlement.target.done.should.be.false;
+                            settlement.target.doneBlockNumber._bn.should.eq.BN(0);
 
                             (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                     payment.sender.wallet, payment.currency)
@@ -827,10 +827,10 @@ module.exports = (glob) => {
                             settlement.settledHash.should.equal(payment.seals.operator.hash);
                             settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                             settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                            settlement.origin.done.should.be.true;
+                            settlement.origin.doneBlockNumber._bn.should.eq.BN(await provider.getBlockNumber());
                             settlement.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
                             settlement.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
-                            settlement.target.done.should.be.false;
+                            settlement.target.doneBlockNumber._bn.should.eq.BN(0);
 
                             (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                     payment.sender.wallet, payment.currency)
@@ -1081,10 +1081,10 @@ module.exports = (glob) => {
                             settlement.settledHash.should.equal(payment.seals.operator.hash);
                             settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                             settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                            settlement.origin.done.should.be.true;
+                            settlement.origin.doneBlockNumber._bn.should.eq.BN(await provider.getBlockNumber());
                             settlement.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
                             settlement.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
-                            settlement.target.done.should.be.false;
+                            settlement.target.doneBlockNumber._bn.should.eq.BN(0);
 
                             (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                     payment.sender.wallet, payment.currency)
@@ -1164,10 +1164,10 @@ module.exports = (glob) => {
                             settlement.settledHash.should.equal(payment.seals.operator.hash);
                             settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                             settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                            settlement.origin.done.should.be.true;
+                            settlement.origin.doneBlockNumber._bn.should.eq.BN(await provider.getBlockNumber());
                             settlement.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
                             settlement.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
-                            settlement.target.done.should.be.false;
+                            settlement.target.doneBlockNumber._bn.should.eq.BN(0);
 
                             (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                     payment.sender.wallet, payment.currency)
@@ -1249,10 +1249,10 @@ module.exports = (glob) => {
                             settlement.settledHash.should.equal(payment.seals.operator.hash);
                             settlement.origin.nonce._bn.should.eq.BN(payment.sender.nonce._bn);
                             settlement.origin.wallet.should.equal(utils.getAddress(payment.sender.wallet));
-                            settlement.origin.done.should.be.true;
+                            settlement.origin.doneBlockNumber._bn.should.eq.BN(await provider.getBlockNumber());
                             settlement.target.nonce._bn.should.eq.BN(payment.recipient.nonce._bn);
                             settlement.target.wallet.should.equal(utils.getAddress(payment.recipient.wallet));
-                            settlement.target.done.should.be.false;
+                            settlement.target.doneBlockNumber._bn.should.eq.BN(0);
 
                             (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                     payment.sender.wallet, payment.currency)

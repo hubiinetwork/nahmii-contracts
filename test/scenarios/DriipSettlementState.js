@@ -406,7 +406,7 @@ module.exports = (glob) => {
                 });
 
                 describe('if called with true as done value', () => {
-                    it('should successfully set done of origin role and update its done block number', async () => {
+                    it('should successfully update its done block number', async () => {
                         await ethersDriipSettlementState.completeSettlementParty(
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
                         );
@@ -451,7 +451,7 @@ module.exports = (glob) => {
                         );
                     });
 
-                    it('should successfully set done of origin role and update its done block number', async () => {
+                    it('should successfully reset its done block number', async () => {
                         await ethersDriipSettlementState.completeSettlementParty(
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), false
                         );
@@ -503,7 +503,7 @@ module.exports = (glob) => {
                 });
 
                 describe('if called with true as done value', () => {
-                    it('should successfully set done of target role and update its done block number', async () => {
+                    it('should successfully update its done block number', async () => {
                         await ethersDriipSettlementState.completeSettlementParty(
                             glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), true
                         );
@@ -548,7 +548,7 @@ module.exports = (glob) => {
                         );
                     });
 
-                    it('should successfully set done of target role and update its done block number', async () => {
+                    it('should successfully reset its done block number', async () => {
                         await ethersDriipSettlementState.completeSettlementParty(
                             glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), false
                         );
@@ -871,11 +871,9 @@ module.exports = (glob) => {
                     settlement.settledHash.should.equal(mocks.hash1);
                     settlement.origin.nonce._bn.should.eq.BN(1);
                     settlement.origin.wallet.should.equal(utils.getAddress(glob.user_a));
-                    settlement.origin.done.should.be.true;
                     settlement.origin.doneBlockNumber._bn.should.be.eq.BN(100);
                     settlement.target.nonce._bn.should.eq.BN(2);
                     settlement.target.wallet.should.equal(utils.getAddress(glob.user_b));
-                    settlement.target.done.should.be.false;
                     settlement.target.doneBlockNumber._bn.should.be.eq.BN(200);
                 });
             });

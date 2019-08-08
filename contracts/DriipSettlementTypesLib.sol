@@ -22,7 +22,6 @@ library DriipSettlementTypesLib {
     struct SettlementParty {
         uint256 nonce;
         address wallet;
-        bool done;
         uint256 doneBlockNumber;
     }
 

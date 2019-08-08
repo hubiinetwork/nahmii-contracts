@@ -658,10 +658,10 @@ module.exports = (glob) => {
                         settlement.settledHash.should.equal(trade.seal.hash);
                         settlement.origin.nonce._bn.should.eq.BN(trade.seller.nonce._bn);
                         settlement.origin.wallet.should.equal(utils.getAddress(trade.seller.wallet));
-                        settlement.origin.done.should.be.false;
+                        settlement.origin.doneBlockNumber._bn.should.eq.BN(0);
                         settlement.target.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                         settlement.target.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
-                        settlement.target.done.should.be.true;
+                        settlement.target.doneBlockNumber._bn.should.eq.BN(await provider.getBlockNumber());
 
                         (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                 trade.buyer.wallet, trade.currencies.intended)
@@ -932,10 +932,10 @@ module.exports = (glob) => {
                         settlement.settledHash.should.equal(trade.seal.hash);
                         settlement.origin.nonce._bn.should.eq.BN(trade.seller.nonce._bn);
                         settlement.origin.wallet.should.equal(utils.getAddress(trade.seller.wallet));
-                        settlement.origin.done.should.be.false;
+                        settlement.origin.doneBlockNumber._bn.should.eq.BN(0);
                         settlement.target.nonce._bn.should.eq.BN(trade.buyer.nonce._bn);
                         settlement.target.wallet.should.equal(utils.getAddress(trade.buyer.wallet));
-                        settlement.target.done.should.be.true;
+                        settlement.target.doneBlockNumber._bn.should.eq.BN(await provider.getBlockNumber());
 
                         (await ethersDriipSettlementState.maxNonceByWalletAndCurrency(
                                 trade.buyer.wallet, trade.currencies.intended)

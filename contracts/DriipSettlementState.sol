@@ -60,7 +60,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
     // -----------------------------------------------------------------------------------------------------------------
     event InitSettlementEvent(DriipSettlementTypesLib.Settlement settlement);
     event CompleteSettlementPartyEvent(address wallet, uint256 nonce, DriipSettlementTypesLib.SettlementRole settlementRole,
-        bool done, uint256 doneBlockNumber);
+        uint256 doneBlockNumber);
     event SetMaxDriipNonceEvent(uint256 maxDriipNonce);
     event UpdateMaxDriipNonceFromCommunityVoteEvent(uint256 maxDriipNonce);
     event SetMaxNonceByWalletAndCurrencyEvent(address wallet, MonetaryTypesLib.Currency currency,
@@ -192,12 +192,11 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         settlements[index - 1].origin :
         settlements[index - 1].target;
 
-        // Update party done and done block number properties
-        party.done = done;
+        // Update party done block number
         party.doneBlockNumber = done ? block.number : 0;
 
         // Emit event
-        emit CompleteSettlementPartyEvent(wallet, nonce, settlementRole, done, party.doneBlockNumber);
+        emit CompleteSettlementPartyEvent(wallet, nonce, settlementRole, party.doneBlockNumber);
     }
 
     /// @notice Gauge whether the settlement is done wrt the given wallet and nonce
@@ -216,11 +215,11 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         if (0 == index)
             return false;
 
-        // Return done
+        // Return done status
         return (
         wallet == settlements[index - 1].origin.wallet ?
-        settlements[index - 1].origin.done :
-        settlements[index - 1].target.done
+        0 != settlements[index - 1].origin.doneBlockNumber :
+        0 != settlements[index - 1].target.doneBlockNumber
         );
     }
 
@@ -251,8 +250,8 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         // Require that wallet is party of the right role
         require(wallet == settlementParty.wallet, "Wallet has wrong settlement role [DriipSettlementState.sol:252]");
 
-        // Return done
-        return settlementParty.done;
+        // Return done status
+        return 0 != settlementParty.doneBlockNumber;
     }
 
     /// @notice Get the done block number of the settlement party with the given wallet and nonce
@@ -451,8 +450,8 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
 
     /// @notice Upgrade settlement from other driip settlement state instance
     function upgradeSettlement(string memory settledKind, bytes32 settledHash,
-        address originWallet, uint256 originNonce, bool originDone, uint256 originDoneBlockNumber,
-        address targetWallet, uint256 targetNonce, bool targetDone, uint256 targetDoneBlockNumber)
+        address originWallet, uint256 originNonce, bool /*originDone*/, uint256 originDoneBlockNumber,
+        address targetWallet, uint256 targetNonce, bool /*targetDone*/, uint256 targetDoneBlockNumber)
     public
     onlyDeployer
     {
@@ -474,11 +473,9 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable {
         settlements[index].settledHash = settledHash;
         settlements[index].origin.nonce = originNonce;
         settlements[index].origin.wallet = originWallet;
-        settlements[index].origin.done = originDone;
         settlements[index].origin.doneBlockNumber = originDoneBlockNumber;
         settlements[index].target.nonce = targetNonce;
         settlements[index].target.wallet = targetWallet;
-        settlements[index].target.done = targetDone;
         settlements[index].target.doneBlockNumber = targetDoneBlockNumber;
 
         // Emit event
