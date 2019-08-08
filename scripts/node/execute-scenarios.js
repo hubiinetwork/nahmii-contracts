@@ -6,7 +6,10 @@ const debug = require('debug')('execute-scenarios');
 
 const rootDir = 'state';
 
+const settlementChallengeTimeout = parseInt(process.env.SETTLEMENT_CHALLENGE_TIMEOUT) || 60 * 60 * 24 * 5;
+
 const bn0 = new BN('0');
+const hash0 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
 function key(...entries) {
     let _entries = [];
@@ -310,7 +313,7 @@ class AllocatedCurrency {
 const configuration = new (class Configuration {
 
     getSettlementChallengeTimeout() {
-        return 60 * 60 * 24 * 5;
+        return settlementChallengeTimeout
     }
 });
 
@@ -475,18 +478,26 @@ const driipSettlementChallengeState = new (class DriipSettlementChallengeState {
             referenceBlockNumber,
             definitionBlockNumber,
             expirationTime: definitionTimestamp + configuration.getSettlementChallengeTimeout(),
-            status: 1,
-            currency,
+            status: 0,
             amounts: {
                 cumulativeTransfer: cumulativeTransferAmount,
                 stage: stageAmount,
                 targetBalance: targetBalanceAmount
             },
+            currency,
+            challenged: {
+                kind: 'payment',
+                hash: challengedHash
+            },
             walletInitiated: true,
             terminated: false,
-            challenged: {
-                hash: challengedHash,
-                kind: 'payment'
+            disqualification: {
+                nonce: 0,
+                blockNumber: 0,
+                candidate: {
+                    kind: '',
+                    hash: hash0
+                }
             }
         };
 
@@ -594,13 +605,27 @@ const nullSettlementChallengeState = new (class NullSettlementChallengeState {
             referenceBlockNumber,
             definitionBlockNumber,
             expirationTime: definitionTimestamp + configuration.getSettlementChallengeTimeout(),
-            status: 1,
-            currency,
+            status: 0,
             amounts: {
+                cumulativeTransfer: bn0,
                 stage: stageAmount,
                 targetBalance: targetBalanceAmount
             },
-            terminated: false
+            currency,
+            challenged: {
+                kind: '',
+                hash: hash0
+            },
+            walletInitiated: true,
+            terminated: false,
+            disqualification: {
+                nonce: 0,
+                blockNumber: 0,
+                candidate: {
+                    kind: '',
+                    hash: hash0
+                }
+            }
         };
 
         let index = this.proposalIndexByWalletCurrency.has(walletCurrencyKey) ?
@@ -688,13 +713,11 @@ const driipSettlementState = new (class DriipSettlementState {
                 origin: {
                     nonce: originNonce,
                     wallet: originWallet,
-                    done: false,
                     doneBlockNumber: 0
                 },
                 target: {
                     nonce: targetNonce,
                     wallet: targetWallet,
-                    done: false,
                     doneBlockNumber: 0
                 }
             });
@@ -721,7 +744,6 @@ const driipSettlementState = new (class DriipSettlementState {
 
         const settlementParty = wallet === settlement.origin.wallet ? settlement.origin : settlement.target;
 
-        settlementParty.done = true;
         settlementParty.doneBlockNumber = done ? doneBlockNumber : 0;
     }
 
