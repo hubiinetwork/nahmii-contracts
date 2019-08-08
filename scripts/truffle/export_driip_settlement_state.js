@@ -17,7 +17,7 @@ let web3DriipSettlementState, ethersDriipSettlementState;
     ethersDriipSettlementState = new Contract(web3DriipSettlementState.address, DriipSettlementState.abi, provider);
 })();
 
-const outDir = 'state/DriipSettlementState';
+const outDir = 'state/export/DriipSettlementState';
 const fromBlock = 0;
 
 const iface = new utils.Interface(DriipSettlementState.abi);
@@ -37,13 +37,11 @@ async function exportSettlements() {
             origin: {
                 nonce: d.origin.nonce.toNumber(),
                 wallet: d.origin.wallet,
-                done: d.origin.done,
                 doneBlockNumber: d.origin.doneBlockNumber.toNumber()
             },
             target: {
                 nonce: d.target.nonce.toNumber(),
                 wallet: d.target.wallet,
-                done: d.target.done,
                 doneBlockNumber: d.target.doneBlockNumber.toNumber()
             }
         })

@@ -17,7 +17,7 @@ let web3DriipSettlementChallengeState, ethersDriipSettlementChallengeState;
     ethersDriipSettlementChallengeState = new Contract(web3DriipSettlementChallengeState.address, DriipSettlementChallengeState.abi, provider);
 })();
 
-const outDir = 'state/DriipSettlementChallengeState';
+const outDir = 'state/export/DriipSettlementChallengeState';
 const fromBlock = 0;
 
 // const coder = new utils.AbiCoder();
@@ -235,17 +235,17 @@ module.exports = async (callback) => {
         // Proposals
         await exportProposals();
 
-        // Initiated proposals
-        await exportInitiatedProposals();
-
-        // Terminated proposals
-        await exportTerminatedProposals();
-
-        // Removed proposals
-        await exportRemovedProposals();
-
-        // Disqualified proposals
-        await exportDisqualifiedProposals();
+        // // Initiated proposals
+        // await exportInitiatedProposals();
+        //
+        // // Terminated proposals
+        // await exportTerminatedProposals();
+        //
+        // // Removed proposals
+        // await exportRemovedProposals();
+        //
+        // // Disqualified proposals
+        // await exportDisqualifiedProposals();
 
     } catch (e) {
         callback(e);
