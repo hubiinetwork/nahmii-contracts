@@ -934,13 +934,13 @@ const driipSettlementChallengeByPayment = new (class DriipSettlementChallengeByP
 
         let correctedCumulativeTransferAmount;
         if (validator.isPaymentSender(step.ref, step.wallet))
-            correctedCumulativeTransferAmount = activeBalanceAmountAtPaymentBlock
-                .sub(step.ref.sender.balances.current)
-                .add(deltaSettledBalanceAmount);
+            correctedCumulativeTransferAmount = step.ref.sender.balances.current
+                .sub(activeBalanceAmountAtPaymentBlock)
+                .sub(deltaSettledBalanceAmount);
         else
-            correctedCumulativeTransferAmount = activeBalanceAmountAtPaymentBlock
-                .sub(step.ref.recipient.balances.current)
-                .add(deltaSettledBalanceAmount);
+            correctedCumulativeTransferAmount = step.ref.recipient.balances.current
+                .sub(activeBalanceAmountAtPaymentBlock)
+                .sub(deltaSettledBalanceAmount);
 
         const currentActiveBalanceAmount = clientFund.getActiveBalanceAmount(
             step.wallet, step.data.currency
@@ -948,7 +948,7 @@ const driipSettlementChallengeByPayment = new (class DriipSettlementChallengeByP
 
         driipSettlementChallengeState.initiateProposal(
             step.wallet, step.data.nonce, correctedCumulativeTransferAmount, step.data.stageAmount,
-            currentActiveBalanceAmount.sub(correctedCumulativeTransferAmount.add(step.data.stageAmount)),
+            currentActiveBalanceAmount.add(correctedCumulativeTransferAmount.sub(step.data.stageAmount)),
             step.data.currency, step.ref.blockNumber, step.ref.seals.operator.hash,
             step.blockNumber, step.blockTimestamp
         )
@@ -992,9 +992,8 @@ const driipSettlementByPayment = new (class DriipSettlementByPayment {
             step.wallet, correctedPaymentBalanceAmount, step.data.currency, step.blockNumber
         );
 
-        // TODO Solve the use of step.data.blockNumber or step.blockNumber as last parameter
         driipSettlementState.addSettledAmountByBlockNumber(
-            step.wallet, settleAmount, step.data.currency, step.data.blockNumber, /*step.data.blockNumber*/ step.blockNumber
+            step.wallet, settleAmount, step.data.currency, step.data.blockNumber, step.blockNumber
         );
 
         const proposal = driipSettlementChallengeState.getProposal(step.wallet, step.data.currency);
@@ -1035,8 +1034,8 @@ const nullSettlementChallengeByPayment = new (class NullSettlementChallengeByPay
 
         nullSettlementChallengeState.initiateProposal(
             step.wallet, nonce, step.data.stageAmount,
-            currentActiveBalanceAmount.sub(
-                dscCumulativeTransferAmount.add(dscStageAmount).add(step.data.stageAmount)
+            currentActiveBalanceAmount.add(
+                dscCumulativeTransferAmount.sub(dscStageAmount).sub(step.data.stageAmount)
             ),
             step.data.currency, currentActiveBalanceBlockNumber,
             step.blockNumber, step.blockTimestamp

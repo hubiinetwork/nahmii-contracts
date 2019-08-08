@@ -11,7 +11,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-1381935930370884298384",
+      "cumulativeTransfer": "1381935930370884298384",
       "stage": "1000000000000000",
       "targetBalance": "1381934930370884298384"
     },
@@ -34,7 +34,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-1000000000000000000000",
+      "cumulativeTransfer": "1000000000000000000000",
       "stage": "999999999999999999900",
       "targetBalance": "1000"
     },
@@ -57,7 +57,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-14650608013966569496",
+      "cumulativeTransfer": "14650608013966569496",
       "stage": "1465000000000000000",
       "targetBalance": "13185608013966569496"
     },
@@ -80,7 +80,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-433599947686682604427",
+      "cumulativeTransfer": "433599947686682604427",
       "stage": "10000000000000000000",
       "targetBalance": "423599947686682604427"
     },
@@ -103,7 +103,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-999999999000000000000",
+      "cumulativeTransfer": "999999999000000000000",
       "stage": "1000000000000000000000",
       "targetBalance": "25153834160836163836169"
     },
@@ -126,7 +126,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-1509168465009579509182",
+      "cumulativeTransfer": "1509168465009579509182",
       "stage": "1000000000000000",
       "targetBalance": "1509167465009579509182"
     },
@@ -149,7 +149,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-7589343545554329092614",
+      "cumulativeTransfer": "7589343545554329092614",
       "stage": "100000000000000000",
       "targetBalance": "7589243545554329092614"
     },
@@ -172,7 +172,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-22839106134917531498",
+      "cumulativeTransfer": "22839106134917531498",
       "stage": "200000000000000000000",
       "targetBalance": "136393027413088327885"
     },
@@ -195,7 +195,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "35085000000000000",
+      "cumulativeTransfer": "-35085000000000000",
       "stage": "32000000000000000",
       "targetBalance": "32915000000000000"
     },
@@ -218,7 +218,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-34908929199254574723",
+      "cumulativeTransfer": "34908929199254574723",
       "stage": "17400000000000000000",
       "targetBalance": "17508929199254574723"
     },
@@ -241,7 +241,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-10012213803116833945266",
+      "cumulativeTransfer": "10012213803116833945266",
       "stage": "5000000000000000000000",
       "targetBalance": "5012213803116833945266"
     },
@@ -264,7 +264,7 @@
       "id": 0
     },
     "amounts": {
-      "cumulativeTransfer": "-46222123442097575929",
+      "cumulativeTransfer": "46222123442097575929",
       "stage": "5000000000000000",
       "targetBalance": "46217123442097575929"
     },
