@@ -525,7 +525,7 @@ BalanceTrackable {
         driipSettlementChallengeState.initiateProposal(
             wallet, nonce, correctedCumulativeTransferAmount, stageAmount,
             balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency)
-            .sub(correctedCumulativeTransferAmount.add(stageAmount)),
+            .add(correctedCumulativeTransferAmount.sub(stageAmount)),
             payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
@@ -557,7 +557,7 @@ BalanceTrackable {
     returns (uint256 nonce, int256 correctedCumulativeTransferAmount)
     {
         // Obtain the active balance amount at the payment block
-        int256 balanceAmountAtPaymentBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+        int256 activeBalanceAmountAtPaymentBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
             wallet, payment.currency, payment.blockNumber
         );
 
@@ -570,14 +570,14 @@ BalanceTrackable {
         // Correct the cumulative transfer amount by the amount that has already been settled
         if (validator.isPaymentSender(payment, wallet)) {
             nonce = payment.sender.nonce;
-            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock // TODO Consider reverting sign of cumulative transfer amount
-            .sub(payment.sender.balances.current)
-            .add(deltaSettledBalanceAmount);
+            correctedCumulativeTransferAmount = payment.sender.balances.current
+            .sub(activeBalanceAmountAtPaymentBlock)
+            .sub(deltaSettledBalanceAmount);
         } else {
             nonce = payment.recipient.nonce;
-            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock // TODO Consider reverting sign of cumulative transfer amount
-            .sub(payment.recipient.balances.current)
-            .add(deltaSettledBalanceAmount);
+            correctedCumulativeTransferAmount = payment.recipient.balances.current
+            .sub(activeBalanceAmountAtPaymentBlock)
+            .sub(deltaSettledBalanceAmount);
         }
     }
 }

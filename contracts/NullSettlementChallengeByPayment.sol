@@ -463,11 +463,11 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
 
         // Initiate proposal, including assurance that there is no overlap with active proposal
-        // Target balance amount is calculated as current balance - DSC cumulativeTransferAmount - DSC stage amount - NSC stageAmount
+        // Target balance amount is calculated as current balance + DSC cumulativeTransferAmount - DSC stage amount - NSC stageAmount
         nullSettlementChallengeState.initiateProposal(
             wallet, nonce, stageAmount,
-            currentActiveBalanceAmount.sub(
-                dscCumulativeTransferAmount.add(dscStageAmount).add(stageAmount)
+            currentActiveBalanceAmount.add(
+                dscCumulativeTransferAmount.sub(dscStageAmount).sub(stageAmount)
             ),
             currency,
             currentActiveBalanceBlockNumber, walletInitiated
@@ -491,11 +491,11 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
     private
     view
     returns (
-        int256 activeBalanceAmount, uint256 activeBalanceBlockNumber,
+        int256 currentActiveBalanceAmount, uint256 currentActiveBalanceBlockNumber,
         int256 dscCumulativeTransferAmount, int256 dscStageAmount,
         uint256 nonce
     ) {
-        (activeBalanceAmount, activeBalanceBlockNumber) = balanceTracker.fungibleActiveRecord(
+        (currentActiveBalanceAmount, currentActiveBalanceBlockNumber) = balanceTracker.fungibleActiveRecord(
             wallet, currency
         );
 

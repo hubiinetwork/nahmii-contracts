@@ -162,26 +162,25 @@ BalanceTrackable, FraudChallengable, Servable {
         );
 
         // Get the change in active balance since the start of the challenge
-        int256 deltaBalanceSinceStart = balanceTracker.fungibleActiveBalanceAmount(
-            wallet, payment.currency
-        ).sub(
-            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
-                wallet, payment.currency,
-                driipSettlementChallengeState.proposalReferenceBlockNumber(wallet, payment.currency)
-            )
+        int256 deltaBalanceAmountSinceStart = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
+            wallet, payment.currency,
+            driipSettlementChallengeState.proposalReferenceBlockNumber(wallet, payment.currency),
+            block.number
         );
 
         // Get the cumulative transfer of the payment
-        int256 paymentCumulativeTransfer = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
-            wallet, payment.currency, payment.blockNumber
-        ).sub(payment.sender.balances.current);
+        int256 paymentCumulativeTransferAmount = payment.sender.balances.current.sub(
+            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+                wallet, payment.currency, payment.blockNumber
+            )
+        );
 
         // Get the cumulative transfer of the proposal (i.e. of challenged payment)
-        int proposalCumulativeTransfer = driipSettlementChallengeState.proposalCumulativeTransferAmount(
+        int proposalCumulativeTransferAmount = driipSettlementChallengeState.proposalCumulativeTransferAmount(
             wallet, payment.currency
         );
 
-        return targetBalanceAmount.add(deltaBalanceSinceStart) < paymentCumulativeTransfer.sub(proposalCumulativeTransfer);
+        return targetBalanceAmount.add(deltaBalanceAmountSinceStart) < proposalCumulativeTransferAmount.sub(paymentCumulativeTransferAmount);
     }
 
     // Lock wallet's balances or reward challenger by stake fraction
