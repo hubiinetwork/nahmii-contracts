@@ -850,7 +850,7 @@ module.exports = (glob) => {
 
                 describe('if wallet has already settled this payment', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                        await ethersDriipSettlementState.completeSettlement(
                             payment.sender.wallet, payment.sender.nonce, mocks.settlementRoles.indexOf('Origin'), true
                         );
                     });
@@ -1272,7 +1272,7 @@ module.exports = (glob) => {
 
                 describe('if wallet has already settled this payment', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                        await ethersDriipSettlementState.completeSettlement(
                             payment.sender.wallet, payment.sender.nonce, mocks.settlementRoles.indexOf('Origin'), true
                         );
                     });

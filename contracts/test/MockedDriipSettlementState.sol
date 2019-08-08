@@ -58,7 +58,7 @@ contract MockedDriipSettlementState {
         settlements[index].target.wallet = targetWallet;
     }
 
-    function completeSettlementParty(address, uint256,
+    function completeSettlement(address, uint256,
         DriipSettlementTypesLib.SettlementRole settlementRole,
         bool done)
     public

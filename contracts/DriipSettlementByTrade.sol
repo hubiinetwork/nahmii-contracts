@@ -283,7 +283,7 @@ FraudChallengable, WalletLockable {
         );
 
         // Set wallet's completion of this trade to prevent the same settlement from being resettled by this wallet
-        driipSettlementState.completeSettlementParty(
+        driipSettlementState.completeSettlement(
             wallet, party.nonce, settlementRole, true
         );
 

@@ -292,7 +292,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
                 _stageFees(wallet, totalFees, revenueFund, nonce, standard);
 
             // Complete settlement of party
-            driipSettlementState.completeSettlementParty(
+            driipSettlementState.completeSettlement(
                 wallet, nonce, settlementRole, true
             );
         }

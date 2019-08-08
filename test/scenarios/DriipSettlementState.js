@@ -414,7 +414,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('completeSettlementParty()', () => {
+        describe('completeSettlement()', () => {
             let filter;
 
             beforeEach(async () => {
@@ -431,7 +431,7 @@ module.exports = (glob) => {
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.completeSettlementParty(
+                    ethersDriipSettlementState.completeSettlement(
                         glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
                     ).should.be.rejected
                 });
@@ -440,7 +440,7 @@ module.exports = (glob) => {
             describe('if called with origin role', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementState.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementState.SET_SETTLEMENT_ROLE_DONE_ACTION(),
+                        glob.owner, await ethersDriipSettlementState.COMPLETE_SETTLEMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
@@ -451,7 +451,7 @@ module.exports = (glob) => {
 
                 describe('if called with true as done value', () => {
                     it('should successfully update its done block number', async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
                         );
 
@@ -490,13 +490,13 @@ module.exports = (glob) => {
 
                 describe('if called with false as done value', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
                         );
                     });
 
                     it('should successfully reset its done block number', async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), false
                         );
 
@@ -537,7 +537,7 @@ module.exports = (glob) => {
             describe('if called with target role', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementState.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementState.SET_SETTLEMENT_ROLE_DONE_ACTION(),
+                        glob.owner, await ethersDriipSettlementState.COMPLETE_SETTLEMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
@@ -548,7 +548,7 @@ module.exports = (glob) => {
 
                 describe('if called with true as done value', () => {
                     it('should successfully update its done block number', async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), true
                         );
 
@@ -587,13 +587,13 @@ module.exports = (glob) => {
 
                 describe('if called with false as done value', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), true
                         );
                     });
 
                     it('should successfully reset its done block number', async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), false
                         );
 

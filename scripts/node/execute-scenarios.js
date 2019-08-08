@@ -712,7 +712,7 @@ const driipSettlementState = new (class DriipSettlementState {
         }
     }
 
-    completeSettlementParty(wallet, nonce, /*role,*/ done, doneBlockNumber) {
+    completeSettlement(wallet, nonce, /*role,*/ done, doneBlockNumber) {
         const k = key(wallet, nonce);
 
         assert(this.walletNonceSettlementIndex.has(k), `Non-existent settlement for ${walletNonceKey(wallet, nonce)}`);
@@ -1002,7 +1002,7 @@ const driipSettlementByPayment = new (class DriipSettlementByPayment {
         for (let totalFee of totalFees)
             driipSettlementState.setTotalFee(step.wallet, step.data.currency, {nonce, amount: totalFee.figure.amount})
 
-        driipSettlementState.completeSettlementParty(step.wallet, nonce, true, step.blockNumber);
+        driipSettlementState.completeSettlement(step.wallet, nonce, true, step.blockNumber);
 
         driipSettlementChallengeState.terminateProposal(step.wallet, step.data.currency);
     }
