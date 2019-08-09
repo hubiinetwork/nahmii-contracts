@@ -10,6 +10,7 @@ const settlementChallengeTimeout = parseInt(process.env.SETTLEMENT_CHALLENGE_TIM
 
 const bn0 = new BN('0');
 const hash0 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+const address0 = '0x0000000000000000000000000000000000000000';
 
 function key(...entries) {
     let _entries = [];
@@ -492,6 +493,7 @@ const driipSettlementChallengeState = new (class DriipSettlementChallengeState {
             walletInitiated: true,
             terminated: false,
             disqualification: {
+                challenger: address0,
                 nonce: 0,
                 blockNumber: 0,
                 candidate: {
@@ -619,6 +621,7 @@ const nullSettlementChallengeState = new (class NullSettlementChallengeState {
             walletInitiated: true,
             terminated: false,
             disqualification: {
+                challenger: address0,
                 nonce: 0,
                 blockNumber: 0,
                 candidate: {
@@ -775,14 +778,14 @@ const driipSettlementState = new (class DriipSettlementState {
 
     getSettledBlockNumber(wallet, currency, blockNumber) {
         const k = key(wallet, currency);
-        // assert(this.walletSettledBlockNumbers.has(k), `No settled block numbers for ${walletCurrencyKey(wallet, currency)}`);
-        if (!this.walletSettledBlockNumbers.has(k) || 0 === this.walletSettledBlockNumbers.get(k).length)
+
+        if (!this.walletSettledBlockNumbers.has(k))
             return 0;
 
         for (let b of Array.from(this.walletSettledBlockNumbers.get(k)).reverse())
             if (b <= blockNumber)
                 return b;
-        assert.fail(`No settled block number found for ${walletCurrencyKey(wallet, currency)} and ${blockNumber}`);
+        return 0;
     }
 
     // TODO Consider whether this should be called
@@ -1176,9 +1179,9 @@ const stateLogger = new (class StateLogger {
     const scenarios = await parser.parseScenarios(`${rootDir}/scenarios`);
 
     for (const [wallet, steps] of scenarios[Symbol.iterator]())
-        // if ('0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5' == wallet)
+        // if ('0xa79d2291c8245aaa2a71fe660e321db98fb5322d' == wallet)
         steps.forEach(step => {
-            stateLogger.logStateBeforeStep(step);
+            // stateLogger.logStateBeforeStep(step);
             stepExecutor.executeStep(bnUtil.bigNumberifyStep(step));
             stateLogger.logStateAfterStep(step);
         });

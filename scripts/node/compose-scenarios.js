@@ -31,48 +31,59 @@ function byWallet(m, d) {
 function selectPayments(payments, steps) {
     const selected = [];
     steps.forEach(s => {
-        const _p = payments.find(p => (p.sender.wallet == s.wallet && p.sender.nonce == s.data.nonce) ||
+        const p = payments.find(p => (p.sender.wallet == s.wallet && p.sender.nonce == s.data.nonce) ||
             (p.recipient.wallet == s.wallet && p.recipient.nonce == s.data.nonce));
 
-        if (!_p || !_p.blockNumber)
+        if (!p || !p.blockNumber)
             return;
 
-        const p = {
+        const step = {
             wallet: s.wallet,
-            blockNumber: _p.blockNumber,
-            data: _p,
-            action: _p.action
+            blockNumber: p.blockNumber,
+            data: Object.assign({}, p),
+            action: p.action
         };
 
-        if (0 <= selected.findIndex(_p => _p.wallet == p.wallet && _p.blockNumber == p.blockNumber))
-            return;
+        delete step.data.action;
 
-        delete p.data.action;
+        if (!step.data.sender.fees.total.figure.amount)
+            step.data.sender.fees.total.figure.amount = '0';
+        if (!step.data.recipient.fees.total.figure.amount)
+            step.data.recipient.fees.total.figure.amount = '0';
 
-        if (!p.data.sender.fees.total.figure.amount)
-            p.data.sender.fees.total.figure.amount = '0';
-        if (!p.data.recipient.fees.total.figure.amount)
-            p.data.recipient.fees.total.figure.amount = '0';
-
-        selected.push(p);
+        selected.push(step);
     });
     return selected;
 }
 
-function selectReceptions(receptions, steps) {
-    const selected = [];
-    steps.forEach(s => {
-        const r = receptions.find(r => r.wallet == s.wallet);
+function createStepsFromPayments(payments) {
+    const steps = [];
+    payments.forEach(p => {
 
-        if (!r)
-            return;
+        const senderStep = {
+            wallet: p.sender.wallet,
+            blockNumber: p.blockNumber,
+            data: Object.assign({}, p),
+            action: p.action
+        };
 
-        if (0 <= selected.findIndex(_r => _r.wallet == r.wallet && _r.blockNumber == r.blockNumber))
-            return;
+        delete senderStep.data.action;
 
-        selected.push(r);
+        steps.push(senderStep);
+
+        const recipientStep = {
+            wallet: p.recipient.wallet,
+            blockNumber: p.blockNumber,
+            data: Object.assign({}, p),
+            action: p.action
+        };
+
+        delete recipientStep.data.action;
+
+        steps.push(recipientStep);
+
     });
-    return selected;
+    return steps;
 }
 
 function connectPayments(scenarios) {
@@ -81,9 +92,12 @@ function connectPayments(scenarios) {
             if ('start-payment-challenge' != step.action)
                 continue;
 
-            const p = steps.find(s => 'pay' == s.action && wallet == s.wallet && (step.data.nonce == s.data.sender.nonce || step.data.nonce == s.data.recipient.nonce));
+            const p = steps.find(s => 'pay' == s.action && (
+                (wallet == s.data.sender.wallet && step.data.nonce == s.data.sender.nonce) ||
+                (wallet == s.data.recipient.wallet && step.data.nonce == s.data.recipient.nonce)
+            ));
 
-            assert(p);
+            assert(p, `Missing payment for wallet ${wallet} at step ${JSON.stringify(step, null, 2)}`);
 
             step.ref = p.data;
         }
@@ -104,9 +118,9 @@ async function writeScenarios(scenarios) {
         .concat(await parseJSON('DriipSettlementByPayment', 'settle-payment'))
         .concat(await parseJSON('DriipSettlementChallengeByPayment', 'start-payment-challenge'));
 
-    const payments = selectPayments(await parseJSON('offchain', 'pay'), steps);
+    const payments = createStepsFromPayments(await parseJSON('offchain', 'pay'));
 
-    const receptions = selectReceptions(await parseJSON('ClientFund', 'receive'), steps);
+    const receptions = await parseJSON('ClientFund', 'receive');
 
     const scenarios = steps.concat(payments)
         .concat(receptions)
