@@ -47,6 +47,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     DriipSettlementTypesLib.Settlement[] public settlements;
     mapping(address => uint256[]) public walletSettlementIndices;
     mapping(address => mapping(uint256 => uint256)) public walletNonceSettlementIndex;
+
     mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxNonce;
 
     mapping(address => mapping(address => mapping(uint256 => mapping(uint256 => int256)))) public walletSettledAmount;
@@ -69,6 +70,8 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     event SetTotalFeeEvent(address wallet, Beneficiary beneficiary, address destination,
         MonetaryTypesLib.Currency currency, MonetaryTypesLib.NoncedAmount totalFee);
     event UpgradeSettlementEvent(DriipSettlementTypesLib.Settlement settlement);
+    event UpgradeSettledAmountEvent(address wallet, int256 amount, MonetaryTypesLib.Currency currency,
+        uint256 blockNumber);
 
     //
     // Constructor
@@ -460,6 +463,29 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
 
         // Emit event
         emit UpgradeSettlementEvent(settlement);
+    }
+
+    /// @notice Upgrade settled amount
+    /// @param wallet The address of the concerned wallet
+    /// @param amount The new settled amount
+    /// @param currency The concerned currency
+    /// @param blockNumber The concerned block number
+    function upgradeSettledAmount(address wallet, int256 amount, MonetaryTypesLib.Currency memory currency,
+        uint256 blockNumber)
+    public
+    onlyWhenUpgrading
+    {
+        // Require that settlement amount has not been initialized/upgraded already
+        require(0 == walletSettledAmount[wallet][currency.ct][currency.id][blockNumber]);
+
+        // Upgrade the settled amount
+        walletSettledAmount[wallet][currency.ct][currency.id][blockNumber] = amount;
+
+        // Add the block number to the set of settled block numbers
+        walletSettledBlockNumbers[wallet][currency.ct][currency.id].push(blockNumber);
+
+        // Emit event
+        emit UpgradeSettledAmountEvent(wallet, amount, currency, blockNumber);
     }
 
     //
