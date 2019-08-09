@@ -55,7 +55,7 @@ async function exportProposals() {
             walletInitiated: d.walletInitiated,
             terminated: d.terminated,
             disqualification: {
-                challenged: d.disqualification.challenged,
+                challenger: d.disqualification.challenger,
                 nonce: d.disqualification.nonce.toNumber(),
                 blockNumber: d.disqualification.blockNumber.toNumber(),
                 candidate: {
