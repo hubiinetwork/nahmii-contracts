@@ -952,6 +952,68 @@ module.exports = (glob) => {
                 });
             });
         });
+
+        describe('upgradeSettledAmount', () => {
+            describe('if called by non-agent', () => {
+                it('should revert', async () => {
+                    ethersDriipSettlementState.upgradeSettledAmount(
+                        glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called after upgrades have been frozen', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
+                    await ethersDriipSettlementState.freezeUpgrades();
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementState.upgradeSettledAmount(
+                        glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let filter;
+
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
+                    filter = await fromBlockTopicsFilter(
+                        ethersDriipSettlementState.interface.events.UpgradeSettledAmountEvent.topics
+                    );
+                });
+
+                it('should successfully upgrade settled amount', async () => {
+                    await ethersDriipSettlementState.upgradeSettledAmount(
+                        glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    (await ethersDriipSettlementState.settledAmountByBlockNumber(
+                        glob.user_a, {ct: mocks.address0, id: 0}, 1234
+                    ))._bn.should.eq.BN(10);
+                });
+            });
+
+            describe('if upgrading existing settled amount', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
+                    await ethersDriipSettlementState.upgradeSettledAmount(
+                        glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
+                    );
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementState.upgradeSettledAmount(
+                        glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+        });
     });
 };
 
