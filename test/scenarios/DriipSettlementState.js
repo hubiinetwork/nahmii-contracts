@@ -849,7 +849,7 @@ module.exports = (glob) => {
             describe('if called by enabled service action', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementState.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementState.SET_FEE_TOTAL_ACTION(),
+                        glob.owner, await ethersDriipSettlementState.SET_TOTAL_FEE_ACTION(),
                         {gasLimit: 1e6}
                     );
                 });

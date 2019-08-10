@@ -37,7 +37,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     string constant public COMPLETE_SETTLEMENT_ACTION = "complete_settlement";
     string constant public SET_MAX_NONCE_ACTION = "set_max_nonce";
     string constant public ADD_SETTLED_AMOUNT_ACTION = "add_settled_amount";
-    string constant public SET_FEE_TOTAL_ACTION = "set_fee_total";
+    string constant public SET_TOTAL_FEE_ACTION = "set_total_fee";
 
     //
     // Variables
@@ -424,7 +424,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     function setTotalFee(address wallet, Beneficiary beneficiary, address destination,
         MonetaryTypesLib.Currency memory currency, MonetaryTypesLib.NoncedAmount memory _totalFee)
     public
-    onlyEnabledServiceAction(SET_FEE_TOTAL_ACTION)
+    onlyEnabledServiceAction(SET_TOTAL_FEE_ACTION)
     {
         // Update total fees value
         totalFeesMap[wallet][address(beneficiary)][destination][currency.ct][currency.id] = _totalFee;
