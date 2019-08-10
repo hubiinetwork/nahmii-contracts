@@ -50,8 +50,8 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
 
     mapping(address => mapping(address => mapping(uint256 => uint256))) public walletCurrencyMaxNonce;
 
-    mapping(address => mapping(address => mapping(uint256 => mapping(uint256 => int256)))) public walletSettledAmount;
-    mapping(address => mapping(address => mapping(uint256 => uint256[]))) public walletSettledBlockNumbers;
+    mapping(address => mapping(address => mapping(uint256 => mapping(uint256 => int256)))) public walletCurrencyBlockNumberSettledAmount;
+    mapping(address => mapping(address => mapping(uint256 => uint256[]))) public walletCurrencySettledBlockNumbers;
 
     mapping(address => mapping(address => mapping(address => mapping(address => mapping(uint256 => MonetaryTypesLib.NoncedAmount))))) public totalFeesMap;
 
@@ -372,7 +372,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     returns (int256)
     {
         uint256 settledBlockNumber = _walletSettledBlockNumber(wallet, currency, blockNumber);
-        return walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber];
+        return walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber];
     }
 
     /// @notice Add to the settled amount at the given block number
@@ -389,11 +389,11 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         uint256 settledBlockNumber = _walletSettledBlockNumber(wallet, currency, blockNumber);
 
         // Add to the settled amount for the found settled block number
-        walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber] =
-        walletSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber].add(amount);
+        walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber] =
+        walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][settledBlockNumber].add(amount);
 
         // Add the current block number to the set of settled block numbers
-        walletSettledBlockNumbers[wallet][currency.ct][currency.id].push(block.number);
+        walletCurrencySettledBlockNumbers[wallet][currency.ct][currency.id].push(block.number);
 
         // Emit event
         emit AddSettledAmountEvent(wallet, amount, currency, blockNumber);
@@ -476,13 +476,13 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     onlyWhenUpgrading
     {
         // Require that settlement amount has not been initialized/upgraded already
-        require(0 == walletSettledAmount[wallet][currency.ct][currency.id][blockNumber]);
+        require(0 == walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][blockNumber]);
 
         // Upgrade the settled amount
-        walletSettledAmount[wallet][currency.ct][currency.id][blockNumber] = amount;
+        walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][blockNumber] = amount;
 
         // Add the block number to the set of settled block numbers
-        walletSettledBlockNumbers[wallet][currency.ct][currency.id].push(blockNumber);
+        walletCurrencySettledBlockNumbers[wallet][currency.ct][currency.id].push(blockNumber);
 
         // Emit event
         emit UpgradeSettledAmountEvent(wallet, amount, currency, blockNumber);
@@ -497,9 +497,9 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     view
     returns (uint256)
     {
-        for (uint256 i = walletSettledBlockNumbers[wallet][currency.ct][currency.id].length; i > 0; i--)
-            if (walletSettledBlockNumbers[wallet][currency.ct][currency.id][i - 1] <= blockNumber)
-                return walletSettledBlockNumbers[wallet][currency.ct][currency.id][i - 1];
+        for (uint256 i = walletCurrencySettledBlockNumbers[wallet][currency.ct][currency.id].length; i > 0; i--)
+            if (walletCurrencySettledBlockNumbers[wallet][currency.ct][currency.id][i - 1] <= blockNumber)
+                return walletCurrencySettledBlockNumbers[wallet][currency.ct][currency.id][i - 1];
         return 0;
     }
 }

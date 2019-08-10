@@ -697,8 +697,8 @@ const driipSettlementState = new (class DriipSettlementState {
         this.walletSettlementIndices = new Map();
         this.walletNonceSettlementIndex = new Map();
         this.walletCurrencyMaxNonce = new Map();
-        this.walletSettledAmounts = new Map(); // AllocatedDenominatedBlockNumberedDiscreteBN();
-        this.walletSettledBlockNumbers = new Map();
+        this.walletCurrencyBlockNumberSettledAmount = new Map(); // AllocatedDenominatedBlockNumberedDiscreteBN();
+        this.walletCurrencySettledBlockNumbers = new Map();
         this.totalFeesMap = new Map();
     }
 
@@ -758,7 +758,7 @@ const driipSettlementState = new (class DriipSettlementState {
     getSettledAmountAtBlockNumber(wallet, currency, blockNumber) {
         const settledBlockNumber = this.getSettledBlockNumber(wallet, currency, blockNumber);
         const k = key(wallet, currency, settledBlockNumber)
-        return this.walletSettledAmounts.has(k) ? this.walletSettledAmounts.get(k) : bn0;
+        return this.walletCurrencyBlockNumberSettledAmount.has(k) ? this.walletCurrencyBlockNumberSettledAmount.get(k) : bn0;
     }
 
     addSettledAmountByBlockNumber(wallet, amount, currency, prevBlockNumber, currBlockNumber) {
@@ -766,23 +766,23 @@ const driipSettlementState = new (class DriipSettlementState {
 
         const settledKey = key(wallet, currency, settledBlockNumber);
 
-        this.walletSettledAmounts.set(settledKey, amount.add(
-            this.walletSettledAmounts.has(settledKey) ? this.walletSettledAmounts.get(settledKey) : bn0)
+        this.walletCurrencyBlockNumberSettledAmount.set(settledKey, amount.add(
+            this.walletCurrencyBlockNumberSettledAmount.has(settledKey) ? this.walletCurrencyBlockNumberSettledAmount.get(settledKey) : bn0)
         );
 
         const walletCurrencyKey = key(wallet, currency);
-        if (!this.walletSettledBlockNumbers.has(walletCurrencyKey))
-            this.walletSettledBlockNumbers.set(walletCurrencyKey, []);
-        this.walletSettledBlockNumbers.get(walletCurrencyKey).push(currBlockNumber);
+        if (!this.walletCurrencySettledBlockNumbers.has(walletCurrencyKey))
+            this.walletCurrencySettledBlockNumbers.set(walletCurrencyKey, []);
+        this.walletCurrencySettledBlockNumbers.get(walletCurrencyKey).push(currBlockNumber);
     }
 
     getSettledBlockNumber(wallet, currency, blockNumber) {
         const k = key(wallet, currency);
 
-        if (!this.walletSettledBlockNumbers.has(k))
+        if (!this.walletCurrencySettledBlockNumbers.has(k))
             return 0;
 
-        for (let b of Array.from(this.walletSettledBlockNumbers.get(k)).reverse())
+        for (let b of Array.from(this.walletCurrencySettledBlockNumbers.get(k)).reverse())
             if (b <= blockNumber)
                 return b;
         return 0;
@@ -844,7 +844,7 @@ const driipSettlementState = new (class DriipSettlementState {
             JSON.stringify(walletCurrencyMaxNonce, null, 2)
         );
 
-        const walletSettledAmounts = Array.from(this.walletSettledAmounts.entries()).reduce((map, elm) => {
+        const walletCurrencyBlockNumberSettledAmount = Array.from(this.walletCurrencyBlockNumberSettledAmount.entries()).reduce((map, elm) => {
             const [wallet, currencyCt, currencyId, blockNumber] = unkey(elm[0]);
             if (!map[wallet])
                 map[wallet] = {};
@@ -859,11 +859,11 @@ const driipSettlementState = new (class DriipSettlementState {
             return map;
         }, {});
         await fs.writeFile(
-            `${dir}/walletSettledAmounts.json`,
-            JSON.stringify(walletSettledAmounts, null, 2)
+            `${dir}/walletCurrencyBlockNumberSettledAmount.json`,
+            JSON.stringify(walletCurrencyBlockNumberSettledAmount, null, 2)
         );
 
-        const walletSettledBlockNumbers = Array.from(this.walletSettledBlockNumbers.entries()).reduce((map, elm) => {
+        const walletCurrencySettledBlockNumbers = Array.from(this.walletCurrencySettledBlockNumbers.entries()).reduce((map, elm) => {
             const [wallet, currencyCt, currencyId] = unkey(elm[0]);
             if (!map[wallet])
                 map[wallet] = {};
@@ -875,8 +875,8 @@ const driipSettlementState = new (class DriipSettlementState {
             return map;
         }, {});
         await fs.writeFile(
-            `${dir}/walletSettledBlockNumbers.json`,
-            JSON.stringify(walletSettledBlockNumbers, null, 2)
+            `${dir}/walletCurrencySettledBlockNumbers.json`,
+            JSON.stringify(walletCurrencySettledBlockNumbers, null, 2)
         );
 
         const totalFeesMap = Array.from(this.totalFeesMap.entries()).reduce((map, elm) => {

@@ -93,15 +93,15 @@ module.exports = async (callback) => {
                         utils.bigNumberify(walletCurrencyMaxNonce[wallet][currencyCt][currencyId]),
                     );
 
-        const walletSettledAmounts = await parseJSONFromFile(`${stateDir}/DriipSettlementState/walletSettledAmounts.json`);
-        console.log(`> Upgrading ${Object.getOwnPropertyNames(walletSettledAmounts).length} settled amounts by wallet and currency entries`);
-        for (let wallet in walletSettledAmounts)
-            for (let currencyCt in walletSettledAmounts[wallet])
-                for (let currencyId in walletSettledAmounts[wallet][currencyCt])
-                    for (let blockNumber in walletSettledAmounts[wallet][currencyCt][currencyId])
+        const walletCurrencyBlockNumberSettledAmount = await parseJSONFromFile(`${stateDir}/DriipSettlementState/walletCurrencyBlockNumberSettledAmount.json`);
+        console.log(`> Upgrading ${Object.getOwnPropertyNames(walletCurrencyBlockNumberSettledAmount).length} settled amounts by wallet and currency entries`);
+        for (let wallet in walletCurrencyBlockNumberSettledAmount)
+            for (let currencyCt in walletCurrencyBlockNumberSettledAmount[wallet])
+                for (let currencyId in walletCurrencyBlockNumberSettledAmount[wallet][currencyCt])
+                    for (let blockNumber in walletCurrencyBlockNumberSettledAmount[wallet][currencyCt][currencyId])
                         await ethersDriipSettlementState.upgradeSettledAmount(
                             wallet,
-                            utils.bigNumberify(walletSettledAmounts[wallet][currencyCt][currencyId][blockNumber]),
+                            utils.bigNumberify(walletCurrencyBlockNumberSettledAmount[wallet][currencyCt][currencyId][blockNumber]),
                             {
                                 ct: currencyCt,
                                 id: utils.bigNumberify(currencyId)

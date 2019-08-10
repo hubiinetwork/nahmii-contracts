@@ -807,10 +807,6 @@ module.exports = (glob) => {
                     (await ethersDriipSettlementState.settledAmountByBlockNumber(
                         glob.user_a, {ct: mocks.address0, id: 0}, await provider.getBlockNumber()
                     ))._bn.should.eq.BN(0);
-
-                    // TODO Remove
-                    // (await ethersDriipSettlementState.walletSettledBlockNumbers(glob.user_a, mocks.address0, 0, 0))
-                    //     .should.eq.BN(10);
                 });
             });
         });
