@@ -7,132 +7,212 @@ const it = db.getCollection('payments').aggregate({
                 {
                     $or: [
                         {
+                            "sender.wallet": "0x5f2f31d14d9388b07773433a6742885dd0e0c13b",
+                            "sender.nonce": 4
+                        },
+                        {
+                            "recipient.wallet": "0x5f2f31d14d9388b07773433a6742885dd0e0c13b",
+                            "recipient.nonce": 4
+                        },
+                        {
+                            "sender.wallet": "0x473a47d4ae5b86bc5897a8af1c8bea297a1399dc",
+                            "sender.nonce": 1
+                        },
+                        {
+                            "recipient.wallet": "0x473a47d4ae5b86bc5897a8af1c8bea297a1399dc",
+                            "recipient.nonce": 1
+                        },
+                        {
+                            "sender.wallet": "0x473a47d4ae5b86bc5897a8af1c8bea297a1399dc",
+                            "sender.nonce": 2
+                        },
+                        {
+                            "recipient.wallet": "0x473a47d4ae5b86bc5897a8af1c8bea297a1399dc",
+                            "recipient.nonce": 2
+                        },
+                        {
+                            "sender.wallet": "0x7d093b992259ec4eb0d1325a38c2f7a7895eb5c9",
+                            "sender.nonce": 1
+                        },
+                        {
+                            "recipient.wallet": "0x7d093b992259ec4eb0d1325a38c2f7a7895eb5c9",
+                            "recipient.nonce": 1
+                        },
+                        {
+                            "sender.wallet": "0x72f080e99f3dde398aab2c0eb29faac17cc8b8d7",
+                            "sender.nonce": 2
+                        },
+                        {
+                            "recipient.wallet": "0x72f080e99f3dde398aab2c0eb29faac17cc8b8d7",
+                            "recipient.nonce": 2
+                        },
+                        {
+                            "sender.wallet": "0x7d093b992259ec4eb0d1325a38c2f7a7895eb5c9",
+                            "sender.nonce": 2
+                        },
+                        {
+                            "recipient.wallet": "0x7d093b992259ec4eb0d1325a38c2f7a7895eb5c9",
+                            "recipient.nonce": 2
+                        },
+                        {
+                            "sender.wallet": "0x75122ea46625961a752a52bafe3b146fa04b3f4b",
+                            "sender.nonce": 1
+                        },
+                        {
+                            "recipient.wallet": "0x75122ea46625961a752a52bafe3b146fa04b3f4b",
+                            "recipient.nonce": 1
+                        },
+                        {
+                            "sender.wallet": "0x75122ea46625961a752a52bafe3b146fa04b3f4b",
+                            "sender.nonce": 2
+                        },
+                        {
+                            "recipient.wallet": "0x75122ea46625961a752a52bafe3b146fa04b3f4b",
+                            "recipient.nonce": 2
+                        },
+                        {
+                            "sender.wallet": "0x98c97cb8cab0aa37c8c423c827efdff8c52285bd",
+                            "sender.nonce": 2
+                        },
+                        {
+                            "recipient.wallet": "0x98c97cb8cab0aa37c8c423c827efdff8c52285bd",
+                            "recipient.nonce": 2
+                        },
+                        {
+                            "sender.wallet": "0x98c97cb8cab0aa37c8c423c827efdff8c52285bd",
+                            "sender.nonce": 4
+                        },
+                        {
+                            "recipient.wallet": "0x98c97cb8cab0aa37c8c423c827efdff8c52285bd",
+                            "recipient.nonce": 4
+                        },
+                        {
+                            "sender.wallet": "0x5b29714ae94b49ae4f5ad1576c45538d6f5656b5",
+                            "sender.nonce": 1
+                        },
+                        {
+                            "recipient.wallet": "0x5b29714ae94b49ae4f5ad1576c45538d6f5656b5",
+                            "recipient.nonce": 1
+                        },
+                        {
+                            "sender.wallet": "0x5b29714ae94b49ae4f5ad1576c45538d6f5656b5",
+                            "sender.nonce": 2
+                        },
+                        {
+                            "recipient.wallet": "0x5b29714ae94b49ae4f5ad1576c45538d6f5656b5",
+                            "recipient.nonce": 2
+                        },
+                        {
+                            "sender.wallet": "0x2156979fd495f5c1650c163f9a568defae52ec9c",
+                            "sender.nonce": 5
+                        },
+                        {
+                            "recipient.wallet": "0x2156979fd495f5c1650c163f9a568defae52ec9c",
+                            "recipient.nonce": 5
+                        },
+                        {
+                            "sender.wallet": "0x2156979fd495f5c1650c163f9a568defae52ec9c",
+                            "sender.nonce": 8
+                        },
+                        {
+                            "recipient.wallet": "0x2156979fd495f5c1650c163f9a568defae52ec9c",
+                            "recipient.nonce": 8
+                        },
+                        {
+                            "sender.wallet": "0x5b29714ae94b49ae4f5ad1576c45538d6f5656b5",
+                            "sender.nonce": 5
+                        },
+                        {
+                            "recipient.wallet": "0x5b29714ae94b49ae4f5ad1576c45538d6f5656b5",
+                            "recipient.nonce": 5
+                        },
+                        {
+                            "sender.wallet": "0x5b29714ae94b49ae4f5ad1576c45538d6f5656b5",
+                            "sender.nonce": 8
+                        },
+                        {
+                            "recipient.wallet": "0x5b29714ae94b49ae4f5ad1576c45538d6f5656b5",
+                            "recipient.nonce": 8
+                        },
+                        {
+                            "sender.wallet": "0x2156979fd495f5c1650c163f9a568defae52ec9c",
+                            "sender.nonce": 11
+                        },
+                        {
+                            "recipient.wallet": "0x2156979fd495f5c1650c163f9a568defae52ec9c",
+                            "recipient.nonce": 11
+                        },
+                        {
+                            "sender.wallet": "0x2156979fd495f5c1650c163f9a568defae52ec9c",
+                            "sender.nonce": 9
+                        },
+                        {
+                            "recipient.wallet": "0x2156979fd495f5c1650c163f9a568defae52ec9c",
+                            "recipient.nonce": 9
+                        },
+                        {
+                            "sender.wallet": "0xcd7620a80f834f994ee5d27d4dcd2df5decfb6fe",
+                            "sender.nonce": 2
+                        },
+                        {
+                            "recipient.wallet": "0xcd7620a80f834f994ee5d27d4dcd2df5decfb6fe",
+                            "recipient.nonce": 2
+                        },
+                        {
+                            "sender.wallet": "0x92b54611baa385feb5c667e797ddc8590e569776",
+                            "sender.nonce": 3
+                        },
+                        {
+                            "recipient.wallet": "0x92b54611baa385feb5c667e797ddc8590e569776",
+                            "recipient.nonce": 3
+                        },
+                        {
+                            "sender.wallet": "0xa79d2291c8245aaa2a71fe660e321db98fb5322d",
+                            "sender.nonce": 2
+                        },
+                        {
+                            "recipient.wallet": "0xa79d2291c8245aaa2a71fe660e321db98fb5322d",
+                            "recipient.nonce": 2
+                        },
+                        {
+                            "sender.wallet": "0xa79d2291c8245aaa2a71fe660e321db98fb5322d",
+                            "sender.nonce": 3
+                        },
+                        {
+                            "recipient.wallet": "0xa79d2291c8245aaa2a71fe660e321db98fb5322d",
+                            "recipient.nonce": 3
+                        },
+                        {
+                            "sender.wallet": "0xcd7620a80f834f994ee5d27d4dcd2df5decfb6fe",
+                            "sender.nonce": 3
+                        },
+                        {
+                            "recipient.wallet": "0xcd7620a80f834f994ee5d27d4dcd2df5decfb6fe",
+                            "recipient.nonce": 3
+                        },
+                        {
+                            "sender.wallet": "0x92b54611baa385feb5c667e797ddc8590e569776",
+                            "sender.nonce": 6
+                        },
+                        {
+                            "recipient.wallet": "0x92b54611baa385feb5c667e797ddc8590e569776",
+                            "recipient.nonce": 6
+                        },
+                        {
+                            "sender.wallet": "0x92b54611baa385feb5c667e797ddc8590e569776",
+                            "sender.nonce": 7
+                        },
+                        {
+                            "recipient.wallet": "0x92b54611baa385feb5c667e797ddc8590e569776",
+                            "recipient.nonce": 7
+                        },
+                        {
                             "sender.wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
                             "sender.nonce": 1
                         },
                         {
                             "recipient.wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
                             "recipient.nonce": 1
-                        },
-                        {
-                            "sender.wallet": "0x77354ee440e930b7a256c8a15afb5b575e490aef",
-                            "sender.nonce": 5
-                        },
-                        {
-                            "recipient.wallet": "0x77354ee440e930b7a256c8a15afb5b575e490aef",
-                            "recipient.nonce": 5
-                        },
-                        {
-                            "sender.wallet": "0x9713fe8824c70c2987cd7c649a319f6cf8977165",
-                            "sender.nonce": 4
-                        },
-                        {
-                            "recipient.wallet": "0x9713fe8824c70c2987cd7c649a319f6cf8977165",
-                            "recipient.nonce": 4
-                        },
-                        {
-                            "sender.wallet": "0x16e7a2d13a967f4467de8dc2f574a2003d3f6a2b",
-                            "sender.nonce": 3
-                        },
-                        {
-                            "recipient.wallet": "0x16e7a2d13a967f4467de8dc2f574a2003d3f6a2b",
-                            "recipient.nonce": 3
-                        },
-                        {
-                            "sender.wallet": "0xe1dddbd012f6a9f3f0a346a2b418aecd03b058e7",
-                            "sender.nonce": 8
-                        },
-                        {
-                            "recipient.wallet": "0xe1dddbd012f6a9f3f0a346a2b418aecd03b058e7",
-                            "recipient.nonce": 8
-                        },
-                        {
-                            "sender.wallet": "0x79cdb8174e097db3a391d29aefc988581456cf00",
-                            "sender.nonce": 5
-                        },
-                        {
-                            "recipient.wallet": "0x79cdb8174e097db3a391d29aefc988581456cf00",
-                            "recipient.nonce": 5
-                        },
-                        {
-                            "sender.wallet": "0x86348f6d11893768fc8cbad8084d021c33895cec",
-                            "sender.nonce": 13
-                        },
-                        {
-                            "recipient.wallet": "0x86348f6d11893768fc8cbad8084d021c33895cec",
-                            "recipient.nonce": 13
-                        },
-                        {
-                            "sender.wallet": "0x2c940d0889f8261e0f6b4d23f253a4c6cb862780",
-                            "sender.nonce": 8
-                        },
-                        {
-                            "recipient.wallet": "0x2c940d0889f8261e0f6b4d23f253a4c6cb862780",
-                            "recipient.nonce": 8
-                        },
-                        {
-                            "sender.wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
-                            "sender.nonce": 2
-                        },
-                        {
-                            "recipient.wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
-                            "recipient.nonce": 2
-                        },
-                        {
-                            "sender.wallet": "0x7344328668927e8b25ee00751a072f751cbf4993",
-                            "sender.nonce": 10
-                        },
-                        {
-                            "recipient.wallet": "0x7344328668927e8b25ee00751a072f751cbf4993",
-                            "recipient.nonce": 10
-                        },
-                        {
-                            "sender.wallet": "0xf7ca4ffecfd4e33ff5fbf612d9e3f09763ed2563",
-                            "sender.nonce": 7
-                        },
-                        {
-                            "recipient.wallet": "0xf7ca4ffecfd4e33ff5fbf612d9e3f09763ed2563",
-                            "recipient.nonce": 7
-                        },
-                        {
-                            "sender.wallet": "0x7344328668927e8b25ee00751a072f751cbf4993",
-                            "sender.nonce": 12
-                        },
-                        {
-                            "recipient.wallet": "0x7344328668927e8b25ee00751a072f751cbf4993",
-                            "recipient.nonce": 12
-                        },
-                        {
-                            "sender.wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
-                            "sender.nonce": 3
-                        },
-                        {
-                            "recipient.wallet": "0x105a18d55732fe5ed7c0a62036e624d4ba1c17b5",
-                            "recipient.nonce": 3
-                        },
-                        {
-                            "sender.wallet": "0x86348f6d11893768fc8cbad8084d021c33895cec",
-                            "sender.nonce": 14
-                        },
-                        {
-                            "recipient.wallet": "0x86348f6d11893768fc8cbad8084d021c33895cec",
-                            "recipient.nonce": 14
-                        },
-                        {
-                            "sender.wallet": "0x0d117250cc44896b5dfb1a46f6b012d672459ae3",
-                            "sender.nonce": 12
-                        },
-                        {
-                            "recipient.wallet": "0x0d117250cc44896b5dfb1a46f6b012d672459ae3",
-                            "recipient.nonce": 12
-                        },
-                        {
-                            "sender.wallet": "0x9713fe8824c70c2987cd7c649a319f6cf8977165",
-                            "sender.nonce": 7
-                        },
-                        {
-                            "recipient.wallet": "0x9713fe8824c70c2987cd7c649a319f6cf8977165",
-                            "recipient.nonce": 7
                         }
                     ]
                 }
