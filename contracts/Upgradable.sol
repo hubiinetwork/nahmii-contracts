@@ -34,7 +34,7 @@ contract Upgradable {
     public
     onlyWhenUpgradable
     {
-        require(address(0) == upgradeAgent, "Upgrade agent has already been set [Upgradable.sol:36]");
+        require(address(0) == upgradeAgent, "Upgrade agent has already been set [Upgradable.sol:37]");
 
         // Set the upgrade agent
         upgradeAgent = _upgradeAgent;
@@ -60,13 +60,13 @@ contract Upgradable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyWhenUpgrading() {
-        require(msg.sender == upgradeAgent, "Caller is not upgrade agent [Upgradable.sol:62]");
-        require(!upgradesFrozen, "Upgrades have been frozen [Upgradable.sol:63]");
+        require(msg.sender == upgradeAgent, "Caller is not upgrade agent [Upgradable.sol:63]");
+        require(!upgradesFrozen, "Upgrades have been frozen [Upgradable.sol:64]");
         _;
     }
 
     modifier onlyWhenUpgradable() {
-        require(!upgradesFrozen, "Upgrades have been frozen [Upgradable.sol:63]");
+        require(!upgradesFrozen, "Upgrades have been frozen [Upgradable.sol:69]");
         _;
     }
 }

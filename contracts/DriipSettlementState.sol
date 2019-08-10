@@ -111,7 +111,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     view
     returns (DriipSettlementTypesLib.Settlement memory)
     {
-        require(walletSettlementIndices[wallet].length > index, "Index out of bounds [DriipSettlementState.sol:111]");
+        require(walletSettlementIndices[wallet].length > index, "Index out of bounds [DriipSettlementState.sol:114]");
         return settlements[walletSettlementIndices[wallet][index] - 1];
     }
 
@@ -124,7 +124,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     view
     returns (DriipSettlementTypesLib.Settlement memory)
     {
-        require(0 != walletNonceSettlementIndex[wallet][nonce], "No settlement found for wallet and nonce [DriipSettlementState.sol:124]");
+        require(0 != walletNonceSettlementIndex[wallet][nonce], "No settlement found for wallet and nonce [DriipSettlementState.sol:127]");
         return settlements[walletNonceSettlementIndex[wallet][nonce] - 1];
     }
 
@@ -185,7 +185,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         uint256 index = walletNonceSettlementIndex[wallet][nonce];
 
         // Require the existence of settlement
-        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:185]");
+        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:188]");
 
         // Get the settlement party
         DriipSettlementTypesLib.SettlementParty storage party =
@@ -249,7 +249,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         settlements[index - 1].origin : settlements[index - 1].target;
 
         // Require that wallet is party of the right role
-        require(wallet == settlementParty.wallet, "Wallet has wrong settlement role [DriipSettlementState.sol:249]");
+        require(wallet == settlementParty.wallet, "Wallet has wrong settlement role [DriipSettlementState.sol:252]");
 
         // Return done status
         return 0 != settlementParty.doneBlockNumber;
@@ -268,7 +268,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         uint256 index = walletNonceSettlementIndex[wallet][nonce];
 
         // Require the existence of settlement
-        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:268]");
+        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:271]");
 
         // Return done block number
         return (
@@ -293,7 +293,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         uint256 index = walletNonceSettlementIndex[wallet][nonce];
 
         // Require the existence of settlement
-        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:293]");
+        require(0 != index, "No settlement found for wallet and nonce [DriipSettlementState.sol:296]");
 
         // Get the settlement party
         DriipSettlementTypesLib.SettlementParty storage settlementParty =
@@ -301,7 +301,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         settlements[index - 1].origin : settlements[index - 1].target;
 
         // Require that wallet is party of the right role
-        require(wallet == settlementParty.wallet, "Wallet has wrong settlement role [DriipSettlementState.sol:301]");
+        require(wallet == settlementParty.wallet, "Wallet has wrong settlement role [DriipSettlementState.sol:304]");
 
         // Return done block number
         return settlementParty.doneBlockNumber;
@@ -442,11 +442,11 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         // Require that settlement has not been initialized/upgraded already
         require(
             0 == walletNonceSettlementIndex[settlement.origin.wallet][settlement.origin.nonce],
-            "Settlement exists for origin wallet and nonce [DriipSettlementState.sol:440]"
+            "Settlement exists for origin wallet and nonce [DriipSettlementState.sol:443]"
         );
         require(
             0 == walletNonceSettlementIndex[settlement.target.wallet][settlement.target.nonce],
-            "Settlement exists for target wallet and nonce [DriipSettlementState.sol:444]"
+            "Settlement exists for target wallet and nonce [DriipSettlementState.sol:447]"
         );
 
         // Push the settlement
@@ -476,7 +476,7 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     onlyWhenUpgrading
     {
         // Require that settlement amount has not been initialized/upgraded already
-        require(0 == walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][blockNumber]);
+        require(0 == walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][blockNumber], "[DriipSettlementState.sol:479]");
 
         // Upgrade the settled amount
         walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][blockNumber] = amount;
