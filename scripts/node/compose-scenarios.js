@@ -8,13 +8,14 @@ async function parseJSON(subDir, action) {
 
     const files = await fs.readdir(inDir);
 
-    let settleNull = [];
+    let json = [];
     for (let file of files)
-        settleNull = settleNull.concat(JSON.parse(await fs.readFile(`${inDir}/${file}`)));
+        json = json.concat(JSON.parse(await fs.readFile(`${inDir}/${file}`)));
 
-    settleNull.forEach(d => d.action = action);
+    if (action)
+        json.forEach(d => d.action = action);
 
-    return settleNull;
+    return json;
 }
 
 function byBlockNumber(d1, d2) {
@@ -26,34 +27,6 @@ function byWallet(m, d) {
         m.set(d.wallet, []);
     m.get(d.wallet).push(d);
     return m;
-}
-
-function selectPayments(payments, steps) {
-    const selected = [];
-    steps.forEach(s => {
-        const p = payments.find(p => (p.sender.wallet == s.wallet && p.sender.nonce == s.data.nonce) ||
-            (p.recipient.wallet == s.wallet && p.recipient.nonce == s.data.nonce));
-
-        if (!p || !p.blockNumber)
-            return;
-
-        const step = {
-            wallet: s.wallet,
-            blockNumber: p.blockNumber,
-            data: Object.assign({}, p),
-            action: p.action
-        };
-
-        delete step.data.action;
-
-        if (!step.data.sender.fees.total.figure.amount)
-            step.data.sender.fees.total.figure.amount = '0';
-        if (!step.data.recipient.fees.total.figure.amount)
-            step.data.recipient.fees.total.figure.amount = '0';
-
-        selected.push(step);
-    });
-    return selected;
 }
 
 function createStepsFromPayments(payments) {
@@ -103,6 +76,11 @@ function connectPayments(scenarios) {
         }
 }
 
+function assignClientFundActions(steps) {
+    steps.forEach(s => s.action = (s.data.balanceType ? 'receive' : 'withdraw'));
+    return steps;
+}
+
 async function writeScenarios(scenarios) {
     const outDir = `${rootDir}/scenarios`;
 
@@ -120,10 +98,10 @@ async function writeScenarios(scenarios) {
 
     const payments = createStepsFromPayments(await parseJSON('offchain', 'pay'));
 
-    const receptions = await parseJSON('ClientFund', 'receive');
+    const receptionsWithdrawals = await parseJSON('ClientFund');
 
     const scenarios = steps.concat(payments)
-        .concat(receptions)
+        .concat(receptionsWithdrawals)
         .sort(byBlockNumber)
         .reduce(byWallet, new Map());
 

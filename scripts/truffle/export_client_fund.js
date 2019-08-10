@@ -18,18 +18,58 @@ const fromBlock = 0;
 
 const iface = new utils.Interface(ClientFund.abi);
 
-async function parseLogs(eventName) {
-    const logs = await provider.getLogs({
-        topics: [ethersClientFund.interface.events[eventName].topic],
-        fromBlock,
-        address: ethersClientFund.address
-    });
-    debug(`# ${eventName}: ${logs.length}`);
-    return Promise.all(logs.map(async (log) => ({
-        values: iface.parseLog(log).values,
-        blockNumber: log.blockNumber,
-        blockTimestamp: (await provider.getBlock(log.blockNumber)).timestamp
-    })));
+// async function parseLogs(eventName) {
+//     const logs = await provider.getLogs({
+//         topics: [ethersClientFund.interface.events[eventName].topic],
+//         fromBlock,
+//         address: ethersClientFund.address
+//     });
+//     debug(`# ${eventName}: ${logs.length}`);
+//     return Promise.all(logs.map(async (log) => ({
+//         values: iface.parseLog(log).values,
+//         blockNumber: log.blockNumber,
+//         blockTimestamp: (await provider.getBlock(log.blockNumber)).timestamp
+//     })));
+// }
+
+// async function parseLogs(...eventNames) {
+//     const logs = (await Promise.all(eventNames.map(n => {
+//         return provider.getLogs({
+//             topics: [ethersClientFund.interface.events[n].topic],
+//             fromBlock,
+//             address: ethersClientFund.address
+//         })
+//     }))).reduce((a, e) => {
+//         a = a.concat(e);
+//         return a;
+//     }, []);
+//
+//     debug(`# ${eventNames}: ${logs.length}`);
+//     return Promise.all(logs.map(async (log) => ({
+//         values: iface.parseLog(log).values,
+//         blockNumber: log.blockNumber,
+//         blockTimestamp: (await provider.getBlock(log.blockNumber)).timestamp
+//     })));
+// }
+
+async function parseLogs(...eventNames) {
+    let logs = [];
+    for (let eventName of eventNames) {
+        let eventLogs = await provider.getLogs({
+            topics: [ethersClientFund.interface.events[eventName].topic],
+            fromBlock,
+            address: ethersClientFund.address
+        });
+        debug(`# ${eventName}: ${eventLogs.length}`);
+        eventLogs = await Promise.all(eventLogs.map(async (log) => ({
+            values: iface.parseLog(log).values,
+            blockNumber: log.blockNumber,
+            blockTimestamp: (await provider.getBlock(log.blockNumber)).timestamp,
+            action: 'ReceiveEvent' == eventName ? 'receive' : 'withdraw'
+        })));
+        logs = logs.concat(eventLogs);
+    }
+    return logs;
 }
 
 async function writeJSON(data, fileName) {
@@ -66,6 +106,51 @@ async function exportReceive() {
     })), 'receive');
 }
 
+async function exportWithdraw() {
+    const logs = await parseLogs('WithdrawEvent');
+
+    return writeJSON(logs.map(log => ({
+        wallet: log.values.wallet.toLowerCase(),
+        blockNumber: log.blockNumber,
+        blockTimestamp: log.blockTimestamp,
+        data: {
+            value: log.values.value.toString(),
+            currency: {
+                ct: log.values.currencyCt.toLowerCase(),
+                id: log.values.currencyId.toNumber(),
+            },
+            standard: log.values.standard
+        }
+    })), 'withdraw');
+}
+
+async function exportReceiveAndWithdraw() {
+    const logs = await parseLogs('ReceiveEvent', 'WithdrawEvent');
+
+    return writeJSON(logs.map(log => {
+            const o = {
+                wallet: log.values.wallet.toLowerCase(),
+                blockNumber: log.blockNumber,
+                blockTimestamp: log.blockTimestamp,
+                data: {
+                    value: log.values.value.toString(),
+                    currency: {
+                        ct: log.values.currencyCt.toLowerCase(),
+                        id: log.values.currencyId.toNumber(),
+                    },
+                    standard: log.values.standard
+                },
+                action: log.action
+            };
+
+            if (log.values.balanceType)
+                o.data.balanceType = log.values.balanceType;
+
+            return o;
+        }
+    ), 'receive-withdraw');
+}
+
 // NOTE This script requires ethers@^4.0.0
 module.exports = async (callback) => {
 
@@ -73,8 +158,14 @@ module.exports = async (callback) => {
         web3ClientFund = await ClientFund.deployed();
         ethersClientFund = new Contract(web3ClientFund.address, ClientFund.abi, provider);
 
-        // Receive
-        await exportReceive();
+        // // Receive
+        // await exportReceive();
+
+        // // Withdraw
+        // await exportWithdraw();
+
+        // Receive and withdraw
+        await exportReceiveAndWithdraw();
 
     } catch (e) {
         callback(e);

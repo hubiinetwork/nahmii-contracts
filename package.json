@@ -26,6 +26,7 @@
     "exec:execute_scenarios": "node scripts/node/execute-scenarios.js",
     "exec:export_client_fund:mainnet": "truffle exec scripts/truffle/export_client_fund.js --network mainnet-infura",
     "exec:export_client_fund:ropsten": "truffle exec scripts/truffle/export_client_fund.js --network ropsten-infura",
+    "exec:compare_client_fund": "truffle exec scripts/truffle/compare-client-fund.js",
     "exec:export_driip_settlement_by_payment:mainnet": "truffle exec scripts/truffle/export_driip_settlement_by_payment.js --network mainnet-infura",
     "exec:export_driip_settlement_by_payment:ropsten": "truffle exec scripts/truffle/export_driip_settlement_by_payment.js --network ropsten-infura",
     "exec:export_driip_settlement_challenge_by_payment:mainnet": "truffle exec scripts/truffle/export_driip_settlement_challenge_by_payment.js --network mainnet-infura",

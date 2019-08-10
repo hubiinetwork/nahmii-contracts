@@ -385,6 +385,10 @@ const clientFund = new (class ClientFund {
         this.walletCurrency.register(wallet, currency);
     }
 
+    withdraw(wallet, amount, currency, blockNumber) {
+        this.stagedBalance.subByBlockNumber(wallet, currency, amount, blockNumber);
+    }
+
     updateSettledBalance(wallet, amount, currency, blockNumber) {
         assert(!amount.isNeg(), `Negative update settled balance amount ${amount.toString()} for ${walletCurrencyKey(
             wallet, currency
@@ -1100,6 +1104,9 @@ const stepExecutor = new (class StepExecutor {
             case 'receive':
                 clientFund.receive(step.wallet, step.data.value, step.data.currency, step.blockNumber);
                 break;
+            case 'withdraw':
+                clientFund.withdraw(step.wallet, step.data.value, step.data.currency, step.blockNumber);
+                break;
             case 'start-payment-challenge':
                 driipSettlementChallengeByPayment.startChallengeByPayment(step);
                 break;
@@ -1146,6 +1153,7 @@ const bnUtil = new (class BNUtil {
                 step.data.targetBalanceAmount = new BN(step.data.targetBalanceAmount);
                 break;
             case 'receive':
+            case 'withdraw':
                 step.data.value = new BN(step.data.value);
                 break;
         }
