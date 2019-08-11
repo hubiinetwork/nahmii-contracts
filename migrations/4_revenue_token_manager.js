@@ -53,7 +53,7 @@ module.exports = (deployer, network, accounts) => {
 
             SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
 
-            if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
+            if (helpers.isTestNetwork(network)) {
                 await deployer.link(SafeMathUintLib, [
                     RevenueTokenManager
                 ]);
@@ -137,10 +137,14 @@ module.exports = (deployer, network, accounts) => {
                     debug(`Releases count: ${(await instance.releasesCount()).toNumber()}`);
                     debug(`Executed releases count: ${(await instance.executedReleasesCount()).toNumber()}`);
                 }
-
-            } else if (network.startsWith('mainnet')) {
-                addressStorage.set('RevenueTokenManager', '0xe3f2158610b7145c04ae03a6356038ad2404a9a6');
             }
+
+            else if (network.startsWith('ropsten'))
+                addressStorage.set('RevenueTokenManager', '0x2fd03fbd66eeb444bdea4c5c3f46de9aec088804');
+
+            else if (network.startsWith('mainnet'))
+                addressStorage.set('RevenueTokenManager', '0xe3f2158610b7145c04ae03a6356038ad2404a9a6');
+
 
         } finally {
             if (!helpers.isTestNetwork(network))
