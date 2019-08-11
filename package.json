@@ -47,7 +47,7 @@
     "exec:export-payments:ropsten": "concurrently --raw --success first --kill-others 'kubectl port-forward trade-db-0 27017:27017 -n test' 'sleep 2 && mongo omphalos scripts/mongodb/aggregate-payments.js > tmp.json && mkdir -p state/export/offchain && tail -n +5 tmp.json > state/export/offchain/payments.json && rm -f tmp.json'",
     "exec:export-settlements:mainnet": "npm run exec:export-driip-settlement-by-payment:mainnet && npm run exec:export-driip-settlement-challenge-by-payment:mainnet && npm run exec:export-null-settlement:mainnet && npm run exec:export-null-settlement-challenge-by-payment:mainnet",
     "exec:export-settlements:ropsten": "npm run exec:export-driip-settlement-by-payment:ropsten && npm run exec:export-driip-settlement-challenge-by-payment:ropsten && npm run exec:export-null-settlement:ropsten && npm run exec:export-null-settlement-challenge-by-payment:ropsten",
-    "exec:ganache-cli": "ganache-cli -l 8000000 -e 1000",
+    "exec:ganache-cli": "ganache-cli -l 8000000 -e 10000",
     "exec:import-driip-settlement-state:mainnet": "truffle exec scripts/truffle/import-driip-settlement-state.js --network mainnet-hubii",
     "exec:import-null-settlement-state:mainnet": "truffle exec scripts/truffle/import-null-settlement-state.js --network mainnet-hubii",
     "exec:mint-erc20-tokens": "truffle exec scripts/truffle/mint-erc20-tokens.js",
