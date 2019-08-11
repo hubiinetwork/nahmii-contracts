@@ -389,7 +389,7 @@ module.exports = (glob) => {
 
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                     proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).sub(payment.sender.balances.current)._bn
+                        payment.sender.balances.current.sub(utils.parseUnits('10000', 18))._bn
                     );
                     proposal.amounts.stage._bn.should.eq.BN(payment.sender.balances.current._bn);
                     proposal.amounts.targetBalance._bn.should.eq.BN(0);
@@ -442,9 +442,9 @@ module.exports = (glob) => {
 
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                     proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18)
-                            .sub(payment.sender.balances.current)
-                            .add(utils.parseUnits('100', 18))
+                        payment.sender.balances.current
+                            .sub(utils.parseUnits('10000', 18))
+                            .sub(utils.parseUnits('100', 18))
                             ._bn
                     );
                     proposal.amounts.stage._bn.should.eq.BN(payment.sender.balances.current.sub(utils.parseUnits('100', 18))._bn);
@@ -586,7 +586,7 @@ module.exports = (glob) => {
 
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                     proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18).sub(payment.sender.balances.current)._bn
+                        payment.sender.balances.current.sub(utils.parseUnits('10000', 18))._bn
                     );
                     proposal.amounts.stage._bn.should.eq.BN(payment.sender.balances.current._bn);
                     proposal.amounts.targetBalance._bn.should.eq.BN(0);
@@ -639,9 +639,9 @@ module.exports = (glob) => {
 
                     proposal.wallet.should.equal(utils.getAddress(payment.sender.wallet));
                     proposal.amounts.cumulativeTransfer._bn.should.eq.BN(
-                        utils.parseUnits('10000', 18)
-                            .sub(payment.sender.balances.current)
-                            .add(utils.parseUnits('100', 18))
+                        payment.sender.balances.current
+                            .sub(utils.parseUnits('10000', 18))
+                            .sub(utils.parseUnits('100', 18))
                             ._bn
                     );
                     proposal.amounts.stage._bn.should.eq.BN(payment.sender.balances.current.sub(utils.parseUnits('100', 18))._bn);

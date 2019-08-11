@@ -289,7 +289,7 @@ module.exports = (glob) => {
                     const proposal = await ethersNullSettlementChallengeState._proposals(1);
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));
                     proposal.amounts.stage._bn.should.eq.BN(10);
-                    proposal.amounts.targetBalance._bn.should.eq.BN(40);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(100);
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.referenceBlockNumber._bn.should.eq.BN(1);
@@ -369,7 +369,7 @@ module.exports = (glob) => {
                     const proposal = await ethersNullSettlementChallengeState._proposals(1);
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));
                     proposal.amounts.stage._bn.should.eq.BN(10);
-                    proposal.amounts.targetBalance._bn.should.eq.BN(40);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(100);
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.referenceBlockNumber._bn.should.eq.BN(1);

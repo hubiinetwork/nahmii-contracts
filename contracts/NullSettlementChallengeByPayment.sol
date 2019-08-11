@@ -455,22 +455,22 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         // Get the last logged active balance amount and block number, properties of overlapping DSC
         // and the baseline nonce
         (
-        int256 activeBalanceAmount, uint256 activeBalanceBlockNumber,
+        int256 currentActiveBalanceAmount, uint256 currentActiveBalanceBlockNumber,
         int256 dscCumulativeTransferAmount, int256 dscStageAmount,
         uint256 nonce
-        ) = _externalProperties(
+        ) = _walletProperties(
             wallet, currency
         );
 
         // Initiate proposal, including assurance that there is no overlap with active proposal
-        // Target balance amount is calculated as current balance - DSC cumulativeTransferAmount - DSC stage amount - NSC stageAmount
+        // Target balance amount is calculated as current balance + DSC cumulativeTransferAmount - DSC stage amount - NSC stageAmount
         nullSettlementChallengeState.initiateProposal(
             wallet, nonce, stageAmount,
-            activeBalanceAmount.sub(
-                dscCumulativeTransferAmount.add(dscStageAmount).add(stageAmount)
+            currentActiveBalanceAmount.add(
+                dscCumulativeTransferAmount.sub(dscStageAmount).sub(stageAmount)
             ),
             currency,
-            activeBalanceBlockNumber, walletInitiated
+            currentActiveBalanceBlockNumber, walletInitiated
         );
     }
 
@@ -487,15 +487,15 @@ contract NullSettlementChallengeByPayment is Ownable, ConfigurableOperational, B
         );
     }
 
-    function _externalProperties(address wallet, MonetaryTypesLib.Currency memory currency)
+    function _walletProperties(address wallet, MonetaryTypesLib.Currency memory currency)
     private
     view
     returns (
-        int256 activeBalanceAmount, uint256 activeBalanceBlockNumber,
+        int256 currentActiveBalanceAmount, uint256 currentActiveBalanceBlockNumber,
         int256 dscCumulativeTransferAmount, int256 dscStageAmount,
         uint256 nonce
     ) {
-        (activeBalanceAmount, activeBalanceBlockNumber) = balanceTracker.fungibleActiveRecord(
+        (currentActiveBalanceAmount, currentActiveBalanceBlockNumber) = balanceTracker.fungibleActiveRecord(
             wallet, currency
         );
 

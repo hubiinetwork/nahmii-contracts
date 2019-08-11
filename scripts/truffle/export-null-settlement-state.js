@@ -14,7 +14,7 @@ const NullSettlementState = artifacts.require('NullSettlementState');
 const iface = new utils.Interface(NullSettlementState.abi);
 
 const outDir = 'state/NullSettlementState';
-const fromBlock = 7588183;
+const fromBlock = 0;
 
 async function exportMaxNullNonces(ethersNullSettlementState) {
     const maxNullLogs = await provider.getLogs({

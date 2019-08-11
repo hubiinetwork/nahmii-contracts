@@ -261,7 +261,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
     private
     {
         // Extract current balance and total fees
-        (int256 correctedCurrentBalance, int settleAmount, NahmiiTypesLib.OriginFigure[] memory totalFees) =
+        (int256 correctedCurrentBalanceAmount, int settleAmount, NahmiiTypesLib.OriginFigure[] memory totalFees) =
         _paymentPartyProperties(payment, wallet);
 
         // Get max nonce for wallet and currency
@@ -275,7 +275,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
 
             // Update settled balance
             clientFund.updateSettledBalance(
-                wallet, correctedCurrentBalance, payment.currency.ct, payment.currency.id, standard, block.number
+                wallet, correctedCurrentBalanceAmount, payment.currency.ct, payment.currency.id, standard, block.number
             );
 
             // Update settled amount
@@ -292,7 +292,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
                 _stageFees(wallet, totalFees, revenueFund, nonce, standard);
 
             // Complete settlement of party
-            driipSettlementState.completeSettlementParty(
+            driipSettlementState.completeSettlement(
                 wallet, nonce, settlementRole, true
             );
         }
@@ -316,13 +316,13 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
         address wallet)
     private
     view
-    returns (int256 correctedCurrentBalance, int settleAmount, NahmiiTypesLib.OriginFigure[] memory totalFees)
+    returns (int256 correctedPaymentBalanceAmount, int settleAmount, NahmiiTypesLib.OriginFigure[] memory totalFees)
     {
         if (validator.isPaymentSender(payment, wallet)) {
-            correctedCurrentBalance = payment.sender.balances.current;
+            correctedPaymentBalanceAmount = payment.sender.balances.current;
             totalFees = payment.sender.fees.total;
         } else {
-            correctedCurrentBalance = payment.recipient.balances.current;
+            correctedPaymentBalanceAmount = payment.recipient.balances.current;
             totalFees = payment.recipient.fees.total;
         }
 
@@ -337,14 +337,14 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
         );
 
         // Calculate settle amount by this payment
-        settleAmount = correctedCurrentBalance.sub(
+        settleAmount = correctedPaymentBalanceAmount.sub(
             balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
                 wallet, payment.currency, payment.blockNumber
             )
         ).sub(deltaSettledBalanceAmount);
 
         // Correct the payment's balance by on-chain deltas
-        correctedCurrentBalance = correctedCurrentBalance
+        correctedPaymentBalanceAmount = correctedPaymentBalanceAmount
         .add(deltaActiveBalanceAmount)
         .sub(deltaSettledBalanceAmount);
     }
@@ -363,7 +363,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
                 0 < partnerBenefactor.registeredBeneficiariesCount() &&
                 fees[i].originId <= partnerBenefactor.registeredBeneficiariesCount()
             )
-                beneficiary = partnerBenefactor.beneficiaries(fees[i].originId - 1);
+                beneficiary = partnerBenefactor.beneficiaries(fees[i].originId.sub(1));
 
             // Continue if there is no beneficiary corresponding to the origin ID
             if (address(0) == address(beneficiary))
@@ -375,7 +375,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
             // If the nonce of the last total fee update is smaller then the current nonce...
             if (driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).nonce < nonce) {
                 // Get the amount previously staged
-                int256 deltaAmount = fees[i].figure.amount - driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount;
+                int256 deltaAmount = fees[i].figure.amount.sub(driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount);
 
                 // If the fee delta is strictly positive...
                 if (deltaAmount.isNonZeroPositiveInt256()) {
