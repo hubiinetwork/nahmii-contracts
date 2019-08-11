@@ -363,7 +363,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
                 0 < partnerBenefactor.registeredBeneficiariesCount() &&
                 fees[i].originId <= partnerBenefactor.registeredBeneficiariesCount()
             )
-                beneficiary = partnerBenefactor.beneficiaries(fees[i].originId - 1);
+                beneficiary = partnerBenefactor.beneficiaries(fees[i].originId.sub(1));
 
             // Continue if there is no beneficiary corresponding to the origin ID
             if (address(0) == address(beneficiary))
@@ -375,7 +375,7 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
             // If the nonce of the last total fee update is smaller then the current nonce...
             if (driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).nonce < nonce) {
                 // Get the amount previously staged
-                int256 deltaAmount = fees[i].figure.amount - driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount;
+                int256 deltaAmount = fees[i].figure.amount.sub(driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount);
 
                 // If the fee delta is strictly positive...
                 if (deltaAmount.isNonZeroPositiveInt256()) {
