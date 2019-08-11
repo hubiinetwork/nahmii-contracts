@@ -146,6 +146,7 @@ module.exports = (deployer, network, accounts) => {
                 addressStorage.set('SafeMathUintLib', '0xd8892322bfdd5839ca262dc38ad77821d06bd272');
                 addressStorage.set('SettlementChallengeTypesLib', '0xccff0888c9ab3e0acb0eeee817daa90c8ab0642b');
                 addressStorage.set('Strings', '0xe8c5584022e0be86bb5d9bea06ae43a0ab8216d8');
+                addressStorage.set('TradeTypesLib', '0x7990167e3565c074b5ef98149ca95b43b5198fcf');
                 addressStorage.set('TxHistoryLib', '0x45ca83ad4ca90a73022d17c20da88ef8f7fa4d9c');
 
                 ConstantsLib.address = addressStorage.get('ConstantsLib');
