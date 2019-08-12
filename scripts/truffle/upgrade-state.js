@@ -18,6 +18,13 @@ async function parseJSONFromFile(file) {
 
 const address0 = '0x0000000000000000000000000000000000000000';
 
+function bigNumberifyProposal(proposal) {
+    proposal.amounts.cumulativeTransfer = utils.bigNumberify(proposal.amounts.cumulativeTransfer);
+    proposal.amounts.stage = utils.bigNumberify(proposal.amounts.stage);
+    proposal.amounts.targetBalance = utils.bigNumberify(proposal.amounts.targetBalance);
+    return proposal;
+}
+
 module.exports = async (callback) => {
 
     // const stateDir = '../nahmii-contract-state/import';
@@ -40,10 +47,10 @@ module.exports = async (callback) => {
 
         const dscProposals = await parseJSONFromFile(`${stateDir}/DriipSettlementChallengeState/proposals.json`);
         console.log(`> Upgrading ${dscProposals.length} proposal entries`);
-        for (let proposal of dscProposals)
-            await ethersDriipSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 1e6});
+        for (let proposal of dscProposals.map(bigNumberifyProposal))
+            await ethersDriipSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 5e6});
 
-        // await ethersDriipSettlementChallengeState.freezeUpgrades();
+        await ethersDriipSettlementChallengeState.freezeUpgrades();
 
         console.log('done');
 
@@ -58,10 +65,10 @@ module.exports = async (callback) => {
 
         const nscProposals = await parseJSONFromFile(`${stateDir}/NullSettlementChallengeState/proposals.json`);
         console.log(`> Upgrading ${nscProposals.length} proposal entries`);
-        for (let proposal of nscProposals)
-            await ethersNullSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 1e6});
+        for (let proposal of nscProposals.map(bigNumberifyProposal))
+            await ethersNullSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 5e6});
 
-        // await ethersNullSettlementChallengeState.freezeUpgrades();
+        await ethersNullSettlementChallengeState.freezeUpgrades();
 
         console.log('done');
 
@@ -73,11 +80,6 @@ module.exports = async (callback) => {
         const ethersDriipSettlementState = new Contract(web3DriipSettlementState.address, DriipSettlementState.abi, upgradeAgent);
 
         await ethersDriipSettlementState.setUpgradeAgent(upgradeAgent.address);
-
-        // await ethersDriipSettlementState.registerService(upgradeAgent.address);
-        // await ethersDriipSettlementState.enableServiceAction(upgradeAgent.address, await ethersDriipSettlementState.SET_MAX_NONCE_ACTION());
-        // await ethersDriipSettlementState.enableServiceAction(upgradeAgent.address, await ethersDriipSettlementState.ADD_SETTLED_AMOUNT_ACTION());
-        // await ethersDriipSettlementState.enableServiceAction(upgradeAgent.address, await ethersDriipSettlementState.SET_TOTAL_FEE_ACTION());
 
         let walletCurrencyMaxNonce = await parseJSONFromFile(`${stateDir}/DriipSettlementState/walletCurrencyMaxNonce.json`);
         console.log(`> Upgrading ${Object.getOwnPropertyNames(walletCurrencyMaxNonce).length} max nonce by wallet and currency entries`);
@@ -91,6 +93,7 @@ module.exports = async (callback) => {
                             id: utils.bigNumberify(currencyId)
                         },
                         utils.bigNumberify(walletCurrencyMaxNonce[wallet][currencyCt][currencyId]),
+                        {gasLimit: 5e6}
                     );
 
         const walletCurrencyBlockNumberSettledAmount = await parseJSONFromFile(`${stateDir}/DriipSettlementState/walletCurrencyBlockNumberSettledAmount.json`);
@@ -106,7 +109,8 @@ module.exports = async (callback) => {
                                 ct: currencyCt,
                                 id: utils.bigNumberify(currencyId)
                             },
-                            utils.bigNumberify(blockNumber)
+                            utils.bigNumberify(blockNumber),
+                            {gasLimit: 5e6}
                         );
 
         const totalFeesMap = await parseJSONFromFile(`${stateDir}/DriipSettlementState/totalFeesMap.json`);
@@ -123,20 +127,16 @@ module.exports = async (callback) => {
                         {
                             nonce: utils.bigNumberify(totalFeesMap[wallet][currencyCt][currencyId].nonce),
                             amount: utils.bigNumberify(totalFeesMap[wallet][currencyCt][currencyId].amount)
-                        }
+                        },
+                        {gasLimit: 5e6}
                     );
 
         const driipSettlements = await parseJSONFromFile(`${stateDir}/DriipSettlementState/settlements.json`);
-        console.log(`> Upgrading ${nscProposals.length} settlement entries`);
+        console.log(`> Upgrading ${driipSettlements.length} settlement entries`);
         for (let driipSettlement of driipSettlements)
-            await ethersDriipSettlementState.upgradeSettlement(driipSettlement, {gasLimit: 1e6});
+            await ethersDriipSettlementState.upgradeSettlement(driipSettlement, {gasLimit: 5e6});
 
-        // await ethersDriipSettlementState.disableServiceAction(upgradeAgent.address, await ethersDriipSettlementState.SET_MAX_NONCE_ACTION());
-        // await ethersDriipSettlementState.disableServiceAction(upgradeAgent.address, await ethersDriipSettlementState.ADD_SETTLED_AMOUNT_ACTION());
-        // await ethersDriipSettlementState.disableServiceAction(upgradeAgent.address, await ethersDriipSettlementState.SET_TOTAL_FEE_ACTION());
-        // await ethersDriipSettlementState.deregisterService(upgradeAgent.address);
-
-        // await ethersDriipSettlementState.freezeUpgrades();
+        await ethersDriipSettlementState.freezeUpgrades();
 
         console.log('done');
 
@@ -146,9 +146,6 @@ module.exports = async (callback) => {
 
         const web3NullSettlementState = await NullSettlementState.deployed();
         const ethersNullSettlementState = new Contract(web3NullSettlementState.address, NullSettlementState.abi, upgradeAgent);
-
-        // await ethersNullSettlementState.registerService(upgradeAgent.address);
-        // await ethersNullSettlementState.enableServiceAction(upgradeAgent.address, await ethersDriipSettlementState.SET_MAX_NONCE_ACTION());
 
         walletCurrencyMaxNonce = await parseJSONFromFile(`${stateDir}/NullSettlementState/walletCurrencyMaxNonce.json`);
         console.log(`> Upgrading ${Object.getOwnPropertyNames(walletCurrencyMaxNonce).length} max nonce by wallet and currency entries`);
@@ -162,18 +159,14 @@ module.exports = async (callback) => {
                             id: utils.bigNumberify(currencyId)
                         },
                         utils.bigNumberify(walletCurrencyMaxNonce[wallet][currencyCt][currencyId]),
+                        {gasLimit: 5e6}
                     );
-
-        // await ethersNullSettlementState.disableServiceAction(upgradeAgent.address, await ethersDriipSettlementState.SET_MAX_NONCE_ACTION());
-        // await ethersNullSettlementState.deregisterService(upgradeAgent.address);
 
         console.log('done');
 
         callback();
     } catch (e) {
         callback(e);
-    } finally {
-        // await web3.personal.lockAccount(address);
     }
 };
 // EOF
