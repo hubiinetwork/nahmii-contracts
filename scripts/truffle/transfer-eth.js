@@ -1,6 +1,7 @@
-cd node_modules/nahmii-contract-abstractions-ropsten
+// cd node_modules/nahmii-contract-abstractions-ropsten
+//
+// cat > script.js << EOF
 
-cat > script.js << EOF
 module.exports = async (callback) => {
 
     const from = process.env.FROM;
@@ -12,21 +13,18 @@ module.exports = async (callback) => {
     try {
         await web3.eth.personal.unlockAccount(from, password, 600);
 
-        const nonce = await web3.eth.getTransactionCount(from);
-
         const tx = {
             from,
             to,
             value: web3.utils.toWei(value, 'ether'),
             gasPrice,
             gas: '21000',
-            nonce
+            nonce: await web3.eth.getTransactionCount(from)
         };
 
         const signedTx = await web3.eth.personal.signTransaction(tx, password);
 
-        const sentTx = await web3.eth.sendSignedTransaction(signedTx.raw);
-        console.log(sentTx);
+        console.log(await web3.eth.sendSignedTransaction(signedTx.raw));
 
         callback()
     } catch (e) {
@@ -35,4 +33,6 @@ module.exports = async (callback) => {
         web3.eth.personal.lockAccount(from);
     }
 };
-EOF
+// EOF
+//
+// cat script.js

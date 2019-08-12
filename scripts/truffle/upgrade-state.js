@@ -1,16 +1,16 @@
-// cd node_modules/nahmii-contract-abstractions-ropsten
+// cd node_modules/nahmii-contract-abstractions
 //
 // cat > script.js << EOF
 
 const fs = require('fs').promises;
 const {Wallet, Contract, utils, providers} = require('ethers');
 const provider = new providers.Web3Provider(web3.currentProvider);
-const helpers = require('../common/helpers.js');
 
 const DriipSettlementChallengeState = artifacts.require('DriipSettlementChallengeState');
 const DriipSettlementState = artifacts.require('DriipSettlementState');
 const NullSettlementChallengeState = artifacts.require('NullSettlementChallengeState');
 const NullSettlementState = artifacts.require('NullSettlementState');
+const RevenueFund1 = artifacts.require('RevenueFund1');
 
 async function parseJSONFromFile(file) {
     return JSON.parse(await fs.readFile(file));
@@ -27,14 +27,14 @@ function bigNumberifyProposal(proposal) {
 
 module.exports = async (callback) => {
 
-    // const stateDir = '../nahmii-contract-state/import';
-    const stateDir = 'state/import';
+    const stateDir = '../nahmii-contract-state/import';
+    // const stateDir = 'state/import';
 
-    const upgradeAgent = Wallet.fromMnemonic('woman year canvas mirror arrest leopard bounce point identify roof water frost')
+    const upgradeAgent = Wallet.fromMnemonic(process.env.UPGRADEAGENT_MNEMONIC)
         .connect(provider);
 
     try {
-        const revenueFundAddress = helpers.parseAddressArg('revenue-fund');
+        const web3RevenueFund1 = await RevenueFund1.deployed();
 
         // #### DriipSettlementChallengeState ####
 
@@ -52,7 +52,7 @@ module.exports = async (callback) => {
 
         await ethersDriipSettlementChallengeState.freezeUpgrades();
 
-        console.log('done');
+        console.log('> Done');
 
         // ### NullSettlementChallengeState ####
 
@@ -70,7 +70,7 @@ module.exports = async (callback) => {
 
         await ethersNullSettlementChallengeState.freezeUpgrades();
 
-        console.log('done');
+        console.log('> Done');
 
         // #### DriipSettlementState ####
 
@@ -119,7 +119,7 @@ module.exports = async (callback) => {
             for (let currencyCt in totalFeesMap[wallet])
                 for (let currencyId in totalFeesMap[wallet][currencyCt])
                     await ethersDriipSettlementState.setTotalFee(
-                        wallet, revenueFundAddress, address0,
+                        wallet, web3RevenueFund1.address, address0,
                         {
                             ct: currencyCt,
                             id: utils.bigNumberify(currencyId)
@@ -138,7 +138,7 @@ module.exports = async (callback) => {
 
         await ethersDriipSettlementState.freezeUpgrades();
 
-        console.log('done');
+        console.log('> Done');
 
         // #### NullSettlementState ####
 
@@ -162,7 +162,7 @@ module.exports = async (callback) => {
                         {gasLimit: 5e6}
                     );
 
-        console.log('done');
+        console.log('> Done');
 
         callback();
     } catch (e) {
@@ -170,3 +170,5 @@ module.exports = async (callback) => {
     }
 };
 // EOF
+//
+// cat script.js
