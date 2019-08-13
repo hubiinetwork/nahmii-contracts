@@ -126,7 +126,7 @@ contract RevenueTokenManager is TokenMultiTimelock {
         // Push total amount released and total released amount blocks
         if (0 < index) {
             totalReleasedAmounts.push(
-                totalReleasedAmounts[index - 1] + releases[index].amount
+                totalReleasedAmounts[index - 1].add(releases[index].amount)
             );
             totalReleasedAmountBlocks.push(
                 totalReleasedAmounts[index - 1].mul(

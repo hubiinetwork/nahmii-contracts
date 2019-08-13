@@ -13,8 +13,8 @@ const NullSettlementState = artifacts.require('NullSettlementState');
 
 const iface = new utils.Interface(NullSettlementState.abi);
 
-const outDir = 'state/NullSettlementState';
-const fromBlock = 7588183;
+const outDir = 'state/export/NullSettlementState';
+const fromBlock = 0;
 
 async function exportMaxNullNonces(ethersNullSettlementState) {
     const maxNullLogs = await provider.getLogs({
@@ -28,20 +28,20 @@ async function exportMaxNullNonces(ethersNullSettlementState) {
 }
 
 async function exportMaxNonces(ethersNullSettlementState) {
-    const maxNullByWalletCurrencyLogs = await provider.getLogs({
+    const maxNonceByWalletCurrencyLogs = await provider.getLogs({
         topics: [ethersNullSettlementState.interface.events.SetMaxNonceByWalletAndCurrencyEvent.topic],
         fromBlock,
         address: ethersNullSettlementState.address
     });
-    debug(`# SetMaxNonceByWalletAndCurrencyEvent: ${maxNullByWalletCurrencyLogs.length}`);
+    debug(`# SetMaxNonceByWalletAndCurrencyEvent: ${maxNonceByWalletCurrencyLogs.length}`);
 
-    let maxNullNonceByWalletCurrency = maxNullByWalletCurrencyLogs.map(
+    let maxNonceByWalletCurrency = maxNonceByWalletCurrencyLogs.map(
         log => {
-            const {wallet, currency, maxNullNonce} = iface.parseLog(log).values;
+            const {wallet, currency, maxNonce} = iface.parseLog(log).values;
             const e = {
                 wallet,
                 currency: {ct: currency[0], id: currency[1].toNumber()},
-                maxNonce: maxNullNonce.toNumber(),
+                maxNonce: maxNonce.toNumber(),
                 blockNumber: log.blockNumber
             };
             return e;
@@ -51,7 +51,7 @@ async function exportMaxNonces(ethersNullSettlementState) {
     await fs.writeFile(
         `${outDir}/max-nonces.json`,
         JSON.stringify(
-            maxNullNonceByWalletCurrency,
+            maxNonceByWalletCurrency,
             null, 2
         )
     );

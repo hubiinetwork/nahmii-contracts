@@ -99,25 +99,36 @@ BalanceTrackable, FraudChallengable, Servable {
     onlyPaymentSender(payment, wallet)
     {
         // Require that payment candidate is not labelled fraudulent
-        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash), "Payment deemed fraudulent [DriipSettlementDisputeByPayment.sol:102]");
+        require(
+            !fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash),
+            "Payment deemed fraudulent [DriipSettlementDisputeByPayment.sol:102]"
+        );
 
         // Require that proposal has been initiated
-        require(driipSettlementChallengeState.hasProposal(wallet, payment.currency), "No proposal found [DriipSettlementDisputeByPayment.sol:105]");
+        require(
+            driipSettlementChallengeState.hasProposal(wallet, payment.currency),
+            "No proposal found [DriipSettlementDisputeByPayment.sol:108]"
+        );
 
         // Require that proposal has not expired
-        require(!driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency), "Proposal found expired [DriipSettlementDisputeByPayment.sol:108]");
+        require(
+            !driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency),
+            "Proposal found expired [DriipSettlementDisputeByPayment.sol:114]"
+        );
 
         // Require that payment party's nonce is strictly greater than proposal's nonce and its current
         // disqualification nonce
-        require(payment.sender.nonce > driipSettlementChallengeState.proposalNonce(
-            wallet, payment.currency
-        ), "Payment nonce not strictly greater than proposal nonce [DriipSettlementDisputeByPayment.sol:112]");
-        require(payment.sender.nonce > driipSettlementChallengeState.proposalDisqualificationNonce(
-            wallet, payment.currency
-        ), "Payment nonce not strictly greater than proposal disqualification nonce [DriipSettlementDisputeByPayment.sol:115]");
+        require(
+            payment.sender.nonce > driipSettlementChallengeState.proposalNonce(wallet, payment.currency),
+            "Payment nonce not strictly greater than proposal nonce [DriipSettlementDisputeByPayment.sol:121]"
+        );
+        require(
+            payment.sender.nonce > driipSettlementChallengeState.proposalDisqualificationNonce(wallet, payment.currency),
+            "Payment nonce not strictly greater than proposal disqualification nonce [DriipSettlementDisputeByPayment.sol:125]"
+        );
 
         // Require overrun for this payment to be a valid challenge candidate
-        require(_overrun(wallet, payment), "No overrun found [DriipSettlementDisputeByPayment.sol:120]");
+        require(_overrun(wallet, payment), "No overrun found [DriipSettlementDisputeByPayment.sol:131]");
 
         // Reward challenger
         _settleRewards(wallet, payment.sender.balances.current, payment.currency, challenger);
@@ -128,7 +139,7 @@ BalanceTrackable, FraudChallengable, Servable {
             payment.sender.nonce, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
 
-        // Cancel dependent null settlement challenge if existent
+        // Terminate dependent null settlement challenge proposal if existent
         nullSettlementChallengeState.terminateProposal(wallet, payment.currency);
 
         // Emit event
@@ -151,26 +162,25 @@ BalanceTrackable, FraudChallengable, Servable {
         );
 
         // Get the change in active balance since the start of the challenge
-        int256 deltaBalanceSinceStart = balanceTracker.fungibleActiveBalanceAmount(
-            wallet, payment.currency
-        ).sub(
-            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
-                wallet, payment.currency,
-                driipSettlementChallengeState.proposalReferenceBlockNumber(wallet, payment.currency)
-            )
+        int256 deltaBalanceAmountSinceStart = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
+            wallet, payment.currency,
+            driipSettlementChallengeState.proposalReferenceBlockNumber(wallet, payment.currency),
+            block.number
         );
 
         // Get the cumulative transfer of the payment
-        int256 paymentCumulativeTransfer = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
-            wallet, payment.currency, payment.blockNumber
-        ).sub(payment.sender.balances.current);
+        int256 paymentCumulativeTransferAmount = payment.sender.balances.current.sub(
+            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+                wallet, payment.currency, payment.blockNumber
+            )
+        );
 
         // Get the cumulative transfer of the proposal (i.e. of challenged payment)
-        int proposalCumulativeTransfer = driipSettlementChallengeState.proposalCumulativeTransferAmount(
+        int proposalCumulativeTransferAmount = driipSettlementChallengeState.proposalCumulativeTransferAmount(
             wallet, payment.currency
         );
 
-        return targetBalanceAmount.add(deltaBalanceSinceStart) < paymentCumulativeTransfer.sub(proposalCumulativeTransfer);
+        return targetBalanceAmount.add(deltaBalanceAmountSinceStart) < proposalCumulativeTransferAmount.sub(paymentCumulativeTransferAmount);
     }
 
     // Lock wallet's balances or reward challenger by stake fraction

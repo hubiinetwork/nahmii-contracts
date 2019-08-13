@@ -24,6 +24,7 @@ contract MockedDriipSettlementState {
     DriipSettlementTypesLib.Settlement[] public settlements;
     uint256 public _maxNonceByWalletAndCurrency;
     uint256 public maxDriipNonce;
+    int256 public _settledAmount;
     MonetaryTypesLib.NoncedAmount public _totalFee;
 
     function _reset()
@@ -32,6 +33,7 @@ contract MockedDriipSettlementState {
         delete settlements;
         delete _maxNonceByWalletAndCurrency;
         delete maxDriipNonce;
+        delete _settledAmount;
         delete _totalFee;
     }
 
@@ -56,7 +58,7 @@ contract MockedDriipSettlementState {
         settlements[index].target.wallet = targetWallet;
     }
 
-    function completeSettlementParty(address, uint256,
+    function completeSettlement(address, uint256,
         DriipSettlementTypesLib.SettlementRole settlementRole,
         bool done)
     public
@@ -68,7 +70,6 @@ contract MockedDriipSettlementState {
         settlements[index].origin :
         settlements[index].target;
 
-        settlementParty.done = done;
         settlementParty.doneBlockNumber = done ? block.number : 0;
     }
 
@@ -82,7 +83,7 @@ contract MockedDriipSettlementState {
 
         uint256 index = settlements.length - 1;
 
-        return (settlements[index - 1].origin.done || settlements[index - 1].target.done);
+        return (0 != settlements[index - 1].origin.doneBlockNumber || 0 != settlements[index - 1].target.doneBlockNumber);
     }
 
     function isSettlementPartyDone(address, uint256,
@@ -97,9 +98,9 @@ contract MockedDriipSettlementState {
         uint256 index = settlements.length - 1;
 
         if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
-            return settlements[index].origin.done;
+            return 0 != settlements[index].origin.doneBlockNumber;
         else
-            return settlements[index].target.done;
+            return 0 != settlements[index].target.doneBlockNumber;
     }
 
     function _setSettlementPartyDone(DriipSettlementTypesLib.SettlementRole settlementRole, bool done)
@@ -110,9 +111,9 @@ contract MockedDriipSettlementState {
         uint256 index = settlements.length - 1;
 
         if (DriipSettlementTypesLib.SettlementRole.Origin == settlementRole)
-            settlements[index].origin.done = done;
+            settlements[index].origin.doneBlockNumber = done ? block.number : 0;
         else
-            settlements[index].target.done = done;
+            settlements[index].target.doneBlockNumber = done ? block.number : 0;
     }
 
     function settlementPartyDoneBlockNumber(address, uint256)
@@ -182,6 +183,19 @@ contract MockedDriipSettlementState {
     public
     {
         maxDriipNonce = _maxDriipNonce;
+    }
+
+    function settledAmountByBlockNumber(address, MonetaryTypesLib.Currency memory, uint256)
+    public
+    view
+    returns (int256) {
+        return _settledAmount;
+    }
+
+    function addSettledAmountByBlockNumber(address, int256 amount, MonetaryTypesLib.Currency memory, uint256)
+    public
+    {
+        _settledAmount += amount;
     }
 
     function totalFee(address, Beneficiary, address, MonetaryTypesLib.Currency memory)

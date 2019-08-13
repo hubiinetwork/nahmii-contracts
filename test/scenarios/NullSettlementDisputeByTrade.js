@@ -12,6 +12,7 @@ const MockedCancelOrdersChallenge = artifacts.require('MockedCancelOrdersChallen
 const MockedValidator = artifacts.require('MockedValidator');
 const MockedSecurityBond = artifacts.require('MockedSecurityBond');
 const MockedWalletLocker = artifacts.require('MockedWalletLocker');
+const MockedBalanceTracker = artifacts.require('MockedBalanceTracker');
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -25,6 +26,7 @@ module.exports = (glob) => {
         let web3Validator, ethersValidator;
         let web3SecurityBond, ethersSecurityBond;
         let web3WalletLocker, ethersWalletLocker;
+        let web3BalanceTracker, ethersBalanceTracker;
         let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
         let web3FraudChallenge, ethersFraudChallenge;
         let web3CancelOrdersChallenge, ethersCancelOrdersChallenge;
@@ -45,6 +47,8 @@ module.exports = (glob) => {
             ethersSecurityBond = new Contract(web3SecurityBond.address, MockedSecurityBond.abi, glob.signer_owner);
             web3WalletLocker = await MockedWalletLocker.new();
             ethersWalletLocker = new Contract(web3WalletLocker.address, MockedWalletLocker.abi, glob.signer_owner);
+            web3BalanceTracker = await MockedBalanceTracker.new();
+            ethersBalanceTracker = new Contract(web3BalanceTracker.address, MockedBalanceTracker.abi, glob.signer_owner);
             web3FraudChallenge = await MockedFraudChallenge.new(glob.owner);
             ethersFraudChallenge = new Contract(web3FraudChallenge.address, MockedFraudChallenge.abi, glob.signer_owner);
             web3CancelOrdersChallenge = await MockedCancelOrdersChallenge.new();
@@ -64,6 +68,7 @@ module.exports = (glob) => {
             await ethersNullSettlementDisputeByTrade.setValidator(ethersValidator.address);
             await ethersNullSettlementDisputeByTrade.setSecurityBond(ethersSecurityBond.address);
             await ethersNullSettlementDisputeByTrade.setWalletLocker(ethersWalletLocker.address);
+            await ethersNullSettlementDisputeByTrade.setBalanceTracker(ethersBalanceTracker.address);
             await ethersNullSettlementDisputeByTrade.setFraudChallenge(ethersFraudChallenge.address);
             await ethersNullSettlementDisputeByTrade.setCancelOrdersChallenge(ethersCancelOrdersChallenge.address);
             await ethersNullSettlementDisputeByTrade.setNullSettlementChallengeState(ethersNullSettlementChallengeState.address);
@@ -314,548 +319,6 @@ module.exports = (glob) => {
             });
         });
 
-        describe('challengeByOrder()', () => {
-            let order, filter;
-
-            beforeEach(async () => {
-                await web3Validator._reset({gasLimit: 4e6});
-                await web3FraudChallenge._reset();
-                await web3CancelOrdersChallenge._reset();
-                await web3NullSettlementChallengeState._reset({gasLimit: 1e6});
-                await web3SecurityBond._reset();
-                await web3WalletLocker._reset();
-
-                order = await mocks.mockOrder(glob.owner);
-
-                await ethersNullSettlementChallengeState._addProposalIfNone();
-
-                filter = {
-                    fromBlock: await provider.getBlockNumber(),
-                    topics: ethersNullSettlementDisputeByTrade.interface.events['ChallengeByOrderEvent'].topics
-                };
-            });
-
-            describe('if called by non-enabled service action', () => {
-                it('should revert', async () => {
-                    ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, Wallet.createRandom().address, {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if called with improperly sealed order', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await web3Validator.setGenuineOrderSeals(false);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, glob.user_a, {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if called with fraudulent order', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await web3FraudChallenge.addFraudulentOrderHash(order.seals.operator.hash);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, glob.user_a, {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if called with cancelled order', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await web3CancelOrdersChallenge.cancelOrdersByHash([order.seals.operator.hash]);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, glob.user_a, {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if called on undefined proposal', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState._setProposal(false);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, glob.user_a, {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if called on expired proposal', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState._setProposal(true);
-                    await ethersNullSettlementChallengeState._setProposalExpired(true);
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, glob.user_a, {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if called on order whose nonce is less than the proposal nonce', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState._setProposal(true);
-                    await ethersNullSettlementChallengeState._setProposalNonce(
-                        order.nonce.add(10)
-                    );
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, glob.user_a, {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if called on order whose nonce is less than the proposal disqualification nonce', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState._setProposal(true);
-                    await ethersNullSettlementChallengeState._setProposalDisqualificationNonce(
-                        order.nonce.add(10)
-                    );
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, glob.user_a, {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if called on order whose amount is less than the proposal target balance amount', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState._setProposal(true);
-                    await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(
-                        order.placement.amount.div(order.placement.rate).mul(2)
-                    );
-                });
-
-                it('should revert', async () => {
-                    ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, glob.user_a, {gasLimit: 1e6}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if called with balance reward and proposal initially is qualified', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState._setProposal(true);
-                    await ethersNullSettlementChallengeState._setProposalWalletInitiated(true);
-                });
-
-                it('should disqualify proposal and reward new challenger by locking challenged wallet', async () => {
-                    await ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, glob.user_a, {gasLimit: 1e6}
-                    );
-
-                    const logs = await provider.getLogs(filter);
-                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
-
-                    const proposal = await ethersNullSettlementChallengeState._proposals(0);
-                    proposal.wallet.should.equal(utils.getAddress(order.wallet));
-                    proposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
-                    proposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-                    proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                    proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                    proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
-                    proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                    proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
-                    proposal.disqualification.candidate.kind.should.equal('order');
-
-                    (await ethersWalletLocker._unlockedWalletsCount())
-                        ._bn.should.eq.BN(0);
-
-                    (await ethersWalletLocker._lockedWalletsCount())
-                        ._bn.should.eq.BN(1);
-
-                    const lock = await ethersWalletLocker.fungibleLocks(0);
-                    lock.lockedWallet.should.equal(utils.getAddress(order.wallet));
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.user_a));
-                    lock.amount._bn.should.eq.BN(order.placement.amount.div(order.placement.rate)._bn);
-                    lock.currencyCt.should.equal(order.placement.currencies.conjugate.ct);
-                    lock.currencyId._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-
-                    (await ethersSecurityBond._absoluteDeprivalsCount())
-                        ._bn.should.eq.BN(0);
-
-                    (await ethersSecurityBond._fractionalRewardsCount())
-                        ._bn.should.eq.BN(0);
-                });
-            });
-
-            describe('if called with balance reward and proposal initially is disqualified', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState._setProposal(true);
-                    await ethersNullSettlementChallengeState._setProposalWalletInitiated(true);
-                    await ethersNullSettlementChallengeState._setProposalStatus(
-                        mocks.settlementStatuses.indexOf('Disqualified')
-                    );
-                    await ethersNullSettlementChallengeState._setProposalDisqualificationChallenger(
-                        glob.user_b
-                    );
-                });
-
-                it('should disqualify proposal anew, deprive previous challenger\'s reward and reward new challenger by locking challenged wallet', async () => {
-                    await ethersNullSettlementDisputeByTrade.challengeByOrder(
-                        order, glob.user_a, {gasLimit: 1e6}
-                    );
-
-                    const logs = await provider.getLogs(filter);
-                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
-
-                    const proposal = await ethersNullSettlementChallengeState._proposals(0);
-                    proposal.wallet.should.equal(utils.getAddress(order.wallet));
-                    proposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
-                    proposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-                    proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                    proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                    proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
-                    proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                    proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
-                    proposal.disqualification.candidate.kind.should.equal('order');
-
-                    (await ethersWalletLocker._unlockedWalletsCount())
-                        ._bn.should.eq.BN(1);
-
-                    const unlock = await ethersWalletLocker.fungibleUnlocks(0);
-                    unlock.lockedWallet.should.equal(utils.getAddress(order.wallet));
-                    unlock.lockerWallet.should.equal(utils.getAddress(glob.user_b));
-
-                    (await ethersWalletLocker._lockedWalletsCount())
-                        ._bn.should.eq.BN(1);
-
-                    const lock = await ethersWalletLocker.fungibleLocks(0);
-                    lock.lockedWallet.should.equal(utils.getAddress(order.wallet));
-                    lock.lockerWallet.should.equal(utils.getAddress(glob.user_a));
-                    lock.amount._bn.should.eq.BN(order.placement.amount.div(order.placement.rate)._bn);
-                    lock.currencyCt.should.equal(order.placement.currencies.conjugate.ct);
-                    lock.currencyId._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-
-                    (await ethersSecurityBond._absoluteDeprivalsCount())
-                        ._bn.should.eq.BN(0);
-
-                    (await ethersSecurityBond._fractionalRewardsCount())
-                        ._bn.should.eq.BN(0);
-                });
-            });
-
-            describe('if called with security bond reward and proposal initially is qualified', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState._setProposal(true);
-                });
-
-                describe('if wallet balance amount is greater than fractional amount', () => {
-                    beforeEach(async () => {
-                        await ethersSecurityBond._setDepositedFractionalBalance(order.placement.amount.div(order.placement.rate).div(2));
-                    });
-
-                    it('should disqualify proposal and reward new challenger from security bond', async () => {
-                        await ethersNullSettlementDisputeByTrade.challengeByOrder(
-                            order, glob.user_a, {gasLimit: 1e6}
-                        );
-
-                        const logs = await provider.getLogs(filter);
-                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
-
-                        const proposal = await ethersNullSettlementChallengeState._proposals(0);
-                        proposal.wallet.should.equal(utils.getAddress(order.wallet));
-                        proposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
-                        proposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-                        proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                        proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
-                        proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                        proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
-                        proposal.disqualification.candidate.kind.should.equal('order');
-
-                        (await ethersWalletLocker._unlockedWalletsCount())
-                            ._bn.should.eq.BN(0);
-
-                        (await ethersWalletLocker._lockedWalletsCount())
-                            ._bn.should.eq.BN(0);
-
-                        (await ethersSecurityBond._absoluteDeprivalsCount())
-                            ._bn.should.eq.BN(0);
-
-                        (await ethersSecurityBond._absoluteRewardsCount())
-                            ._bn.should.eq.BN(2);
-
-                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
-                        flatReward.wallet.should.equal(utils.getAddress(glob.user_a));
-                        flatReward.amount._bn.should.eq.BN(1e16.toString());
-                        flatReward.currency.ct.should.equal(mocks.address0);
-                        flatReward.currency.id._bn.should.eq.BN(0);
-                        flatReward.unlockTime._bn.should.eq.BN(0);
-
-                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
-                        progressiveReward.wallet.should.equal(utils.getAddress(glob.user_a));
-                        progressiveReward.amount._bn.should.eq.BN(order.placement.amount.div(order.placement.rate).div(2)._bn);
-                        progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
-                        progressiveReward.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-                        progressiveReward.unlockTime._bn.should.eq.BN(0);
-                    });
-                });
-
-                describe('if wallet balance amount is less than fractional amount', () => {
-                    beforeEach(async () => {
-                        await ethersSecurityBond._setDepositedFractionalBalance(order.placement.amount.div(order.placement.rate).mul(2));
-                    });
-
-                    it('should disqualify proposal and reward new challenger from security bond', async () => {
-                        await ethersNullSettlementDisputeByTrade.challengeByOrder(
-                            order, glob.user_a, {gasLimit: 1e6}
-                        );
-
-                        const logs = await provider.getLogs(filter);
-                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
-
-                        const proposal = await ethersNullSettlementChallengeState._proposals(0);
-                        proposal.wallet.should.equal(utils.getAddress(order.wallet));
-                        proposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
-                        proposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-                        proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                        proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
-                        proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                        proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
-                        proposal.disqualification.candidate.kind.should.equal('order');
-
-                        (await ethersWalletLocker._unlockedWalletsCount())
-                            ._bn.should.eq.BN(0);
-
-                        (await ethersWalletLocker._lockedWalletsCount())
-                            ._bn.should.eq.BN(0);
-
-                        (await ethersSecurityBond._absoluteDeprivalsCount())
-                            ._bn.should.eq.BN(0);
-
-                        (await ethersSecurityBond._absoluteRewardsCount())
-                            ._bn.should.eq.BN(2);
-
-                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
-                        flatReward.wallet.should.equal(utils.getAddress(glob.user_a));
-                        flatReward.amount._bn.should.eq.BN(1e16.toString());
-                        flatReward.currency.ct.should.equal(mocks.address0);
-                        flatReward.currency.id._bn.should.eq.BN(0);
-                        flatReward.unlockTime._bn.should.eq.BN(0);
-
-                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
-                        progressiveReward.wallet.should.equal(utils.getAddress(glob.user_a));
-                        progressiveReward.amount._bn.should.eq.BN(order.placement.amount.div(order.placement.rate)._bn);
-                        progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
-                        progressiveReward.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-                        progressiveReward.unlockTime._bn.should.eq.BN(0);
-                    });
-                });
-            });
-
-            describe('if called with security bond reward and proposal initially is disqualified', () => {
-                beforeEach(async () => {
-                    await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
-                    await ethersNullSettlementDisputeByTrade.enableServiceAction(
-                        glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_ORDER_ACTION(),
-                        {gasLimit: 1e6}
-                    );
-
-                    await ethersNullSettlementChallengeState._setProposal(true);
-                    await ethersNullSettlementChallengeState._setProposalStatus(
-                        mocks.settlementStatuses.indexOf('Disqualified')
-                    );
-                    await ethersNullSettlementChallengeState._setProposalDisqualificationChallenger(
-                        glob.user_b
-                    );
-                });
-
-                describe('if wallet balance amount is greater than fractional amount', () => {
-                    beforeEach(async () => {
-                        await ethersSecurityBond._setDepositedFractionalBalance(order.placement.amount.div(order.placement.rate).div(2));
-                    });
-
-                    it('should disqualify proposal anew, deprive previous challenger\'s reward and reward new challenger from security bond', async () => {
-                        await ethersNullSettlementDisputeByTrade.challengeByOrder(
-                            order, glob.user_a, {gasLimit: 1e6}
-                        );
-
-                        const logs = await provider.getLogs(filter);
-                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
-
-                        const proposal = await ethersNullSettlementChallengeState._proposals(0);
-                        proposal.wallet.should.equal(utils.getAddress(order.wallet));
-                        proposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
-                        proposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-                        proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                        proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
-                        proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                        proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
-                        proposal.disqualification.candidate.kind.should.equal('order');
-
-                        (await ethersWalletLocker._unlockedWalletsCount())
-                            ._bn.should.eq.BN(0);
-
-                        (await ethersWalletLocker._lockedWalletsCount())
-                            ._bn.should.eq.BN(0);
-
-                        (await ethersSecurityBond._absoluteDeprivalsCount())
-                            ._bn.should.eq.BN(1);
-
-                        const deprival = await ethersSecurityBond.absoluteDeprivals(0);
-                        deprival.wallet.should.equal(utils.getAddress(glob.user_b));
-
-                        (await ethersSecurityBond._absoluteRewardsCount())
-                            ._bn.should.eq.BN(2);
-
-                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
-                        flatReward.wallet.should.equal(utils.getAddress(glob.user_a));
-                        flatReward.amount._bn.should.eq.BN(1e16.toString());
-                        flatReward.currency.ct.should.equal(mocks.address0);
-                        flatReward.currency.id._bn.should.eq.BN(0);
-                        flatReward.unlockTime._bn.should.eq.BN(0);
-
-                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
-                        progressiveReward.wallet.should.equal(utils.getAddress(glob.user_a));
-                        progressiveReward.amount._bn.should.eq.BN(order.placement.amount.div(order.placement.rate).div(2)._bn);
-                        progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
-                        progressiveReward.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-                        progressiveReward.unlockTime._bn.should.eq.BN(0);
-                    });
-                });
-
-                describe('if wallet balance amount is less than fractional amount', () => {
-                    beforeEach(async () => {
-                        await ethersSecurityBond._setDepositedFractionalBalance(order.placement.amount.div(order.placement.rate).mul(2));
-                    });
-
-                    it('should disqualify proposal anew, deprive previous challenger\'s reward and reward new challenger from security bond', async () => {
-                        await ethersNullSettlementDisputeByTrade.challengeByOrder(
-                            order, glob.user_a, {gasLimit: 1e6}
-                        );
-
-                        const logs = await provider.getLogs(filter);
-                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
-
-                        const proposal = await ethersNullSettlementChallengeState._proposals(0);
-                        proposal.wallet.should.equal(utils.getAddress(order.wallet));
-                        proposal.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
-                        proposal.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-                        proposal.status.should.equal(mocks.settlementStatuses.indexOf('Disqualified'));
-                        proposal.disqualification.challenger.should.equal(utils.getAddress(glob.user_a));
-                        proposal.disqualification.blockNumber._bn.should.eq.BN(order.blockNumber._bn);
-                        proposal.disqualification.nonce._bn.should.eq.BN(order.nonce._bn);
-                        proposal.disqualification.candidate.hash.should.equal(order.seals.operator.hash);
-                        proposal.disqualification.candidate.kind.should.equal('order');
-
-                        (await ethersWalletLocker._unlockedWalletsCount())
-                            ._bn.should.eq.BN(0);
-
-                        (await ethersWalletLocker._lockedWalletsCount())
-                            ._bn.should.eq.BN(0);
-
-                        (await ethersSecurityBond._absoluteDeprivalsCount())
-                            ._bn.should.eq.BN(1);
-
-                        const deprival = await ethersSecurityBond.absoluteDeprivals(0);
-                        deprival.wallet.should.equal(utils.getAddress(glob.user_b));
-
-                        (await ethersSecurityBond._absoluteRewardsCount())
-                            ._bn.should.eq.BN(2);
-
-                        const flatReward = await ethersSecurityBond.absoluteRewards(0);
-                        flatReward.wallet.should.equal(utils.getAddress(glob.user_a));
-                        flatReward.amount._bn.should.eq.BN(1e16.toString());
-                        flatReward.currency.ct.should.equal(mocks.address0);
-                        flatReward.currency.id._bn.should.eq.BN(0);
-                        flatReward.unlockTime._bn.should.eq.BN(0);
-
-                        const progressiveReward = await ethersSecurityBond.absoluteRewards(1);
-                        progressiveReward.wallet.should.equal(utils.getAddress(glob.user_a));
-                        progressiveReward.amount._bn.should.eq.BN(order.placement.amount.div(order.placement.rate)._bn);
-                        progressiveReward.currency.ct.should.equal(order.placement.currencies.conjugate.ct);
-                        progressiveReward.currency.id._bn.should.eq.BN(order.placement.currencies.conjugate.id._bn);
-                        progressiveReward.unlockTime._bn.should.eq.BN(0);
-                    });
-                });
-            });
-        });
-
         describe('challengeByTrade()', () => {
             let trade, filter;
 
@@ -866,6 +329,7 @@ module.exports = (glob) => {
                 await web3NullSettlementChallengeState._reset({gasLimit: 1e6});
                 await web3SecurityBond._reset();
                 await web3WalletLocker._reset();
+                await web3BalanceTracker._reset();
 
                 await ethersNullSettlementChallengeState._addProposalIfNone();
 
@@ -1055,7 +519,7 @@ module.exports = (glob) => {
                 });
             });
 
-            describe('if called on trade whose single transfer amount is less than the proposal target balance amount', () => {
+            describe('if not causing overrun', () => {
                 beforeEach(async () => {
                     await ethersNullSettlementDisputeByTrade.registerService(glob.owner);
                     await ethersNullSettlementDisputeByTrade.enableServiceAction(
@@ -1063,9 +527,20 @@ module.exports = (glob) => {
                         {gasLimit: 1e6}
                     );
 
+                    await ethersBalanceTracker._set(
+                        await ethersBalanceTracker.depositedBalanceType(), trade.buyer.balances.conjugate.previous,
+                        {gasLimit: 1e6}
+                    );
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), trade.buyer.balances.conjugate.previous,
+                        1, {gasLimit: 1e6}
+                    );
+
                     await ethersNullSettlementChallengeState._setProposal(true);
                     await ethersNullSettlementChallengeState._setProposalTargetBalanceAmount(
-                        trade.transfers.conjugate.single.mul(2)
+                        trade.buyer.balances.conjugate.previous
+                            .sub(trade.buyer.balances.conjugate.current)
+                            .mul(2)
                     );
                 });
 
@@ -1082,6 +557,15 @@ module.exports = (glob) => {
                     await ethersNullSettlementDisputeByTrade.enableServiceAction(
                         glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_TRADE_ACTION(),
                         {gasLimit: 1e6}
+                    );
+
+                    await ethersBalanceTracker._set(
+                        await ethersBalanceTracker.depositedBalanceType(), trade.buyer.balances.conjugate.previous,
+                        {gasLimit: 1e6}
+                    );
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), trade.buyer.balances.conjugate.previous,
+                        1, {gasLimit: 1e6}
                     );
 
                     await ethersNullSettlementChallengeState._setProposal(true);
@@ -1135,6 +619,15 @@ module.exports = (glob) => {
                     await ethersNullSettlementDisputeByTrade.enableServiceAction(
                         glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_TRADE_ACTION(),
                         {gasLimit: 1e6}
+                    );
+
+                    await ethersBalanceTracker._set(
+                        await ethersBalanceTracker.depositedBalanceType(), trade.buyer.balances.conjugate.previous,
+                        {gasLimit: 1e6}
+                    );
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), trade.buyer.balances.conjugate.previous,
+                        1, {gasLimit: 1e6}
                     );
 
                     await ethersNullSettlementChallengeState._setProposal(true);
@@ -1197,6 +690,15 @@ module.exports = (glob) => {
                     await ethersNullSettlementDisputeByTrade.enableServiceAction(
                         glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_TRADE_ACTION(),
                         {gasLimit: 1e6}
+                    );
+
+                    await ethersBalanceTracker._set(
+                        await ethersBalanceTracker.depositedBalanceType(), trade.buyer.balances.conjugate.previous,
+                        {gasLimit: 1e6}
+                    );
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), trade.buyer.balances.conjugate.previous,
+                        1, {gasLimit: 1e6}
                     );
 
                     await ethersNullSettlementChallengeState._setProposal(true);
@@ -1311,6 +813,15 @@ module.exports = (glob) => {
                     await ethersNullSettlementDisputeByTrade.enableServiceAction(
                         glob.owner, await ethersNullSettlementDisputeByTrade.CHALLENGE_BY_TRADE_ACTION(),
                         {gasLimit: 1e6}
+                    );
+
+                    await ethersBalanceTracker._set(
+                        await ethersBalanceTracker.depositedBalanceType(), trade.buyer.balances.conjugate.previous,
+                        {gasLimit: 1e6}
+                    );
+                    await ethersBalanceTracker._setFungibleRecord(
+                        await ethersBalanceTracker.depositedBalanceType(), trade.buyer.balances.conjugate.previous,
+                        1, {gasLimit: 1e6}
                     );
 
                     await ethersNullSettlementChallengeState._setProposal(true);

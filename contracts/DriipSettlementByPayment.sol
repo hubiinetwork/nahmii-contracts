@@ -13,6 +13,7 @@ import {Ownable} from "./Ownable.sol";
 import {Configurable} from "./Configurable.sol";
 import {Validatable} from "./Validatable.sol";
 import {ClientFundable} from "./ClientFundable.sol";
+import {BalanceTrackable} from "./BalanceTrackable.sol";
 import {CommunityVotable} from "./CommunityVotable.sol";
 import {FraudChallengable} from "./FraudChallengable.sol";
 import {WalletLockable} from "./WalletLockable.sol";
@@ -28,15 +29,18 @@ import {NahmiiTypesLib} from "./NahmiiTypesLib.sol";
 import {PaymentTypesLib} from "./PaymentTypesLib.sol";
 import {DriipSettlementTypesLib} from "./DriipSettlementTypesLib.sol";
 import {SettlementChallengeTypesLib} from "./SettlementChallengeTypesLib.sol";
+import {BalanceTracker} from "./BalanceTracker.sol";
+import {BalanceTrackerLib} from "./BalanceTrackerLib.sol";
 
 /**
  * @title DriipSettlementByPayment
  * @notice Where driip settlements pertaining to payment are finalized
  */
-contract DriipSettlementByPayment is Ownable, Configurable, Validatable, ClientFundable, CommunityVotable,
-FraudChallengable, WalletLockable, PartnerBenefactorable {
+contract DriipSettlementByPayment is Ownable, Configurable, Validatable, ClientFundable, BalanceTrackable,
+CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
     using SafeMathIntLib for int256;
     using SafeMathUintLib for uint256;
+    using BalanceTrackerLib for BalanceTracker;
 
     //
     // Variables
@@ -183,40 +187,54 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
     onlySealedPayment(payment)
     onlyPaymentParty(payment, wallet)
     {
-        require(!fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash), "Payment deemed fraudulent [DriipSettlementByPayment.sol:186]");
-        require(!communityVote.isDoubleSpenderWallet(wallet), "Wallet deemed double spender [DriipSettlementByPayment.sol:187]");
+        require(
+            !fraudChallenge.isFraudulentPaymentHash(payment.seals.operator.hash),
+            "Payment deemed fraudulent [DriipSettlementByPayment.sol:190]"
+        );
+        require(
+            !communityVote.isDoubleSpenderWallet(wallet),
+            "Wallet deemed double spender [DriipSettlementByPayment.sol:194]"
+        );
 
         // Require that wallet is not locked
-        require(!walletLocker.isLocked(wallet), "Wallet found locked [DriipSettlementByPayment.sol:190]");
+        require(!walletLocker.isLocked(wallet), "Wallet found locked [DriipSettlementByPayment.sol:200]");
 
         // Require that the wallet's current driip settlement challenge proposal is defined wrt this payment
-        require(payment.seals.operator.hash == driipSettlementChallengeState.proposalChallengedHash(
-            wallet, payment.currency
-        ), "Payment not challenged [DriipSettlementByPayment.sol:193]");
+        require(
+            payment.seals.operator.hash == driipSettlementChallengeState.proposalChallengedHash(wallet, payment.currency),
+            "Payment not challenged [DriipSettlementByPayment.sol:203]"
+        );
 
-        // Extract properties depending on settlement role
-        (
-        DriipSettlementTypesLib.SettlementRole settlementRole, uint256 nonce,
-        NahmiiTypesLib.OriginFigure[] memory totalFees, int256 currentBalance
-        ) = _getRoleProperties(payment, wallet);
+        // Extract settlement role and nonce
+        (DriipSettlementTypesLib.SettlementRole settlementRole, uint256 nonce) = _getSettlementRoleNonce(payment, wallet);
 
         // Require that driip settlement challenge proposal has been initiated
-        require(driipSettlementChallengeState.hasProposal(wallet, nonce, payment.currency), "No proposal found [DriipSettlementByPayment.sol:204]");
+        require(
+            driipSettlementChallengeState.hasProposal(wallet, nonce, payment.currency),
+            "No proposal found [DriipSettlementByPayment.sol:212]"
+        );
 
         // Require that driip settlement challenge proposal has not been terminated already
-        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency), "Proposal found terminated [DriipSettlementByPayment.sol:207]");
+        require(
+            !driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency),
+            "Proposal found terminated [DriipSettlementByPayment.sol:218]"
+        );
 
         // Require that driip settlement challenge proposal has expired
-        require(driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency), "Proposal found not expired [DriipSettlementByPayment.sol:210]");
+        require(
+            driipSettlementChallengeState.hasProposalExpired(wallet, payment.currency),
+            "Proposal found not expired [DriipSettlementByPayment.sol:224]"
+        );
 
         // Require that driip settlement challenge proposal qualified
-        require(SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
-            wallet, payment.currency
-        ), "Proposal found not qualified [DriipSettlementByPayment.sol:213]");
+        require(
+            SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(wallet, payment.currency),
+            "Proposal found not qualified [DriipSettlementByPayment.sol:230]"
+        );
 
         // Require that operational mode is normal and data is available
-        require(configuration.isOperationalModeNormal(), "Not normal operational mode [DriipSettlementByPayment.sol:218]");
-        require(communityVote.isDataAvailable(), "Data not available [DriipSettlementByPayment.sol:219]");
+        require(configuration.isOperationalModeNormal(), "Not normal operational mode [DriipSettlementByPayment.sol:236]");
+        require(communityVote.isDataAvailable(), "Data not available [DriipSettlementByPayment.sol:237]");
 
         // Init settlement, i.e. create one if no such settlement exists for the double pair of wallets and nonces
         driipSettlementState.initSettlement(
@@ -226,25 +244,42 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
         );
 
         // If exists settlement of nonce then require that wallet has not already settled
-        require(!driipSettlementState.isSettlementPartyDone(
-            wallet, nonce, settlementRole
-        ), "Settlement party already done [DriipSettlementByPayment.sol:229]");
-
-        // Set address of origin or target to prevent the same settlement from being resettled by this wallet
-        driipSettlementState.completeSettlementParty(
-            wallet, nonce, settlementRole, true
+        require(
+            !driipSettlementState.isSettlementPartyDone(wallet, nonce, settlementRole),
+            "Settlement party already done [DriipSettlementByPayment.sol:247]"
         );
+
+        // Execute settlement
+        _settle(wallet, payment, standard, nonce, settlementRole);
+
+        // Terminate proposal
+        driipSettlementChallengeState.terminateProposal(wallet, payment.currency, false);
+    }
+
+    function _settle(address wallet, PaymentTypesLib.Payment memory payment, string memory standard,
+        uint256 nonce, DriipSettlementTypesLib.SettlementRole settlementRole)
+    private
+    {
+        // Extract current balance and total fees
+        (int256 correctedCurrentBalanceAmount, int settleAmount, NahmiiTypesLib.OriginFigure[] memory totalFees) =
+        _paymentPartyProperties(payment, wallet);
+
+        // Get max nonce for wallet and currency
+        uint256 maxNonce = driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency);
 
         // If wallet has previously settled balance of the concerned currency with higher wallet nonce, then don't
         // settle balance again
-        if (driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency) < nonce) {
-            // Update settled nonce of wallet and currency
+        if (maxNonce < nonce) {
+            // Update max nonce of wallet and currency
             driipSettlementState.setMaxNonceByWalletAndCurrency(wallet, payment.currency, nonce);
 
             // Update settled balance
             clientFund.updateSettledBalance(
-                wallet, currentBalance, payment.currency.ct, payment.currency.id, standard, payment.blockNumber
+                wallet, correctedCurrentBalanceAmount, payment.currency.ct, payment.currency.id, standard, block.number
             );
+
+            // Update settled amount
+            driipSettlementState.addSettledAmountByBlockNumber(wallet, settleAmount, payment.currency, payment.blockNumber);
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
@@ -255,32 +290,63 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
             // Stage fees to revenue fund
             if (address(0) != address(revenueFund))
                 _stageFees(wallet, totalFees, revenueFund, nonce, standard);
-        }
 
-        // Remove driip settlement challenge proposal
-        driipSettlementChallengeState.terminateProposal(wallet, payment.currency, false);
+            // Complete settlement of party
+            driipSettlementState.completeSettlement(
+                wallet, nonce, settlementRole, true
+            );
+        }
     }
 
-    function _getRoleProperties(PaymentTypesLib.Payment memory payment, address wallet)
+    function _getSettlementRoleNonce(PaymentTypesLib.Payment memory payment, address wallet)
     private
     view
-    returns (
-        DriipSettlementTypesLib.SettlementRole settlementRole, uint256 walletNonce,
-        NahmiiTypesLib.OriginFigure[] memory totalFees, int256 currentBalance
-    )
+    returns (DriipSettlementTypesLib.SettlementRole settlementRole, uint256 nonce)
     {
         if (validator.isPaymentSender(payment, wallet)) {
             settlementRole = DriipSettlementTypesLib.SettlementRole.Origin;
-            walletNonce = payment.sender.nonce;
-            totalFees = payment.sender.fees.total;
-            currentBalance = payment.sender.balances.current;
-
+            nonce = payment.sender.nonce;
         } else {
             settlementRole = DriipSettlementTypesLib.SettlementRole.Target;
-            walletNonce = payment.recipient.nonce;
-            totalFees = payment.recipient.fees.total;
-            currentBalance = payment.recipient.balances.current;
+            nonce = payment.recipient.nonce;
         }
+    }
+
+    function _paymentPartyProperties(PaymentTypesLib.Payment memory payment,
+        address wallet)
+    private
+    view
+    returns (int256 correctedPaymentBalanceAmount, int settleAmount, NahmiiTypesLib.OriginFigure[] memory totalFees)
+    {
+        if (validator.isPaymentSender(payment, wallet)) {
+            correctedPaymentBalanceAmount = payment.sender.balances.current;
+            totalFees = payment.sender.fees.total;
+        } else {
+            correctedPaymentBalanceAmount = payment.recipient.balances.current;
+            totalFees = payment.recipient.fees.total;
+        }
+
+        // Obtain delta in active balance amount since payment's block number
+        int256 deltaActiveBalanceAmount = balanceTracker.fungibleActiveDeltaBalanceAmountByBlockNumbers(
+            wallet, payment.currency, payment.blockNumber, block.number
+        );
+
+        // Obtain delta in settled balance amount
+        int256 deltaSettledBalanceAmount = driipSettlementState.settledAmountByBlockNumber(
+            wallet, payment.currency, payment.blockNumber
+        );
+
+        // Calculate settle amount by this payment
+        settleAmount = correctedPaymentBalanceAmount.sub(
+            balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+                wallet, payment.currency, payment.blockNumber
+            )
+        ).sub(deltaSettledBalanceAmount);
+
+        // Correct the payment's balance by on-chain deltas
+        correctedPaymentBalanceAmount = correctedPaymentBalanceAmount
+        .add(deltaActiveBalanceAmount)
+        .sub(deltaSettledBalanceAmount);
     }
 
     function _stageFees(address wallet, NahmiiTypesLib.OriginFigure[] memory fees,
@@ -297,7 +363,7 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
                 0 < partnerBenefactor.registeredBeneficiariesCount() &&
                 fees[i].originId <= partnerBenefactor.registeredBeneficiariesCount()
             )
-                beneficiary = partnerBenefactor.beneficiaries(fees[i].originId - 1);
+                beneficiary = partnerBenefactor.beneficiaries(fees[i].originId.sub(1));
 
             // Continue if there is no beneficiary corresponding to the origin ID
             if (address(0) == address(beneficiary))
@@ -306,22 +372,26 @@ FraudChallengable, WalletLockable, PartnerBenefactorable {
             // Define destination from origin ID
             address destination = address(fees[i].originId);
 
+            // If the nonce of the last total fee update is smaller then the current nonce...
             if (driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).nonce < nonce) {
                 // Get the amount previously staged
-                int256 deltaAmount = fees[i].figure.amount - driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount;
+                int256 deltaAmount = fees[i].figure.amount.sub(driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount);
 
-                // Update fee total
-                driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
+                // If the fee delta is strictly positive...
+                if (deltaAmount.isNonZeroPositiveInt256()) {
+                    // Update total fee
+                    driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
 
-                // Stage to beneficiary
-                clientFund.transferToBeneficiary(
-                    wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, standard
-                );
+                    // Stage to beneficiary
+                    clientFund.transferToBeneficiary(
+                        wallet, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, standard
+                    );
 
-                // Emit event
-                emit StageFeesEvent(
-                    wallet, deltaAmount, fees[i].figure.amount, fees[i].figure.currency.ct, fees[i].figure.currency.id
-                );
+                    // Emit event
+                    emit StageFeesEvent(
+                        wallet, deltaAmount, fees[i].figure.amount, fees[i].figure.currency.ct, fees[i].figure.currency.id
+                    );
+                }
             }
         }
     }

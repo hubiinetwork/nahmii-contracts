@@ -49,8 +49,8 @@ FraudChallengable, WalletLockable {
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SettleTradeEvent(address wallet, TradeTypesLib.Trade trade);
-    event SettleTradeByProxyEvent(address proxy, address wallet, TradeTypesLib.Trade trade);
+    event SettleTradeEvent(address wallet, TradeTypesLib.Trade trade, string standard);
+    event SettleTradeByProxyEvent(address proxy, address wallet, TradeTypesLib.Trade trade, string standard);
     event SetDriipSettlementChallengeStateEvent(DriipSettlementChallengeState oldDriipSettlementChallengeState,
         DriipSettlementChallengeState newDriipSettlementChallengeState);
     event SetDriipSettlementStateEvent(DriipSettlementState oldDriipSettlementState,
@@ -163,47 +163,61 @@ FraudChallengable, WalletLockable {
 
     /// @notice Settle driip that is a trade
     /// @param trade The trade to be settled
-    function settleTrade(TradeTypesLib.Trade memory trade)
+    /// @param standard The standard of the token to be settled (discarded if settling ETH)
+    function settleTrade(TradeTypesLib.Trade memory trade, string memory standard)
     public
     {
         // Settle trade
-        _settleTrade(msg.sender, trade);
+        _settleTrade(msg.sender, trade, standard);
 
         // Emit event
-        emit SettleTradeEvent(msg.sender, trade);
+        emit SettleTradeEvent(msg.sender, trade, standard);
     }
 
     /// @notice Settle driip that is a trade
     /// @param wallet The wallet whose side of the trade is to be settled
     /// @param trade The trade to be settled
-    function settleTradeByProxy(address wallet, TradeTypesLib.Trade memory trade)
+    /// @param standard The standard of the token to be settled (discarded if settling ETH)
+    function settleTradeByProxy(address wallet, TradeTypesLib.Trade memory trade, string memory standard)
     public
     onlyOperator
     {
         // Settle trade for wallet
-        _settleTrade(wallet, trade);
+        _settleTrade(wallet, trade, standard);
 
         // Emit event
-        emit SettleTradeByProxyEvent(msg.sender, wallet, trade);
+        emit SettleTradeByProxyEvent(msg.sender, wallet, trade, standard);
     }
 
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _settleTrade(address wallet, TradeTypesLib.Trade memory trade)
+    function _settleTrade(address wallet, TradeTypesLib.Trade memory trade, string memory standard)
     private
     onlySealedTrade(trade)
     onlyTradeParty(trade, wallet)
     {
-        require(!fraudChallenge.isFraudulentTradeHash(trade.seal.hash));
-        require(!communityVote.isDoubleSpenderWallet(wallet));
+        require(
+            !fraudChallenge.isFraudulentTradeHash(trade.seal.hash),
+            "Trade deemed fraudulent [DriipSettlementByTrade.sol:200]"
+        );
+        require(
+            !communityVote.isDoubleSpenderWallet(wallet),
+            "Wallet deemed double spender [DriipSettlementByTrade.sol:204]"
+        );
 
         // Require that wallet is not locked
-        require(!walletLocker.isLocked(wallet));
+        require(!walletLocker.isLocked(wallet), "Wallet found locked [DriipSettlementByTrade.sol:210]");
 
         // Require that the wallet's current driip settlement challenge proposals are defined wrt this trade
-        require(trade.seal.hash == driipSettlementChallengeState.proposalChallengedHash(wallet, trade.currencies.intended));
-        require(trade.seal.hash == driipSettlementChallengeState.proposalChallengedHash(wallet, trade.currencies.conjugate));
+        require(
+            trade.seal.hash == driipSettlementChallengeState.proposalChallengedHash(wallet, trade.currencies.intended),
+            "Trade not challenged in intended currency [DriipSettlementByTrade.sol:213]"
+        );
+        require(
+            trade.seal.hash == driipSettlementChallengeState.proposalChallengedHash(wallet, trade.currencies.conjugate),
+            "Trade not challenged in conjugate currency [DriipSettlementByTrade.sol:217]"
+        );
 
         // Extract properties depending on settlement role
         (
@@ -212,27 +226,48 @@ FraudChallengable, WalletLockable {
         ) = _getRoleProperties(trade, wallet);
 
         // Require that driip settlement challenge proposals have been initiated
-        require(driipSettlementChallengeState.hasProposal(wallet, party.nonce, trade.currencies.intended));
-        require(driipSettlementChallengeState.hasProposal(wallet, party.nonce, trade.currencies.conjugate));
+        require(
+            driipSettlementChallengeState.hasProposal(wallet, party.nonce, trade.currencies.intended),
+            "No intended proposal found [DriipSettlementByTrade.sol:229]"
+        );
+        require(
+            driipSettlementChallengeState.hasProposal(wallet, party.nonce, trade.currencies.conjugate),
+            "No conjugate proposal found [DriipSettlementByTrade.sol:233]"
+        );
 
         // Require that driip settlement challenge proposal have not been terminated already
-        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended));
-        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate));
+        require(
+            !driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.intended),
+            "Intended proposal found terminated [DriipSettlementByTrade.sol:239]"
+        );
+        require(
+            !driipSettlementChallengeState.hasProposalTerminated(wallet, trade.currencies.conjugate),
+            "Conjugate proposal found terminated [DriipSettlementByTrade.sol:243]"
+        );
 
         // Require that driip settlement challenge proposals have expired
-        require(driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended));
-        require(driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate));
+        require(
+            driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.intended),
+            "Intended proposal found not expired [DriipSettlementByTrade.sol:249]"
+        );
+        require(
+            driipSettlementChallengeState.hasProposalExpired(wallet, trade.currencies.conjugate),
+            "Conjugate proposal found not expired [DriipSettlementByTrade.sol:253]"
+        );
 
         // Require that driip settlement challenge proposals qualified
-        require(SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
-            wallet, trade.currencies.intended
-        ));
-        require(SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(
-            wallet, trade.currencies.conjugate
-        ));
+        require(
+            SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(wallet, trade.currencies.intended),
+            "Intended proposal found not qualified [DriipSettlementByTrade.sol:259]"
+        );
+        require(
+            SettlementChallengeTypesLib.Status.Qualified == driipSettlementChallengeState.proposalStatus(wallet, trade.currencies.conjugate),
+            "Conjugate proposal found not qualified [DriipSettlementByTrade.sol:263]"
+        );
 
         // Require that operational mode is normal and data is available
-        require(configuration.isOperationalModeNormal() && communityVote.isDataAvailable());
+        require(configuration.isOperationalModeNormal(), "Not normal operational mode [DriipSettlementByTrade.sol:269]");
+        require(communityVote.isDataAvailable(), "Data not available [DriipSettlementByTrade.sol:270]");
 
         // Init settlement, i.e. create one if no such settlement exists for the double pair of wallets and nonces
         driipSettlementState.initSettlement(
@@ -242,12 +277,13 @@ FraudChallengable, WalletLockable {
         );
 
         // If exists settlement of nonce then require that wallet has not already settled
-        require(!driipSettlementState.isSettlementPartyDone(
-            wallet, party.nonce, settlementRole
-        ));
+        require(
+            !driipSettlementState.isSettlementPartyDone(wallet, party.nonce, settlementRole),
+            "Settlement party already done [DriipSettlementByTrade.sol:280]"
+        );
 
-        // Set address of origin or target to prevent the same settlement from being resettled by this wallet
-        driipSettlementState.completeSettlementParty(
+        // Set wallet's completion of this trade to prevent the same settlement from being resettled by this wallet
+        driipSettlementState.completeSettlement(
             wallet, party.nonce, settlementRole, true
         );
 
@@ -260,14 +296,14 @@ FraudChallengable, WalletLockable {
             // Update settled balance
             clientFund.updateSettledBalance(
                 wallet, party.balances.intended.current, trade.currencies.intended.ct,
-                trade.currencies.intended.id, "", trade.blockNumber
+                trade.currencies.intended.id, standard, block.number
             );
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
                 wallet,
                 driipSettlementChallengeState.proposalStageAmount(wallet, trade.currencies.intended),
-                trade.currencies.intended.ct, trade.currencies.intended.id, ""
+                trade.currencies.intended.ct, trade.currencies.intended.id, standard
             );
         }
 
@@ -280,24 +316,24 @@ FraudChallengable, WalletLockable {
             // Update settled balance
             clientFund.updateSettledBalance(
                 wallet, party.balances.conjugate.current, trade.currencies.conjugate.ct,
-                trade.currencies.conjugate.id, "", trade.blockNumber
+                trade.currencies.conjugate.id, standard, block.number
             );
 
             // Stage (stage function assures positive amount only)
             clientFund.stage(
                 wallet,
                 driipSettlementChallengeState.proposalStageAmount(wallet, trade.currencies.conjugate),
-                trade.currencies.conjugate.ct, trade.currencies.conjugate.id, ""
+                trade.currencies.conjugate.ct, trade.currencies.conjugate.id, standard
             );
         }
 
         // Stage fees to revenue fund
         if (address(0) != address(revenueFund))
-            _stageFees(wallet, party.fees.total, revenueFund, party.nonce);
+            _stageFees(wallet, party.fees.total, revenueFund, party.nonce, standard);
 
-        // If trade global nonce is beyond max driip nonce then update max driip nonce
-        if (trade.nonce > driipSettlementState.maxDriipNonce())
-            driipSettlementState.setMaxDriipNonce(trade.nonce);
+        // Remove driip settlement challenge proposals
+        driipSettlementChallengeState.terminateProposal(wallet, trade.currencies.intended, false);
+        driipSettlementChallengeState.terminateProposal(wallet, trade.currencies.conjugate, false);
     }
 
     function _getRoleProperties(TradeTypesLib.Trade memory trade, address wallet)
@@ -319,7 +355,7 @@ FraudChallengable, WalletLockable {
     }
 
     function _stageFees(address wallet, NahmiiTypesLib.OriginFigure[] memory fees,
-        Beneficiary protocolBeneficiary, uint256 nonce)
+        Beneficiary protocolBeneficiary, uint256 nonce, string memory standard)
     private
     {
         // For each origin figure...
@@ -330,14 +366,14 @@ FraudChallengable, WalletLockable {
 
             if (driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).nonce < nonce) {
                 // Get the amount previously staged
-                int256 deltaAmount = fees[i].figure.amount - driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount;
+                int256 deltaAmount = fees[i].figure.amount.sub(driipSettlementState.totalFee(wallet, beneficiary, destination, fees[i].figure.currency).amount);
 
                 // Update fee total
                 driipSettlementState.setTotalFee(wallet, beneficiary, destination, fees[i].figure.currency, MonetaryTypesLib.NoncedAmount(nonce, fees[i].figure.amount));
 
                 // Transfer to beneficiary
                 clientFund.transferToBeneficiary(
-                    destination, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, ""
+                    destination, beneficiary, deltaAmount, fees[i].figure.currency.ct, fees[i].figure.currency.id, standard
                 );
 
                 // Emit event

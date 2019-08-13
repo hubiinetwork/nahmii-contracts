@@ -16,20 +16,12 @@ import {TradeTypesLib} from "../TradeTypesLib.sol";
  * @notice Mocked implementation of null settlement dispute by trade contract
  */
 contract MockedNullSettlementDisputeByTrade {
-    uint256 public _challengeByOrderCount;
     uint256 public _challengeByTradeCount;
 
     function _reset()
     public
     {
-        _challengeByOrderCount = 0;
         _challengeByTradeCount = 0;
-    }
-
-    function challengeByOrder(TradeTypesLib.Order memory, address)
-    public
-    {
-        _challengeByOrderCount++;
     }
 
     function challengeByTrade(address, TradeTypesLib.Trade memory, address)

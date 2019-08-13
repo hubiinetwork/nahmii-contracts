@@ -65,6 +65,19 @@ library FungibleBalanceLib {
         updateCurrencies(self, currencyCt, currencyId);
     }
 
+    function setByBlockNumber(Balance storage self, int256 amount, address currencyCt, uint256 currencyId,
+        uint256 blockNumber)
+    internal
+    {
+        self.amountByCurrency[currencyCt][currencyId] = amount;
+
+        self.recordsByCurrency[currencyCt][currencyId].push(
+            Record(self.amountByCurrency[currencyCt][currencyId], blockNumber)
+        );
+
+        updateCurrencies(self, currencyCt, currencyId);
+    }
+
     function add(Balance storage self, int256 amount, address currencyCt, uint256 currencyId)
     internal
     {
@@ -77,6 +90,19 @@ library FungibleBalanceLib {
         updateCurrencies(self, currencyCt, currencyId);
     }
 
+    function addByBlockNumber(Balance storage self, int256 amount, address currencyCt, uint256 currencyId,
+        uint256 blockNumber)
+    internal
+    {
+        self.amountByCurrency[currencyCt][currencyId] = self.amountByCurrency[currencyCt][currencyId].add(amount);
+
+        self.recordsByCurrency[currencyCt][currencyId].push(
+            Record(self.amountByCurrency[currencyCt][currencyId], blockNumber)
+        );
+
+        updateCurrencies(self, currencyCt, currencyId);
+    }
+
     function sub(Balance storage self, int256 amount, address currencyCt, uint256 currencyId)
     internal
     {
@@ -84,6 +110,19 @@ library FungibleBalanceLib {
 
         self.recordsByCurrency[currencyCt][currencyId].push(
             Record(self.amountByCurrency[currencyCt][currencyId], block.number)
+        );
+
+        updateCurrencies(self, currencyCt, currencyId);
+    }
+
+    function subByBlockNumber(Balance storage self, int256 amount, address currencyCt, uint256 currencyId,
+        uint256 blockNumber)
+    internal
+    {
+        self.amountByCurrency[currencyCt][currencyId] = self.amountByCurrency[currencyCt][currencyId].sub(amount);
+
+        self.recordsByCurrency[currencyCt][currencyId].push(
+            Record(self.amountByCurrency[currencyCt][currencyId], blockNumber)
         );
 
         updateCurrencies(self, currencyCt, currencyId);

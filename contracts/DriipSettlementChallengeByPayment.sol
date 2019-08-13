@@ -203,7 +203,7 @@ BalanceTrackable {
         // Define currency
         MonetaryTypesLib.Currency memory currency = MonetaryTypesLib.Currency(currencyCt, currencyId);
 
-        // Terminate driip settlement challenge proposal
+        // Stop challenge
         _stopChallenge(wallet, currency, true, false);
 
         // Emit event
@@ -492,38 +492,40 @@ BalanceTrackable {
         );
 
         // Require that given wallet is a payment party
-        require(validator.isPaymentParty(payment, wallet), "Wallet is not payment party [DriipSettlementChallengeByPayment.sol:495]");
+        require(
+            validator.isPaymentParty(payment, wallet),
+            "Wallet is not payment party [DriipSettlementChallengeByPayment.sol:495]"
+        );
 
         // Require that there is no ongoing overlapping driip settlement challenge
         require(
             !driipSettlementChallengeState.hasProposal(wallet, payment.currency) ||
         driipSettlementChallengeState.hasProposalTerminated(wallet, payment.currency),
-            "Overlapping driip settlement challenge proposal found [DriipSettlementChallengeByPayment.sol:498]"
+            "Overlapping driip settlement challenge proposal found [DriipSettlementChallengeByPayment.sol:501]"
         );
 
         // Require that there is no ongoing overlapping null settlement challenge
         require(
             !nullSettlementChallengeState.hasProposal(wallet, payment.currency) ||
         nullSettlementChallengeState.hasProposalTerminated(wallet, payment.currency),
-            "Overlapping null settlement challenge proposal found [DriipSettlementChallengeByPayment.sol:505]"
+            "Overlapping null settlement challenge proposal found [DriipSettlementChallengeByPayment.sol:508]"
         );
 
         // Deduce the concerned nonce and cumulative relative transfer
-        (uint256 nonce, int256 cumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);
+        (uint256 nonce, int256 correctedCumulativeTransferAmount) = _paymentPartyProperties(payment, wallet);
 
         // Require that the wallet nonce of the payment is higher than the highest settled wallet nonce
         require(
             driipSettlementState.maxNonceByWalletAndCurrency(wallet, payment.currency) < nonce,
-            "Wallet's nonce below highest settled nonce [DriipSettlementChallengeByPayment.sol:515]"
+            "Wallet's nonce below highest settled nonce [DriipSettlementChallengeByPayment.sol:518]"
         );
 
         // Initiate proposal, including assurance that there is no overlap with active proposal
-        // Target balance amount is calculated as current balance - cumulativeTransferAmount - stageAmount
+        // Target balance amount is calculated as current (payment) balance - cumulativeTransferAmount - stageAmount
         driipSettlementChallengeState.initiateProposal(
-            wallet, nonce, cumulativeTransferAmount, stageAmount,
-            balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency).sub(
-                cumulativeTransferAmount.add(stageAmount)
-            ),
+            wallet, nonce, correctedCumulativeTransferAmount, stageAmount,
+            balanceTracker.fungibleActiveBalanceAmount(wallet, payment.currency)
+            .add(correctedCumulativeTransferAmount.sub(stageAmount)),
             payment.currency, payment.blockNumber,
             walletInitiated, payment.seals.operator.hash, PaymentTypesLib.PAYMENT_KIND()
         );
@@ -533,8 +535,14 @@ BalanceTrackable {
     private
     {
         // Require that there is an unterminated driip settlement challenge proposal
-        require(driipSettlementChallengeState.hasProposal(wallet, currency), "No proposal found [DriipSettlementChallengeByPayment.sol:536]");
-        require(!driipSettlementChallengeState.hasProposalTerminated(wallet, currency), "Proposal found terminated [DriipSettlementChallengeByPayment.sol:537]");
+        require(
+            driipSettlementChallengeState.hasProposal(wallet, currency),
+            "No proposal found [DriipSettlementChallengeByPayment.sol:538]"
+        );
+        require(
+            !driipSettlementChallengeState.hasProposalTerminated(wallet, currency),
+            "Proposal found terminated [DriipSettlementChallengeByPayment.sol:542]"
+        );
 
         // Terminate driip settlement challenge proposal
         driipSettlementChallengeState.terminateProposal(wallet, currency, clearNonce, walletTerminated);
@@ -548,43 +556,28 @@ BalanceTrackable {
     view
     returns (uint256 nonce, int256 correctedCumulativeTransferAmount)
     {
-        // Obtain unsynchronized stage amount from previous driip settlement if existent.
-        int256 unsynchronizedStageAmount = 0;
-        if (driipSettlementChallengeState.hasProposal(wallet, payment.currency)) {
-            uint256 previousChallengeNonce = driipSettlementChallengeState.proposalNonce(wallet, payment.currency);
-
-            // Get settlement party done block number. The function returns 0 if the settlement party has not effectuated
-            // its side of the settlement.
-            uint256 settlementPartyDoneBlockNumber = driipSettlementState.settlementPartyDoneBlockNumber(
-                wallet, previousChallengeNonce
-            );
-
-            // If payment is not up to date wrt events affecting the wallet's balance then obtain
-            // the unsynchronized stage amount from the previous driip settlement challenge.
-            if (payment.blockNumber < settlementPartyDoneBlockNumber)
-                unsynchronizedStageAmount = driipSettlementChallengeState.proposalStageAmount(
-                    wallet, payment.currency
-                );
-        }
-
         // Obtain the active balance amount at the payment block
-        int256 balanceAmountAtPaymentBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+        int256 activeBalanceAmountAtPaymentBlock = balanceTracker.fungibleActiveBalanceAmountByBlockNumber(
+            wallet, payment.currency, payment.blockNumber
+        );
+
+        // Obtain the delta settled amount
+        int256 deltaSettledBalanceAmount = driipSettlementState.settledAmountByBlockNumber(
             wallet, payment.currency, payment.blockNumber
         );
 
         // Obtain nonce and cumulative (relative) transfer amount.
-        // Correct the cumulative transfer amount for wrong value occurring from
-        // race condition of off-chain wallet rebalance resulting from completed settlement
+        // Correct the cumulative transfer amount by the amount that has already been settled
         if (validator.isPaymentSender(payment, wallet)) {
             nonce = payment.sender.nonce;
-            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock
-            .sub(payment.sender.balances.current)
-            .add(unsynchronizedStageAmount);
+            correctedCumulativeTransferAmount = payment.sender.balances.current
+            .sub(activeBalanceAmountAtPaymentBlock)
+            .sub(deltaSettledBalanceAmount);
         } else {
             nonce = payment.recipient.nonce;
-            correctedCumulativeTransferAmount = balanceAmountAtPaymentBlock
-            .sub(payment.recipient.balances.current)
-            .add(unsynchronizedStageAmount);
+            correctedCumulativeTransferAmount = payment.recipient.balances.current
+            .sub(activeBalanceAmountAtPaymentBlock)
+            .sub(deltaSettledBalanceAmount);
         }
     }
 }

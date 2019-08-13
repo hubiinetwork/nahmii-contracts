@@ -16,22 +16,14 @@ import {TradeTypesLib} from "../TradeTypesLib.sol";
  * @notice Mocked implementation of driip settlement dispute by trade contract
  */
 contract MockedDriipSettlementDisputeByTrade {
-    uint256 public _challengeByOrderCount;
     uint256 public _unchallengeOrderCandidateByTradeCount;
     uint256 public _challengeByTradeCount;
 
     function _reset()
     public
     {
-        _challengeByOrderCount = 0;
         _unchallengeOrderCandidateByTradeCount = 0;
         _challengeByTradeCount = 0;
-    }
-
-    function challengeByOrder(TradeTypesLib.Order memory, address)
-    public
-    {
-        _challengeByOrderCount++;
     }
 
     function unchallengeOrderCandidateByTrade(TradeTypesLib.Order memory, TradeTypesLib.Trade memory,

@@ -162,6 +162,37 @@ module.exports = (glob) => {
             });
         });
 
+        describe('upgradeAgent()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersDriipSettlementState.upgradeAgent())
+                    .should.equal(mocks.address0);
+            });
+        });
+
+        describe('setUpgradeAgent()', () => {
+            describe('if called once', () => {
+                let address, filter;
+
+                before(async () => {
+                    address = Wallet.createRandom().address;
+
+                    filter = await fromBlockTopicsFilter(
+                        ethersDriipSettlementState.interface.events.SetUpgradeAgentEvent.topics
+                    );
+                });
+
+                it('should successfully set agent', async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(address);
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    (await ethersDriipSettlementState.upgradeAgent())
+                        .should.equal(address);
+                });
+            });
+        });
+
         describe('upgradesFrozen()', () => {
             it('should equal value initialized', async () => {
                 (await ethersDriipSettlementState.upgradesFrozen())
@@ -170,32 +201,45 @@ module.exports = (glob) => {
         });
 
         describe('freezeUpgrades()', () => {
-            describe('if called by non-deployer', () => {
+            describe('if called by non-agent', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementState.freezeUpgrades({from: glob.user_a})
+                    ethersDriipSettlementState.freezeUpgrades()
                         .should.be.rejected;
                 });
             });
 
-            describe('if called by deployer', () => {
-                let address, filter;
+            describe('if called by agent', () => {
+                let filter;
 
                 beforeEach(async () => {
-                    address = Wallet.createRandom().address;
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
 
                     filter = await fromBlockTopicsFilter(
                         ethersDriipSettlementState.interface.events.FreezeUpgradesEvent.topics
                     );
                 });
 
-                it('should disable changing community vote', async () => {
-                    await web3DriipSettlementState.freezeUpgrades();
+                it('should successfully set the upgrades frozen flag', async () => {
+                    await ethersDriipSettlementState.freezeUpgrades();
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
                     (await ethersDriipSettlementState.upgradesFrozen())
                         .should.be.true;
+                });
+            });
+
+            describe('if upgrades are frozen', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
+
+                    await ethersDriipSettlementState.freezeUpgrades();
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementState.freezeUpgrades()
+                        .should.be.rejected;
                 });
             });
         });
@@ -370,7 +414,7 @@ module.exports = (glob) => {
             });
         });
 
-        describe('completeSettlementParty()', () => {
+        describe('completeSettlement()', () => {
             let filter;
 
             beforeEach(async () => {
@@ -387,7 +431,7 @@ module.exports = (glob) => {
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.completeSettlementParty(
+                    ethersDriipSettlementState.completeSettlement(
                         glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
                     ).should.be.rejected
                 });
@@ -396,7 +440,7 @@ module.exports = (glob) => {
             describe('if called with origin role', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementState.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementState.SET_SETTLEMENT_ROLE_DONE_ACTION(),
+                        glob.owner, await ethersDriipSettlementState.COMPLETE_SETTLEMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
@@ -406,8 +450,8 @@ module.exports = (glob) => {
                 });
 
                 describe('if called with true as done value', () => {
-                    it('should successfully set done of origin role and update its done block number', async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                    it('should successfully update its done block number', async () => {
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
                         );
 
@@ -446,13 +490,13 @@ module.exports = (glob) => {
 
                 describe('if called with false as done value', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
                         );
                     });
 
-                    it('should successfully set done of origin role and update its done block number', async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                    it('should successfully reset its done block number', async () => {
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), false
                         );
 
@@ -493,7 +537,7 @@ module.exports = (glob) => {
             describe('if called with target role', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementState.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementState.SET_SETTLEMENT_ROLE_DONE_ACTION(),
+                        glob.owner, await ethersDriipSettlementState.COMPLETE_SETTLEMENT_ACTION(),
                         {gasLimit: 1e6}
                     );
 
@@ -503,8 +547,8 @@ module.exports = (glob) => {
                 });
 
                 describe('if called with true as done value', () => {
-                    it('should successfully set done of target role and update its done block number', async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                    it('should successfully update its done block number', async () => {
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), true
                         );
 
@@ -543,13 +587,13 @@ module.exports = (glob) => {
 
                 describe('if called with false as done value', () => {
                     beforeEach(async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), true
                         );
                     });
 
-                    it('should successfully set done of target role and update its done block number', async () => {
-                        await ethersDriipSettlementState.completeSettlementParty(
+                    it('should successfully reset its done block number', async () => {
+                        await ethersDriipSettlementState.completeSettlement(
                             glob.user_b, 2, mocks.settlementRoles.indexOf('Target'), false
                         );
 
@@ -714,6 +758,59 @@ module.exports = (glob) => {
             });
         });
 
+        describe('settledAmountByBlockNumber()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersDriipSettlementState.settledAmountByBlockNumber(
+                    glob.user_a, {ct: mocks.address0, id: 0}, 10
+                ))._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('addSettledAmountByBlockNumber()', () => {
+            let filter;
+
+            beforeEach(async () => {
+                await ethersDriipSettlementState.registerService(glob.owner);
+
+                filter = await fromBlockTopicsFilter(
+                    ethersDriipSettlementState.interface.events.AddSettledAmountEvent.topics
+                );
+            });
+
+            describe('if called by non-enabled service action', () => {
+                it('should revert', async () => {
+                    ethersDriipSettlementState.addSettledAmountByBlockNumber(
+                        glob.user_a, 100, {ct: mocks.address0, id: 0}, 10, {gasLimit: 1e6}
+                    ).should.be.rejected
+                });
+            });
+
+            describe('if called by enabled service action', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.enableServiceAction(
+                        glob.owner, await ethersDriipSettlementState.ADD_SETTLED_AMOUNT_ACTION(),
+                        {gasLimit: 1e6}
+                    );
+                });
+
+                it('should successfully add settled amount record at the given block number', async () => {
+                    ethersDriipSettlementState.addSettledAmountByBlockNumber(
+                        glob.user_a, 100, {ct: mocks.address0, id: 0}, 10, {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    (await ethersDriipSettlementState.settledAmountByBlockNumber(
+                        glob.user_a, {ct: mocks.address0, id: 0}, 10
+                    ))._bn.should.eq.BN(100);
+                    (await ethersDriipSettlementState.settledAmountByBlockNumber(
+                        glob.user_a, {ct: mocks.address0, id: 0}, await provider.getBlockNumber()
+                    ))._bn.should.eq.BN(0);
+                });
+            });
+        });
+
         describe('totalFee()', () => {
             it('should equal value initialized', async () => {
                 const totalFee = await ethersDriipSettlementState.totalFee(
@@ -748,7 +845,7 @@ module.exports = (glob) => {
             describe('if called by enabled service action', () => {
                 beforeEach(async () => {
                     await ethersDriipSettlementState.enableServiceAction(
-                        glob.owner, await ethersDriipSettlementState.SET_FEE_TOTAL_ACTION(),
+                        glob.owner, await ethersDriipSettlementState.SET_TOTAL_FEE_ACTION(),
                         {gasLimit: 1e6}
                     );
                 });
@@ -773,24 +870,103 @@ module.exports = (glob) => {
         });
 
         describe('upgradeSettlement', () => {
-            describe('if called by non-deployer', () => {
+            let settlement;
+
+            before(() => {
+                settlement = {
+                    settledKind: 'payment',
+                    settledHash: mocks.hash1,
+                    origin: {
+                        nonce: 1,
+                        wallet: mocks.address1,
+                        doneBlockNumber: 1234
+                    },
+                    target: {
+                        nonce: 2,
+                        wallet: mocks.address2,
+                        doneBlockNumber: 5678
+                    }
+                }
+            });
+
+            describe('if called by non-agent', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementState.upgradeSettlement(
-                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
-                        {from: glob.user_a, gas: 1e6}
-                    ).should.be.rejected;
+                    ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
+                        .should.be.rejected;
                 });
             });
 
-            describe('if called after settlement upgrades have been frozen', () => {
+            describe('if called after upgrades have been frozen', () => {
                 beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
                     await ethersDriipSettlementState.freezeUpgrades();
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementState.upgradeSettlement(
-                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
-                        {gasLimit: 1e6}
+                    ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let filter;
+
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
+                    filter = await fromBlockTopicsFilter(
+                        ethersDriipSettlementState.interface.events.UpgradeSettlementEvent.topics
+                    );
+                });
+
+                it('should successfully upgrade settlement', async () => {
+                    await ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6});
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const _settlement = await ethersDriipSettlementState.settlements(0);
+                    _settlement.settledKind.should.equal('payment');
+                    _settlement.settledHash.should.equal(mocks.hash1);
+                    _settlement.origin.nonce._bn.should.eq.BN(1);
+                    _settlement.origin.wallet.should.equal(utils.getAddress(mocks.address1));
+                    _settlement.origin.doneBlockNumber._bn.should.be.eq.BN(1234);
+                    _settlement.target.nonce._bn.should.eq.BN(2);
+                    _settlement.target.wallet.should.equal(utils.getAddress(mocks.address2));
+                    _settlement.target.doneBlockNumber._bn.should.be.eq.BN(5678);
+                });
+            });
+
+            describe('if upgrading existing settlement', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
+                    await ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6});
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+        });
+
+        describe('upgradeSettledAmount', () => {
+            describe('if called by non-agent', () => {
+                it('should revert', async () => {
+                    ethersDriipSettlementState.upgradeSettledAmount(
+                        glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called after upgrades have been frozen', () => {
+                beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
+                    await ethersDriipSettlementState.freezeUpgrades();
+                });
+
+                it('should revert', async () => {
+                    ethersDriipSettlementState.upgradeSettledAmount(
+                        glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
             });
@@ -799,46 +975,37 @@ module.exports = (glob) => {
                 let filter;
 
                 beforeEach(async () => {
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
                     filter = await fromBlockTopicsFilter(
-                        ethersDriipSettlementState.interface.events.UpgradeSettlementEvent.topics
+                        ethersDriipSettlementState.interface.events.UpgradeSettledAmountEvent.topics
                     );
                 });
 
-                it('should successfully upgrade settlement', async () => {
-                    await ethersDriipSettlementState.upgradeSettlement(
-                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
-                        {gasLimit: 1e6}
+                it('should successfully upgrade settled amount', async () => {
+                    await ethersDriipSettlementState.upgradeSettledAmount(
+                        glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
                     );
 
                     const logs = await provider.getLogs(filter);
                     logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
 
-                    const settlement = await ethersDriipSettlementState.settlements(0);
-                    settlement.settledKind.should.equal('some_kind');
-                    settlement.settledHash.should.equal(mocks.hash1);
-                    settlement.origin.nonce._bn.should.eq.BN(1);
-                    settlement.origin.wallet.should.equal(utils.getAddress(glob.user_a));
-                    settlement.origin.done.should.be.true;
-                    settlement.origin.doneBlockNumber._bn.should.be.eq.BN(100);
-                    settlement.target.nonce._bn.should.eq.BN(2);
-                    settlement.target.wallet.should.equal(utils.getAddress(glob.user_b));
-                    settlement.target.done.should.be.false;
-                    settlement.target.doneBlockNumber._bn.should.be.eq.BN(200);
+                    (await ethersDriipSettlementState.settledAmountByBlockNumber(
+                        glob.user_a, {ct: mocks.address0, id: 0}, 1234
+                    ))._bn.should.eq.BN(10);
                 });
             });
 
-            describe('if upgrading existing settlement', () => {
+            describe('if upgrading existing settled amount', () => {
                 beforeEach(async () => {
-                    await ethersDriipSettlementState.upgradeSettlement(
-                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
-                        {gasLimit: 1e6}
+                    await ethersDriipSettlementState.setUpgradeAgent(glob.owner);
+                    await ethersDriipSettlementState.upgradeSettledAmount(
+                        glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
                     );
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementState.upgradeSettlement(
-                        'some_kind', mocks.hash1, glob.user_a, 1, true, 100, glob.user_b, 2, false, 200,
-                        {gasLimit: 1e6}
+                    ethersDriipSettlementState.upgradeSettledAmount(
+                        glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
             });

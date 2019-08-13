@@ -20,7 +20,7 @@ contract MockedClientFund {
     //
     // Types
     // -----------------------------------------------------------------------------------------------------------------
-    struct Update {
+    struct Change {
         address sourceWallet;
         address targetWallet;
         MonetaryTypesLib.Figure figure;
@@ -36,9 +36,9 @@ contract MockedClientFund {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    Update[] public settledBalanceUpdates;
-    Update[] public stages;
-    Update[] public beneficiaryTransfers;
+    Change[] public settledBalanceUpdates;
+    Change[] public stages;
+    Change[] public beneficiaryTransfers;
 
     //
     // Events
@@ -70,7 +70,7 @@ contract MockedClientFund {
     public
     {
         settledBalanceUpdates.push(
-            Update(
+            Change(
                 wallet,
                 address(0),
                 MonetaryTypesLib.Figure(
@@ -95,13 +95,14 @@ contract MockedClientFund {
     function _settledBalanceUpdates(uint256 index)
     public
     view
-    returns (address, int256, address, uint256, string memory) {
+    returns (address, int256, address, uint256, string memory, uint256) {
         return (
         settledBalanceUpdates[index].sourceWallet,
         settledBalanceUpdates[index].figure.amount,
         settledBalanceUpdates[index].figure.currency.ct,
         settledBalanceUpdates[index].figure.currency.id,
-        settledBalanceUpdates[index].standard
+        settledBalanceUpdates[index].standard,
+        settledBalanceUpdates[index].blockNumber
         );
     }
 
@@ -110,7 +111,7 @@ contract MockedClientFund {
     public
     {
         stages.push(
-            Update(
+            Change(
                 wallet,
                 address(0),
                 MonetaryTypesLib.Figure(
@@ -129,7 +130,7 @@ contract MockedClientFund {
     public
     {
         stages.push(
-            Update(
+            Change(
                 wallet,
                 address(beneficiary),
                 MonetaryTypesLib.Figure(
@@ -171,7 +172,7 @@ contract MockedClientFund {
     public
     {
         beneficiaryTransfers.push(
-            Update(
+            Change(
                 wallet,
                 address(beneficiary),
                 MonetaryTypesLib.Figure(

@@ -13,11 +13,12 @@ chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
 chai.should();
 
+let provider;
+
 module.exports = (glob) => {
     describe('NullSettlementChallengeState', () => {
         let web3NullSettlementChallengeState, ethersNullSettlementChallengeState;
         let web3Configuration, ethersConfiguration;
-        let provider;
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -76,6 +77,88 @@ module.exports = (glob) => {
             });
         });
 
+        describe('upgradeAgent()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersNullSettlementChallengeState.upgradeAgent())
+                    .should.equal(mocks.address0);
+            });
+        });
+
+        describe('setUpgradeAgent()', () => {
+            describe('if called once', () => {
+                let address, filter;
+
+                before(async () => {
+                    address = Wallet.createRandom().address;
+
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.SetUpgradeAgentEvent.topics
+                    );
+                });
+
+                it('should successfully set agent', async () => {
+                    await ethersNullSettlementChallengeState.setUpgradeAgent(address);
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    (await ethersNullSettlementChallengeState.upgradeAgent())
+                        .should.equal(address);
+                });
+            });
+        });
+
+        describe('upgradesFrozen()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersNullSettlementChallengeState.upgradesFrozen())
+                    .should.be.false;
+            });
+        });
+
+        describe('freezeUpgrades()', () => {
+            describe('if called by non-agent', () => {
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeState.freezeUpgrades()
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called by agent', () => {
+                let filter;
+
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState.setUpgradeAgent(glob.owner);
+
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.FreezeUpgradesEvent.topics
+                    );
+                });
+
+                it('should successfully set the upgrades frozen flag', async () => {
+                    await ethersNullSettlementChallengeState.freezeUpgrades();
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    (await ethersNullSettlementChallengeState.upgradesFrozen())
+                        .should.be.true;
+                });
+            });
+
+            describe('if upgrades are frozen', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState.setUpgradeAgent(glob.owner);
+
+                    await ethersNullSettlementChallengeState.freezeUpgrades();
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeState.freezeUpgrades()
+                        .should.be.rejected;
+                });
+            });
+        });
+
         describe('proposals()', () => {
             it('should return default values', async () => {
                 ethersNullSettlementChallengeState.proposals(0)
@@ -117,10 +200,9 @@ module.exports = (glob) => {
                         glob.owner, await ethersNullSettlementChallengeState.INITIATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
-                    filter = {
-                        fromBlock: await provider.getBlockNumber(),
-                        topics: ethersNullSettlementChallengeState.interface.events['InitiateProposalEvent'].topics
-                    };
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.InitiateProposalEvent.topics
+                    );
                 });
 
                 it('successfully initiate proposal', async () => {
@@ -176,10 +258,9 @@ module.exports = (glob) => {
                         glob.owner, await ethersNullSettlementChallengeState.TERMINATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
-                    filter = {
-                        fromBlock: await provider.getBlockNumber(),
-                        topics: ethersNullSettlementChallengeState.interface.events['TerminateProposalEvent'].topics
-                    };
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.TerminateProposalEvent.topics
+                    );
                 });
 
                 it('should return gracefully', async () => {
@@ -203,10 +284,9 @@ module.exports = (glob) => {
                         30, true, {gasLimit: 1e6}
                     );
 
-                    filter = {
-                        fromBlock: await provider.getBlockNumber(),
-                        topics: ethersNullSettlementChallengeState.interface.events['TerminateProposalEvent'].topics
-                    };
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.TerminateProposalEvent.topics
+                    );
                 });
 
                 it('successfully terminate proposal', async () => {
@@ -247,10 +327,9 @@ module.exports = (glob) => {
                         glob.owner, await ethersNullSettlementChallengeState.TERMINATE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
-                    filter = {
-                        fromBlock: await provider.getBlockNumber(),
-                        topics: ethersNullSettlementChallengeState.interface.events['TerminateProposalEvent'].topics
-                    };
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.TerminateProposalEvent.topics
+                    );
                 });
 
                 it('should return gracefully', async () => {
@@ -293,10 +372,9 @@ module.exports = (glob) => {
                         30, true, {gasLimit: 1e6}
                     );
 
-                    filter = {
-                        fromBlock: await provider.getBlockNumber(),
-                        topics: ethersNullSettlementChallengeState.interface.events['TerminateProposalEvent'].topics
-                    };
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.TerminateProposalEvent.topics
+                    );
                 });
 
                 it('successfully terminate proposal', async () => {
@@ -337,10 +415,9 @@ module.exports = (glob) => {
                         glob.owner, await ethersNullSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
-                    filter = {
-                        fromBlock: await provider.getBlockNumber(),
-                        topics: ethersNullSettlementChallengeState.interface.events['RemoveProposalEvent'].topics
-                    };
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.RemoveProposalEvent.topics
+                    );
                 });
 
                 it('should return gracefully', async () => {
@@ -364,10 +441,9 @@ module.exports = (glob) => {
                         30, true, {gasLimit: 1e6}
                     );
 
-                    filter = {
-                        fromBlock: await provider.getBlockNumber(),
-                        topics: ethersNullSettlementChallengeState.interface.events['RemoveProposalEvent'].topics
-                    };
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.RemoveProposalEvent.topics
+                    );
                 });
 
                 it('successfully terminate proposal', async () => {
@@ -408,10 +484,9 @@ module.exports = (glob) => {
                         glob.owner, await ethersNullSettlementChallengeState.REMOVE_PROPOSAL_ACTION(), {gasLimit: 1e6}
                     );
 
-                    filter = {
-                        fromBlock: await provider.getBlockNumber(),
-                        topics: ethersNullSettlementChallengeState.interface.events['RemoveProposalEvent'].topics
-                    };
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.RemoveProposalEvent.topics
+                    );
                 });
 
                 it('should return gracefully', async () => {
@@ -454,10 +529,9 @@ module.exports = (glob) => {
                         30, true, {gasLimit: 1e6}
                     );
 
-                    filter = {
-                        fromBlock: await provider.getBlockNumber(),
-                        topics: ethersNullSettlementChallengeState.interface.events['RemoveProposalEvent'].topics
-                    };
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.RemoveProposalEvent.topics
+                    );
                 });
 
                 it('successfully terminate proposal', async () => {
@@ -519,10 +593,9 @@ module.exports = (glob) => {
                         30, true, {gasLimit: 1e6}
                     );
 
-                    filter = {
-                        fromBlock: await provider.getBlockNumber(),
-                        topics: ethersNullSettlementChallengeState.interface.events['DisqualifyProposalEvent'].topics
-                    };
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.DisqualifyProposalEvent.topics
+                    );
                 });
 
                 it('successfully disqualify proposal', async () => {
@@ -1202,5 +1275,122 @@ module.exports = (glob) => {
                 });
             });
         });
+
+        describe('upgradeProposal', () => {
+            let proposal;
+
+            before(() => {
+                proposal = {
+                    wallet: mocks.address1,
+                    nonce: 1,
+                    referenceBlockNumber: 123,
+                    definitionBlockNumber: 456,
+                    expirationTime: 12345678,
+                    status: mocks.settlementStatuses.indexOf('Qualified'),
+                    amounts: {
+                        cumulativeTransfer: utils.bigNumberify(10),
+                        stage: utils.bigNumberify(20),
+                        targetBalance: utils.bigNumberify(30)
+                    },
+                    currency: {
+                        ct: mocks.address0,
+                        id: 0
+                    },
+                    challenged: {
+                        kind: 'payment',
+                        hash: mocks.hash1
+                    },
+                    walletInitiated: true,
+                    terminated: false,
+                    disqualification: {
+                        challenger: mocks.address2,
+                        nonce: 2,
+                        blockNumber: 789,
+                        candidate: {
+                            kind: 'trade',
+                            hash: mocks.hash2
+                        }
+                    }
+                }
+            });
+
+            describe('if called by non-agent', () => {
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called after upgrades have been frozen', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState.setUpgradeAgent(glob.owner);
+                    await ethersNullSettlementChallengeState.freezeUpgrades();
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let filter;
+
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState.setUpgradeAgent(glob.owner);
+                    filter = await fromBlockTopicsFilter(
+                        ethersNullSettlementChallengeState.interface.events.UpgradeProposalEvent.topics
+                    );
+                });
+
+                it('should successfully upgrade proposal', async () => {
+                    await ethersNullSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 1e6});
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const _proposal = await ethersNullSettlementChallengeState.proposals(0);
+                    _proposal.wallet.should.equal(mocks.address1);
+                    _proposal.nonce._bn.should.eq.BN(1);
+                    _proposal.referenceBlockNumber._bn.should.eq.BN(123);
+                    _proposal.definitionBlockNumber._bn.should.eq.BN(456);
+                    _proposal.expirationTime._bn.should.eq.BN(12345678);
+                    _proposal.status.should.equal(mocks.settlementStatuses.indexOf('Qualified'));
+                    _proposal.amounts.cumulativeTransfer._bn.should.eq.BN(10);
+                    _proposal.amounts.stage._bn.should.eq.BN(20);
+                    _proposal.amounts.targetBalance._bn.should.eq.BN(30);
+                    _proposal.currency.ct.should.equal(mocks.address0);
+                    _proposal.currency.id._bn.should.eq.BN(0);
+                    _proposal.challenged.kind.should.equal('payment');
+                    _proposal.challenged.hash.should.equal(mocks.hash1);
+                    _proposal.walletInitiated.should.be.true;
+                    _proposal.terminated.should.be.false;
+                    _proposal.disqualification.challenger.should.equal(mocks.address2);
+                    _proposal.disqualification.nonce._bn.should.eq.BN(2);
+                    _proposal.disqualification.blockNumber._bn.should.eq.BN(789);
+                    _proposal.disqualification.candidate.kind.should.equal('trade');
+                    _proposal.disqualification.candidate.hash.should.equal(mocks.hash2);
+                });
+            });
+
+            describe('if upgrading existing proposal', () => {
+                beforeEach(async () => {
+                    await ethersNullSettlementChallengeState.setUpgradeAgent(glob.owner);
+                    await ethersNullSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 1e6});
+                });
+
+                it('should revert', async () => {
+                    ethersNullSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 1e6})
+                        .should.be.rejected;
+                });
+            });
+        });
     });
+};
+
+const fromBlockTopicsFilter = async (topics) => {
+    return {
+        fromBlock: await provider.getBlockNumber(),
+        topics
+    };
 };

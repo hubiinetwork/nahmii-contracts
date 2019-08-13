@@ -13,7 +13,7 @@ module.exports = (glob) => {
     describe('Servable', () => {
         let web3Servable, ethersServable;
 
-        before(async () => {
+        beforeEach(async () => {
             web3Servable = await Servable.new(glob.owner);
             ethersServable = new Contract(web3Servable.address, Servable.abi, glob.signer_owner);
         });
@@ -100,12 +100,9 @@ module.exports = (glob) => {
         describe('registerServiceDeferred()', () => {
             let address;
 
-            before(async () => {
-                await ethersServable.setServiceActivationTimeout(utils.bigNumberify(3));
-            });
-
-            beforeEach(() => {
+            beforeEach(async () => {
                 address = Wallet.createRandom().address;
+                await ethersServable.setServiceActivationTimeout(utils.bigNumberify(3));
             });
 
             it('should register service contract and emit event', async () => {
@@ -116,7 +113,7 @@ module.exports = (glob) => {
                 registered.should.be.true;
                 let registeredActive = await ethersServable.isRegisteredActiveService(address);
                 registeredActive.should.be.false;
-                await setTimeoutPromise(3000);
+                await setTimeoutPromise(4000);
                 registeredActive = await ethersServable.isRegisteredActiveService(address);
                 registeredActive.should.be.true;
             });

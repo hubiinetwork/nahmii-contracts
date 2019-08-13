@@ -175,6 +175,40 @@ module.exports = (glob) => {
             });
         });
 
+        describe('driipSettlementChallengeState()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersNullSettlementChallengeByPayment.driipSettlementChallengeState())
+                    .should.equal(utils.getAddress(ethersDriipSettlementChallengeState.address));
+            });
+        });
+
+        describe('setDriipSettlementChallengeState()', () => {
+            let address;
+
+            before(() => {
+                address = Wallet.createRandom().address;
+            });
+
+            describe('if called by deployer', () => {
+                it('should set new value and emit event', async () => {
+                    const result = await web3NullSettlementChallengeByPayment.setDriipSettlementChallengeState(address);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetDriipSettlementChallengeStateEvent');
+
+                    (await ethersNullSettlementChallengeByPayment.driipSettlementChallengeState())
+                        .should.equal(address);
+                });
+            });
+
+            describe('if called by non-deployer', () => {
+                it('should revert', async () => {
+                    web3NullSettlementChallengeByPayment.setDriipSettlementChallengeState(address, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+        });
+
         describe('startChallenge()', () => {
             beforeEach(async () => {
                 await ethersWalletLocker._reset();
@@ -255,7 +289,7 @@ module.exports = (glob) => {
                     const proposal = await ethersNullSettlementChallengeState._proposals(1);
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));
                     proposal.amounts.stage._bn.should.eq.BN(10);
-                    proposal.amounts.targetBalance._bn.should.eq.BN(40);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(100);
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.referenceBlockNumber._bn.should.eq.BN(1);
@@ -335,7 +369,7 @@ module.exports = (glob) => {
                     const proposal = await ethersNullSettlementChallengeState._proposals(1);
                     proposal.wallet.should.equal(utils.getAddress(glob.owner));
                     proposal.amounts.stage._bn.should.eq.BN(10);
-                    proposal.amounts.targetBalance._bn.should.eq.BN(40);
+                    proposal.amounts.targetBalance._bn.should.eq.BN(100);
                     proposal.currency.ct.should.equal(mocks.address0);
                     proposal.currency.id._bn.should.eq.BN(0);
                     proposal.referenceBlockNumber._bn.should.eq.BN(1);
