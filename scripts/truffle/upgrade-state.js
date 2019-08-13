@@ -50,8 +50,6 @@ module.exports = async (callback) => {
         for (let proposal of dscProposals.map(bigNumberifyProposal))
             await ethersDriipSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 5e6});
 
-        await ethersDriipSettlementChallengeState.freezeUpgrades();
-
         console.log('> Done');
 
         // ### NullSettlementChallengeState ####
@@ -67,8 +65,6 @@ module.exports = async (callback) => {
         console.log(`> Upgrading ${nscProposals.length} proposal entries`);
         for (let proposal of nscProposals.map(bigNumberifyProposal))
             await ethersNullSettlementChallengeState.upgradeProposal(proposal, {gasLimit: 5e6});
-
-        await ethersNullSettlementChallengeState.freezeUpgrades();
 
         console.log('> Done');
 
@@ -135,8 +131,6 @@ module.exports = async (callback) => {
         console.log(`> Upgrading ${driipSettlements.length} settlement entries`);
         for (let driipSettlement of driipSettlements)
             await ethersDriipSettlementState.upgradeSettlement(driipSettlement, {gasLimit: 5e6});
-
-        await ethersDriipSettlementState.freezeUpgrades();
 
         console.log('> Done');
 
