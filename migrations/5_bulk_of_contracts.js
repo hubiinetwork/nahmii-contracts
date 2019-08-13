@@ -78,7 +78,7 @@ const SignerManager = artifacts.require('SignerManager');
 const Strings = artifacts.require('Strings');
 const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const TradeHasher = artifacts.require('TradeHasher');
-// const TradeTypesLib = artifacts.require('TradeTypesLib');
+const TradeTypesLib = artifacts.require('TradeTypesLib');
 const TransferControllerManager = artifacts.require('TransferControllerManager');
 const TransactionTracker = artifacts.require('TransactionTracker');
 const TxHistoryLib = artifacts.require('TxHistoryLib');
@@ -149,7 +149,6 @@ module.exports = (deployer, network, accounts) => {
             SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
             SettlementChallengeTypesLib.address = addressStorage.get('SettlementChallengeTypesLib');
             Strings.address = addressStorage.get('Strings');
-            // TradeTypesLib.address = addressStorage.get('TradeTypesLib');
             TxHistoryLib.address = addressStorage.get('TxHistoryLib');
 
             await deployer.link(BalanceTrackerLib, [
@@ -385,34 +384,6 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(Strings, [
                 PartnerFund
             ]);
-            // await deployer.link(TradeTypesLib, [
-            //     CancelOrdersChallenge,
-            //     DriipSettlementByTrade,
-            //     DriipSettlementChallengeByOrder,
-            //     DriipSettlementChallengeByTrade,
-            //     DriipSettlementDisputeByOrder,
-            //     DriipSettlementDisputeByTrade,
-            //     FraudChallengeByDoubleSpentOrders,
-            //     FraudChallengeByOrder,
-            //     FraudChallengeByPaymentSucceedingTrade,
-            //     FraudChallengeBySuccessiveTrades,
-            //     FraudChallengeByTrade,
-            //     FraudChallengeByTradeOrderResiduals,
-            //     FraudChallengeByTradeSucceedingPayment,
-            //     MockedCancelOrdersChallenge,
-            //     MockedDriipSettlementDisputeByOrder,
-            //     MockedDriipSettlementDisputeByTrade,
-            //     MockedValidator,
-            //     NullSettlementChallengeByOrder,
-            //     NullSettlementChallengeByTrade,
-            //     NullSettlementDisputeByOrder,
-            //     NullSettlementDisputeByTrade,
-            //     TradeHasher,
-            //     Validatable,
-            //     ValidatableV2,
-            //     Validator,
-            //     ValidatorV2
-            // ]);
             await deployer.link(TxHistoryLib, [
                 ClientFund,
                 PartnerFund,
@@ -424,6 +395,37 @@ module.exports = (deployer, network, accounts) => {
             const delayBlocks = helpers.isTestNetwork(network) ? 1 : 10;
 
             if (helpers.isTestNetwork(network)) {
+                TradeTypesLib.address = addressStorage.get('TradeTypesLib');
+
+                await deployer.link(TradeTypesLib, [
+                    CancelOrdersChallenge,
+                    DriipSettlementByTrade,
+                    DriipSettlementChallengeByOrder,
+                    DriipSettlementChallengeByTrade,
+                    DriipSettlementDisputeByOrder,
+                    DriipSettlementDisputeByTrade,
+                    FraudChallengeByDoubleSpentOrders,
+                    FraudChallengeByOrder,
+                    FraudChallengeByPaymentSucceedingTrade,
+                    FraudChallengeBySuccessiveTrades,
+                    FraudChallengeByTrade,
+                    FraudChallengeByTradeOrderResiduals,
+                    FraudChallengeByTradeSucceedingPayment,
+                    MockedCancelOrdersChallenge,
+                    MockedDriipSettlementDisputeByOrder,
+                    MockedDriipSettlementDisputeByTrade,
+                    MockedValidator,
+                    NullSettlementChallengeByOrder,
+                    NullSettlementChallengeByTrade,
+                    NullSettlementDisputeByOrder,
+                    NullSettlementDisputeByTrade,
+                    TradeHasher,
+                    Validatable,
+                    ValidatableV2,
+                    Validator,
+                    ValidatorV2
+                ]);
+
                 await execDeploy(ctl, 'BalanceTracker', '', BalanceTracker);
                 await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
                 await execDeploy(ctl, 'ClientFund', '', ClientFund);
