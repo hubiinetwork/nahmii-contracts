@@ -135,7 +135,6 @@ const it = db.getCollection('payments').aggregate({
                             "recipient.nonce": 7
                         }
                     ]
-
                 }
             ]
         }

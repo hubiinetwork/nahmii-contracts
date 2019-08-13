@@ -60,23 +60,10 @@ module.exports = async (callback) => {
                     ).toString();
                     return m;
                 }, {});
-
-                // stateEntry.relativeDeltaAmounts = Object.getOwnPropertyNames(stateEntry.offChainBalanceAmounts).reduce((m, t) => {
-                //     m[t] = bn(stateEntry.onChainBalanceAmounts[t]).isZero() ? '0' : bn(stateEntry.onChainBalanceAmounts[t])
-                //         .sub(
-                //             bn(stateEntry.offChainBalanceAmounts[t])
-                //         )
-                //         .mul(100)
-                //         .div(bn(stateEntry.onChainBalanceAmounts[t]))
-                //         .toString();
-                //     return m;
-                // }, {});
             }
         }
 
         await writeJSONToFile(state, `${stateDir}/compare/ClientFund/state.json`);
-
-        // console.log(JSON.stringify(state, null, 2));
 
         callback();
     } catch (e) {
