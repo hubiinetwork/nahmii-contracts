@@ -361,10 +361,23 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         emit SetMaxNonceByWalletAndCurrencyEvent(wallet, currency, maxNonce);
     }
 
+    /// @notice Get the count of settled block numbers
+    /// @param wallet The address of the concerned wallet
+    /// @param currency The concerned currency
+    /// @return The count of settled block numbers
+    function settledBlockNumbersCount(address wallet, MonetaryTypesLib.Currency memory currency)
+    public
+    view
+    returns (uint256)
+    {
+        return walletCurrencySettledBlockNumbers[wallet][currency.ct][currency.id].length;
+    }
+
     /// @notice Get the value of settled amount at the given block number
     /// @param wallet The address of the concerned wallet
     /// @param currency The concerned currency
     /// @param blockNumber The concerned block number
+    /// @return The settled amount
     function settledAmountByBlockNumber(address wallet, MonetaryTypesLib.Currency memory currency,
         uint256 blockNumber)
     public
@@ -442,11 +455,11 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
         // Require that settlement has not been initialized/upgraded already
         require(
             0 == walletNonceSettlementIndex[settlement.origin.wallet][settlement.origin.nonce],
-            "Settlement exists for origin wallet and nonce [DriipSettlementState.sol:443]"
+            "Settlement exists for origin wallet and nonce [DriipSettlementState.sol:456]"
         );
         require(
             0 == walletNonceSettlementIndex[settlement.target.wallet][settlement.target.nonce],
-            "Settlement exists for target wallet and nonce [DriipSettlementState.sol:447]"
+            "Settlement exists for target wallet and nonce [DriipSettlementState.sol:460]"
         );
 
         // Push the settlement
@@ -476,7 +489,8 @@ contract DriipSettlementState is Ownable, Servable, CommunityVotable, Upgradable
     onlyWhenUpgrading
     {
         // Require that settlement amount has not been initialized/upgraded already
-        require(0 == walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][blockNumber], "[DriipSettlementState.sol:479]");
+        require(0 == walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][blockNumber],
+            "Settled amount exists for wallet and currency [DriipSettlementState.sol:492]");
 
         // Upgrade the settled amount
         walletCurrencyBlockNumberSettledAmount[wallet][currency.ct][currency.id][blockNumber] = amount;
