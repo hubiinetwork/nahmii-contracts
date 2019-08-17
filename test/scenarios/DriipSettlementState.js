@@ -758,6 +758,14 @@ module.exports = (glob) => {
             });
         });
 
+        describe('settledBlockNumbersCount()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersDriipSettlementState.settledBlockNumbersCount(
+                    glob.user_a, {ct: mocks.address0, id: 0}
+                ))._bn.should.eq.BN(0);
+            });
+        });
+
         describe('settledAmountByBlockNumber()', () => {
             it('should equal value initialized', async () => {
                 (await ethersDriipSettlementState.settledAmountByBlockNumber(
@@ -807,6 +815,10 @@ module.exports = (glob) => {
                     (await ethersDriipSettlementState.settledAmountByBlockNumber(
                         glob.user_a, {ct: mocks.address0, id: 0}, await provider.getBlockNumber()
                     ))._bn.should.eq.BN(0);
+
+                    (await ethersDriipSettlementState.settledBlockNumbersCount(
+                        glob.user_a, {ct: mocks.address0, id: 0}
+                    ))._bn.should.eq.BN(1);
                 });
             });
         });

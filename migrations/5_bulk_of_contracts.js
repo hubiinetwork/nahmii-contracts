@@ -385,34 +385,6 @@ module.exports = (deployer, network, accounts) => {
             await deployer.link(Strings, [
                 PartnerFund
             ]);
-            await deployer.link(TradeTypesLib, [
-                CancelOrdersChallenge,
-                DriipSettlementByTrade,
-                DriipSettlementChallengeByOrder,
-                DriipSettlementChallengeByTrade,
-                DriipSettlementDisputeByOrder,
-                DriipSettlementDisputeByTrade,
-                FraudChallengeByDoubleSpentOrders,
-                FraudChallengeByOrder,
-                FraudChallengeByPaymentSucceedingTrade,
-                FraudChallengeBySuccessiveTrades,
-                FraudChallengeByTrade,
-                FraudChallengeByTradeOrderResiduals,
-                FraudChallengeByTradeSucceedingPayment,
-                MockedCancelOrdersChallenge,
-                MockedDriipSettlementDisputeByOrder,
-                MockedDriipSettlementDisputeByTrade,
-                MockedValidator,
-                NullSettlementChallengeByOrder,
-                NullSettlementChallengeByTrade,
-                NullSettlementDisputeByOrder,
-                NullSettlementDisputeByTrade,
-                TradeHasher,
-                Validatable,
-                ValidatableV2,
-                Validator,
-                ValidatorV2
-            ]);
             await deployer.link(TxHistoryLib, [
                 ClientFund,
                 PartnerFund,
@@ -420,6 +392,40 @@ module.exports = (deployer, network, accounts) => {
                 SecurityBond,
                 TokenHolderRevenueFund
             ]);
+
+            const delayBlocks = helpers.isTestNetwork(network) ? 1 : 10;
+
+            if (helpers.isTestNetwork(network)) {
+                TradeTypesLib.address = addressStorage.get('TradeTypesLib');
+
+                await deployer.link(TradeTypesLib, [
+                    CancelOrdersChallenge,
+                    DriipSettlementByTrade,
+                    DriipSettlementChallengeByOrder,
+                    DriipSettlementChallengeByTrade,
+                    DriipSettlementDisputeByOrder,
+                    DriipSettlementDisputeByTrade,
+                    FraudChallengeByDoubleSpentOrders,
+                    FraudChallengeByOrder,
+                    FraudChallengeByPaymentSucceedingTrade,
+                    FraudChallengeBySuccessiveTrades,
+                    FraudChallengeByTrade,
+                    FraudChallengeByTradeOrderResiduals,
+                    FraudChallengeByTradeSucceedingPayment,
+                    MockedCancelOrdersChallenge,
+                    MockedDriipSettlementDisputeByOrder,
+                    MockedDriipSettlementDisputeByTrade,
+                    MockedValidator,
+                    NullSettlementChallengeByOrder,
+                    NullSettlementChallengeByTrade,
+                    NullSettlementDisputeByOrder,
+                    NullSettlementDisputeByTrade,
+                    TradeHasher,
+                    Validatable,
+                    ValidatableV2,
+                    Validator,
+                    ValidatorV2
+                ]);
 
             const delayBlocks = helpers.isTestNetwork(network) ? 1 : 10;
 
