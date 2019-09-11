@@ -39,7 +39,7 @@ module.exports = (deployer, network, accounts) => {
         debug(`deployerAccount: ${deployerAccount}`);
 
         try {
-            if (helpers.isTestNetwork(network)) {
+            if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
                 let ctl = {
                     deployer,
                     deployFilters: helpers.getFiltersFromArgs(),
@@ -59,9 +59,6 @@ module.exports = (deployer, network, accounts) => {
                     debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
                 }
             }
-
-            else if (network.startsWith('ropsten'))
-                addressStorage.set('NahmiiToken', '0x229d723cd3f661e4103703da82a5a13c107ba586');
 
             else if (network.startsWith('mainnet'))
                 addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');

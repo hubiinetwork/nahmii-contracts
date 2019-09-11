@@ -66,7 +66,7 @@ module.exports = (deployer, network, accounts) => {
                 deployerAccount
             };
 
-            if (helpers.isTestNetwork(network)) {
+            if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
                 await execDeploy(ctl, 'BlockNumbIntsLib', '', BlockNumbIntsLib);
                 await execDeploy(ctl, 'BlockNumbUintsLib', '', BlockNumbUintsLib);
                 await execDeploy(ctl, 'ConstantsLib', '', ConstantsLib);
@@ -126,71 +126,6 @@ module.exports = (deployer, network, accounts) => {
 
                 await execDeploy(ctl, 'PaymentTypesLib', '', PaymentTypesLib);
                 await execDeploy(ctl, 'TradeTypesLib', '', TradeTypesLib);
-
-            } else if (network.startsWith('ropsten')) {
-                addressStorage.set('BalanceTrackerLib', '0x436d12a6953c55243ce8cfe87177840c2d45462e');
-                addressStorage.set('BlockNumbDisdIntsLib', '0xbc763e0e12e2622b12e86830330757d10f1d60bf');
-                addressStorage.set('BlockNumbFiguresLib', '0x7b052737eb15df515b9e6183d091aec1a109ed9c');
-                addressStorage.set('BlockNumbIntsLib', '0xd3ee9b9e3fbc5f06585308de2807f979b7727e99');
-                addressStorage.set('BlockNumbReferenceCurrenciesLib', '0x41dc44d72036e08eae0a4b9486dab608ec94af30');
-                addressStorage.set('BlockNumbUintsLib', '0xf8c9e699ddc8fc44eab92a32068be3e2d19e6194');
-                addressStorage.set('ConstantsLib', '0x0607d44c92f146c388190206140da19edcbbe6f3');
-                addressStorage.set('CurrenciesLib', '0x37f14be1972d526691384afab98fdece03550261');
-                addressStorage.set('DriipSettlementTypesLib', '0x5d64ab50a9474f86dc0280aab5384cff6b035559');
-                addressStorage.set('FungibleBalanceLib', '0x8b40d7a9923bddecdb0c863d39636981e2d85805');
-                addressStorage.set('MonetaryTypesLib', '0xd32e6ef7cc7f41987dd4377e70a851de538457ef');
-                addressStorage.set('NahmiiTypesLib', '0xbc954f0f3d8bc560cf41d70acc936bdf60d9e392');
-                addressStorage.set('NonFungibleBalanceLib', '0x5aa412ffb609254fecabd0b6484ab1756bd57d32');
-                addressStorage.set('PaymentTypesLib', '0x5e8f6adeda6957abc8caa66821431bd273ba0736');
-                addressStorage.set('SafeMathIntLib', '0xe8062fa6442ef48707fdc92b8b05d88eaa9a5f30');
-                addressStorage.set('SafeMathUintLib', '0xd8892322bfdd5839ca262dc38ad77821d06bd272');
-                addressStorage.set('SettlementChallengeTypesLib', '0xccff0888c9ab3e0acb0eeee817daa90c8ab0642b');
-                addressStorage.set('Strings', '0xe8c5584022e0be86bb5d9bea06ae43a0ab8216d8');
-                addressStorage.set('TradeTypesLib', '0x7990167e3565c074b5ef98149ca95b43b5198fcf');
-                addressStorage.set('TxHistoryLib', '0x45ca83ad4ca90a73022d17c20da88ef8f7fa4d9c');
-
-                ConstantsLib.address = addressStorage.get('ConstantsLib');
-                MonetaryTypesLib.address = addressStorage.get('MonetaryTypesLib');
-                SafeMathIntLib.address = addressStorage.get('SafeMathIntLib');
-                SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
-
-                await deployer.link(ConstantsLib, [
-                    BlockNumbDisdIntsLib
-                ]);
-                await deployer.link(MonetaryTypesLib, [
-                    BalanceTrackerLib,
-                    BlockNumbFiguresLib,
-                    BlockNumbReferenceCurrenciesLib,
-                    CurrenciesLib,
-                    NahmiiTypesLib,
-                    PaymentTypesLib,
-                    SettlementChallengeTypesLib
-                ]);
-                await deployer.link(SafeMathIntLib, [
-                    BalanceTrackerLib,
-                    BlockNumbDisdIntsLib,
-                    FungibleBalanceLib,
-                    NonFungibleBalanceLib
-                ]);
-                await deployer.link(SafeMathUintLib, [
-                    BalanceTrackerLib,
-                    CurrenciesLib,
-                    FungibleBalanceLib,
-                    NonFungibleBalanceLib
-                ]);
-
-                CurrenciesLib.address = addressStorage.get('CurrenciesLib');
-
-                await deployer.link(CurrenciesLib, [
-                    FungibleBalanceLib,
-                    NonFungibleBalanceLib
-                ]);
-
-                NahmiiTypesLib.address = addressStorage.get('NahmiiTypesLib');
-
-                await deployer.link(NahmiiTypesLib, [
-                    PaymentTypesLib
-                ]);
 
             } else if (network.startsWith('mainnet')) {
                 addressStorage.set('BalanceTrackerLib', '0xc62e6b5c5d1cfb97c992cf065ed74eda82553028');
