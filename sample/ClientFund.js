@@ -9,7 +9,7 @@ const BalanceTracker = artifacts.require('BalanceTracker');
 const TransactionTracker = artifacts.require('TransactionTracker');
 const WalletLocker = artifacts.require('MockedWalletLocker');
 
-contract.skip('ClientFund', accounts => {
+contract('ClientFund', accounts => {
     let operator, service, wallet;
     let operatorSigner;
     let provider;

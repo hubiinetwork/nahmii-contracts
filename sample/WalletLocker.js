@@ -5,7 +5,7 @@ const {address0} = require('../test/mocks');
 const MockedConfiguration = artifacts.require('MockedConfiguration');
 const WalletLocker = artifacts.require('WalletLocker');
 
-contract.skip('WalletLocker', (accounts) => {
+contract('WalletLocker', (accounts) => {
     let operator, service, walletA, walletB;
     let operatorSigner;
     let provider;
