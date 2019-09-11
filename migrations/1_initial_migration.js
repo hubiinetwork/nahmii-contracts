@@ -35,7 +35,7 @@ module.exports = (deployer, network, accounts) => {
         debug(`deployerAccount: ${deployerAccount}`);
 
         try {
-            if (helpers.isTestNetwork(network) || network.startsWith('ropsten')) {
+            if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
                 instance = await deployer.deploy(Migrations, {from: deployerAccount});
                 addressStorage.set('Migrations', instance.address);
 
