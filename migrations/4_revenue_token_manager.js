@@ -53,7 +53,7 @@ module.exports = (deployer, network, accounts) => {
 
             SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
 
-            if (helpers.isTestNetwork(network)) {
+            if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
                 await deployer.link(SafeMathUintLib, [
                     RevenueTokenManager
                 ]);
@@ -139,9 +139,6 @@ module.exports = (deployer, network, accounts) => {
                 }
             }
 
-            else if (network.startsWith('ropsten'))
-                addressStorage.set('RevenueTokenManager', '0x2fd03fbd66eeb444bdea4c5c3f46de9aec088804');
-
             else if (network.startsWith('mainnet'))
                 addressStorage.set('RevenueTokenManager', '0xe3f2158610b7145c04ae03a6356038ad2404a9a6');
 
@@ -190,10 +187,10 @@ function shouldDeploy(contractName, deployFilters) {
 }
 
 function airdriipReleases() {
-    let date = new moment('30 Mar 2019 00:00:00 UT');
+    let date = new moment('7 Sep 2019 00:00:00 UT');
 
     const releases = [];
-    const blockNumbers = [5303042, 5309688, 5315799];
+    const blockNumbers = [8500000, 8510000, 8520000];
     for (let i = 0; i < 120; i++) {
         const release = {
             earliestReleaseTime: moment(date).subtract(1, 'hour').unix(),
