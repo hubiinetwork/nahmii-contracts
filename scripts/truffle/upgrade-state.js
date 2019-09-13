@@ -2,7 +2,7 @@
 //
 // cat > script.js << EOF
 
-const fs = require('fs').promises;
+const fs = require('fs');
 const {Wallet, Contract, utils, constants, providers} = require('ethers');
 const provider = new providers.Web3Provider(web3.currentProvider);
 
@@ -13,7 +13,7 @@ const NullSettlementState = artifacts.require('NullSettlementState');
 const RevenueFund1 = artifacts.require('RevenueFund1');
 
 async function parseJSONFromFile(file) {
-    return JSON.parse(await fs.readFile(file));
+    return JSON.parse(fs.readFileSync(file));
 }
 
 function bigNumberifyProposal(proposal) {
@@ -72,8 +72,8 @@ module.exports = async (callback) => {
     try {
         const upgradeAgent = Wallet.fromMnemonic(process.env.UPGRADEAGENT_MNEMONIC)
             .connect(provider);
-        const stateImportDir = process.env.STATE_IMPORT_DIR || 'state/import';
-        const gasPrice = utils.bigNumberify(process.env.GAS_PRICE || 4e9);
+        const stateImportDir = process.env.STATE_IMPORT_DIR;
+        const gasPrice = utils.bigNumberify(process.env.GAS_PRICE);
 
         const web3RevenueFund1 = await RevenueFund1.deployed();
 
