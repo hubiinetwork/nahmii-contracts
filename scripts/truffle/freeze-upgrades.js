@@ -12,7 +12,7 @@ module.exports = async (callback) => {
 
         // #### DriipSettlementChallengeState ####
 
-        console.log('\nFreezing upgrades of DriipSettlementChallengeState...');
+        console.log('Freezing upgrades of DriipSettlementChallengeState...');
 
         const web3DriipSettlementChallengeState = await DriipSettlementChallengeState.deployed();
         await web3DriipSettlementChallengeState.freezeUpgrades();
@@ -21,7 +21,7 @@ module.exports = async (callback) => {
 
         // ### NullSettlementChallengeState ####
 
-        console.log('\nFreezing upgrades of NullSettlementChallengeState...');
+        console.log('Freezing upgrades of NullSettlementChallengeState...');
 
         const web3NullSettlementChallengeState = await NullSettlementChallengeState.deployed();
         await web3NullSettlementChallengeState.freezeUpgrades();
@@ -30,7 +30,7 @@ module.exports = async (callback) => {
 
         // #### DriipSettlementState ####
 
-        console.log('\nFreezing upgrades of DriipSettlementState...');
+        console.log('Freezing upgrades of DriipSettlementState...');
 
         const web3DriipSettlementState = await DriipSettlementState.deployed();
         await web3DriipSettlementState.freezeUpgrades();
