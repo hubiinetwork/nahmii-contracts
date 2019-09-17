@@ -21,7 +21,7 @@ module.exports = {
             host: "localhost",
             port: 7545,
             network_id: "*",
-            gas: 100000000
+            gas: 8000000
         },
         "ganache-cli": {
             host: "localhost",
