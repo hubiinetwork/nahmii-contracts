@@ -31,9 +31,9 @@ module.exports = (deployer, network, accounts) => {
             deployerAccount = helpers.parseDeployerArg();
 
             if (web3.eth.personal)
-                await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 14400); // 4h
+                await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
             else
-                await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 14400); // 4h
+                await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
         }
 
         debug(`deployerAccount: ${deployerAccount}`);
