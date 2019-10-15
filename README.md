@@ -2,9 +2,9 @@
 
 This is the home of code for smart contracts for hubii's 2nd layer solution called nahmii.
 
-## Whitepaper
+## White Paper
 
-An elaborate outline of the nahmii protocol can be found in the [nahmii whitepaper](https://www.hubii.com/wp-content/uploads/2018/09/nahmii-whitepaper.pdf). We suggest you read this document before diving into the details of the supporting smart contracts in this repository.
+An elaborate outline of the nahmii protocol can be found in the [nahmii white paper](https://www.nahmii.io/nahmii%20White%20Paper%20v2.0.pdf). We suggest you read this document before diving into the details of the supporting smart contracts in this repository.
 
 ## Tests
 
@@ -24,7 +24,7 @@ Etherscan code verification is currently not possible as their code verification
 
 ## Contributing
 
-### Bug reports
+### Bug Reports
 
 Please open issues in the issue tracker and label them as bugs.
 
