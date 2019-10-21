@@ -19,6 +19,7 @@ import {FungibleBalanceLib} from "./FungibleBalanceLib.sol";
 import {TxHistoryLib} from "./TxHistoryLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {CurrenciesLib} from "./CurrenciesLib.sol";
+import {ConstantsLib} from "./ConstantsLib.sol";
 import {RevenueToken} from "./RevenueToken.sol";
 import {RevenueTokenManager} from "./RevenueTokenManager.sol";
 import {TransferController} from "./TransferController.sol";
@@ -41,6 +42,15 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     string constant public CLOSE_ACCRUAL_PERIOD_ACTION = "close_accrual_period";
 
     //
+    // Types
+    // -----------------------------------------------------------------------------------------------------------------
+    struct AccrualPeriod {
+        uint256 startBlock;
+        uint256 endBlock;
+        int256 amount;
+    }
+
+    //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     RevenueTokenManager public revenueTokenManager;
@@ -53,9 +63,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
     TxHistoryLib.TxHistory private txHistory;
 
-    mapping(address => mapping(address => mapping(uint256 => uint256[]))) public claimedAccrualBlockNumbersByWalletCurrency;
+    mapping(address => mapping(uint256 => AccrualPeriod[])) public accrualPeriodsByCurrency;
 
-    mapping(address => mapping(uint256 => uint256[])) public accrualBlockNumbersByCurrency;
+    mapping(address => mapping(address => mapping(uint256 => uint256[]))) public claimedAccrualPeriodIndicesByWalletCurrency;
+    mapping(address => mapping(address => mapping(uint256 => mapping(uint256 => bool)))) public accrualPeriodClaimedByWalletCurrencyIndex;
+
     mapping(address => mapping(uint256 => mapping(uint256 => int256))) public aggregateAccrualAmountByCurrencyBlockNumber;
 
     mapping(address => FungibleBalanceLib.Balance) private stagedByWallet;
@@ -71,10 +83,10 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     event CloseAccrualPeriodEvent(int256 periodAmount, int256 aggregateAmount, address currencyCt,
         uint256 currencyId);
     event ClaimAndTransferToBeneficiaryEvent(address wallet, string balanceType, int256 amount,
-        address currencyCt, uint256 currencyId, string standard);
-    event ClaimAndTransferToBeneficiaryByProxyEvent(address wallet, string balanceType, int256 amount,
-        address currencyCt, uint256 currencyId, string standard);
-    event ClaimAndStageEvent(address from, int256 amount, address currencyCt, uint256 currencyId);
+        address currencyCt, uint256 currencyId, uint256 firstPeriodIndex, uint256 lastPeriodIndex,
+        string standard);
+    event ClaimAndStageEvent(address from, int256 amount, address currencyCt, uint256 currencyId,
+        uint256 firstPeriodIndex, uint256 lastPeriodIndex);
     event WithdrawEvent(address from, int256 amount, address currencyCt, uint256 currencyId,
         string standard);
 
@@ -154,7 +166,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         uint256 currencyId, string memory standard)
     public
     {
-        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:157]");
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:169]");
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
@@ -163,7 +175,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
             )
         );
-        require(success, "Reception by controller failed [TokenHolderRevenueFund.sol:166]");
+        require(success, "Reception by controller failed [TokenHolderRevenueFund.sol:178]");
 
         // Add to balances
         periodAccrual.add(amount, currencyCt, currencyId);
@@ -295,8 +307,15 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
             // Get the amount of the accrual period
             int256 periodAmount = periodAccrual.get(currency.ct, currency.id);
 
-            // Register this block number as accrual block number of currency
-            accrualBlockNumbersByCurrency[currency.ct][currency.id].push(block.number);
+            // Define start block of the completed accrual period, as (if existent) previous period end block + 1, else 0
+            uint256 startBlock = (
+            0 == accrualPeriodsByCurrency[currency.ct][currency.id].length ?
+            0 :
+            accrualPeriodsByCurrency[currency.ct][currency.id][accrualPeriodsByCurrency[currency.ct][currency.id].length - 1].endBlock + 1
+            );
+
+            // Add new accrual period
+            accrualPeriodsByCurrency[currency.ct][currency.id].push(AccrualPeriod(startBlock, block.number, periodAmount));
 
             // Store the aggregate accrual balance of currency at this block number
             aggregateAccrualAmountByCurrencyBlockNumber[currency.ct][currency.id][block.number] = aggregateAccrualBalance(
@@ -331,8 +350,38 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         address currencyCt, uint256 currencyId, string memory standard)
     public
     {
+        // Determine the period index to be claimed, being the one after the last period index already claimed
+        uint256 periodIndex = (
+        0 == claimedAccrualPeriodIndicesByWalletCurrency[msg.sender][currencyCt][currencyId].length ?
+        0 :
+        claimedAccrualPeriodIndicesByWalletCurrency[msg.sender][currencyCt][currencyId][
+        claimedAccrualPeriodIndicesByWalletCurrency[msg.sender][currencyCt][currencyId].length - 1
+        ] + 1
+        );
+
         // Claim accrual and obtain the claimed amount
-        int256 claimedAmount = _claim(msg.sender, currencyCt, currencyId);
+        claimAndTransferToBeneficiary(
+            beneficiary, destWallet, balanceType, currencyCt, currencyId,
+            periodIndex, periodIndex, standard
+        );
+    }
+
+    /// @notice Claim accrual and transfer to beneficiary
+    /// @param beneficiary The concerned beneficiary
+    /// @param destWallet The concerned destination wallet of the transfer
+    /// @param balanceType The target balance type
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param firstPeriodIndex The index of the first accrual period in the range
+    /// @param lastPeriodIndex The index of the last accrual period in the range, clamped to the max period index
+    /// @param standard The standard of the token ("" for default registered, "ERC20", "ERC721")
+    function claimAndTransferToBeneficiary(Beneficiary beneficiary, address destWallet, string memory balanceType,
+        address currencyCt, uint256 currencyId, uint256 firstPeriodIndex, uint256 lastPeriodIndex,
+        string memory standard)
+    public
+    {
+        // Claim accrual and obtain the claimed amount
+        int256 claimedAmount = _claim(msg.sender, currencyCt, currencyId, firstPeriodIndex, lastPeriodIndex);
 
         // Transfer ETH to the beneficiary
         if (address(0) == currencyCt && 0 == currencyId)
@@ -346,30 +395,34 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                     controller.getApproveSignature(), address(beneficiary), uint256(claimedAmount), currencyCt, currencyId
                 )
             );
-            require(success, "Approval by controller failed [TokenHolderRevenueFund.sol:349]");
+            require(success, "Approval by controller failed [TokenHolderRevenueFund.sol:398]");
 
             // Transfer tokens to the beneficiary
             beneficiary.receiveTokensTo(destWallet, balanceType, claimedAmount, currencyCt, currencyId, standard);
         }
 
         // Emit event
-        emit ClaimAndTransferToBeneficiaryEvent(msg.sender, balanceType, claimedAmount, currencyCt, currencyId, standard);
+        emit ClaimAndTransferToBeneficiaryEvent(msg.sender, balanceType, claimedAmount, currencyCt, currencyId,
+            firstPeriodIndex, lastPeriodIndex, standard);
     }
 
     /// @notice Claim accrual and stage for later withdrawal
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    function claimAndStage(address currencyCt, uint256 currencyId)
+    /// @param firstPeriodIndex The index of the first accrual period in the range
+    /// @param lastPeriodIndex The index of the last accrual period in the range, clamped to the max period index
+    function claimAndStage(address currencyCt, uint256 currencyId,
+        uint256 firstPeriodIndex, uint256 lastPeriodIndex)
     public
     {
         // Claim accrual and obtain the claimed amount
-        int256 claimedAmount = _claim(msg.sender, currencyCt, currencyId);
+        int256 claimedAmount = _claim(msg.sender, currencyCt, currencyId, firstPeriodIndex, lastPeriodIndex);
 
         // Update staged balance
         stagedByWallet[msg.sender].add(claimedAmount, currencyCt, currencyId);
 
         // Emit event
-        emit ClaimAndStageEvent(msg.sender, claimedAmount, currencyCt, currencyId);
+        emit ClaimAndStageEvent(msg.sender, claimedAmount, currencyCt, currencyId, firstPeriodIndex, lastPeriodIndex);
     }
 
     /// @notice Withdraw from staged balance of msg.sender
@@ -381,7 +434,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     public
     {
         // Require that amount is strictly positive
-        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:384]");
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:437]");
 
         // Clamp amount to the max given by staged balance
         amount = amount.clampMax(stagedByWallet[msg.sender].get(currencyCt, currencyId));
@@ -400,57 +453,115 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                     controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId
                 )
             );
-            require(success, "Dispatch by controller failed [TokenHolderRevenueFund.sol:403]");
+            require(success, "Dispatch by controller failed [TokenHolderRevenueFund.sol:456]");
         }
 
         // Emit event
         emit WithdrawEvent(msg.sender, amount, currencyCt, currencyId, standard);
     }
 
+    /// @notice Get the claimable amount for the given wallet-currency pair in the given
+    /// range of accrual period indices
+    /// @param wallet The address of the concerned wallet
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param firstPeriodIndex The index of the first accrual period in the range
+    /// @param lastPeriodIndex The index of the last accrual period in the range, clamped to the max period index
+    function claimableAmount(address wallet, address currencyCt, uint256 currencyId,
+        uint256 firstPeriodIndex, uint256 lastPeriodIndex)
+    public
+    view
+    returns (int256)
+    {
+        // Return 0 if no accrual period has terminated
+        if (0 == accrualPeriodsByCurrency[currencyCt][currencyId].length)
+            return 0;
+
+        // Clamp period indices to the index of the last accrual period
+        firstPeriodIndex = firstPeriodIndex.clampMax(accrualPeriodsByCurrency[currencyCt][currencyId].length - 1);
+        lastPeriodIndex = lastPeriodIndex.clampMax(accrualPeriodsByCurrency[currencyCt][currencyId].length - 1);
+
+        // Impose ordinality constraint
+        require(firstPeriodIndex <= lastPeriodIndex, "Index parameters mismatch [TokenHolderRevenueFund.sol:485]");
+
+        // For each period index in range...
+        int256 _claimableAmount = 0;
+        for (uint256 i = firstPeriodIndex; i <= lastPeriodIndex; i++)
+        // Increment the claimed amount
+            _claimableAmount = _claimableAmount.add(_claimableAmountOfPeriod(wallet, currencyCt, currencyId, i));
+
+        // Return the claimable amount
+        return _claimableAmount;
+    }
+
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _claim(address wallet, address currencyCt, uint256 currencyId)
+    function _claim(address wallet, address currencyCt, uint256 currencyId,
+        uint256 firstPeriodIndex, uint256 lastPeriodIndex)
     private
     returns (int256)
     {
         // Require that at least one accrual period has terminated
-        require(0 < accrualBlockNumbersByCurrency[currencyCt][currencyId].length, "No terminated accrual period found [TokenHolderRevenueFund.sol:418]");
+        require(0 < accrualPeriodsByCurrency[currencyCt][currencyId].length, "No terminated accrual period found [TokenHolderRevenueFund.sol:506]");
 
-        // Calculate lower block number as last accrual block number claimed for currency c by wallet OR 0
-        uint256[] storage claimedAccrualBlockNumbers = claimedAccrualBlockNumbersByWalletCurrency[wallet][currencyCt][currencyId];
-        uint256 bnLow = (0 == claimedAccrualBlockNumbers.length ? 0 : claimedAccrualBlockNumbers[claimedAccrualBlockNumbers.length - 1]);
+        // Clamp period indices to the index of the last accrual period
+        firstPeriodIndex = firstPeriodIndex.clampMax(accrualPeriodsByCurrency[currencyCt][currencyId].length - 1);
+        lastPeriodIndex = lastPeriodIndex.clampMax(accrualPeriodsByCurrency[currencyCt][currencyId].length - 1);
 
-        // Set upper block number as last accrual block number
-        uint256 bnUp = accrualBlockNumbersByCurrency[currencyCt][currencyId][accrualBlockNumbersByCurrency[currencyCt][currencyId].length - 1];
+        // Impose ordinality constraint
+        require(firstPeriodIndex <= lastPeriodIndex, "Index parameters mismatch [TokenHolderRevenueFund.sol:513]");
 
-        // Require that lower block number is below upper block number
-        require(bnLow < bnUp, "Bounds parameters mismatch [TokenHolderRevenueFund.sol:428]");
+        // For each period index in range...
+        int256 _claimedAmount = 0;
+        for (uint256 i = firstPeriodIndex; i <= lastPeriodIndex; i++) {
+            // Increment the claimed amount
+            _claimedAmount = _claimedAmount.add(_claimableAmountOfPeriod(wallet, currencyCt, currencyId, i));
 
-        // Calculate the amount that is claimable in the span between lower and upper block numbers
-        int256 claimableAmount = aggregateAccrualAmountByCurrencyBlockNumber[currencyCt][currencyId][bnUp]
-        - (0 == bnLow ? 0 : aggregateAccrualAmountByCurrencyBlockNumber[currencyCt][currencyId][bnLow]);
+            // Set the claimed flag on the period
+            accrualPeriodClaimedByWalletCurrencyIndex[wallet][currencyCt][currencyId][i] = true;
 
-        // Require that claimable amount is strictly positive
-        require(claimableAmount.isNonZeroPositiveInt256(), "Claimable amount not strictly positive [TokenHolderRevenueFund.sol:435]");
+            // Store the index of the claimed accrual period
+            claimedAccrualPeriodIndicesByWalletCurrency[wallet][currencyCt][currencyId].push(i);
+        }
+
+        // Return the claimed amount
+        return _claimedAmount;
+    }
+
+    function _claimableAmountOfPeriod(address wallet, address currencyCt, uint256 currencyId, uint256 periodIndex)
+    private
+    view
+    returns (int256)
+    {
+        // Return 0 if the period amount is 0
+        if (
+            0 == accrualPeriodsByCurrency[currencyCt][currencyId][periodIndex].amount ||
+        accrualPeriodClaimedByWalletCurrencyIndex[wallet][currencyCt][currencyId][periodIndex]
+        )
+            return 0;
 
         // Retrieve the balance blocks of wallet
-        int256 walletBalanceBlocks = int256(
-            RevenueToken(address(revenueTokenManager.token())).balanceBlocksIn(wallet, bnLow, bnUp)
+        int256 _walletBalanceBlocks = int256(
+            RevenueToken(address(revenueTokenManager.token())).balanceBlocksIn(
+                wallet,
+                accrualPeriodsByCurrency[currencyCt][currencyId][periodIndex].startBlock,
+                accrualPeriodsByCurrency[currencyCt][currencyId][periodIndex].endBlock
+            )
         );
 
         // Retrieve the released amount blocks
-        int256 releasedAmountBlocks = int256(
-            revenueTokenManager.releasedAmountBlocksIn(bnLow, bnUp)
+        int256 _releasedAmountBlocks = int256(
+            revenueTokenManager.releasedAmountBlocksIn(
+                accrualPeriodsByCurrency[currencyCt][currencyId][periodIndex].startBlock,
+                accrualPeriodsByCurrency[currencyCt][currencyId][periodIndex].endBlock
+            )
         );
 
         // Calculate the claimed amount
-        int256 claimedAmount = walletBalanceBlocks.mul_nn(claimableAmount).mul_nn(1e18).div_nn(releasedAmountBlocks.mul_nn(1e18));
-
-        // Store upper bound as the last claimed accrual block number for currency
-        claimedAccrualBlockNumbers.push(bnUp);
-
-        // Return the claimed amount
-        return claimedAmount;
+        return _walletBalanceBlocks
+        .mul_nn(accrualPeriodsByCurrency[currencyCt][currencyId][periodIndex].amount)
+        .mul_nn(ConstantsLib.PARTS_PER())
+        .div_nn(_releasedAmountBlocks.mul_nn(ConstantsLib.PARTS_PER()));
     }
 }
