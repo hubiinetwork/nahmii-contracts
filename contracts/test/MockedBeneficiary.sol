@@ -11,7 +11,6 @@ pragma experimental ABIEncoderV2;
 
 import {Beneficiary} from "../Beneficiary.sol";
 import {MonetaryTypesLib} from "../MonetaryTypesLib.sol";
-import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title MockedBeneficiary
@@ -74,7 +73,6 @@ contract MockedBeneficiary is Beneficiary {
                 standard
             )
         );
-        IERC20(currencyCt).transferFrom(msg.sender, address(this), uint256(amount));
     }
 
     function _getBenefit(uint256 index)

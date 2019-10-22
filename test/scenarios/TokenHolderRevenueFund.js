@@ -836,7 +836,7 @@ module.exports = function (glob) {
                         benefit.currencyId._bn.should.eq.BN(0);
                         benefit.standard.should.be.a('string').that.is.empty;
 
-                        (await ethersERC20.balanceOf(ethersMockedBeneficiary.address))
+                        (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
                             ._bn.should.eq.BN(3);
                     });
                 });
@@ -999,7 +999,7 @@ module.exports = function (glob) {
                         benefit.currencyId._bn.should.eq.BN(0);
                         benefit.standard.should.be.a('string').that.is.empty;
 
-                        (await ethersERC20.balanceOf(ethersMockedBeneficiary.address))
+                        (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
                             ._bn.should.eq.BN(9);
                     });
                 });
