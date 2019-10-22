@@ -848,6 +848,18 @@ module.exports = (glob) => {
                     });
                 });
 
+                describe('if proposal stage amount is 0', () => {
+                    beforeEach(async () => {
+                        await ethersDriipSettlementChallengeState._setProposalStageAmount(0);
+                    });
+
+                    it('should settle payment successfully without attempting to stage', async () => {
+                        await ethersDriipSettlementByPayment.settlePayment(payment, 'ERCXYZ', {gasLimit: 5e6});
+
+                        (await ethersClientFund._stagesCount())._bn.should.eq.BN(0);
+                    });
+                });
+
                 describe('if wallet has already settled this payment', () => {
                     beforeEach(async () => {
                         await ethersDriipSettlementState.completeSettlement(
@@ -1183,7 +1195,7 @@ module.exports = (glob) => {
                             proposal.terminated.should.be.true;
                         });
                     });
-                    
+
                     describe('if there is delta in settled balance', () => {
                         beforeEach(async () => {
                             await ethersDriipSettlementState.addSettledAmountByBlockNumber(

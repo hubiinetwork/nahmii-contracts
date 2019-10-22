@@ -282,10 +282,9 @@ CommunityVotable, FraudChallengable, WalletLockable, PartnerBenefactorable {
             driipSettlementState.addSettledAmountByBlockNumber(wallet, settleAmount, payment.currency, payment.blockNumber);
 
             // Stage (stage function assures positive amount only)
-            clientFund.stage(
-                wallet, driipSettlementChallengeState.proposalStageAmount(wallet, payment.currency),
-                payment.currency.ct, payment.currency.id, standard
-            );
+            int256 stageAmount = driipSettlementChallengeState.proposalStageAmount(wallet, payment.currency);
+            if (stageAmount.isNonZeroPositiveInt256())
+                clientFund.stage(wallet, stageAmount, payment.currency.ct, payment.currency.id, standard);
 
             // Stage fees to revenue fund
             if (address(0) != address(revenueFund))
