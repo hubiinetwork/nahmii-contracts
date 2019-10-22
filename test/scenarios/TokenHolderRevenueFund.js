@@ -981,6 +981,9 @@ module.exports = function (glob) {
                         benefit.currencyId._bn.should.eq.BN(0);
                         benefit.standard.should.be.a('string').that.is.empty;
 
+                        (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                            ._bn.should.eq.BN(3);
+
                         await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
                             'claimAndTransferToBeneficiary(address,address,string,address,uint256,string)'
                             ](
@@ -1000,7 +1003,7 @@ module.exports = function (glob) {
                         benefit.standard.should.be.a('string').that.is.empty;
 
                         (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
-                            ._bn.should.eq.BN(9);
+                            ._bn.should.eq.BN(6);
                     });
                 });
             });
