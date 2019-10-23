@@ -65,6 +65,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     mapping(address => mapping(uint256 => Accrual[])) public closedAccrualsByCurrency;
 
     mapping(address => mapping(address => mapping(uint256 => uint256[]))) public claimedAccrualIndicesByWalletCurrency;
+    mapping(address => mapping(address => mapping(uint256 => int))) public remainderByWalletCurrency;
     mapping(address => mapping(address => mapping(uint256 => mapping(uint256 => bool)))) public accrualClaimedByWalletCurrencyIndex;
 
     mapping(address => mapping(uint256 => mapping(uint256 => int256))) public aggregateAccrualAmountByCurrencyBlockNumber;
@@ -376,13 +377,17 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         require(firstPeriodIndex <= lastPeriodIndex, "Index parameters mismatch [TokenHolderRevenueFund.sol:376]");
 
         // For each period index in range...
-        int256 _claimableAmount = 0;
-        for (uint256 i = firstPeriodIndex; i <= lastPeriodIndex; i++)
-        // Increment the claimed amount
-            _claimableAmount = _claimableAmount.add(_claimableAmountOfPeriod(wallet, currencyCt, currencyId, i));
+        int256 amount = 0;
+        for (uint256 i = firstPeriodIndex; i <= lastPeriodIndex; i++) {
+            // Get the claimable amount and remainder for the current index
+            (int256 _amount, int256 _remainder) = _claimableAmountAndRemainderOfPeriod(wallet, currencyCt, currencyId, i);
+
+            // Increment the claimed amount
+            amount = amount.add(_amount).add(_remainder);
+        }
 
         // Return the claimable amount
-        return _claimableAmount;
+        return amount;
     }
 
     /// @notice Claim accrual and transfer to beneficiary
@@ -525,10 +530,17 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         require(firstPeriodIndex <= lastPeriodIndex, "Index parameters mismatch [TokenHolderRevenueFund.sol:525]");
 
         // For each period index in range...
-        int256 _claimedAmount = 0;
+        int256 amount = 0;
         for (uint256 i = firstPeriodIndex; i <= lastPeriodIndex; i++) {
+            // Get the claimable amount and remainder for the current index
+            (int256 _amount, int256 _remainder) = _claimableAmountAndRemainderOfPeriod(wallet, currencyCt, currencyId, i);
+
             // Increment the claimed amount
-            _claimedAmount = _claimedAmount.add(_claimableAmountOfPeriod(wallet, currencyCt, currencyId, i));
+            amount = amount.add(_amount);
+
+            // Increment the remainder
+            remainderByWalletCurrency[wallet][currencyCt][currencyId] = remainderByWalletCurrency[wallet][currencyCt][currencyId]
+            .add_nn(_remainder);
 
             // Set the claimed flag on the period
             accrualClaimedByWalletCurrencyIndex[wallet][currencyCt][currencyId][i] = true;
@@ -538,20 +550,20 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         }
 
         // Return the claimed amount
-        return _claimedAmount;
+        return amount;
     }
 
-    function _claimableAmountOfPeriod(address wallet, address currencyCt, uint256 currencyId, uint256 periodIndex)
+    function _claimableAmountAndRemainderOfPeriod(address wallet, address currencyCt, uint256 currencyId, uint256 periodIndex)
     private
     view
-    returns (int256)
+    returns (int256, int256)
     {
         // Return 0 if the period amount is 0 or period has previously been claimed for wallet-currency pair
         if (
             0 == closedAccrualsByCurrency[currencyCt][currencyId][periodIndex].amount ||
         accrualClaimedByWalletCurrencyIndex[wallet][currencyCt][currencyId][periodIndex]
         )
-            return 0;
+            return (0, 0);
 
         // Retrieve the balance blocks of wallet
         int256 _walletBalanceBlocks = int256(
@@ -570,8 +582,12 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
             )
         );
 
-        // Calculate the claimed amount
-        return closedAccrualsByCurrency[currencyCt][currencyId][periodIndex].amount
-        .mul_nn(_walletBalanceBlocks).div_nn(_releasedAmountBlocks);
+        // Calculate the dividend for calculation of claimable amount
+        int256 dividend = closedAccrualsByCurrency[currencyCt][currencyId][periodIndex].amount
+        .add_nn(remainderByWalletCurrency[wallet][currencyCt][currencyId])
+        .mul_nn(_walletBalanceBlocks);
+
+        // Calculate the claimable amount and remainder
+        return (dividend.div_nn(_releasedAmountBlocks), dividend.mod_nn(_releasedAmountBlocks));
     }
 }

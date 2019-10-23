@@ -28,6 +28,15 @@ library SafeMathIntLib {
         return a / b;
     }
 
+    function mod(int256 a, int256 b)
+    internal
+    pure
+    returns (int256)
+    {
+        require(a != INT256_MIN || b != - 1);
+        return a % b;
+    }
+
     function mul(int256 a, int256 b)
     internal
     pure
@@ -71,6 +80,15 @@ library SafeMathIntLib {
     {
         require(a >= 0 && b > 0);
         return a / b;
+    }
+
+    function mod_nn(int256 a, int256 b)
+    internal
+    pure
+    returns (int256)
+    {
+        require(a >= 0 && b > 0);
+        return a % b;
     }
 
     function mul_nn(int256 a, int256 b)
