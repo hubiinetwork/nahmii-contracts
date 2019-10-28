@@ -100,6 +100,7 @@ contract('Unit tests', function () {
     require('./scenarios/SignerManager')(glob);
     require('./scenarios/TokenHolderRevenueFund')(glob);
     require('./scenarios/TradeHasher')(glob);
+    require('./scenarios/TradeHasher2')(glob);
     require('./scenarios/Validator')(glob);
     require('./scenarios/WalletLocker')(glob);
 });

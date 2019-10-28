@@ -62,6 +62,11 @@ library NahmiiTypesLib {
         SingleTotalInt256 conjugate;
     }
 
+    struct IntendedConjugateInt256 {
+        int256 intended;
+        int256 conjugate;
+    }
+
     struct WalletOperatorHashes {
         bytes32 wallet;
         bytes32 operator;
