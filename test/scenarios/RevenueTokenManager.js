@@ -3,7 +3,9 @@ const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Contract, Wallet, utils} = require('ethers');
+const {sleep} = require('../../scripts/common/helpers');
 const {address0} = require('../mocks');
+const {futureEpoch} = require('../helpers');
 
 const MockedAucCalculator = artifacts.require('MockedAucCalculator');
 const NahmiiToken = artifacts.require('NahmiiToken');
@@ -37,17 +39,137 @@ module.exports = function (glob) {
 
             web3ReleasedAmountBlocksCalculator = await MockedAucCalculator.new();
             ethersReleasedAmountBlocksCalculator = new Contract(web3ReleasedAmountBlocksCalculator.address, MockedAucCalculator.abi, glob.signer_owner);
-
-            await web3RevenueTokenManager.setToken(web3NahmiiToken.address);
-            await web3RevenueTokenManager.setBeneficiary(glob.user_a);
-            await web3RevenueTokenManager.setBalanceBlocksCalculator(web3BalanceBlocksCalculator.address);
-            await web3RevenueTokenManager.setReleasedAmountBlocksCalculator(web3ReleasedAmountBlocksCalculator.address);
         });
 
         describe('constructor()', () => {
             it('should initialize fields', async () => {
                 (await web3RevenueTokenManager.deployer.call()).should.equal(glob.owner);
                 (await web3RevenueTokenManager.operator.call()).should.equal(glob.owner);
+            });
+        });
+
+        describe('token()', () => {
+            it('should equal value initialized', async () => {
+                (await web3RevenueTokenManager.token.call())
+                    .should.equal(address0);
+            });
+        });
+
+        describe('beneficiary()', () => {
+            it('should equal value initialized', async () => {
+                (await web3RevenueTokenManager.beneficiary.call())
+                    .should.equal(address0);
+            });
+        });
+
+        describe('balanceBlocksCalculator()', () => {
+            it('should equal value initialized', async () => {
+                (await web3RevenueTokenManager.balanceBlocksCalculator.call())
+                    .should.equal(address0);
+            });
+        });
+
+        describe('releasedAmountBlocksCalculator()', () => {
+            it('should equal value initialized', async () => {
+                (await web3RevenueTokenManager.releasedAmountBlocksCalculator.call())
+                    .should.equal(address0);
+            });
+        });
+
+        describe('totalLockedAmount()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersRevenueTokenManager.totalLockedAmount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('releasesCount()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersRevenueTokenManager.releasesCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('executedReleasesCount()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersRevenueTokenManager.executedReleasesCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('setToken()', () => {
+            describe('if called by non-operator', () => {
+                it('should revert', async () => {
+                    await web3RevenueTokenManager.setToken(Wallet.createRandom().address, {from: glob.user_a})
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    await web3RevenueTokenManager.setToken(address0)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if called with address of token multi time-lock contract', () => {
+                it('should revert', async () => {
+                    await web3RevenueTokenManager.setToken(web3RevenueTokenManager.address)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let tokenAddress;
+
+                beforeEach(async () => {
+                    tokenAddress = Wallet.createRandom().address;
+                });
+
+                it('should successfully set token', async () => {
+                    const result = await web3RevenueTokenManager.setToken(tokenAddress);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetTokenEvent');
+
+                    (await ethersRevenueTokenManager.token())
+                        .should.equal(tokenAddress);
+                });
+            });
+        });
+
+        describe('setBeneficiary()', () => {
+            describe('if called by non-operator', () => {
+                it('should revert', async () => {
+                    await web3RevenueTokenManager.setBeneficiary(
+                        Wallet.createRandom().address, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    await web3RevenueTokenManager.setBeneficiary(address0)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let beneficiaryAddress;
+
+                beforeEach(async () => {
+                    beneficiaryAddress = Wallet.createRandom().address;
+                });
+
+                it('should successfully set token', async () => {
+                    const result = await web3RevenueTokenManager.setBeneficiary(beneficiaryAddress);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetBeneficiaryEvent');
+
+                    (await ethersRevenueTokenManager.beneficiary())
+                        .should.equal(beneficiaryAddress);
+                });
             });
         });
 
@@ -133,117 +255,6 @@ module.exports = function (glob) {
             });
         });
 
-        describe('token()', () => {
-            it('should equal value initialized', async () => {
-                (await web3RevenueTokenManager.token.call())
-                    .should.equal(address0);
-            });
-        });
-
-        describe('beneficiary()', () => {
-            it('should equal value initialized', async () => {
-                (await web3RevenueTokenManager.beneficiary.call())
-                    .should.equal(address0);
-            });
-        });
-
-        describe('totalLockedAmount()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersRevenueTokenManager.totalLockedAmount())
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('releasesCount()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersRevenueTokenManager.releasesCount())
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('executedReleasesCount()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersRevenueTokenManager.executedReleasesCount())
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('setToken()', () => {
-            describe('if called by non-operator', () => {
-                it('should revert', async () => {
-                    web3RevenueTokenManager.setToken(Wallet.createRandom().address, {from: glob.user_a})
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called with null address', () => {
-                it('should revert', async () => {
-                    web3RevenueTokenManager.setToken(address0)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called with address of token multi time-lock contract', () => {
-                it('should revert', async () => {
-                    web3RevenueTokenManager.setToken(web3RevenueTokenManager.address)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                let tokenAddress;
-
-                beforeEach(async () => {
-                    tokenAddress = Wallet.createRandom().address;
-                });
-
-                it('should successfully set token', async () => {
-                    const result = await web3RevenueTokenManager.setToken(tokenAddress);
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetTokenEvent');
-
-                    (await ethersRevenueTokenManager.token())
-                        .should.equal(tokenAddress);
-                });
-            });
-        });
-
-        describe('setBeneficiary()', () => {
-            describe('if called by non-operator', () => {
-                it('should revert', async () => {
-                    web3RevenueTokenManager.setBeneficiary(
-                        Wallet.createRandom().address, {from: glob.user_a}
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if called with null address', () => {
-                it('should revert', async () => {
-                    web3RevenueTokenManager.setBeneficiary(address0)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                let beneficiaryAddress;
-
-                beforeEach(async () => {
-                    beneficiaryAddress = Wallet.createRandom().address;
-                });
-
-                it('should successfully set token', async () => {
-                    const result = await web3RevenueTokenManager.setBeneficiary(beneficiaryAddress);
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetBeneficiaryEvent');
-
-                    (await ethersRevenueTokenManager.beneficiary())
-                        .should.equal(beneficiaryAddress);
-                });
-            });
-        });
-
         describe('defineReleases()', () => {
             let earliestReleaseTimes, amounts, blockNumbers;
 
@@ -259,14 +270,14 @@ module.exports = function (glob) {
                 for (let i = 1; i <= 60; i++) {
                     earliestReleaseTimes.push(futureEpoch(10 * i));
                     amounts.push(1000);
-                    if (blockNumbers <= 10)
+                    if (i <= 10)
                         blockNumbers.push(1000000 * i);
                 }
             });
 
             describe('if called by non-operator', () => {
                 it('should revert', async () => {
-                    web3RevenueTokenManager.defineReleases(
+                    await web3RevenueTokenManager.defineReleases(
                         earliestReleaseTimes, amounts, blockNumbers, {from: glob.user_a}
                     ).should.be.rejected;
                 });
@@ -281,7 +292,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3RevenueTokenManager.defineReleases(
+                    await web3RevenueTokenManager.defineReleases(
                         earliestReleaseTimes, amounts, blockNumbers
                     ).should.be.rejected;
                 });
@@ -293,7 +304,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3RevenueTokenManager.defineReleases(
+                    await web3RevenueTokenManager.defineReleases(
                         earliestReleaseTimes, amounts, blockNumbers
                     ).should.be.rejected;
                 });
@@ -305,7 +316,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3RevenueTokenManager.defineReleases(
+                    await web3RevenueTokenManager.defineReleases(
                         earliestReleaseTimes, amounts, blockNumbers
                     ).should.be.rejected;
                 });
@@ -317,7 +328,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3RevenueTokenManager.defineReleases(
+                    await web3RevenueTokenManager.defineReleases(
                         earliestReleaseTimes, amounts, blockNumbers
                     ).should.be.rejected;
                 });
@@ -338,6 +349,29 @@ module.exports = function (glob) {
                         ._bn.should.eq.BN(60);
                     (await ethersRevenueTokenManager.executedReleasesCount())
                         ._bn.should.eq.BN(0);
+
+                    (await ethersRevenueTokenManager.balanceRecordsCount(address0))
+                        ._bn.should.eq.BN(0);
+
+                    (await ethersRevenueTokenManager.recordBalance(address0, 0))
+                        ._bn.should.eq.BN(0);
+                    (await ethersRevenueTokenManager.recordBlockNumber(address0, 0))
+                        ._bn.should.eq.BN(blockNumbers[0]);
+
+                    (await ethersRevenueTokenManager.recordBalance(address0, 10))
+                        ._bn.should.eq.BN(0);
+                    (await ethersRevenueTokenManager.recordBlockNumber(address0, 10))
+                        ._bn.should.eq.BN(0);
+
+                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, blockNumbers[0]))
+                        ._bn.should.eq.BN(0);
+                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, blockNumbers[0] + 10))
+                        ._bn.should.eq.BN(0);
+
+                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, blockNumbers[9]))
+                        ._bn.should.eq.BN(9);
+                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, blockNumbers[9] + 10))
+                        ._bn.should.eq.BN(9);
                 });
             });
         });
@@ -352,13 +386,13 @@ module.exports = function (glob) {
 
             describe('if called by non-beneficiary', () => {
                 it('should revert', async () => {
-                    web3RevenueTokenManager.release(0, {from: glob.user_b}).should.be.rejected;
+                    await web3RevenueTokenManager.release(0, {from: glob.user_b}).should.be.rejected;
                 });
             });
 
             describe('if called with index of undefined release', () => {
                 it('should revert', async () => {
-                    web3RevenueTokenManager.release(0, {from: glob.user_a}).should.be.rejected;
+                    await web3RevenueTokenManager.release(0, {from: glob.user_a}).should.be.rejected;
                 });
             });
 
@@ -370,7 +404,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3RevenueTokenManager.release(0, {from: glob.user_a}).should.be.rejected;
+                    await web3RevenueTokenManager.release(0, {from: glob.user_a}).should.be.rejected;
                 });
             });
 
@@ -403,6 +437,14 @@ module.exports = function (glob) {
 
                         (await ethersNahmiiToken.balanceOf(glob.user_a))
                             ._bn.should.eq.BN(1000);
+
+                        (await ethersRevenueTokenManager.balanceRecordsCount(address0))
+                            ._bn.should.eq.BN(1);
+
+                        (await ethersRevenueTokenManager.recordBalance(address0, 0))
+                            ._bn.should.eq.BN(1000);
+                        (await ethersRevenueTokenManager.recordBlockNumber(address0, 0))
+                            ._bn.should.eq.BN(1000000);
                     });
                 });
 
@@ -434,6 +476,14 @@ module.exports = function (glob) {
 
                         (await ethersNahmiiToken.balanceOf(glob.user_a))
                             ._bn.should.eq.BN(1000);
+
+                        (await ethersRevenueTokenManager.balanceRecordsCount(address0))
+                            ._bn.should.eq.BN(1);
+
+                        (await ethersRevenueTokenManager.recordBalance(address0, 0))
+                            ._bn.should.eq.BN(1000);
+                        (await ethersRevenueTokenManager.recordBlockNumber(address0, 0))
+                            ._bn.should.eq.BN(await provider.getBlockNumber());
                     });
                 });
             });
@@ -450,7 +500,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3RevenueTokenManager.release(0, {from: glob.user_a, gas: 1e6}).should.be.rejected;
+                    await web3RevenueTokenManager.release(0, {from: glob.user_a, gas: 1e6}).should.be.rejected;
                 });
             });
         });
@@ -469,7 +519,7 @@ module.exports = function (glob) {
 
             describe('if called by non-beneficiary', () => {
                 it('should revert', async () => {
-                    web3RevenueTokenManager.setReleaseBlockNumber(0, 1000000, {from: glob.user_b}).should.be.rejected;
+                    await web3RevenueTokenManager.setReleaseBlockNumber(0, 1000000, {from: glob.user_b}).should.be.rejected;
                 });
             });
 
@@ -493,7 +543,7 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    web3RevenueTokenManager.setReleaseBlockNumber(0, 1000000, {from: glob.user_a})
+                    await web3RevenueTokenManager.setReleaseBlockNumber(0, 1000000, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -501,11 +551,14 @@ module.exports = function (glob) {
 
         describe('balanceBlocksIn()', () => {
             let wallet;
-            
-            before(() => {
-                wallet = Wallet.createRandom().address;    
+
+            beforeEach(async () => {
+                wallet = Wallet.createRandom().address;
+
+                await web3RevenueTokenManager.setToken(web3NahmiiToken.address);
+                await web3RevenueTokenManager.setBalanceBlocksCalculator(web3BalanceBlocksCalculator.address);
             });
-            
+
             it('should call the calculation of the balance blocks calculator', async () => {
                 (await ethersRevenueTokenManager.balanceBlocksIn(wallet, 4, 10))
                     ._bn.should.eq.BN(6); // Balance of 1 times block number span
@@ -515,13 +568,51 @@ module.exports = function (glob) {
         describe('releasedAmountBlocksIn()', () => {
             let wallet;
 
-            before(() => {
+            beforeEach(async () => {
                 wallet = Wallet.createRandom().address;
+
+                await web3RevenueTokenManager.setReleasedAmountBlocksCalculator(web3ReleasedAmountBlocksCalculator.address);
             });
 
             it('should call the calculation of the released amount blocks calculator', async () => {
                 (await ethersRevenueTokenManager.releasedAmountBlocksIn(4, 10))
                     ._bn.should.eq.BN(6); // Released amount of 1 times block number span
+            });
+        });
+
+        describe('balanceRecordsCount()', () => {
+            describe('if no release has been executed', () => {
+                it('should equal value initialized', async () => {
+                    (await ethersRevenueTokenManager.balanceRecordsCount(address0))
+                        ._bn.should.eq.BN(0);
+                });
+            });
+        });
+
+        describe('recordBalance()', () => {
+            describe('if no release has been defined', () => {
+                it('should revert', async () => {
+                    await ethersRevenueTokenManager.recordBalance(address0, 0)
+                        .should.be.rejected;
+                });
+            });
+        });
+
+        describe('recordBlockNumber()', () => {
+            describe('if no release has been defined', () => {
+                it('should revert', async () => {
+                    await ethersRevenueTokenManager.recordBlockNumber(address0, 0)
+                        .should.be.rejected;
+                });
+            });
+        });
+
+        describe('recordIndexByBlockNumber()', () => {
+            describe('if no release has been defined', () => {
+                it('should revert', async () => {
+                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, 1000000))
+                        ._bn.should.eq.BN(-1);
+                });
             });
         });
     });

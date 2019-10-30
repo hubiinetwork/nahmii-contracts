@@ -100,17 +100,6 @@ contract RevenueTokenManager is TokenMultiTimelock, BalanceRecordable {
         );
     }
 
-    /// @notice Get the block number of the release
-    /// @param index The index of the release
-    /// @return The block number of the release;
-    function releaseBlockNumbers(uint256 index)
-    public
-    view
-    returns (uint256)
-    {
-        return releases[index].blockNumber;
-    }
-
     /// @notice Get the count of executed releases
     /// @return The count of executed releases
     function balanceRecordsCount(address)

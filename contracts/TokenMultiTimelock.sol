@@ -175,10 +175,10 @@ contract TokenMultiTimelock is Ownable {
     {
         for (uint256 i = releases.length; i > 0;) {
             i = i.sub(1);
-            if (releases[i].blockNumber <= blockNumber)
+            if (0 < releases[i].blockNumber && releases[i].blockNumber <= blockNumber)
                 return int256(i);
         }
-        return - 1;
+        return -1;
     }
 
     /// @notice Transfers tokens held in the indicated release to beneficiary.

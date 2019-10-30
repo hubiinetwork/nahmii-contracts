@@ -13,7 +13,7 @@ chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
 chai.should();
 
-// TODO Merge tests into ./RevenueTokenManager.js
+// TODO Remove file
 module.exports = function (glob) {
     describe('TokenMultiTimelock', function () {
         let provider;
