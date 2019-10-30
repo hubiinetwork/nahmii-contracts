@@ -10,26 +10,29 @@ pragma solidity >=0.4.25 <0.6.0;
 
 import 'openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import 'openzeppelin-solidity/contracts/math/Math.sol';
+import {BalanceRecordable} from './BalanceRecordable.sol';
 
 /**
  * @title RevenueToken
  * @dev Implementation of the EIP20 standard token (also known as ERC20 token) with added
  * calculation of balance blocks at every transfer.
  */
-contract RevenueToken is ERC20Mintable {
+contract RevenueToken is ERC20Mintable, BalanceRecordable {
     using SafeMath for uint256;
+    using Math for uint256;
 
-    bool public mintingDisabled;
+    struct BalanceRecord {
+        uint256 blockNumber;
+        uint256 balance;
+    }
+
+    mapping(address => BalanceRecord[]) public balanceRecords;
 
     address[] public holders;
+    mapping(address => uint256) public holderIndices;
 
-    mapping(address => bool) public holdersMap;
-
-    mapping(address => uint256[]) public balances;
-
-    mapping(address => uint256[]) public balanceBlocks;
-
-    mapping(address => uint256[]) public balanceBlockNumbers;
+    bool public mintingDisabled;
 
     event DisableMinting();
 
@@ -41,8 +44,10 @@ contract RevenueToken is ERC20Mintable {
     public
     onlyMinter
     {
+        // Disable minting
         mintingDisabled = true;
 
+        // Emit event
         emit DisableMinting();
     }
 
@@ -57,22 +62,22 @@ contract RevenueToken is ERC20Mintable {
     onlyMinter
     returns (bool)
     {
-        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:60]");
+        // Require that minting has not been disabled
+        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:66]");
 
         // Call super's mint, including event emission
         bool minted = super.mint(to, value);
 
+        // If minted...
         if (minted) {
-            // Adjust balance blocks
-            addBalanceBlocks(to);
+            // Add balance record
+            _addBalanceRecord(to);
 
-            // Add to the token holders list
-            if (!holdersMap[to]) {
-                holdersMap[to] = true;
-                holders.push(to);
-            }
+            // Add recipient to the token holders list
+            _addToHolders(to);
         }
 
+        // Return the minted flag
         return minted;
     }
 
@@ -89,18 +94,21 @@ contract RevenueToken is ERC20Mintable {
         // Call super's transfer, including event emission
         bool transferred = super.transfer(to, value);
 
+        // If funds were transferred...
         if (transferred) {
-            // Adjust balance blocks
-            addBalanceBlocks(msg.sender);
-            addBalanceBlocks(to);
+            // Add balance records
+            _addBalanceRecord(msg.sender);
+            _addBalanceRecord(to);
 
-            // Add to the token holders list
-            if (!holdersMap[to]) {
-                holdersMap[to] = true;
-                holders.push(to);
-            }
+            // Remove sender from the holders list if no more balance
+            if (0 == balanceOf(msg.sender))
+                _removeFromHolders(msg.sender);
+
+            // Add recipient to the token holders list
+            _addToHolders(to);
         }
 
+        // Return the transferred flag
         return transferred;
     }
 
@@ -120,7 +128,7 @@ contract RevenueToken is ERC20Mintable {
         // Prevent the update of non-zero allowance
         require(
             0 == value || 0 == allowance(msg.sender, spender),
-            "Value or allowance non-zero [RevenueToken.sol:121]"
+            "Value or allowance non-zero [RevenueToken.sol:129]"
         );
 
         // Call super's approve, including event emission
@@ -138,98 +146,88 @@ contract RevenueToken is ERC20Mintable {
     public
     returns (bool)
     {
-        // Call super's transferFrom, including event emission
-        bool transferred = super.transferFrom(from, to, value);
+        {
+            // Call super's transferFrom, including event emission
+            bool transferred = super.transferFrom(from, to, value);
 
-        if (transferred) {
-            // Adjust balance blocks
-            addBalanceBlocks(from);
-            addBalanceBlocks(to);
+            // If funds were transferred...
+            if (transferred) {
+                // Add balance records
+                _addBalanceRecord(from);
+                _addBalanceRecord(to);
 
-            // Add to the token holders list
-            if (!holdersMap[to]) {
-                holdersMap[to] = true;
-                holders.push(to);
+                // Remove sender from the holders list if no more balance
+                if (0 == balanceOf(from))
+                    _removeFromHolders(from);
+
+                // Add recipient to the token holders list
+                _addToHolders(to);
             }
-        }
 
-        return transferred;
+            // Return the transferred flag
+            return transferred;
+        }
     }
 
     /**
-     * @notice Calculate the amount of balance blocks, i.e. the area under the curve (AUC) of
-     * balance as function of block number
-     * @dev The AUC is used as weight for the share of revenue that a token holder may claim
-     * @param account The account address for which calculation is done
-     * @param startBlock The start block number considered
-     * @param endBlock The end block number considered
-     * @return The calculated AUC
-     */
-    function balanceBlocksIn(address account, uint256 startBlock, uint256 endBlock)
-    public
-    view
-    returns (uint256)
-    {
-        require(startBlock < endBlock, "Bounds parameters mismatch [RevenueToken.sol:173]");
-        require(account != address(0), "Account is null address [RevenueToken.sol:174]");
-
-        if (balanceBlockNumbers[account].length == 0 || endBlock < balanceBlockNumbers[account][0])
-            return 0;
-
-        uint256 i = 0;
-        while (i < balanceBlockNumbers[account].length && balanceBlockNumbers[account][i] < startBlock)
-            i++;
-
-        uint256 r;
-        if (i >= balanceBlockNumbers[account].length)
-            r = balances[account][balanceBlockNumbers[account].length - 1].mul(endBlock.sub(startBlock));
-
-        else {
-            uint256 l = (i == 0) ? startBlock : balanceBlockNumbers[account][i - 1];
-
-            uint256 h = balanceBlockNumbers[account][i];
-            if (h > endBlock)
-                h = endBlock;
-
-            h = h.sub(startBlock);
-            r = (h == 0) ? 0 : balanceBlocks[account][i].mul(h).div(balanceBlockNumbers[account][i].sub(l));
-            i++;
-
-            while (i < balanceBlockNumbers[account].length && balanceBlockNumbers[account][i] < endBlock) {
-                r = r.add(balanceBlocks[account][i]);
-                i++;
-            }
-
-            if (i >= balanceBlockNumbers[account].length)
-                r = r.add(
-                    balances[account][balanceBlockNumbers[account].length - 1].mul(
-                        endBlock.sub(balanceBlockNumbers[account][balanceBlockNumbers[account].length - 1])
-                    )
-                );
-
-            else if (balanceBlockNumbers[account][i - 1] < endBlock)
-                r = r.add(
-                    balanceBlocks[account][i].mul(
-                        endBlock.sub(balanceBlockNumbers[account][i - 1])
-                    ).div(
-                        balanceBlockNumbers[account][i].sub(balanceBlockNumbers[account][i - 1])
-                    )
-                );
-        }
-
-        return r;
-    }
-
-    /**
-     * @notice Get the count of balance updates for the given account
+     * @notice Get the count of balance records for the given account
+     * @param account The concerned account
      * @return The count of balance updates
      */
-    function balanceUpdatesCount(address account)
+    function balanceRecordsCount(address account)
     public
     view
     returns (uint256)
     {
-        return balanceBlocks[account].length;
+        return balanceRecords[account].length;
+    }
+
+    /**
+     * @notice Get the balance record balance for the given account and balance record index
+     * @param account The concerned account
+     * @param index The concerned index
+     * @return The balance record balance
+     */
+    function recordBalance(address account, uint256 index)
+    public
+    view
+    returns (uint256)
+    {
+        return balanceRecords[account][index].balance;
+    }
+
+    /**
+     * @notice Get the balance record block number for the given account and balance record index
+     * @param account The concerned account
+     * @param index The concerned index
+     * @return The balance record block number
+     */
+    function recordBlockNumber(address account, uint256 index)
+    public
+    view
+    returns (uint256)
+    {
+        return balanceRecords[account][index].blockNumber;
+    }
+
+    /**
+     * @notice Get the index of the balance record containing the given block number,
+     * or -1 if the given block number is below the smallest balance record block number
+     * @param account The concerned account
+     * @param blockNumber The concerned block number
+     * @return The count of balance updates
+     */
+    function recordIndexByBlockNumber(address account, uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
+        for (uint256 i = balanceRecords[account].length; i > 0;) {
+            i = i.sub(1);
+            if (balanceRecords[account][i].blockNumber <= blockNumber)
+                return int256(i);
+        }
+        return - 1;
     }
 
     /**
@@ -245,52 +243,71 @@ contract RevenueToken is ERC20Mintable {
     }
 
     /**
-     * @notice Get the subset of holders (optionally with positive balance only) in the given 0 based index range
+     * @notice Get the subset of holders in the given 0 based index range
      * @param low The lower inclusive index
      * @param up The upper inclusive index
-     * @param posOnly List only positive balance holders
-     * @return The subset of positive balance registered holders in the given range
+     * @return The subset of registered holders in the given range
      */
-    function holdersByIndices(uint256 low, uint256 up, bool posOnly)
+    function holdersByIndices(uint256 low, uint256 up)
     public
     view
     returns (address[] memory)
     {
-        require(low <= up, "Bounds parameters mismatch [RevenueToken.sol:259]");
+        // Clamp up to the highest index of holders
+        up = up.min(holders.length.sub(1));
 
-        up = up > holders.length - 1 ? holders.length - 1 : up;
+        // Require that lower index is not strictly greater than upper index
+        require(low <= up, "Bounds parameters mismatch [RevenueToken.sol:260]");
 
-        uint256 length = 0;
-        if (posOnly) {
-            for (uint256 i = low; i <= up; i++)
-                if (0 < balanceOf(holders[i]))
-                    length++;
-        } else
-            length = up - low + 1;
+        // Get the length of the return array
+        uint256 length = up.sub(low).add(1);
 
+        // Initialize return array
         address[] memory _holders = new address[](length);
 
+        // Populate the return array
         uint256 j = 0;
-        for (uint256 i = low; i <= up; i++)
-            if (!posOnly || 0 < balanceOf(holders[i]))
-                _holders[j++] = holders[i];
+        for (uint256 i = low; i <= up; i = i.add(1))
+            _holders[j++] = holders[i];
 
+        // Return subset of holders
         return _holders;
     }
 
-    function addBalanceBlocks(address account)
+    /**
+     * @dev Add balance record for the given account
+     */
+    function _addBalanceRecord(address account)
     private
     {
-        uint256 length = balanceBlockNumbers[account].length;
-        balances[account].push(balanceOf(account));
-        if (0 < length)
-            balanceBlocks[account].push(
-                balances[account][length - 1].mul(
-                    block.number.sub(balanceBlockNumbers[account][length - 1])
-                )
-            );
-        else
-            balanceBlocks[account].push(0);
-        balanceBlockNumbers[account].push(block.number);
+        balanceRecords[account].push(BalanceRecord(block.number, balanceOf(account)));
+    }
+
+    /**
+     * @dev Add the given account to the store of holders if not already present
+     */
+    function _addToHolders(address account)
+    private
+    {
+        if (0 == holderIndices[account]) {
+            holders.push(account);
+            holderIndices[account] = holders.length;
+        }
+    }
+
+    /**
+     * @dev Remove the given account from the store of holders if already present
+     */
+    function _removeFromHolders(address account)
+    private
+    {
+        if (0 < holderIndices[account]) {
+            if (holderIndices[account] < holders.length) {
+                holders[holderIndices[account].sub(1)] = holders[holders.length.sub(1)];
+                holderIndices[holders[holders.length.sub(1)]] = holderIndices[account];
+            }
+            holders.length--;
+            holderIndices[account] = 0;
+        }
     }
 }

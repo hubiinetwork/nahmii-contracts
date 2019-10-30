@@ -32,7 +32,7 @@ module.exports = function (glob) {
         describe('setName()', () => {
             describe('if called by non-minter', () => {
                 it('should should revert', async () => {
-                    web3NahmiiToken.setName('some name', {from: glob.user_a})
+                    await web3NahmiiToken.setName('some name', {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -58,7 +58,7 @@ module.exports = function (glob) {
         describe('setSymbol()', () => {
             describe('if called by non-minter', () => {
                 it('should should revert', async () => {
-                    web3NahmiiToken.setName('some name', {from: glob.user_a})
+                    await web3NahmiiToken.setName('some name', {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -84,7 +84,7 @@ module.exports = function (glob) {
         describe('disabledMinting()', () => {
             describe('if called by non-minter', () => {
                 it('should should revert', async () => {
-                    web3NahmiiToken.disableMinting({from: glob.user_a})
+                    await web3NahmiiToken.disableMinting({from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -108,9 +108,9 @@ module.exports = function (glob) {
             });
         });
 
-        describe('balanceUpdatesCount()', () => {
+        describe('balanceRecordsCount()', () => {
             it('should equal value initialized', async () => {
-                (await ethersNahmiiToken.balanceUpdatesCount(glob.user_a))
+                (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                     ._bn.should.eq.BN(0);
             });
         });
@@ -118,7 +118,7 @@ module.exports = function (glob) {
         describe('mint()', () => {
             describe('if called by non-minter', () => {
                 it('should should revert', async () => {
-                    web3NahmiiToken.mint(glob.user_a, 1000, {from: glob.user_a})
+                    await web3NahmiiToken.mint(glob.user_a, 1000, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -129,7 +129,7 @@ module.exports = function (glob) {
                 });
 
                 it('should should revert', async () => {
-                    web3NahmiiToken.mint(glob.user_a, 1000).should.be.rejected;
+                    await web3NahmiiToken.mint(glob.user_a, 1000).should.be.rejected;
                 });
             });
 
@@ -145,7 +145,7 @@ module.exports = function (glob) {
 
                     (await ethersNahmiiToken.holdersCount())
                         ._bn.should.eq.BN(1);
-                    (await ethersNahmiiToken.balanceUpdatesCount(glob.user_a))
+                    (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                         ._bn.should.eq.BN(1);
                 });
             });
@@ -168,16 +168,16 @@ module.exports = function (glob) {
                     ._bn.should.eq.BN(1000);
 
                 (await ethersNahmiiToken.holdersCount())
+                    ._bn.should.eq.BN(1);
+                (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                     ._bn.should.eq.BN(2);
-                (await ethersNahmiiToken.balanceUpdatesCount(glob.user_a))
-                    ._bn.should.eq.BN(2);
-                (await ethersNahmiiToken.balanceUpdatesCount(glob.user_b))
+                (await ethersNahmiiToken.balanceRecordsCount(glob.user_b))
                     ._bn.should.eq.BN(1);
             });
         });
 
         describe('approve()', () => {
-            describe('if allowance is zero', () => {
+            describe('if old allowance is zero', () => {
                 it('should successfully approve', async () => {
                     const result = await web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a});
 
@@ -189,14 +189,28 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if allowance is non-zero', () => {
+            describe('if old allowance is non-zero', () => {
                 beforeEach(async () => {
                     await web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a});
                 });
 
-                it('should revert', async () => {
-                    web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a})
-                        .should.be.rejected;
+                describe('if new allowance is non-zero', () => {
+                    it('should revert', async () => {
+                        await web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if new allowance is zero', () => {
+                    it('should successfully approve', async () => {
+                        const result = await web3NahmiiToken.approve(glob.user_b, 0, {from: glob.user_a});
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('Approval');
+
+                        (await ethersNahmiiToken.allowance(glob.user_a, glob.user_b))
+                            ._bn.should.eq.BN(0);
+                    });
                 });
             });
         });
@@ -220,83 +234,120 @@ module.exports = function (glob) {
                     ._bn.should.eq.BN(1000);
 
                 (await ethersNahmiiToken.holdersCount())
+                    ._bn.should.eq.BN(1);
+                (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                     ._bn.should.eq.BN(2);
-                (await ethersNahmiiToken.balanceUpdatesCount(glob.user_a))
-                    ._bn.should.eq.BN(2);
-                (await ethersNahmiiToken.balanceUpdatesCount(glob.user_b))
+                (await ethersNahmiiToken.balanceRecordsCount(glob.user_b))
                     ._bn.should.eq.BN(1);
             });
         });
 
-        describe('balanceBlocksIn()', () => {
-            let blockNumber;
-
-            beforeEach(async () => {
-                await web3NahmiiToken.mint(glob.user_a, 1000);
-                await web3NahmiiToken.transfer(glob.user_b, 300, {from: glob.user_a});
-                blockNumber = await provider.getBlockNumber();
+        describe('recordBalance()', () => {
+            describe('if the records count is zero', () => {
+                it('should revert', async () => {
+                    await ethersNahmiiToken.recordBalance(glob.user_a, 0).should.be.rejected;
+                });
             });
 
-            it('should successfully return calculated balance blocks value', async () => {
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_a, blockNumber - 2, blockNumber - 1
-                ))._bn.should.eq.BN(0);
+            describe('if the records count is non-zero', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.mint(glob.user_a, 1000);
+                    await web3NahmiiToken.mint(glob.user_a, 2000);
+                    await web3NahmiiToken.mint(glob.user_a, 3000);
+                });
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_a, blockNumber - 1, blockNumber
-                ))._bn.should.eq.BN(1000);
+                it('should return the balance at the given record index', async () => {
+                    (await ethersNahmiiToken.recordBalance(glob.user_a, 0))
+                        ._bn.should.eq.BN(1000);
+                    (await ethersNahmiiToken.recordBalance(glob.user_a, 1))
+                        ._bn.should.eq.BN(3000);
+                    (await ethersNahmiiToken.recordBalance(glob.user_a, 2))
+                        ._bn.should.eq.BN(6000);
+                });
+            });
+        });
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_a, blockNumber, blockNumber + 1
-                ))._bn.should.eq.BN(700);
+        describe('recordBlockNumber()', () => {
+            describe('if the records count is zero', () => {
+                it('should revert', async () => {
+                    await ethersNahmiiToken.recordBlockNumber(glob.user_a, 0).should.be.rejected;
+                });
+            });
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_a, blockNumber - 1, blockNumber + 1
-                ))._bn.should.eq.BN(1700);
+            describe('if the records count is non-zero', () => {
+                let blockNumber;
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_b, blockNumber - 2, blockNumber - 1
-                ))._bn.should.eq.BN(0);
+                beforeEach(async () => {
+                    await web3NahmiiToken.mint(glob.user_a, 1000);
+                    await web3NahmiiToken.mint(glob.user_a, 2000);
+                    await web3NahmiiToken.mint(glob.user_a, 3000);
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_b, blockNumber - 1, blockNumber
-                ))._bn.should.eq.BN(0);
+                    blockNumber = await provider.getBlockNumber()
+                });
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_b, blockNumber, blockNumber + 1
-                ))._bn.should.eq.BN(300);
+                it('should return the balance at the given record index', async () => {
+                    (await ethersNahmiiToken.recordBlockNumber(glob.user_a, 0))
+                        ._bn.should.eq.BN(blockNumber - 2);
+                    (await ethersNahmiiToken.recordBlockNumber(glob.user_a, 1))
+                        ._bn.should.eq.BN(blockNumber - 1);
+                    (await ethersNahmiiToken.recordBlockNumber(glob.user_a, 2))
+                        ._bn.should.eq.BN(blockNumber);
+                });
+            });
+        });
+
+        describe('recordIndexByBlockNumber()', () => {
+            describe('if the records count is zero', () => {
+                it('should return -1', async () => {
+                    (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, 1000))
+                        ._bn.should.eq.BN(-1);
+                });
+            });
+
+            describe('if the records count is non-zero', () => {
+                let blockNumber;
+
+                beforeEach(async () => {
+                    await web3NahmiiToken.mint(glob.user_a, 1000);
+                    await web3NahmiiToken.mint(glob.user_a, 2000);
+                    await web3NahmiiToken.mint(glob.user_a, 3000);
+
+                    blockNumber = await provider.getBlockNumber();
+                });
+
+                it('should return the balance at the given record index', async () => {
+                    (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, blockNumber - 2))
+                        ._bn.should.eq.BN(0);
+                    (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, blockNumber - 1))
+                        ._bn.should.eq.BN(1);
+                    (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, blockNumber))
+                        ._bn.should.eq.BN(2);
+                    (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, blockNumber + 10))
+                        ._bn.should.eq.BN(2);
+                });
             });
         });
 
         describe('holdersByIndices()', () => {
             beforeEach(async () => {
                 await web3NahmiiToken.mint(glob.user_a, 1000);
-                await web3NahmiiToken.transfer(glob.user_b, 1000, {from: glob.user_a});
+                await web3NahmiiToken.transfer(glob.user_b, 400, {from: glob.user_a});
             });
 
             describe('if low is greater than up', () => {
                 it('should revert', async () => {
-                    web3NahmiiToken.holdersByIndices.call(1, 0, false)
+                    await web3NahmiiToken.holdersByIndices.call(1, 0)
                         .should.be.rejected;
                 });
             });
 
-            describe('if posOnly is false', () => {
-                it('should return the count of all holders', async () => {
-                    const holders = await web3NahmiiToken.holdersByIndices.call(0, 1, false);
+            describe('if within operational constraints', () => {
+                it('should return the holders', async () => {
+                    const holders = await web3NahmiiToken.holdersByIndices.call(0, 1);
 
                     holders.should.be.an('array').and.have.lengthOf(2);
                     holders[0].should.equal(glob.user_a);
                     holders[1].should.equal(glob.user_b);
-                });
-            });
-
-            describe('if posOnly is true', () => {
-                it('should return the count of holders with positive balances', async () => {
-                    const holders = await web3NahmiiToken.holdersByIndices.call(0, 1, true);
-
-                    holders.should.be.an('array').and.have.lengthOf(1);
-                    holders[0].should.equal(glob.user_b);
                 });
             });
         });

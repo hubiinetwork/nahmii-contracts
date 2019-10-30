@@ -4,8 +4,9 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-const SafeMath = artifacts.require('SafeMath');
+const Math = artifacts.require('Math');
 const NahmiiToken = artifacts.require('NahmiiToken');
+const SafeMath = artifacts.require('SafeMath');
 
 const debug = require('debug')('2_nahmii_token');
 const path = require('path');
@@ -48,8 +49,10 @@ module.exports = (deployer, network, accounts) => {
                 };
 
                 await execDeploy(ctl, 'SafeMath', '', SafeMath);
+                await execDeploy(ctl, 'Math', '', Math);
 
                 await deployer.link(SafeMath, NahmiiToken);
+                await deployer.link(Math, NahmiiToken);
 
                 const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
 
