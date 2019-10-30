@@ -4,6 +4,7 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
+const BalanceAucCalculator = artifacts.require('BalanceAucCalculator');
 const NahmiiToken = artifacts.require('NahmiiToken');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
@@ -54,10 +55,11 @@ module.exports = (deployer, network, accounts) => {
 
             if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
                 await deployer.link(SafeMathUintLib, [
-                    RevenueTokenManager
+                    BalanceAucCalculator, RevenueTokenManager
                 ]);
 
-                const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', 'RevenueTokenManager', RevenueTokenManager);
+                const balanceAucCalculator = await execDeploy(ctl, 'BalanceAucCalculator', null, BalanceAucCalculator);
+                const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', null, RevenueTokenManager, true);
 
                 let nahmiiToken = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
                 await nahmiiToken.mint(addressStorage.get('RevenueTokenManager'), 120e24);
@@ -69,6 +71,8 @@ module.exports = (deployer, network, accounts) => {
 
                 await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
                 await revenueTokenManager.setBeneficiary(deployerAccount);
+                await revenueTokenManager.setBalanceBlocksCalculator(balanceAucCalculator.address);
+                await revenueTokenManager.setReleasedAmountBlocksCalculator(balanceAucCalculator.address);
 
                 const {earliestReleaseTimes, amounts} = airdriipReleases();
 
@@ -134,18 +138,15 @@ module.exports = (deployer, network, accounts) => {
     });
 };
 
-async function execDeploy(ctl, contractName, instanceName, contract, usesAccessManager) {
+async function execDeploy(ctl, contractName, instanceName, contract, ownable) {
     let address = ctl.addressStorage.get(instanceName || contractName);
     let instance;
 
     if (!address || shouldDeploy(contractName, ctl.deployFilters)) {
-        if (usesAccessManager) {
-            let signerManager = ctl.addressStorage.get('SignerManager');
-
-            instance = await ctl.deployer.deploy(contract, ctl.deployerAccount, signerManager, {from: ctl.deployerAccount});
-
-        } else
+        if (ownable)
             instance = await ctl.deployer.deploy(contract, ctl.deployerAccount, {from: ctl.deployerAccount});
+        else
+            instance = await ctl.deployer.deploy(contract, {from: ctl.deployerAccount});
 
         ctl.addressStorage.set(instanceName || contractName, instance.address);
     }
