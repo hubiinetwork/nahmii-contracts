@@ -49,17 +49,12 @@ contract('Unit tests', function () {
         assert.notEqual(glob.user_i, null);
     });
 
-    require('./scenarios/NahmiiToken')(glob);
     require('./scenarios/AuthorizableServable')(glob);
+    require('./scenarios/BalanceAucCalculator')(glob);
     require('./scenarios/BalanceTracker')(glob);
+    require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/ClientFund')(glob);
     require('./scenarios/Configuration')(glob);
-    require('./scenarios/ERC20TransferController')(glob);
-    require('./scenarios/RevenueTokenManager')(glob);
-    require('./scenarios/Servable')(glob);
-    require('./scenarios/TokenMultiTimelock')(glob);
-    require('./scenarios/TransactionTracker')(glob);
-    require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/CommunityVote')(glob);
     require('./scenarios/DriipSettlementByPayment')(glob);
     require('./scenarios/DriipSettlementByTrade')(glob);
@@ -71,6 +66,7 @@ contract('Unit tests', function () {
     require('./scenarios/DriipSettlementDisputeByPayment')(glob);
     require('./scenarios/DriipSettlementDisputeByTrade')(glob);
     require('./scenarios/DriipSettlementState')(glob);
+    require('./scenarios/ERC20TransferController')(glob);
     // require('./scenarios/ERC721TransferController')(glob);
     require('./scenarios/FraudChallenge')(glob);
     require('./scenarios/FraudChallengeByOrder')(glob);
@@ -83,6 +79,7 @@ contract('Unit tests', function () {
     require('./scenarios/FraudChallengeByTradeOrderResiduals')(glob);
     require('./scenarios/FraudChallengeByDoubleSpentOrders')(glob);
     require('./scenarios/FraudChallengeByDuplicateDriipNonceOfTrades')(glob);
+    require('./scenarios/NahmiiToken')(glob);
     require('./scenarios/NullSettlement')(glob);
     require('./scenarios/NullSettlementChallengeByOrder')(glob);
     require('./scenarios/NullSettlementChallengeByPayment')(glob);
@@ -96,10 +93,14 @@ contract('Unit tests', function () {
     require('./scenarios/PartnerFund')(glob);
     require('./scenarios/PaymentHasher')(glob);
     require('./scenarios/RevenueFund1')(glob);
+    require('./scenarios/RevenueTokenManager')(glob);
     require('./scenarios/SecurityBond')(glob);
+    require('./scenarios/Servable')(glob);
     require('./scenarios/SignerManager')(glob);
     require('./scenarios/TokenHolderRevenueFund')(glob);
+    require('./scenarios/TokenMultiTimelock')(glob);
     require('./scenarios/TradeHasher')(glob);
+    require('./scenarios/TransactionTracker')(glob);
     require('./scenarios/Validator')(glob);
     require('./scenarios/WalletLocker')(glob);
 });
