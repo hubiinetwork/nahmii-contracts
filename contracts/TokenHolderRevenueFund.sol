@@ -555,7 +555,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         // Retrieve the balance blocks of wallet
         int256 _walletBalanceBlocks = int256(
-            RevenueToken(address(revenueTokenManager.token())).balanceBlocksIn(
+            revenueTokenManager.balanceBlocksIn(
                 wallet,
                 closedAccrualsByCurrency[currencyCt][currencyId][periodIndex].startBlock,
                 closedAccrualsByCurrency[currencyCt][currencyId][periodIndex].endBlock
