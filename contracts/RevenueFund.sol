@@ -283,6 +283,10 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
             // Roll over remaining to next accrual period
             periodAccrual.set(remaining, currency.ct, currency.id);
+
+            // Remove currency from period in-use list if the remaining amount is 0
+            if (0 == remaining)
+                periodCurrencies.removeByCurrency(currency.ct, currency.id);
         }
 
         // Close accrual period of accrual beneficiaries
