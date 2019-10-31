@@ -9,8 +9,6 @@
 pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
-import {MockedRevenueToken} from "./MockedRevenueToken.sol";
-
 /**
  * @title MockedRevenueTokenManager
  * @notice Mocked implementation of RevenueTokenManager
@@ -19,16 +17,8 @@ contract MockedRevenueTokenManager {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    MockedRevenueToken public token;
+    uint256 public _balanceBlocksIn;
     uint256 public _releasedAmountBlocksIn;
-
-    //
-    // Constructor
-    // -----------------------------------------------------------------------------------------------------------------
-    constructor() public
-    {
-        token = new MockedRevenueToken();
-    }
 
     //
     // Functions
@@ -39,6 +29,20 @@ contract MockedRevenueTokenManager {
         _releasedAmountBlocksIn = 0;
     }
 
+    function balanceBlocksIn(address, uint256, uint256)
+    public
+    view
+    returns (uint256)
+    {
+        return _balanceBlocksIn;
+    }
+
+    function _setBalanceBlocksIn(uint256 _blockIn)
+    public
+    {
+        _balanceBlocksIn = _blockIn;
+    }
+
     function releasedAmountBlocksIn(uint256, uint256)
     public
     view
@@ -47,9 +51,9 @@ contract MockedRevenueTokenManager {
         return _releasedAmountBlocksIn;
     }
 
-    function _setReleasedAmountBlocksIn(uint256 _rabIn)
+    function _setReleasedAmountBlocksIn(uint256 _blocksIn)
     public
     {
-        _releasedAmountBlocksIn = _rabIn;
+        _releasedAmountBlocksIn = _blocksIn;
     }
 }

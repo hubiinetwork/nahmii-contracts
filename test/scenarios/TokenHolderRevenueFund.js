@@ -10,7 +10,6 @@ const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const MockedTokenHolderRevenueFundService = artifacts.require('MockedTokenHolderRevenueFundService');
 const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 const MockedRevenueTokenManager = artifacts.require('MockedRevenueTokenManager');
-const MockedRevenueToken = artifacts.require('MockedRevenueToken');
 
 chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
@@ -25,7 +24,6 @@ module.exports = function (glob) {
         let web3MockedTokenHolderRevenueFundService, ethersMockedTokenHolderRevenueFundService;
         let web3MockedBeneficiary, ethersMockedBeneficiary;
         let web3MockedRevenueTokenManager, ethersMockedRevenueTokenManager;
-        let web3MockedRevenueToken, ethersMockedRevenueToken;
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -34,10 +32,6 @@ module.exports = function (glob) {
 
             web3MockedTokenHolderRevenueFundService = await MockedTokenHolderRevenueFundService.new();
             ethersMockedTokenHolderRevenueFundService = new Contract(web3MockedTokenHolderRevenueFundService.address, MockedTokenHolderRevenueFundService.abi, glob.signer_owner);
-            web3MockedRevenueTokenManager = await MockedRevenueTokenManager.new();
-            ethersMockedRevenueTokenManager = new Contract(web3MockedRevenueTokenManager.address, MockedRevenueTokenManager.abi, glob.signer_owner);
-            web3MockedRevenueToken = await MockedRevenueToken.at(await web3MockedRevenueTokenManager.token());
-            ethersMockedRevenueToken = new Contract(web3MockedRevenueToken.address, MockedRevenueToken.abi, glob.signer_owner);
         });
 
         beforeEach(async () => {
@@ -48,6 +42,8 @@ module.exports = function (glob) {
 
             await web3TransferControllerManager.registerCurrency(web3ERC20.address, 'ERC20', {from: glob.owner});
 
+            web3MockedRevenueTokenManager = await MockedRevenueTokenManager.new();
+            ethersMockedRevenueTokenManager = new Contract(web3MockedRevenueTokenManager.address, MockedRevenueTokenManager.abi, glob.signer_owner);
             web3MockedBeneficiary = await MockedBeneficiary.new(glob.owner);
             ethersMockedBeneficiary = new Contract(web3MockedBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);
 
@@ -652,7 +648,7 @@ module.exports = function (glob) {
                         [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
-                    await web3MockedRevenueToken._setBalanceBlocksIn(3000);
+                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(3000);
                     await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
                 });
 
@@ -688,7 +684,7 @@ module.exports = function (glob) {
                         [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
-                    await web3MockedRevenueToken._setBalanceBlocksIn(3000);
+                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(3000);
                     await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmount(
@@ -768,7 +764,7 @@ module.exports = function (glob) {
                             [{ct: mocks.address0, id: 0}], {gasLimit: 1e6}
                         );
 
-                        await web3MockedRevenueToken._setBalanceBlocksIn(3000);
+                        await web3MockedRevenueTokenManager._setBalanceBlocksIn(3000);
                         await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
 
                         balanceBefore = (await provider.getBalance(ethersMockedBeneficiary.address))._bn;
@@ -813,7 +809,7 @@ module.exports = function (glob) {
                             [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                         );
 
-                        await web3MockedRevenueToken._setBalanceBlocksIn(3000);
+                        await web3MockedRevenueTokenManager._setBalanceBlocksIn(3000);
                         await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
                     });
 
@@ -882,7 +878,7 @@ module.exports = function (glob) {
                             [{ct: mocks.address0, id: 0}], {gasLimit: 1e6}
                         );
 
-                        await web3MockedRevenueToken._setBalanceBlocksIn(3000);
+                        await web3MockedRevenueTokenManager._setBalanceBlocksIn(3000);
                         await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
 
                         balanceBefore = (await provider.getBalance(ethersMockedBeneficiary.address))._bn;
@@ -958,7 +954,7 @@ module.exports = function (glob) {
                             [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                         );
 
-                        await web3MockedRevenueToken._setBalanceBlocksIn(3000);
+                        await web3MockedRevenueTokenManager._setBalanceBlocksIn(3000);
                         await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
                     });
 
@@ -1043,7 +1039,7 @@ module.exports = function (glob) {
                         [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
-                    await web3MockedRevenueToken._setBalanceBlocksIn(3000);
+                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(3000);
                     await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmount(
@@ -1095,7 +1091,7 @@ module.exports = function (glob) {
                         [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
-                    await web3MockedRevenueToken._setBalanceBlocksIn(3000);
+                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(3000);
                     await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmount(
@@ -1178,7 +1174,7 @@ module.exports = function (glob) {
                         [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
-                    await web3MockedRevenueToken._setBalanceBlocksIn(3000);
+                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(3000);
                     await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
 
                     await web3TokenHolderRevenueFund.claimAndStage(
