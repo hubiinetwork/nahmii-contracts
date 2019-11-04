@@ -4,6 +4,7 @@ const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Contract} = require('ethers');
 const NahmiiToken = artifacts.require('NahmiiToken');
+const MockedTokenUpgradeAgent = artifacts.require('MockedTokenUpgradeAgent');
 
 chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
@@ -226,6 +227,120 @@ module.exports = function (glob) {
                     ._bn.should.eq.BN(2);
                 (await ethersNahmiiToken.balanceRecordsCount(glob.user_b))
                     ._bn.should.eq.BN(1);
+            });
+        });
+
+        describe('upgrade()', () => {
+            let web3UpgradeAgent;
+
+            beforeEach(async () => {
+                await web3NahmiiToken.mint(glob.user_a, 1000);
+
+                web3UpgradeAgent = await MockedTokenUpgradeAgent.new(web3NahmiiToken.address);
+            });
+
+            describe('if agent upgrades', () => {
+                beforeEach(async () => {
+                    await web3UpgradeAgent._setUpgradeFrom(true);
+                });
+
+                it('should successfully decrement the old balance', async () => {
+                    const result = await web3NahmiiToken.upgrade(web3UpgradeAgent.address, 600, {
+                        from: glob.user_a,
+                        gas: 1e6
+                    });
+
+                    result.logs.should.be.an('array').and.have.lengthOf(2);
+
+                    result.logs.map(l => l.event).should.include('Upgrade');
+
+                    (await ethersNahmiiToken.balanceOf(glob.user_a))
+                        ._bn.should.eq.BN(400);
+                });
+            });
+
+            describe('if agent does not upgrade', () => {
+                beforeEach(async () => {
+                    await web3UpgradeAgent._setUpgradeFrom(false);
+                });
+
+                it('should not decrement the old balance', async () => {
+                    const result = await web3NahmiiToken.upgrade(web3UpgradeAgent.address, 600, {
+                        from: glob.user_a,
+                        gas: 1e6
+                    });
+
+                    result.logs.should.be.an('array');
+                    result.logs.map(l => l.event).should.not.include('Upgrade');
+
+                    (await ethersNahmiiToken.balanceOf(glob.user_a))
+                        ._bn.should.eq.BN(1000);
+                });
+            });
+        });
+
+        describe('upgradeFrom()', () => {
+            let web3UpgradeAgent;
+
+            beforeEach(async () => {
+                await web3NahmiiToken.mint(glob.user_a, 1000);
+
+                web3UpgradeAgent = await MockedTokenUpgradeAgent.new(web3NahmiiToken.address);
+            });
+
+            describe('if agent upgrades', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.approve(glob.owner, 600, {from: glob.user_a});
+
+                    await web3UpgradeAgent._setUpgradeFrom(true);
+                });
+
+                it('should successfully decrement the old balance', async () => {
+                    const result = await web3NahmiiToken.upgradeFrom(web3UpgradeAgent.address, glob.user_a, 600, {
+                        gas: 1e6
+                    });
+
+                    result.logs.should.be.an('array').and.have.lengthOf(3);
+
+                    result.logs.map(l => l.event).should.include('UpgradeFrom');
+
+                    (await ethersNahmiiToken.balanceOf(glob.user_a))
+                        ._bn.should.eq.BN(400);
+                });
+            });
+
+            describe('if agent does not upgrade', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.approve(glob.owner, 600, {from: glob.user_a});
+
+                    await web3UpgradeAgent._setUpgradeFrom(false);
+                });
+
+                it('should not decrement the old balance', async () => {
+                    const result = await web3NahmiiToken.upgradeFrom(web3UpgradeAgent.address, glob.user_a, 600, {
+                        gas: 1e6
+                    });
+
+                    result.logs.should.be.an('array');
+                    result.logs.map(l => l.event).should.not.include('UpgradeFrom');
+
+                    (await ethersNahmiiToken.balanceOf(glob.user_a))
+                        ._bn.should.eq.BN(1000);
+                });
+            });
+
+            describe('if wallet is not approved to burn', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.approve(glob.owner, 500, {from: glob.user_a});
+
+                    await web3UpgradeAgent._setUpgradeFrom(true);
+                });
+
+                it('should revert', async () => {
+                    await web3NahmiiToken.upgradeFrom(web3UpgradeAgent.address, glob.user_a, 600, {
+                        gas: 1e6
+                    }).should.be.rejected;
+                });
             });
         });
 

@@ -11,7 +11,8 @@ pragma solidity >=0.4.25 <0.6.0;
 import 'openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import 'openzeppelin-solidity/contracts/math/Math.sol';
-import {BalanceRecordable} from './BalanceRecordable.sol';
+import {BalanceRecordable} from "./BalanceRecordable.sol";
+import {TokenUpgradeAgent} from "./TokenUpgradeAgent.sol";
 
 /**
  * @title RevenueToken
@@ -32,6 +33,8 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
     bool public mintingDisabled;
 
     event DisableMinting();
+    event Upgrade(TokenUpgradeAgent tokenUpgradeAgent, address from, uint256 value);
+    event UpgradeFrom(TokenUpgradeAgent tokenUpgradeAgent, address upgrader, address from, uint256 value);
 
     /**
      * @notice Disable further minting
@@ -60,7 +63,7 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
     returns (bool)
     {
         // Require that minting has not been disabled
-        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:63]");
+        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:66]");
 
         // Call super's mint, including event emission
         bool minted = super.mint(to, value);
@@ -112,7 +115,7 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
         // Prevent the update of non-zero allowance
         require(
             0 == value || 0 == allowance(msg.sender, spender),
-            "Value or allowance non-zero [RevenueToken.sol:113]"
+            "Value or allowance non-zero [RevenueToken.sol:118]"
         );
 
         // Call super's approve, including event emission
@@ -143,6 +146,59 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
             // Return the transferred flag
             return transferred;
         }
+    }
+
+    /**
+     * @notice Upgrade the given value of this token to a new token contract using the given upgrade agent
+     * @param tokenUpgradeAgent The upgrade agent doing the increment of the new token
+     * @param value The value to decrement this token
+     * @return A boolean that indicates if the operation was successful.
+     */
+    function upgrade(TokenUpgradeAgent tokenUpgradeAgent, uint256 value)
+    public
+    returns (bool)
+    {
+        // Upgrade from message sender
+        bool upgraded = tokenUpgradeAgent.upgradeFrom(msg.sender, value);
+
+        // If new token upgraded...
+        if (upgraded) {
+            // Burn the value from of this token
+            _burn(msg.sender, value);
+
+            // Emit event
+            emit Upgrade(tokenUpgradeAgent, msg.sender, value);
+        }
+
+        // Return true
+        return upgraded;
+    }
+
+    /**
+    * @notice Upgrade the given wallet's value of this token to a new token contract using the given upgrade agent
+    * @param tokenUpgradeAgent The upgrade agent doing the increment of the new token
+    * @param from The wallet whose token balance will be upgraded
+    * @param value The value to decrement this token
+    * @return A boolean that indicates if the operation was successful.
+    */
+    function upgradeFrom(TokenUpgradeAgent tokenUpgradeAgent, address from, uint256 value)
+    public
+    returns (bool)
+    {
+        // Upgrade from message sender
+        bool upgraded = tokenUpgradeAgent.upgradeFrom(from, value);
+
+        // If new token upgraded...
+        if (upgraded) {
+            // Burn the value from of this token
+            _burnFrom(from, value);
+
+            // Emit event
+            emit UpgradeFrom(tokenUpgradeAgent, msg.sender, from, value);
+        }
+
+        // Return true
+        return upgraded;
     }
 
     /**
