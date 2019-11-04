@@ -98,7 +98,6 @@ contract('Unit tests', function () {
     require('./scenarios/Servable')(glob);
     require('./scenarios/SignerManager')(glob);
     require('./scenarios/TokenHolderRevenueFund')(glob);
-    // require('./scenarios/TokenMultiTimelock')(glob); // TODO Remove
     require('./scenarios/TradeHasher')(glob);
     require('./scenarios/TransactionTracker')(glob);
     require('./scenarios/Validator')(glob);
