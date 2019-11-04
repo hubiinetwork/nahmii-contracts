@@ -29,9 +29,6 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
 
     mapping(address => BalanceRecord[]) public balanceRecords;
 
-    address[] public holders;
-    mapping(address => uint256) public holderIndices;
-
     bool public mintingDisabled;
 
     event DisableMinting();
@@ -63,19 +60,14 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
     returns (bool)
     {
         // Require that minting has not been disabled
-        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:66]");
+        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:63]");
 
         // Call super's mint, including event emission
         bool minted = super.mint(to, value);
 
-        // If minted...
-        if (minted) {
-            // Add balance record
+        // Add balance record if minted
+        if (minted)
             _addBalanceRecord(to);
-
-            // Add recipient to the token holders list
-            _addToHolders(to);
-        }
 
         // Return the minted flag
         return minted;
@@ -94,18 +86,10 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
         // Call super's transfer, including event emission
         bool transferred = super.transfer(to, value);
 
-        // If funds were transferred...
+        // Add balance records if funds were transferred
         if (transferred) {
-            // Add balance records
             _addBalanceRecord(msg.sender);
             _addBalanceRecord(to);
-
-            // Remove sender from the holders list if no more balance
-            if (0 == balanceOf(msg.sender))
-                _removeFromHolders(msg.sender);
-
-            // Add recipient to the token holders list
-            _addToHolders(to);
         }
 
         // Return the transferred flag
@@ -128,7 +112,7 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
         // Prevent the update of non-zero allowance
         require(
             0 == value || 0 == allowance(msg.sender, spender),
-            "Value or allowance non-zero [RevenueToken.sol:129]"
+            "Value or allowance non-zero [RevenueToken.sol:113]"
         );
 
         // Call super's approve, including event emission
@@ -150,18 +134,10 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
             // Call super's transferFrom, including event emission
             bool transferred = super.transferFrom(from, to, value);
 
-            // If funds were transferred...
+            // Add balance records if funds were transferred
             if (transferred) {
-                // Add balance records
                 _addBalanceRecord(from);
                 _addBalanceRecord(to);
-
-                // Remove sender from the holders list if no more balance
-                if (0 == balanceOf(from))
-                    _removeFromHolders(from);
-
-                // Add recipient to the token holders list
-                _addToHolders(to);
             }
 
             // Return the transferred flag
@@ -231,83 +207,11 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
     }
 
     /**
-     * @notice Get the count of holders
-     * @return The count of holders
-     */
-    function holdersCount()
-    public
-    view
-    returns (uint256)
-    {
-        return holders.length;
-    }
-
-    /**
-     * @notice Get the subset of holders in the given 0 based index range
-     * @param low The lower inclusive index
-     * @param up The upper inclusive index
-     * @return The subset of registered holders in the given range
-     */
-    function holdersByIndices(uint256 low, uint256 up)
-    public
-    view
-    returns (address[] memory)
-    {
-        // Clamp up to the highest index of holders
-        up = up.min(holders.length.sub(1));
-
-        // Require that lower index is not strictly greater than upper index
-        require(low <= up, "Bounds parameters mismatch [RevenueToken.sol:260]");
-
-        // Get the length of the return array
-        uint256 length = up.sub(low).add(1);
-
-        // Initialize return array
-        address[] memory _holders = new address[](length);
-
-        // Populate the return array
-        uint256 j = 0;
-        for (uint256 i = low; i <= up; i = i.add(1))
-            _holders[j++] = holders[i];
-
-        // Return subset of holders
-        return _holders;
-    }
-
-    /**
      * @dev Add balance record for the given account
      */
     function _addBalanceRecord(address account)
     private
     {
         balanceRecords[account].push(BalanceRecord(block.number, balanceOf(account)));
-    }
-
-    /**
-     * @dev Add the given account to the store of holders if not already present
-     */
-    function _addToHolders(address account)
-    private
-    {
-        if (0 == holderIndices[account]) {
-            holders.push(account);
-            holderIndices[account] = holders.length;
-        }
-    }
-
-    /**
-     * @dev Remove the given account from the store of holders if already present
-     */
-    function _removeFromHolders(address account)
-    private
-    {
-        if (0 < holderIndices[account]) {
-            if (holderIndices[account] < holders.length) {
-                holders[holderIndices[account].sub(1)] = holders[holders.length.sub(1)];
-                holderIndices[holders[holders.length.sub(1)]] = holderIndices[account];
-            }
-            holders.length--;
-            holderIndices[account] = 0;
-        }
     }
 }

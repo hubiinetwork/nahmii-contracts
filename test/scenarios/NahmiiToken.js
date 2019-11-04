@@ -101,13 +101,6 @@ module.exports = function (glob) {
             });
         });
 
-        describe('holdersCount()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersNahmiiToken.holdersCount())
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
         describe('balanceRecordsCount()', () => {
             it('should equal value initialized', async () => {
                 (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
@@ -143,8 +136,6 @@ module.exports = function (glob) {
                     (await ethersNahmiiToken.balanceOf(glob.user_a))
                         ._bn.should.eq.BN(1000);
 
-                    (await ethersNahmiiToken.holdersCount())
-                        ._bn.should.eq.BN(1);
                     (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                         ._bn.should.eq.BN(1);
                 });
@@ -167,8 +158,6 @@ module.exports = function (glob) {
                 (await ethersNahmiiToken.balanceOf(glob.user_b))
                     ._bn.should.eq.BN(1000);
 
-                (await ethersNahmiiToken.holdersCount())
-                    ._bn.should.eq.BN(1);
                 (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                     ._bn.should.eq.BN(2);
                 (await ethersNahmiiToken.balanceRecordsCount(glob.user_b))
@@ -233,8 +222,6 @@ module.exports = function (glob) {
                 (await ethersNahmiiToken.balanceOf(glob.user_b))
                     ._bn.should.eq.BN(1000);
 
-                (await ethersNahmiiToken.holdersCount())
-                    ._bn.should.eq.BN(1);
                 (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                     ._bn.should.eq.BN(2);
                 (await ethersNahmiiToken.balanceRecordsCount(glob.user_b))
@@ -324,30 +311,6 @@ module.exports = function (glob) {
                         ._bn.should.eq.BN(2);
                     (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, blockNumber + 10))
                         ._bn.should.eq.BN(2);
-                });
-            });
-        });
-
-        describe('holdersByIndices()', () => {
-            beforeEach(async () => {
-                await web3NahmiiToken.mint(glob.user_a, 1000);
-                await web3NahmiiToken.transfer(glob.user_b, 400, {from: glob.user_a});
-            });
-
-            describe('if low is greater than up', () => {
-                it('should revert', async () => {
-                    await web3NahmiiToken.holdersByIndices.call(1, 0)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                it('should return the holders', async () => {
-                    const holders = await web3NahmiiToken.holdersByIndices.call(0, 1);
-
-                    holders.should.be.an('array').and.have.lengthOf(2);
-                    holders[0].should.equal(glob.user_a);
-                    holders[1].should.equal(glob.user_b);
                 });
             });
         });
