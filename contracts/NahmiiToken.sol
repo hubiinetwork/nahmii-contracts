@@ -7,6 +7,7 @@
  */
 
 pragma solidity >=0.4.25 <0.6.0;
+pragma experimental ABIEncoderV2;
 
 import {RevenueToken} from "./RevenueToken.sol";
 

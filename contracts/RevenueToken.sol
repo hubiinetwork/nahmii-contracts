@@ -7,6 +7,7 @@
  */
 
 pragma solidity >=0.4.25 <0.6.0;
+pragma experimental ABIEncoderV2;
 
 import 'openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
@@ -35,6 +36,7 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
     event DisableMinting();
     event Upgrade(TokenUpgradeAgent tokenUpgradeAgent, address from, uint256 value);
     event UpgradeFrom(TokenUpgradeAgent tokenUpgradeAgent, address upgrader, address from, uint256 value);
+    event UpgradeBalanceRecords(address account, uint256 startIndex, uint256 endIndex);
 
     /**
      * @notice Disable further minting
@@ -63,7 +65,7 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
     returns (bool)
     {
         // Require that minting has not been disabled
-        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:66]");
+        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:68]");
 
         // Call super's mint, including event emission
         bool minted = super.mint(to, value);
@@ -115,7 +117,7 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
         // Prevent the update of non-zero allowance
         require(
             0 == value || 0 == allowance(msg.sender, spender),
-            "Value or allowance non-zero [RevenueToken.sol:118]"
+            "Value or allowance non-zero [RevenueToken.sol:120]"
         );
 
         // Call super's approve, including event emission
@@ -260,6 +262,33 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
                 return int256(i);
         }
         return - 1;
+    }
+
+    /**
+     * @notice Add the account's given set of balance records to the stored set of records
+     * @param account The concerned account
+     * @param _balanceRecords The set of balance records to be added
+     */
+    function upgradeBalanceRecords(address account, BalanceRecord[] memory _balanceRecords)
+    public
+    onlyMinter
+    {
+        // If there are input balance records
+        if (0 < _balanceRecords.length) {
+            // Require that minting has not been disabled
+            require(!mintingDisabled, "Minting disabled [RevenueToken.sol:347]");
+
+            // Calculate index range to be upgraded
+            uint256 startIndex = balanceRecords[account].length;
+            uint256 endIndex = startIndex.add(_balanceRecords.length).sub(1);
+
+            // Add balance records
+            for (uint256 i = 0; i < _balanceRecords.length; i = i.add(1))
+                balanceRecords[account].push(_balanceRecords[i]);
+
+            // Emit event
+            emit UpgradeBalanceRecords(account, startIndex, endIndex);
+        }
     }
 
     /**

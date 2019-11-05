@@ -429,5 +429,61 @@ module.exports = function (glob) {
                 });
             });
         });
+
+        describe('upgradeBalanceRecords()', () => {
+            let balanceRecords;
+
+            beforeEach(() => {
+                balanceRecords = [
+                    {blockNumber: 1, balance: 1000},
+                    {blockNumber: 2, balance: 2000},
+                    {blockNumber: 3, balance: 3000}
+                ];
+            });
+
+            describe('if called by non-minter', () => {
+                it('should should revert', async () => {
+                    await ethersNahmiiToken.connect(glob.signer_a).upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called when minting is disabled', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.disableMinting();
+                });
+
+                it('should should revert', async () => {
+                    await ethersNahmiiToken.upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let topic, filter;
+
+                beforeEach(async () => {
+                    topic = ethersNahmiiToken.interface.events.UpgradeBalanceRecords.topics[0];
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: [topic]
+                    };
+                });
+
+                it('should successfully mint', async () => {
+                    await ethersNahmiiToken.upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+
+                    (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
+                        ._bn.should.eq.BN(3);
+                });
+            });
+        });
     });
 };
