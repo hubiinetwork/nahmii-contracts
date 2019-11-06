@@ -14,7 +14,7 @@ import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 /**
- * @title Balance tracker
+ * @title TokenMultiTimelock
  * @notice An ownable that allows a beneficiary to extract tokens in
  *   a number of batches each a given release time
  */

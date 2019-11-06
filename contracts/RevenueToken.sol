@@ -18,7 +18,7 @@ import {TokenUpgradeAgent} from "./TokenUpgradeAgent.sol";
 /**
  * @title RevenueToken
  * @dev Implementation of the EIP20 standard token (also known as ERC20 token) with added
- * calculation of balance blocks at every transfer.
+ * storage of balance records (block number/balance pairs) and upgrade support.
  */
 contract RevenueToken is ERC20Mintable, BalanceRecordable {
     using SafeMath for uint256;
@@ -55,9 +55,9 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
 
     /**
      * @notice Mint tokens
-     * @param to The address that will receive the minted tokens.
-     * @param value The amount of tokens to mint.
-     * @return A boolean that indicates if the operation was successful.
+     * @param to The address that will receive the minted tokens
+     * @param value The amount of tokens to mint
+     * @return A boolean that indicates if the operation was successful
      */
     function mint(address to, uint256 value)
     public
@@ -80,9 +80,9 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
 
     /**
      * @notice Transfer token for a specified address
-     * @param to The address to transfer to.
-     * @param value The amount to be transferred.
-     * @return A boolean that indicates if the operation was successful.
+     * @param to The address to transfer to
+     * @param value The amount to be transferred
+     * @return A boolean that indicates if the operation was successful
      */
     function transfer(address to, uint256 value)
     public
@@ -102,13 +102,12 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
     }
 
     /**
-     * @notice Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
+     * @notice Approve the passed address to spend the specified amount of tokens on behalf of msg.sender
      * @dev Beware that to change the approve amount you first have to reduce the addresses'
      * allowance to zero by calling `approve(spender, 0)` if it is not already 0 to mitigate the race
-     * condition described here:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     * @param spender The address which will spend the funds.
-     * @param value The amount of tokens to be spent.
+     * condition described in https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     * @param spender The address which will spend the funds
+     * @param value The amount of tokens to be spent
      */
     function approve(address spender, uint256 value)
     public
@@ -126,35 +125,34 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
 
     /**
      * @dev Transfer tokens from one address to another
-     * @param from address The address which you want to send tokens from
-     * @param to address The address which you want to transfer to
+     * @param from address The address to send tokens from
+     * @param to address The address to send tokens to
      * @param value uint256 the amount of tokens to be transferred
-     * @return A boolean that indicates if the operation was successful.
+     * @return A boolean that indicates if the operation was successful
      */
     function transferFrom(address from, address to, uint256 value)
     public
     returns (bool)
     {
-        {
-            // Call super's transferFrom, including event emission
-            bool transferred = super.transferFrom(from, to, value);
+        // Call super's transferFrom, including event emission
+        bool transferred = super.transferFrom(from, to, value);
 
-            // Add balance records if funds were transferred
-            if (transferred) {
-                _addBalanceRecord(from);
-                _addBalanceRecord(to);
-            }
-
-            // Return the transferred flag
-            return transferred;
+        // Add balance records if funds were transferred
+        if (transferred) {
+            _addBalanceRecord(from);
+            _addBalanceRecord(to);
         }
+
+        // Return the transferred flag
+        return transferred;
     }
 
     /**
-     * @notice Upgrade the given value of this token to a new token contract using the given upgrade agent
+     * @notice Upgrade the given value of this token to a new token contract
+     * using the given upgrade agent
      * @param tokenUpgradeAgent The upgrade agent doing the increment of the new token
      * @param value The value to decrement this token
-     * @return A boolean that indicates if the operation was successful.
+     * @return A boolean that indicates if the operation was successful
      */
     function upgrade(TokenUpgradeAgent tokenUpgradeAgent, uint256 value)
     public
@@ -165,7 +163,7 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
 
         // If new token upgraded...
         if (upgraded) {
-            // Burn the value from of this token
+            // Destroy old tokens of message sender
             _burn(msg.sender, value);
 
             // Emit event
@@ -181,18 +179,18 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
     * @param tokenUpgradeAgent The upgrade agent doing the increment of the new token
     * @param from The wallet whose token balance will be upgraded
     * @param value The value to decrement this token
-    * @return A boolean that indicates if the operation was successful.
+    * @return A boolean that indicates if the operation was successful
     */
     function upgradeFrom(TokenUpgradeAgent tokenUpgradeAgent, address from, uint256 value)
     public
     returns (bool)
     {
-        // Upgrade from message sender
+        // Upgrade from wallet
         bool upgraded = tokenUpgradeAgent.upgradeFrom(from, value);
 
         // If new token upgraded...
         if (upgraded) {
-            // Burn the value from of this token
+            // Destroy old tokens of wallet
             _burnFrom(from, value);
 
             // Emit event

@@ -14,6 +14,11 @@ import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {BalanceAucCalculator} from "./BalanceAucCalculator.sol";
 import {BalanceRecordable} from "./BalanceRecordable.sol";
 
+/**
+ * @title RevenueTokenManager
+ * @notice An token multi-timelock that supports the calculation of balance blocks
+ * of the underlying revenue token as well as amount blocks from its own released amount
+ */
 contract RevenueTokenManager is TokenMultiTimelock, BalanceRecordable {
     using SafeMathUintLib for uint256;
 
