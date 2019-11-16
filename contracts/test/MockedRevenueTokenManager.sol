@@ -17,7 +17,7 @@ contract MockedRevenueTokenManager {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    uint256 public _balanceBlocksIn;
+    mapping(address => uint256) public _balanceBlocksInByWallet;
     uint256 public _releasedAmountBlocksIn;
 
     //
@@ -29,18 +29,18 @@ contract MockedRevenueTokenManager {
         _releasedAmountBlocksIn = 0;
     }
 
-    function balanceBlocksIn(address, uint256, uint256)
+    function balanceBlocksIn(address wallet, uint256, uint256)
     public
     view
     returns (uint256)
     {
-        return _balanceBlocksIn;
+        return _balanceBlocksInByWallet[wallet];
     }
 
-    function _setBalanceBlocksIn(uint256 _blockIn)
+    function _setBalanceBlocksIn(address wallet, uint256 _blockIn)
     public
     {
-        _balanceBlocksIn = _blockIn;
+        _balanceBlocksInByWallet[wallet] = _blockIn;
     }
 
     function releasedAmountBlocksIn(uint256, uint256)
