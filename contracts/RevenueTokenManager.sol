@@ -71,7 +71,7 @@ contract RevenueTokenManager is TokenMultiTimelock, BalanceRecordable {
         releasedAmountBlocksCalculator = calculator;
 
         // Emit event
-        emit SetReleasedAmountBlocksCalculatorEvent(balanceBlocksCalculator);
+        emit SetReleasedAmountBlocksCalculatorEvent(releasedAmountBlocksCalculator);
     }
 
     /// @notice Calculate the wallet's balance blocks, i.e. the area under the curve (AUC) of
