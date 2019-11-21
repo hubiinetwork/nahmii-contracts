@@ -88,8 +88,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetRevenueTokenManagerEvent(RevenueTokenManager oldRevenueTokenManager,
-        RevenueTokenManager newRevenueTokenManager);
+    event SetRevenueTokenManagerEvent(RevenueTokenManager manager);
     event RegisterNonClaimerEvent(address wallet);
     event DeregisterNonClaimerEvent(address wallet);
     event ReceiveEvent(address wallet, int256 amount, address currencyCt,
@@ -117,20 +116,17 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
     /// @notice Set the revenue token manager contract
-    /// @param newRevenueTokenManager The (address of) RevenueTokenManager contract instance
-    function setRevenueTokenManager(RevenueTokenManager newRevenueTokenManager)
+    /// @param manager The (address of) RevenueTokenManager contract instance
+    function setRevenueTokenManager(RevenueTokenManager manager)
     public
     onlyDeployer
-    notNullAddress(address(newRevenueTokenManager))
+    notNullAddress(address(manager))
     {
-        if (newRevenueTokenManager != revenueTokenManager) {
-            // Set new revenue token
-            RevenueTokenManager oldRevenueTokenManager = revenueTokenManager;
-            revenueTokenManager = newRevenueTokenManager;
+        // Set new revenue token manager
+        revenueTokenManager = manager;
 
-            // Emit event
-            emit SetRevenueTokenManagerEvent(oldRevenueTokenManager, newRevenueTokenManager);
-        }
+        // Emit event
+        emit SetRevenueTokenManagerEvent(manager);
     }
 
     /// @notice Gauge whether the given wallet is a registered non-claimer, i.e. prevented from claiming
