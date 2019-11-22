@@ -4,7 +4,6 @@
  * Copyright (C) 2017-2018 Hubii AS
  */
 
-const BalanceAucCalculator = artifacts.require('BalanceAucCalculator');
 const NahmiiToken = artifacts.require('NahmiiToken');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
@@ -55,10 +54,9 @@ module.exports = (deployer, network, accounts) => {
 
             if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
                 await deployer.link(SafeMathUintLib, [
-                    BalanceAucCalculator, RevenueTokenManager
+                    RevenueTokenManager
                 ]);
 
-                const balanceAucCalculator = await execDeploy(ctl, 'BalanceAucCalculator', null, BalanceAucCalculator);
                 const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', null, RevenueTokenManager, true);
 
                 let nahmiiToken = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
@@ -71,8 +69,6 @@ module.exports = (deployer, network, accounts) => {
 
                 await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
                 await revenueTokenManager.setBeneficiary(deployerAccount);
-                await revenueTokenManager.setBalanceBlocksCalculator(balanceAucCalculator.address);
-                await revenueTokenManager.setReleasedAmountBlocksCalculator(balanceAucCalculator.address);
 
                 const {earliestReleaseTimes, amounts} = airdriipReleases();
 

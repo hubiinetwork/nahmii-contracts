@@ -13,24 +13,29 @@ pragma experimental ABIEncoderV2;
 import {BalanceRecordable} from "../BalanceRecordable.sol";
 
 /**
- * @title MockedAucCalculator
+ * @title MockedBalanceAucCalculator
  * @notice Mocked implementation of balance AUC calculator
  */
-contract MockedAucCalculator {
+contract MockedBalanceAucCalculator {
+    //
+    // Variables
+    // -----------------------------------------------------------------------------------------------------------------
+    mapping(address => uint256) public _valuesByWallet;
+
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function calculate(BalanceRecordable balanceRecordable, address wallet, uint256 startBlock, uint256 endBlock)
+    function calculate(BalanceRecordable, address wallet, uint256, uint256)
     public
     view
     returns (uint256)
     {
-        // Test that contract implementing the BalanceRecordable interface has been called
-        balanceRecordable.balanceRecordsCount(wallet);
-        //        balanceRecordable.recordBalance(wallet, 0);
-        //        balanceRecordable.recordBlockNumber(wallet, 0);
-        balanceRecordable.recordIndexByBlockNumber(wallet, startBlock);
+        return _valuesByWallet[wallet];
+    }
 
-        return endBlock - startBlock;
+    function _setCalculate(address wallet, uint256 value)
+    public
+    {
+        _valuesByWallet[wallet] = value;
     }
 }

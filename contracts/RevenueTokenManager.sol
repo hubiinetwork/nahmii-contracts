@@ -23,18 +23,6 @@ contract RevenueTokenManager is TokenMultiTimelock, BalanceRecordable {
     using SafeMathUintLib for uint256;
 
     //
-    // Variables
-    // -----------------------------------------------------------------------------------------------------------------
-    BalanceAucCalculator public balanceBlocksCalculator;
-    BalanceAucCalculator public releasedAmountBlocksCalculator;
-
-    //
-    // Events
-    // -----------------------------------------------------------------------------------------------------------------
-    event SetBalanceBlocksCalculatorEvent(BalanceAucCalculator calculator);
-    event SetReleasedAmountBlocksCalculatorEvent(BalanceAucCalculator calculator);
-
-    //
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address deployer)
@@ -46,65 +34,6 @@ contract RevenueTokenManager is TokenMultiTimelock, BalanceRecordable {
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Set the balance AUC calculator for calculation of revenue token balance blocks
-    /// @param calculator The balance AUC calculator
-    function setBalanceBlocksCalculator(BalanceAucCalculator calculator)
-    public
-    onlyDeployer
-    notNullOrThisAddress(address(calculator))
-    {
-        // Set the calculator
-        balanceBlocksCalculator = calculator;
-
-        // Emit event
-        emit SetBalanceBlocksCalculatorEvent(balanceBlocksCalculator);
-    }
-
-    /// @notice Set the balance AUC calculator for calculation of revenue token balance blocks
-    /// @param calculator The balance AUC calculator
-    function setReleasedAmountBlocksCalculator(BalanceAucCalculator calculator)
-    public
-    onlyDeployer
-    notNullOrThisAddress(address(calculator))
-    {
-        // Set the calculator
-        releasedAmountBlocksCalculator = calculator;
-
-        // Emit event
-        emit SetReleasedAmountBlocksCalculatorEvent(releasedAmountBlocksCalculator);
-    }
-
-    /// @notice Calculate the wallet's balance blocks, i.e. the area under the curve (AUC) of
-    /// wallet's balance as function of block number, in the given range of block numbers
-    /// @param wallet The concerned wallet
-    /// @param startBlock The start block number considered
-    /// @param endBlock The end block number considered
-    /// @return The calculated AUC
-    function balanceBlocksIn(address wallet, uint256 startBlock, uint256 endBlock)
-    public
-    view
-    returns (uint256)
-    {
-        return balanceBlocksCalculator.calculate(
-            BalanceRecordable(address(token)), wallet, startBlock, endBlock
-        );
-    }
-
-    /// @notice Calculate the released amount blocks, i.e. the area under the curve (AUC) of
-    /// released amount as function of block number
-    /// @param startBlock The start block number considered
-    /// @param endBlock The end block number considered
-    /// @return The calculated AUC
-    function releasedAmountBlocksIn(uint256 startBlock, uint256 endBlock)
-    public
-    view
-    returns (uint256)
-    {
-        return releasedAmountBlocksCalculator.calculate(
-            BalanceRecordable(address(this)), address(0), startBlock, endBlock
-        );
-    }
-
     /// @notice Get the count of executed releases
     /// @return The count of executed releases
     function balanceRecordsCount(address)

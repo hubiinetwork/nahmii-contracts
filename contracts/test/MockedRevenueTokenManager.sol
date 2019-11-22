@@ -9,6 +9,8 @@
 pragma solidity >=0.4.25 <0.6.0;
 pragma experimental ABIEncoderV2;
 
+import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+
 /**
  * @title MockedRevenueTokenManager
  * @notice Mocked implementation of RevenueTokenManager
@@ -17,43 +19,14 @@ contract MockedRevenueTokenManager {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => uint256) public _balanceBlocksInByWallet;
-    uint256 public _releasedAmountBlocksIn;
+    IERC20 public token;
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset()
+    function _setToken(IERC20 _token)
     public
     {
-        _releasedAmountBlocksIn = 0;
-    }
-
-    function balanceBlocksIn(address wallet, uint256, uint256)
-    public
-    view
-    returns (uint256)
-    {
-        return _balanceBlocksInByWallet[wallet];
-    }
-
-    function _setBalanceBlocksIn(address wallet, uint256 _blockIn)
-    public
-    {
-        _balanceBlocksInByWallet[wallet] = _blockIn;
-    }
-
-    function releasedAmountBlocksIn(uint256, uint256)
-    public
-    view
-    returns (uint256)
-    {
-        return _releasedAmountBlocksIn;
-    }
-
-    function _setReleasedAmountBlocksIn(uint256 _blocksIn)
-    public
-    {
-        _releasedAmountBlocksIn = _blocksIn;
+        token = _token;
     }
 }

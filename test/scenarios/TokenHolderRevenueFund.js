@@ -11,13 +11,14 @@ const TokenHolderRevenueFund = artifacts.require('TokenHolderRevenueFund');
 const MockedTokenHolderRevenueFundService = artifacts.require('MockedTokenHolderRevenueFundService');
 const MockedBeneficiary = artifacts.require('MockedBeneficiary');
 const MockedRevenueTokenManager = artifacts.require('MockedRevenueTokenManager');
+const MockedBalanceAucCalculator = artifacts.require('MockedBalanceAucCalculator');
 
 chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    describe.only('TokenHolderRevenueFund', function () {
+    describe('TokenHolderRevenueFund', function () {
         let provider;
         let web3ERC20TransferController;
         let web3TransferControllerManager;
@@ -26,6 +27,8 @@ module.exports = function (glob) {
         let web3MockedTokenHolderRevenueFundService, ethersMockedTokenHolderRevenueFundService;
         let web3MockedBeneficiary, ethersMockedBeneficiary;
         let web3MockedRevenueTokenManager, ethersMockedRevenueTokenManager;
+        let web3MockedBalanceBlocksCalculator, ethersMockedBalanceBlocksCalculator;
+        let web3MockedReleasedAmountBlocksCalculator, ethersMockedReleasedAmountBlocksCalculator;
 
         before(async () => {
             provider = glob.signer_owner.provider;
@@ -49,19 +52,26 @@ module.exports = function (glob) {
 
             web3MockedRevenueTokenManager = await MockedRevenueTokenManager.new();
             ethersMockedRevenueTokenManager = new Contract(web3MockedRevenueTokenManager.address, MockedRevenueTokenManager.abi, glob.signer_owner);
+            web3MockedBalanceBlocksCalculator = await MockedBalanceAucCalculator.new();
+            ethersMockedBalanceBlocksCalculator = new Contract(web3MockedBalanceBlocksCalculator.address, MockedBalanceAucCalculator.abi, glob.signer_owner);
+            web3MockedReleasedAmountBlocksCalculator = await MockedBalanceAucCalculator.new();
+            ethersMockedReleasedAmountBlocksCalculator = new Contract(web3MockedReleasedAmountBlocksCalculator.address, MockedBalanceAucCalculator.abi, glob.signer_owner);
             web3MockedBeneficiary = await MockedBeneficiary.new(glob.owner);
             ethersMockedBeneficiary = new Contract(web3MockedBeneficiary.address, MockedBeneficiary.abi, glob.signer_owner);
-
             web3TokenHolderRevenueFund = await TokenHolderRevenueFund.new(glob.owner);
             ethersTokenHolderRevenueFund = new Contract(web3TokenHolderRevenueFund.address, TokenHolderRevenueFund.abi, glob.signer_owner);
 
             await web3TokenHolderRevenueFund.setTransferControllerManager(web3TransferControllerManager.address);
             await web3TokenHolderRevenueFund.setRevenueTokenManager(web3MockedRevenueTokenManager.address);
+            await web3TokenHolderRevenueFund.setBalanceBlocksCalculator(web3MockedBalanceBlocksCalculator.address);
+            await web3TokenHolderRevenueFund.setReleasedAmountBlocksCalculator(web3MockedReleasedAmountBlocksCalculator.address);
             await web3TokenHolderRevenueFund.registerService(web3MockedTokenHolderRevenueFundService.address);
             await web3TokenHolderRevenueFund.enableServiceAction(web3MockedTokenHolderRevenueFundService.address,
                 await web3TokenHolderRevenueFund.CLOSE_ACCRUAL_PERIOD_ACTION.call());
 
             await web3MockedTokenHolderRevenueFundService.setTokenHolderRevenueFund(web3TokenHolderRevenueFund.address);
+
+            web3MockedRevenueTokenManager._setToken(web3ERC20.address);
         });
 
         describe('constructor()', () => {
@@ -78,21 +88,43 @@ module.exports = function (glob) {
             });
         });
 
-        describe('setRevenueTokenManager()', () => {
-            let revenueTokenManager;
-
-            beforeEach(() => {
-                revenueTokenManager = Wallet.createRandom().address;
+        describe('balanceBlocksCalculator()', () => {
+            it('should equal value initialized', async () => {
+                (await web3TokenHolderRevenueFund.balanceBlocksCalculator.call())
+                    .should.equal(web3MockedBalanceBlocksCalculator.address);
             });
+        });
 
+        describe('releasedAmountBlocksCalculator()', () => {
+            it('should equal value initialized', async () => {
+                (await web3TokenHolderRevenueFund.releasedAmountBlocksCalculator.call())
+                    .should.equal(web3MockedReleasedAmountBlocksCalculator.address);
+            });
+        });
+
+        describe('setRevenueTokenManager()', () => {
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    await web3TokenHolderRevenueFund.setRevenueTokenManager(revenueTokenManager, {from: glob.user_a})
+                    await web3TokenHolderRevenueFund.setRevenueTokenManager(
+                        Wallet.createRandom().address, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    await web3TokenHolderRevenueFund.setBalanceBlocksCalculator(mocks.address0)
                         .should.be.rejected;
                 });
             });
 
-            describe('if called by deployer', () => {
+            describe('if within operational constraints', () => {
+                let revenueTokenManager;
+
+                beforeEach(() => {
+                    revenueTokenManager = Wallet.createRandom().address;
+                });
+
                 it('should successfully set revenue token manager and emit event', async () => {
                     const result = await web3TokenHolderRevenueFund.setRevenueTokenManager(revenueTokenManager);
 
@@ -101,6 +133,76 @@ module.exports = function (glob) {
 
                     (await ethersTokenHolderRevenueFund.revenueTokenManager.call())
                         .should.equal(revenueTokenManager);
+                });
+            });
+        });
+
+        describe('setBalanceBlocksCalculator()', () => {
+            describe('if called by non-operator', () => {
+                it('should revert', async () => {
+                    await web3TokenHolderRevenueFund.setBalanceBlocksCalculator(
+                        Wallet.createRandom().address, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    await web3TokenHolderRevenueFund.setBalanceBlocksCalculator(mocks.address0)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let calculator;
+
+                beforeEach(async () => {
+                    calculator = Wallet.createRandom().address;
+                });
+
+                it('should successfully set token', async () => {
+                    const result = await web3TokenHolderRevenueFund.setBalanceBlocksCalculator(calculator);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetBalanceBlocksCalculatorEvent');
+
+                    (await ethersTokenHolderRevenueFund.balanceBlocksCalculator())
+                        .should.equal(calculator);
+                });
+            });
+        });
+
+        describe('setReleasedAmountBlocksCalculator()', () => {
+            describe('if called by non-operator', () => {
+                it('should revert', async () => {
+                    await web3TokenHolderRevenueFund.setReleasedAmountBlocksCalculator(
+                        Wallet.createRandom().address, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with null address', () => {
+                it('should revert', async () => {
+                    await web3TokenHolderRevenueFund.setReleasedAmountBlocksCalculator(mocks.address0)
+                        .should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let calculator;
+
+                beforeEach(async () => {
+                    calculator = Wallet.createRandom().address;
+                });
+
+                it('should successfully set token', async () => {
+                    const result = await web3TokenHolderRevenueFund.setReleasedAmountBlocksCalculator(calculator);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetReleasedAmountBlocksCalculatorEvent');
+
+                    (await ethersTokenHolderRevenueFund.releasedAmountBlocksCalculator())
+                        .should.equal(calculator);
                 });
             });
         });
@@ -795,8 +897,8 @@ module.exports = function (glob) {
 
             describe('if called with exact accrual indices', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -831,8 +933,8 @@ module.exports = function (glob) {
                 let claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -871,8 +973,8 @@ module.exports = function (glob) {
                 let nonClaimer;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -899,7 +1001,7 @@ module.exports = function (glob) {
 
                     await web3TokenHolderRevenueFund.registerNonClaimer(nonClaimer);
 
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(nonClaimer, 8000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(nonClaimer, 8000);
                 });
 
                 it('should return the claimable amount', async () => {
@@ -958,8 +1060,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,
@@ -988,8 +1090,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,
@@ -1018,8 +1120,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,
@@ -1048,8 +1150,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -1089,8 +1191,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -1130,8 +1232,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -1171,8 +1273,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 60,
@@ -1223,8 +1325,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 60,
@@ -1275,8 +1377,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 60,
@@ -1327,8 +1429,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 10000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 10000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -1369,8 +1471,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 10000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 10000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -1411,8 +1513,8 @@ module.exports = function (glob) {
                 let blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 10000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 10000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -1489,8 +1591,8 @@ module.exports = function (glob) {
                     let balanceBefore;
 
                     beforeEach(async () => {
-                        await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                        await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                        await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                        await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                         await web3TokenHolderRevenueFund.receiveEthersTo(
                             mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
@@ -1529,8 +1631,8 @@ module.exports = function (glob) {
 
                 describe('of ERC20 token', () => {
                     beforeEach(async () => {
-                        await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                        await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                        await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                        await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                         await web3ERC20.approve(
                             web3TokenHolderRevenueFund.address, 10,
@@ -1611,8 +1713,8 @@ module.exports = function (glob) {
                     let balanceBefore;
 
                     beforeEach(async () => {
-                        await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                        await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                        await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                        await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                         await web3TokenHolderRevenueFund.receiveEthersTo(
                             mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
@@ -1675,8 +1777,8 @@ module.exports = function (glob) {
 
                 describe('of ERC20 token', () => {
                     beforeEach(async () => {
-                        await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                        await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                        await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                        await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                         await web3ERC20.approve(
                             web3TokenHolderRevenueFund.address, 10,
@@ -1777,8 +1879,8 @@ module.exports = function (glob) {
                 let claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -1823,8 +1925,8 @@ module.exports = function (glob) {
                 let claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -1920,8 +2022,8 @@ module.exports = function (glob) {
 
             describe('if called with wrong block number parameter ordinality', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,
@@ -1948,8 +2050,8 @@ module.exports = function (glob) {
                 let blockNumber, claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,
@@ -1988,8 +2090,8 @@ module.exports = function (glob) {
                 let blockNumber, claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,
@@ -2028,8 +2130,8 @@ module.exports = function (glob) {
                 let blockNumber, claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,
@@ -2068,8 +2170,8 @@ module.exports = function (glob) {
                 let blockNumber, claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2119,8 +2221,8 @@ module.exports = function (glob) {
                 let blockNumber, claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2170,8 +2272,8 @@ module.exports = function (glob) {
                 let blockNumber, claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2221,8 +2323,8 @@ module.exports = function (glob) {
                 let blockNumber, claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 60,
@@ -2283,8 +2385,8 @@ module.exports = function (glob) {
                 let blockNumber, claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 60,
@@ -2345,8 +2447,8 @@ module.exports = function (glob) {
                 let blockNumber, claimableAmount;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 60,
@@ -2407,8 +2509,8 @@ module.exports = function (glob) {
                 let claimableAmount, blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 10000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 10000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2459,8 +2561,8 @@ module.exports = function (glob) {
                 let claimableAmount, blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 10000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 10000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2511,8 +2613,8 @@ module.exports = function (glob) {
                 let claimableAmount, blockNumber;
 
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 10000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 10000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2571,8 +2673,8 @@ module.exports = function (glob) {
 
             describe('if called before accrual has been claimed', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,
@@ -2597,8 +2699,8 @@ module.exports = function (glob) {
 
             describe('if called after accrual has been fully claimed', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,
@@ -2627,8 +2729,8 @@ module.exports = function (glob) {
 
             describe('if called after accrual has been partially claimed', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,
@@ -2669,8 +2771,8 @@ module.exports = function (glob) {
 
             describe('if called before accrual has been claimed', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2695,8 +2797,8 @@ module.exports = function (glob) {
 
             describe('if called after accrual has been fully claimed', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2725,8 +2827,8 @@ module.exports = function (glob) {
 
             describe('if called after accrual has been partially claimed', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2767,8 +2869,8 @@ module.exports = function (glob) {
 
             describe('if called before accrual has been claimed', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2793,8 +2895,8 @@ module.exports = function (glob) {
 
             describe('if called after accrual has been fully claimed', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2823,8 +2925,8 @@ module.exports = function (glob) {
 
             describe('if called after accrual has been partially claimed', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_a, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_a, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 30,
@@ -2865,8 +2967,8 @@ module.exports = function (glob) {
 
             describe('if within operational constraints', () => {
                 beforeEach(async () => {
-                    await web3MockedRevenueTokenManager._setBalanceBlocksIn(glob.user_b, 3000);
-                    await web3MockedRevenueTokenManager._setReleasedAmountBlocksIn(10000);
+                    await web3MockedBalanceBlocksCalculator._setCalculate(glob.user_b, 3000);
+                    await web3MockedReleasedAmountBlocksCalculator._setCalculate(mocks.address0, 10000);
 
                     await web3ERC20.approve(
                         web3TokenHolderRevenueFund.address, 10,

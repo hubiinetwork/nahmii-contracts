@@ -5,6 +5,7 @@
  */
 
 const AccrualBenefactor = artifacts.require('AccrualBenefactor');
+const BalanceAucCalculator = artifacts.require('BalanceAucCalculator');
 const BalanceTracker = artifacts.require('BalanceTracker');
 const BalanceTrackerLib = artifacts.require('BalanceTrackerLib');
 const BlockNumbDisdIntsLib = artifacts.require('BlockNumbDisdIntsLib');
@@ -321,6 +322,7 @@ module.exports = (deployer, network, accounts) => {
                 ValidatorV2
             ]);
             await deployer.link(SafeMathUintLib, [
+                BalanceAucCalculator,
                 BalanceTracker,
                 CancelOrdersChallenge,
                 ClientFund,
@@ -426,6 +428,7 @@ module.exports = (deployer, network, accounts) => {
                     ValidatorV2
                 ]);
 
+                await execDeploy(ctl, 'BalanceAucCalculator', '', BalanceAucCalculator);
                 await execDeploy(ctl, 'BalanceTracker', '', BalanceTracker);
                 await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
                 await execDeploy(ctl, 'ClientFund', '', ClientFund);
@@ -902,6 +905,8 @@ module.exports = (deployer, network, accounts) => {
                 instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
                 await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
                 await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
+                await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+                await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
                 await instance.registerService(addressStorage.get('RevenueFund1'));
                 await instance.enableServiceAction(addressStorage.get('RevenueFund1'), await instance.CLOSE_ACCRUAL_PERIOD_ACTION.call());
 
@@ -949,6 +954,7 @@ module.exports = (deployer, network, accounts) => {
                 await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
 
             } else if (network.startsWith('mainnet')) {
+                await execDeploy(ctl, 'BalanceAucCalculator', '', BalanceAucCalculator);
                 addressStorage.set('BalanceTracker', '0xbc1bcc29edf605095bf4fe7a953b7c115ecc8cad');
                 // await execDeploy(ctl, 'CancelOrdersChallenge', '', CancelOrdersChallenge);
                 addressStorage.set('ClientFund', '0xcc8d82f6ba952966e63001c7b320eef2ae729099');
@@ -1429,11 +1435,13 @@ module.exports = (deployer, network, accounts) => {
                 // await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
                 // await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeOrderResiduals'), await instance.REWARD_ACTION.call());
 
-                // instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
-                // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
-                // await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
-                // await instance.registerService(addressStorage.get('RevenueFund1'));
-                // await instance.enableServiceAction(addressStorage.get('RevenueFund1'), await instance.CLOSE_ACCRUAL_PERIOD_ACTION.call());
+                instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
+                await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
+                await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
+                await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+                await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+                await instance.registerService(addressStorage.get('RevenueFund1'));
+                await instance.enableServiceAction(addressStorage.get('RevenueFund1'), await instance.CLOSE_ACCRUAL_PERIOD_ACTION.call());
 
                 // instance = await TransactionTracker.at(addressStorage.get('TransactionTracker'));
                 // await instance.registerService(addressStorage.get('ClientFund'));

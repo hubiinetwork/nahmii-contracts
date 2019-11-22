@@ -7,7 +7,6 @@ const {sleep} = require('../../scripts/common/helpers');
 const {address0} = require('../mocks');
 const {futureEpoch} = require('../helpers');
 
-const MockedAucCalculator = artifacts.require('MockedAucCalculator');
 const NahmiiToken = artifacts.require('NahmiiToken');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 
@@ -18,8 +17,6 @@ chai.should();
 module.exports = function (glob) {
     describe('RevenueTokenManager', function () {
         let provider;
-        let web3BalanceBlocksCalculator, ethersBalanceBlocksCalculator;
-        let web3ReleasedAmountBlocksCalculator, ethersReleasedAmountBlocksCalculator;
         let web3NahmiiToken, ethersNahmiiToken;
         let web3RevenueTokenManager, ethersRevenueTokenManager;
 
@@ -33,12 +30,6 @@ module.exports = function (glob) {
 
             web3NahmiiToken = await NahmiiToken.new();
             ethersNahmiiToken = new Contract(web3NahmiiToken.address, NahmiiToken.abi, glob.signer_owner);
-
-            web3BalanceBlocksCalculator = await MockedAucCalculator.new();
-            ethersBalanceBlocksCalculator = new Contract(web3BalanceBlocksCalculator.address, MockedAucCalculator.abi, glob.signer_owner);
-
-            web3ReleasedAmountBlocksCalculator = await MockedAucCalculator.new();
-            ethersReleasedAmountBlocksCalculator = new Contract(web3ReleasedAmountBlocksCalculator.address, MockedAucCalculator.abi, glob.signer_owner);
         });
 
         describe('constructor()', () => {
@@ -58,20 +49,6 @@ module.exports = function (glob) {
         describe('beneficiary()', () => {
             it('should equal value initialized', async () => {
                 (await web3RevenueTokenManager.beneficiary.call())
-                    .should.equal(address0);
-            });
-        });
-
-        describe('balanceBlocksCalculator()', () => {
-            it('should equal value initialized', async () => {
-                (await web3RevenueTokenManager.balanceBlocksCalculator.call())
-                    .should.equal(address0);
-            });
-        });
-
-        describe('releasedAmountBlocksCalculator()', () => {
-            it('should equal value initialized', async () => {
-                (await web3RevenueTokenManager.releasedAmountBlocksCalculator.call())
                     .should.equal(address0);
             });
         });
@@ -169,88 +146,6 @@ module.exports = function (glob) {
 
                     (await ethersRevenueTokenManager.beneficiary())
                         .should.equal(beneficiaryAddress);
-                });
-            });
-        });
-
-        describe('setBalanceBlocksCalculator()', () => {
-            describe('if called by non-operator', () => {
-                it('should revert', async () => {
-                    await web3RevenueTokenManager.setBalanceBlocksCalculator(Wallet.createRandom().address, {from: glob.user_a})
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called with null address', () => {
-                it('should revert', async () => {
-                    await web3RevenueTokenManager.setBalanceBlocksCalculator(address0)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called with address of token multi time-lock contract', () => {
-                it('should revert', async () => {
-                    await web3RevenueTokenManager.setBalanceBlocksCalculator(web3RevenueTokenManager.address)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                let calculatorAddress;
-
-                beforeEach(async () => {
-                    calculatorAddress = Wallet.createRandom().address;
-                });
-
-                it('should successfully set token', async () => {
-                    const result = await web3RevenueTokenManager.setBalanceBlocksCalculator(calculatorAddress);
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetBalanceBlocksCalculatorEvent');
-
-                    (await ethersRevenueTokenManager.balanceBlocksCalculator())
-                        .should.equal(calculatorAddress);
-                });
-            });
-        });
-
-        describe('setReleasedAmountBlocksCalculator()', () => {
-            describe('if called by non-operator', () => {
-                it('should revert', async () => {
-                    await web3RevenueTokenManager.setReleasedAmountBlocksCalculator(Wallet.createRandom().address, {from: glob.user_a})
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called with null address', () => {
-                it('should revert', async () => {
-                    await web3RevenueTokenManager.setReleasedAmountBlocksCalculator(address0)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called with address of token multi time-lock contract', () => {
-                it('should revert', async () => {
-                    await web3RevenueTokenManager.setReleasedAmountBlocksCalculator(web3RevenueTokenManager.address)
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if within operational constraints', () => {
-                let calculatorAddress;
-
-                beforeEach(async () => {
-                    calculatorAddress = Wallet.createRandom().address;
-                });
-
-                it('should successfully set token', async () => {
-                    const result = await web3RevenueTokenManager.setReleasedAmountBlocksCalculator(calculatorAddress);
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetReleasedAmountBlocksCalculatorEvent');
-
-                    (await ethersRevenueTokenManager.releasedAmountBlocksCalculator())
-                        .should.equal(calculatorAddress);
                 });
             });
         });
@@ -546,37 +441,6 @@ module.exports = function (glob) {
                     await web3RevenueTokenManager.setReleaseBlockNumber(0, 1000000, {from: glob.user_a})
                         .should.be.rejected;
                 });
-            });
-        });
-
-        describe('balanceBlocksIn()', () => {
-            let wallet;
-
-            beforeEach(async () => {
-                wallet = Wallet.createRandom().address;
-
-                await web3RevenueTokenManager.setToken(web3NahmiiToken.address);
-                await web3RevenueTokenManager.setBalanceBlocksCalculator(web3BalanceBlocksCalculator.address);
-            });
-
-            it('should call the calculation of the balance blocks calculator', async () => {
-                (await ethersRevenueTokenManager.balanceBlocksIn(wallet, 4, 10))
-                    ._bn.should.eq.BN(6); // Balance of 1 times block number span
-            });
-        });
-
-        describe('releasedAmountBlocksIn()', () => {
-            let wallet;
-
-            beforeEach(async () => {
-                wallet = Wallet.createRandom().address;
-
-                await web3RevenueTokenManager.setReleasedAmountBlocksCalculator(web3ReleasedAmountBlocksCalculator.address);
-            });
-
-            it('should call the calculation of the released amount blocks calculator', async () => {
-                (await ethersRevenueTokenManager.releasedAmountBlocksIn(4, 10))
-                    ._bn.should.eq.BN(6); // Released amount of 1 times block number span
             });
         });
 
