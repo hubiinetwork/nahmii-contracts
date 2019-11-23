@@ -28,20 +28,22 @@ contract MockedTokenHolderRevenueFund /*is Beneficiary*/ {
         string standard;
     }
 
+    struct Accrual {
+        uint256 startBlock;
+        uint256 endBlock;
+        int256 amount;
+    }
+
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
     ClaimTransfer[] public _claimTransfers;
+    mapping(address => mapping(uint256 => Accrual[])) public _closedAccrualsByCurrency;
+    address[] public nonClaimers;
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function _reset()
-    public
-    {
-        _claimTransfers.length = 0;
-    }
-
     function claimAndTransferToBeneficiary(Beneficiary beneficiary, address destWallet, string memory balanceType,
         address currencyCt, uint256 currencyId, string memory standard)
     public
@@ -65,5 +67,43 @@ contract MockedTokenHolderRevenueFund /*is Beneficiary*/ {
         currencyCt = _claimTransfers[index].currency.ct;
         currencyId = _claimTransfers[index].currency.id;
         standard = _claimTransfers[index].standard;
+    }
+
+    function closedAccrualsCount(address currencyCt, uint256 currencyId)
+    public
+    view
+    returns (uint256)
+    {
+        return _closedAccrualsByCurrency[currencyCt][currencyId].length;
+    }
+
+    function closedAccrualsByCurrency(address currencyCt, uint256 currencyId,
+        uint256 index)
+    public
+    view
+    returns (Accrual memory)
+    {
+        return _closedAccrualsByCurrency[currencyCt][currencyId][index];
+    }
+
+    function _setClosedAccrualByCurrency(address currencyCt, uint256 currencyId,
+        Accrual memory accrual)
+    public
+    {
+        _closedAccrualsByCurrency[currencyCt][currencyId].push(accrual);
+    }
+
+    function nonClaimersCount()
+    public
+    view
+    returns (uint256)
+    {
+        return nonClaimers.length;
+    }
+
+    function _setNonClaimer(address nonClaimer)
+    public
+    {
+        nonClaimers.push(nonClaimer);
     }
 }

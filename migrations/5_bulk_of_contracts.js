@@ -70,6 +70,7 @@ const PartnerBenefactor = artifacts.require('PartnerBenefactor');
 const PaymentHasher = artifacts.require('PaymentHasher');
 const PaymentTypesLib = artifacts.require('PaymentTypesLib');
 const RevenueFund1 = artifacts.require('RevenueFund1');
+const RevenueFundAccrualMonitor = artifacts.require('RevenueFundAccrualMonitor');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
@@ -184,6 +185,7 @@ module.exports = (deployer, network, accounts) => {
                 Configuration,
                 MockedConfiguration,
                 RevenueFund1,
+                RevenueFundAccrualMonitor,
                 SecurityBond,
                 Validator,
                 ValidatorV2
@@ -316,6 +318,7 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementState,
                 PartnerFund,
                 RevenueFund1,
+                RevenueFundAccrualMonitor,
                 SecurityBond,
                 TokenHolderRevenueFund,
                 Validator,
@@ -351,6 +354,7 @@ module.exports = (deployer, network, accounts) => {
                 NullSettlementDisputeByTrade,
                 NullSettlementState,
                 RevenueFund1,
+                RevenueFundAccrualMonitor,
                 RevenueTokenManager,
                 SecurityBond,
                 SignerManager,

@@ -20,22 +20,32 @@ contract MockedBalanceAucCalculator {
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    mapping(address => uint256) public _valuesByWallet;
+    mapping(address => mapping(address => uint256)) public _valuesByBalanceRecordableWallet;
+    mapping(address => mapping(address => mapping(uint256 => uint256))) public _valuesByBalanceRecordableWalletStartBlock;
 
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    function calculate(BalanceRecordable, address wallet, uint256, uint256)
+    function calculate(address balanceRecordable, address wallet, uint256 startBlock, uint256)
     public
     view
     returns (uint256)
     {
-        return _valuesByWallet[wallet];
+        if (0 < _valuesByBalanceRecordableWalletStartBlock[balanceRecordable][wallet][startBlock])
+            return _valuesByBalanceRecordableWalletStartBlock[balanceRecordable][wallet][startBlock];
+        else
+            return _valuesByBalanceRecordableWallet[balanceRecordable][wallet];
     }
 
-    function _setCalculate(address wallet, uint256 value)
+    function _setCalculate(address balanceRecordable, address wallet, uint256 value)
     public
     {
-        _valuesByWallet[wallet] = value;
+        _valuesByBalanceRecordableWallet[balanceRecordable][wallet] = value;
+    }
+
+    function _setCalculate(address balanceRecordable, address wallet, uint256 startBlock, uint256 value)
+    public
+    {
+        _valuesByBalanceRecordableWalletStartBlock[balanceRecordable][wallet][startBlock] = value;
     }
 }
