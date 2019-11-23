@@ -207,9 +207,16 @@ module.exports = function (glob) {
             });
         });
 
+        describe('nonClaimersCount()', () => {
+            it('should return initial value', async () => {
+                (await ethersTokenHolderRevenueFund.nonClaimersCount())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
         describe('isNonClaimer()', () => {
             it('should return initial value', async () => {
-                (await web3TokenHolderRevenueFund.isNonClaimer.call(Wallet.createRandom().address))
+                (await ethersTokenHolderRevenueFund.isNonClaimer(Wallet.createRandom().address))
                     .should.be.false;
             });
         });
@@ -235,7 +242,9 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('RegisterNonClaimerEvent');
 
-                    (await web3TokenHolderRevenueFund.isNonClaimer.call(nonClaimer))
+                    (await ethersTokenHolderRevenueFund.nonClaimersCount())
+                        ._bn.should.eq.BN(1);
+                    (await ethersTokenHolderRevenueFund.isNonClaimer(nonClaimer))
                         .should.be.true;
                 });
             });
@@ -264,7 +273,9 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('DeregisterNonClaimerEvent');
 
-                    (await web3TokenHolderRevenueFund.isNonClaimer.call(nonClaimer))
+                    (await ethersTokenHolderRevenueFund.nonClaimersCount())
+                        ._bn.should.eq.BN(0);
+                    (await ethersTokenHolderRevenueFund.isNonClaimer(nonClaimer))
                         .should.be.false;
                 });
             });

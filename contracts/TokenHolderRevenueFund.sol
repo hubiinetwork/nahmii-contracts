@@ -163,6 +163,16 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         emit SetReleasedAmountBlocksCalculatorEvent(releasedAmountBlocksCalculator);
     }
 
+    /// @notice Get the number of registered non-claimers
+    /// @return The number of registered non-claimers
+    function nonClaimersCount()
+    public
+    view
+    returns (uint256)
+    {
+        return nonClaimers.length;
+    }
+
     /// @notice Gauge whether the given wallet is a registered non-claimer, i.e. prevented from claiming
     /// @param wallet The address of the concerned wallet
     /// @return true if wallet is non-claimer
@@ -1044,7 +1054,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     view
     returns (int256)
     {
-        // Obtain the released amount blocks from revenue token manager
+        // Obtain the released amount blocks
         int256 amountBlocks = int256(releasedAmountBlocksCalculator.calculate(
                 BalanceRecordable(address(revenueTokenManager)), address(0), startBlock, endBlock
             ));
