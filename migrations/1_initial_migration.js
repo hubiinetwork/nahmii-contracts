@@ -39,7 +39,7 @@ module.exports = (deployer, network, accounts) => {
                 instance = await deployer.deploy(Migrations, {from: deployerAccount});
                 addressStorage.set('Migrations', instance.address);
 
-            } else {
+            } else if (network.startsWith('mainnet')) {
                 Migrations.address = '0x14b641a8263c7a2ec41f117a3c82e2a61567a799';
                 addressStorage.set('Migrations', '0x14b641a8263c7a2ec41f117a3c82e2a61567a799');
             }

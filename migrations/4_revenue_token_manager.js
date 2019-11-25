@@ -52,14 +52,12 @@ module.exports = (deployer, network, accounts) => {
 
             SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
 
-            if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
-                await deployer.link(SafeMathUintLib, [
-                    RevenueTokenManager
-                ]);
+            if (helpers.isTestNetwork(network)) {
+                await deployer.link(SafeMathUintLib, RevenueTokenManager);
 
-                const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', null, RevenueTokenManager, true);
+                const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
 
-                let nahmiiToken = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
+                const nahmiiToken = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
                 await nahmiiToken.mint(addressStorage.get('RevenueTokenManager'), 120e24);
 
                 while (0 == (await nahmiiToken.balanceOf(revenueTokenManager.address)).toNumber()) {
@@ -117,6 +115,17 @@ module.exports = (deployer, network, accounts) => {
                 debug(`Total locked amount: ${(await revenueTokenManager.totalLockedAmount()).toNumber()}`);
                 debug(`Releases count: ${(await revenueTokenManager.releasesCount()).toNumber()}`);
                 debug(`Executed releases count: ${(await revenueTokenManager.executedReleasesCount()).toNumber()}`);
+
+            } else if (network.startsWith('ropsten')) {
+                await deployer.link(SafeMathUintLib, RevenueTokenManager);
+
+                const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
+
+                const nahmiiToken = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
+                await nahmiiToken.mint(addressStorage.get('RevenueTokenManager'), 120e24);
+
+                await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
+                await revenueTokenManager.setBeneficiary(deployerAccount);
 
             } else if (network.startsWith('mainnet'))
                 addressStorage.set('RevenueTokenManager', '0xe3f2158610b7145c04ae03a6356038ad2404a9a6');

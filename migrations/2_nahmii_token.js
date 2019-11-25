@@ -40,31 +40,33 @@ module.exports = (deployer, network, accounts) => {
         debug(`deployerAccount: ${deployerAccount}`);
 
         try {
-            if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
-                let ctl = {
-                    deployer,
-                    deployFilters: helpers.getFiltersFromArgs(),
-                    addressStorage,
-                    deployerAccount
-                };
+            let ctl = {
+                deployer,
+                deployFilters: helpers.getFiltersFromArgs(),
+                addressStorage,
+                deployerAccount
+            };
 
+            if (helpers.isTestNetwork(network))
                 await execDeploy(ctl, 'SafeMath', '', SafeMath);
-                await execDeploy(ctl, 'Math', '', Math);
-
-                await deployer.link(SafeMath, NahmiiToken);
-                await deployer.link(Math, NahmiiToken);
-
-                const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
-
-                if (!helpers.isTestNetwork(network)) {
-                    debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
-                    // await instance.disableMinting();
-                    debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
-                }
+            else if (network.startsWith('ropsten')) {
+                addressStorage.set('SafeMath', '0xfda9a5f546bd24b2aead0ca6a51d08cc475e26e8');
+                SafeMath.address = addressStorage.get('SafeMath');
+            } else if (network.startsWith('mainnet')) {
+                throw new Error('SafeMath at mainnet not configured'); // TODO Add reference
+                SafeMath.address = addressStorage.get('SafeMath');
             }
 
-            else if (network.startsWith('mainnet'))
-                addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
+            await execDeploy(ctl, 'Math', '', Math);
+
+            await deployer.link(SafeMath, NahmiiToken);
+            await deployer.link(Math, NahmiiToken);
+
+            const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+
+            debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
+            // await instance.disableMinting();
+            debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
 
         } finally {
             if (!helpers.isTestNetwork(network))
