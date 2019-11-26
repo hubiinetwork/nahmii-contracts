@@ -150,7 +150,6 @@
     "NullSettlement.sol",
     "NullSettlementChallengeByOrder.sol",
     "NullSettlementChallengeByPayment.sol",
-    "NullSettlementChallengeByTrade.sol",
     "NullSettlementChallengeState.sol",
     "NullSettlementDisputeByOrder.sol",
     "NullSettlementDisputeByPayment.sol",
