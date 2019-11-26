@@ -4,6 +4,9 @@ const HDWalletProvider = require('truffle-hdwallet-provider');
 // For read-only interaction
 const mnemonic = 'paddle envelope cage erupt lake unaware genre captain thunder spread hollow hybrid notice kangaroo wasp';
 
+const ropstenTestnetNode = 'https://%eth.testnet.node%';
+console.log(`Ropsten testnet node: ${ropstenTestnetNode}`);
+
 module.exports = {
     networks: {
         'development': {
@@ -31,7 +34,7 @@ module.exports = {
             gas: 8000000
         },
         'ropsten': {
-            provider: () => new Web3.providers.HttpProvider('https://%eth.testnet.node%'),
+            provider: new Web3.providers.HttpProvider(ropstenTestnetNode),
             network_id: '3',
             gas: 8000000
         },
