@@ -116,7 +116,7 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
         // Prevent the update of non-zero allowance
         require(
             0 == value || 0 == allowance(msg.sender, spender),
-            "Value or allowance non-zero [RevenueToken.sol:120]"
+            "Value or allowance non-zero [RevenueToken.sol:117]"
         );
 
         // Call super's approve, including event emission
@@ -274,7 +274,7 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
         // If there are input balance records
         if (0 < _balanceRecords.length) {
             // Require that minting has not been disabled
-            require(!mintingDisabled, "Minting disabled [RevenueToken.sol:347]");
+            require(!mintingDisabled, "Minting disabled [RevenueToken.sol:277]");
 
             // Calculate index range to be upgraded
             uint256 startIndex = balanceRecords[account].length;
