@@ -31,50 +31,50 @@ module.exports = (deployer, network, accounts) => {
         else {
             deployerAccount = helpers.parseDeployerArg();
 
-            if (web3.eth.personal)
-                await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-            else
-                await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
+            // if (web3.eth.personal)
+            //     await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
+            // else
+            //     await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
         }
 
         debug(`deployerAccount: ${deployerAccount}`);
 
-        try {
-            let ctl = {
-                deployer,
-                deployFilters: helpers.getFiltersFromArgs(),
-                addressStorage,
-                deployerAccount
-            };
+        // try {
+        let ctl = {
+            deployer,
+            deployFilters: helpers.getFiltersFromArgs(),
+            addressStorage,
+            deployerAccount
+        };
 
-            if (helpers.isTestNetwork(network))
-                await execDeploy(ctl, 'SafeMath', '', SafeMath);
-            else if (network.startsWith('ropsten')) {
-                addressStorage.set('SafeMath', '0xfda9a5f546bd24b2aead0ca6a51d08cc475e26e8');
-                SafeMath.address = addressStorage.get('SafeMath');
-            } else if (network.startsWith('mainnet')) {
-                throw new Error('SafeMath at mainnet not configured'); // TODO Add reference
-                SafeMath.address = addressStorage.get('SafeMath');
-            }
-
-            await execDeploy(ctl, 'Math', '', Math);
-
-            await deployer.link(SafeMath, NahmiiToken);
-            await deployer.link(Math, NahmiiToken);
-
-            const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
-
-            debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
-            // await instance.disableMinting();
-            debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
-
-        } finally {
-            if (!helpers.isTestNetwork(network))
-                if (web3.eth.personal)
-                    await web3.eth.personal.lockAccount(deployerAccount);
-                else
-                    await web3.personal.lockAccount(deployerAccount);
+        if (helpers.isTestNetwork(network))
+            await execDeploy(ctl, 'SafeMath', '', SafeMath);
+        else if (network.startsWith('ropsten')) {
+            addressStorage.set('SafeMath', '0xfda9a5f546bd24b2aead0ca6a51d08cc475e26e8');
+            SafeMath.address = addressStorage.get('SafeMath');
+        } else if (network.startsWith('mainnet')) {
+            throw new Error('SafeMath at mainnet not configured'); // TODO Add reference
+            SafeMath.address = addressStorage.get('SafeMath');
         }
+
+        await execDeploy(ctl, 'Math', '', Math);
+
+        await deployer.link(SafeMath, NahmiiToken);
+        await deployer.link(Math, NahmiiToken);
+
+        const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+
+        debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
+        // await instance.disableMinting();
+        debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
+
+        // } finally {
+        // if (!helpers.isTestNetwork(network))
+        //     if (web3.eth.personal)
+        //         await web3.eth.personal.lockAccount(deployerAccount);
+        //     else
+        //         await web3.personal.lockAccount(deployerAccount);
+        // }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();
