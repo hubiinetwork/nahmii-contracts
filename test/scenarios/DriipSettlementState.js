@@ -16,7 +16,7 @@ chai.should();
 let provider;
 
 module.exports = (glob) => {
-    describe('DriipSettlementState', () => {
+    describe.only('DriipSettlementState', () => {
         let web3DriipSettlementState, ethersDriipSettlementState;
         let web3CommunityVote, ethersCommunityVote;
 
@@ -64,7 +64,8 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementState.setDeployer(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    await web3DriipSettlementState.setDeployer(glob.user_a, {from: glob.user_a})
+                        .should.be.rejected;
                 });
             });
         });
@@ -93,7 +94,8 @@ module.exports = (glob) => {
 
             describe('if called with sender that is not (current) operator', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementState.setOperator(glob.user_a, {from: glob.user_a}).should.be.rejected;
+                    await web3DriipSettlementState.setOperator(glob.user_a, {from: glob.user_a})
+                        .should.be.rejected;
                 });
             });
         });
@@ -126,7 +128,7 @@ module.exports = (glob) => {
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementState.setCommunityVote(
+                    await web3DriipSettlementState.setCommunityVote(
                         Wallet.createRandom().address, {from: glob.user_a}
                     ).should.be.rejected;
                 });
@@ -143,7 +145,7 @@ module.exports = (glob) => {
         describe('freezeCommunityVote()', () => {
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    web3DriipSettlementState.freezeCommunityVote({from: glob.user_a})
+                    await web3DriipSettlementState.freezeCommunityVote({from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -157,7 +159,8 @@ module.exports = (glob) => {
 
                 it('should disable changing community vote', async () => {
                     await web3DriipSettlementState.freezeCommunityVote();
-                    web3DriipSettlementState.setCommunityVote(address).should.be.rejected;
+
+                    await web3DriipSettlementState.setCommunityVote(address).should.be.rejected;
                 });
             });
         });
@@ -203,7 +206,7 @@ module.exports = (glob) => {
         describe('freezeUpgrades()', () => {
             describe('if called by non-agent', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.freezeUpgrades()
+                    await ethersDriipSettlementState.freezeUpgrades()
                         .should.be.rejected;
                 });
             });
@@ -238,7 +241,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementState.freezeUpgrades()
+                    await ethersDriipSettlementState.freezeUpgrades()
                         .should.be.rejected;
                 });
             });
@@ -262,7 +265,7 @@ module.exports = (glob) => {
         describe('settlementByWalletAndIndex()', () => {
             describe('if no matching settlement exists', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.settlementByWalletAndIndex(
+                    await ethersDriipSettlementState.settlementByWalletAndIndex(
                         Wallet.createRandom().address, 1
                     ).should.be.rejected;
                 })
@@ -272,7 +275,7 @@ module.exports = (glob) => {
         describe('settlementByWalletAndNonce()', () => {
             describe('if no matching settlement exists', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.settlementByWalletAndNonce(
+                    await ethersDriipSettlementState.settlementByWalletAndNonce(
                         Wallet.createRandom().address, 1
                     ).should.be.rejected;
                 })
@@ -290,7 +293,7 @@ module.exports = (glob) => {
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.initSettlement(
+                    await ethersDriipSettlementState.initSettlement(
                         'payment', mocks.hash1, glob.user_a, 1, glob.user_b, 2
                     ).should.be.rejected;
                 });
@@ -431,7 +434,7 @@ module.exports = (glob) => {
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.completeSettlement(
+                    await ethersDriipSettlementState.completeSettlement(
                         glob.user_a, 1, mocks.settlementRoles.indexOf('Origin'), true
                     ).should.be.rejected
                 });
@@ -652,7 +655,7 @@ module.exports = (glob) => {
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.setMaxDriipNonce(10).should.be.rejected
+                    await ethersDriipSettlementState.setMaxDriipNonce(10).should.be.rejected
                 });
             });
 
@@ -729,7 +732,7 @@ module.exports = (glob) => {
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
+                    await ethersDriipSettlementState.setMaxNonceByWalletAndCurrency(
                         glob.user_a, {ct: mocks.address0, id: 0}, 10
                     ).should.be.rejected
                 });
@@ -787,7 +790,7 @@ module.exports = (glob) => {
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.addSettledAmountByBlockNumber(
+                    await ethersDriipSettlementState.addSettledAmountByBlockNumber(
                         glob.user_a, 100, {ct: mocks.address0, id: 0}, 10, {gasLimit: 1e6}
                     ).should.be.rejected
                 });
@@ -802,7 +805,7 @@ module.exports = (glob) => {
                 });
 
                 it('should successfully add settled amount record at the given block number', async () => {
-                    ethersDriipSettlementState.addSettledAmountByBlockNumber(
+                    await ethersDriipSettlementState.addSettledAmountByBlockNumber(
                         glob.user_a, 100, {ct: mocks.address0, id: 0}, 10, {gasLimit: 1e6}
                     );
 
@@ -846,7 +849,7 @@ module.exports = (glob) => {
 
             describe('if called by non-enabled service action', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.setTotalFee(
+                    await ethersDriipSettlementState.setTotalFee(
                         glob.user_a, mocks.address1, mocks.address2,
                         {ct: mocks.address0, id: 0},
                         {nonce: 10, amount: 20}
@@ -903,7 +906,7 @@ module.exports = (glob) => {
 
             describe('if called by non-agent', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
+                    await ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -915,7 +918,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
+                    await ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -955,7 +958,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
+                    await ethersDriipSettlementState.upgradeSettlement(settlement, {gasLimit: 1e6})
                         .should.be.rejected;
                 });
             });
@@ -964,7 +967,7 @@ module.exports = (glob) => {
         describe('upgradeSettledAmount', () => {
             describe('if called by non-agent', () => {
                 it('should revert', async () => {
-                    ethersDriipSettlementState.upgradeSettledAmount(
+                    await ethersDriipSettlementState.upgradeSettledAmount(
                         glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -977,7 +980,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementState.upgradeSettledAmount(
+                    await ethersDriipSettlementState.upgradeSettledAmount(
                         glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
@@ -1016,7 +1019,7 @@ module.exports = (glob) => {
                 });
 
                 it('should revert', async () => {
-                    ethersDriipSettlementState.upgradeSettledAmount(
+                    await ethersDriipSettlementState.upgradeSettledAmount(
                         glob.user_a, 10, {ct: mocks.address0, id: 0}, 1234, {gasLimit: 1e6}
                     ).should.be.rejected;
                 });
