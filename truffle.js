@@ -4,7 +4,7 @@ const HDWalletProvider = require('truffle-hdwallet-provider');
 // For read-only interaction
 const mnemonic = 'paddle envelope cage erupt lake unaware genre captain thunder spread hollow hybrid notice kangaroo wasp';
 
-const ropstenTestnetNode = 'https://%eth.testnet.node%';
+const ropstenTestnetNode = 'https://geth-ropsten.dev.hubii.net';
 console.log(`Ropsten testnet node: ${ropstenTestnetNode}`);
 
 module.exports = {
