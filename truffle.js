@@ -1,11 +1,6 @@
 const Web3 = require('web3');
-const HDWalletProvider = require('truffle-hdwallet-provider');
-
-// For read-only interaction
-const mnemonic = 'paddle envelope cage erupt lake unaware genre captain thunder spread hollow hybrid notice kangaroo wasp';
-
-const ropstenTestnetNode = 'https://geth-ropsten.dev.hubii.net';
-console.log(`Ropsten testnet node: ${ropstenTestnetNode}`);
+const HDWalletProvider = require('@truffle/hdwallet-provider');
+const keythereum = require('keythereum');
 
 module.exports = {
     networks: {
@@ -34,12 +29,16 @@ module.exports = {
             gas: 8000000
         },
         'ropsten': {
-            provider: new Web3.providers.HttpProvider(ropstenTestnetNode),
+            provider: () => new Web3.providers.HttpProvider('https://geth-ropsten.dev.hubii.net'),
             network_id: '3',
             gas: 8000000
         },
         'ropsten-infura': {
-            provider: () => new HDWalletProvider(mnemonic, 'https://ropsten.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3'),
+            provider: () => {
+                const keyObject = keythereum.importFromFile(process.env.ETH_TESTNET_ACCOUNT, '.');
+                const privateKey = keythereum.recover(process.env.ETH_TESTNET_SECRET, keyObject).toString('hex');
+                return new HDWalletProvider(privateKey, 'https://ropsten.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3')
+            },
             network_id: '*',
             gas: 8000000
         },
@@ -56,7 +55,11 @@ module.exports = {
             gas: 8000000
         },
         'mainnet-infura': {
-            provider: () => new HDWalletProvider(mnemonic, 'https://mainnet.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3'),
+            provider: () => {
+                const keyObject = keythereum.importFromFile(process.env.ETH_MAINNET_ACCOUNT, '.');
+                const privateKey = keythereum.recover(process.env.ETH_MAINNET_SECRET, keyObject).toString('hex');
+                return new HDWalletProvider(privateKey, 'https://mainnet.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3')
+            },
             network_id: '*',
             gas: 8000000
         },

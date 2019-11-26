@@ -87,18 +87,18 @@
     "url": "git+https://github.com/hubiinetwork/nahmii-contracts.git"
   },
   "dependencies": {
+    "@truffle/hdwallet-provider": "^1.0.26",
     "async": "^2.6.0",
     "debug": "^4.1.1",
     "ethers": "^3.0.29",
     "ganache-cli": "~6.4.3",
+    "keythereum": "^1.0.4",
     "moment": "^2.23.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "openzeppelin-solidity": "^2.2.0",
     "solc": "^0.5.8",
     "solidity-util": "github:willitscale/solidity-util",
     "truffle": "^4.1.15",
-    "truffle-hdwallet-provider": "0.0.6",
-    "truffle-hdwallet-provider-privkey": "^0.3.0",
     "yargs": "^13.2.4"
   },
   "devDependencies": {
