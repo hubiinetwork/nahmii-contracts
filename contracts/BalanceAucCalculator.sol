@@ -30,43 +30,43 @@ contract BalanceAucCalculator {
             return 0;
 
         // Get the count of balance records
-        uint256 l = balanceRecordable.balanceRecordsCount(wallet);
+        uint256 recordsCount = balanceRecordable.balanceRecordsCount(wallet);
 
         // Return 0 if the balance recordable has no records
-        if (0 == l)
+        if (0 == recordsCount)
             return 0;
 
         // Obtain the record index of the end block number boundary
-        int256 _iEnd = balanceRecordable.recordIndexByBlockNumber(wallet, endBlock);
+        int256 _endIndex = balanceRecordable.recordIndexByBlockNumber(wallet, endBlock);
 
         // If the record index is negative the upper boundary is below the first record's block number, hence return 0
-        if (0 > _iEnd)
+        if (0 > _endIndex)
             return 0;
 
         // Cast end record index to unsigned
-        uint256 iEnd = uint256(_iEnd);
+        uint256 endIndex = uint256(_endIndex);
 
         // Clamp the start block number boundary to the first record block number as any contribution
         // to the calculation below this limit is 0
         startBlock = startBlock.clampMin(balanceRecordable.recordBlockNumber(wallet, 0));
 
         // Obtain the record index of the start block number boundary
-        uint256 iStart = uint256(balanceRecordable.recordIndexByBlockNumber(wallet, startBlock));
+        uint256 startIndex = uint256(balanceRecordable.recordIndexByBlockNumber(wallet, startBlock));
 
         // Initialize the result
-        uint256 r = 0;
+        uint256 result = 0;
 
         // Add contribution for the record where the lower block number boundary resides
-        if (iStart < iEnd)
-            r = r.add(
-                balanceRecordable.recordBalance(wallet, iStart).mul(
-                    balanceRecordable.recordBlockNumber(wallet, iStart.add(1)).sub(startBlock)
+        if (startIndex < endIndex)
+            result = result.add(
+                balanceRecordable.recordBalance(wallet, startIndex).mul(
+                    balanceRecordable.recordBlockNumber(wallet, startIndex.add(1)).sub(startBlock)
                 )
             );
 
         // Add contribution from records at intermediate indices
-        for (uint256 i = iStart.add(1); i < iEnd; i = i.add(1))
-            r = r.add(
+        for (uint256 i = startIndex.add(1); i < endIndex; i = i.add(1))
+            result = result.add(
                 balanceRecordable.recordBalance(wallet, i).mul(
                     balanceRecordable.recordBlockNumber(wallet, i.add(1)).sub(
                         balanceRecordable.recordBlockNumber(wallet, i)
@@ -75,15 +75,15 @@ contract BalanceAucCalculator {
             );
 
         // Add contribution from the record where the upper block number boundary resides
-        r = r.add(
-            balanceRecordable.recordBalance(wallet, iEnd).mul(
+        result = result.add(
+            balanceRecordable.recordBalance(wallet, endIndex).mul(
                 endBlock.sub(
-                    balanceRecordable.recordBlockNumber(wallet, iEnd).clampMin(startBlock)
+                    balanceRecordable.recordBlockNumber(wallet, endIndex).clampMin(startBlock)
                 )
             )
         );
 
         // Return result
-        return r;
+        return result;
     }
 }
