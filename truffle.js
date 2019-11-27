@@ -29,7 +29,11 @@ module.exports = {
             gas: 8000000
         },
         'ropsten': {
-            provider: () => new Web3.providers.HttpProvider('https://geth-ropsten.dev.hubii.net'),
+            provider: () => {
+                const keyObject = keythereum.importFromFile(process.env.ETH_TESTNET_ACCOUNT, '.');
+                const privateKey = keythereum.recover(process.env.ETH_TESTNET_SECRET, keyObject).toString('hex');
+                return new HDWalletProvider(privateKey, 'https://geth-ropsten.dev.hubii.net')
+            },
             network_id: '3',
             gas: 8000000
         },
