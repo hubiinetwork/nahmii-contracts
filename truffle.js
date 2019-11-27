@@ -1,4 +1,3 @@
-const Web3 = require('web3');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 const keythereum = require('keythereum');
 const path = require('path');
@@ -32,7 +31,6 @@ module.exports = {
         },
         'ropsten': {
             provider: () => {
-                console.log(`cwd: ${process.cwd()}`);
                 const dataDir = path.dirname(findUp.sync('keystore', {type: 'directory'}));
                 const keyObject = keythereum.importFromFile(process.env.ETH_TESTNET_ACCOUNT, dataDir);
                 const privateKey = keythereum.recover(process.env.ETH_TESTNET_SECRET, keyObject).toString('hex');
