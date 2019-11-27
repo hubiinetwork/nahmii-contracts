@@ -1,6 +1,8 @@
 const Web3 = require('web3');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 const keythereum = require('keythereum');
+const path = require('path');
+const findUp = require('find-up');
 
 module.exports = {
     networks: {
@@ -30,7 +32,9 @@ module.exports = {
         },
         'ropsten': {
             provider: () => {
-                const keyObject = keythereum.importFromFile(process.env.ETH_TESTNET_ACCOUNT, '.');
+                console.log(`cwd: ${process.cwd()}`);
+                const dataDir = path.dirname(findUp.sync('keystore', {type: 'directory'}));
+                const keyObject = keythereum.importFromFile(process.env.ETH_TESTNET_ACCOUNT, dataDir);
                 const privateKey = keythereum.recover(process.env.ETH_TESTNET_SECRET, keyObject).toString('hex');
                 return new HDWalletProvider(privateKey, 'https://geth-ropsten.dev.hubii.net')
             },
@@ -39,7 +43,8 @@ module.exports = {
         },
         'ropsten-infura': {
             provider: () => {
-                const keyObject = keythereum.importFromFile(process.env.ETH_TESTNET_ACCOUNT, '.');
+                const dataDir = path.dirname(findUp.sync('keystore', {type: 'directory'}));
+                const keyObject = keythereum.importFromFile(process.env.ETH_TESTNET_ACCOUNT, dataDir);
                 const privateKey = keythereum.recover(process.env.ETH_TESTNET_SECRET, keyObject).toString('hex');
                 return new HDWalletProvider(privateKey, 'https://ropsten.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3')
             },
