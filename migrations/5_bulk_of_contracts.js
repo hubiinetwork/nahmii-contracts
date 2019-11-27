@@ -108,24 +108,13 @@ module.exports = (deployer, network, accounts) => {
 
         await addressStorage.load();
 
-        // if (helpers.isResetArgPresent())
-        //     addressStorage.clear();
-
         if (helpers.isTestNetwork(network))
             deployerAccount = accounts[0];
-
-        else {
+        else
             deployerAccount = helpers.parseDeployerArg();
-
-            // if (web3.eth.personal)
-            //     await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-            // else
-            //     await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-        }
 
         debug(`deployerAccount: ${deployerAccount}`);
 
-        // try {
         let ctl = {
             deployer: deployer,
             deployFilters: helpers.getFiltersFromArgs(),
@@ -2047,14 +2036,6 @@ module.exports = (deployer, network, accounts) => {
             // await instance.registerService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
             // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
         }
-
-        // } finally {
-        // if (!helpers.isTestNetwork(network))
-        //     if (web3.eth.personal)
-        //         await web3.eth.personal.lockAccount(deployerAccount);
-        //     else
-        //         await web3.personal.lockAccount(deployerAccount);
-        // }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();

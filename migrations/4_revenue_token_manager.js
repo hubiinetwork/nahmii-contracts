@@ -25,24 +25,13 @@ module.exports = (deployer, network, accounts) => {
 
         await addressStorage.load();
 
-        // if (helpers.isResetArgPresent())
-        //     addressStorage.clear();
-
         if (helpers.isTestNetwork(network))
             deployerAccount = accounts[0];
-
-        else {
+        else
             deployerAccount = helpers.parseDeployerArg();
-
-            // if (web3.eth.personal)
-            //     await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-            // else
-            //     await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-        }
 
         debug(`deployerAccount: ${deployerAccount}`);
 
-        // try {
         let ctl = {
             deployer,
             deployFilters: helpers.getFiltersFromArgs(),
@@ -117,26 +106,10 @@ module.exports = (deployer, network, accounts) => {
             debug(`Executed releases count: ${(await revenueTokenManager.executedReleasesCount()).toNumber()}`);
 
         } else if (network.startsWith('ropsten')) {
-            await deployer.link(SafeMathUintLib, RevenueTokenManager);
-
-            const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
-
-            const nahmiiToken = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
-            await nahmiiToken.mint(addressStorage.get('RevenueTokenManager'), 120e24);
-
-            await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
-            await revenueTokenManager.setBeneficiary(deployerAccount);
+            addressStorage.set('RevenueTokenManager', '0xf8e558333a1d4e1c1e7a65db4186bfe8673f1ace');
 
         } else if (network.startsWith('mainnet'))
             addressStorage.set('RevenueTokenManager', '0xe3f2158610b7145c04ae03a6356038ad2404a9a6');
-
-        // } finally {
-        // if (!helpers.isTestNetwork(network))
-        //     if (web3.eth.personal)
-        //         await web3.eth.personal.lockAccount(deployerAccount);
-        //     else
-        //         await web3.personal.lockAccount(deployerAccount);
-        // }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();

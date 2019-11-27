@@ -41,24 +41,13 @@ module.exports = (deployer, network, accounts) => {
 
         await addressStorage.load();
 
-        // if (helpers.isResetArgPresent())
-        //     addressStorage.clear();
-
         if (helpers.isTestNetwork(network))
             deployerAccount = accounts[0];
-
-        else {
+        else
             deployerAccount = helpers.parseDeployerArg();
-
-            // if (web3.eth.personal)
-            //     await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-            // else
-            //     await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-        }
 
         debug(`deployerAccount: ${deployerAccount}`);
 
-        // try {
         let ctl = {
             deployer,
             deployFilters: helpers.getFiltersFromArgs(),
@@ -146,6 +135,7 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('SafeMathUintLib', '0x2372b2677b58f834b52266d13e9b2cfc8f339d2e');
             addressStorage.set('SettlementChallengeTypesLib', '0x4ef8a1de09cb3c190b6d47f20372d3282e4b4748');
             addressStorage.set('Strings', '0xb8eed225c41b8bf98d0fb91bb449f874a848b7ef');
+            addressStorage.set('TradeTypesLib', '0x7255df349ad869adbedd0dcaf808f4b4e20ad1bb');
             addressStorage.set('TxHistoryLib', '0x705c22764b35de57958ebd8f26ebbc7aa3ac4614');
 
             ConstantsLib.address = addressStorage.get('ConstantsLib');
@@ -163,8 +153,8 @@ module.exports = (deployer, network, accounts) => {
                 CurrenciesLib,
                 NahmiiTypesLib,
                 PaymentTypesLib,
-                SettlementChallengeTypesLib/*,
-                    TradeTypesLib*/
+                SettlementChallengeTypesLib,
+                TradeTypesLib
             ]);
             await deployer.link(SafeMathIntLib, [
                 BalanceTrackerLib,
@@ -189,11 +179,9 @@ module.exports = (deployer, network, accounts) => {
             NahmiiTypesLib.address = addressStorage.get('NahmiiTypesLib');
 
             await deployer.link(NahmiiTypesLib, [
-                PaymentTypesLib/*,
-                    TradeTypesLib*/
+                PaymentTypesLib,
+                TradeTypesLib
             ]);
-
-            // await execDeploy(ctl, 'TradeTypesLib', '', TradeTypesLib);
 
         } else if (network.startsWith('mainnet')) {
             addressStorage.set('BalanceTrackerLib', '0xc62e6b5c5d1cfb97c992cf065ed74eda82553028');
@@ -264,14 +252,6 @@ module.exports = (deployer, network, accounts) => {
 
             // await execDeploy(ctl, 'TradeTypesLib', '', TradeTypesLib);
         }
-
-        // } finally {
-        // if (!helpers.isTestNetwork(network))
-        //     if (web3.eth.personal)
-        //         await web3.eth.personal.lockAccount(deployerAccount);
-        //     else
-        //         await web3.personal.lockAccount(deployerAccount);
-        // }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();

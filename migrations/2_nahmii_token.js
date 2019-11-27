@@ -22,24 +22,13 @@ module.exports = (deployer, network, accounts) => {
 
         await addressStorage.load();
 
-        // if (helpers.isResetArgPresent())
-        //     addressStorage.clear();
-
         if (helpers.isTestNetwork(network))
             deployerAccount = accounts[0];
-
-        else {
+        else
             deployerAccount = helpers.parseDeployerArg();
-
-            // if (web3.eth.personal)
-            //     await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-            // else
-            //     await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-        }
 
         debug(`deployerAccount: ${deployerAccount}`);
 
-        // try {
         let ctl = {
             deployer,
             deployFilters: helpers.getFiltersFromArgs(),
@@ -47,34 +36,40 @@ module.exports = (deployer, network, accounts) => {
             deployerAccount
         };
 
-        if (helpers.isTestNetwork(network))
+        if (helpers.isTestNetwork(network)) {
             await execDeploy(ctl, 'SafeMath', '', SafeMath);
-        else if (network.startsWith('ropsten')) {
+            await execDeploy(ctl, 'Math', '', Math);
+
+        } else if (network.startsWith('ropsten')) {
             addressStorage.set('SafeMath', '0xfda9a5f546bd24b2aead0ca6a51d08cc475e26e8');
+            addressStorage.set('Math', '0x7286202281f28d09fd2b9dc60c8673db6bb375c0');
+
             SafeMath.address = addressStorage.get('SafeMath');
+            Math.address = addressStorage.get('Math');
+
         } else if (network.startsWith('mainnet')) {
             throw new Error('SafeMath at mainnet not configured'); // TODO Add reference
             SafeMath.address = addressStorage.get('SafeMath');
         }
 
-        await execDeploy(ctl, 'Math', '', Math);
-
         await deployer.link(SafeMath, NahmiiToken);
         await deployer.link(Math, NahmiiToken);
 
-        const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+        if (helpers.isTestNetwork(network)) {
+            const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
 
-        debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
-        // await instance.disableMinting();
-        debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
+            debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
+            debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
 
-        // } finally {
-        // if (!helpers.isTestNetwork(network))
-        //     if (web3.eth.personal)
-        //         await web3.eth.personal.lockAccount(deployerAccount);
-        //     else
-        //         await web3.personal.lockAccount(deployerAccount);
-        // }
+        } else if (network.startsWith('ropsten')) {
+            addressStorage.set('NahmiiToken', '0x6b8f93bf1987c3c08353f306e69e7b2a6118d120');
+
+            NahmiiToken.address = addressStorage.get('NahmiiToken');
+
+        } else if (network.startsWith('mainnet')) {
+            throw new Error('NahmiiToken at mainnet not configured'); // TODO Add reference
+            NahmiiToken.address = addressStorage.get('NahmiiToken');
+        }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();
