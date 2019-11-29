@@ -9,9 +9,7 @@
 pragma solidity >=0.4.25 <0.6.0;
 
 import {TokenMultiTimelock} from "./TokenMultiTimelock.sol";
-import {RevenueToken} from "./RevenueToken.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {BalanceAucCalculator} from "./BalanceAucCalculator.sol";
 import {BalanceRecordable} from "./BalanceRecordable.sol";
 
 /**
