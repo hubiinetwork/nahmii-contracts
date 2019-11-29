@@ -71,7 +71,6 @@ const PaymentHasher = artifacts.require('PaymentHasher');
 const PaymentTypesLib = artifacts.require('PaymentTypesLib');
 const RevenueFund1 = artifacts.require('RevenueFund1');
 const RevenueFundAccrualMonitor = artifacts.require('RevenueFundAccrualMonitor');
-const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathIntLib = artifacts.require('SafeMathIntLib');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 const SecurityBond = artifacts.require('SecurityBond');
@@ -344,7 +343,6 @@ module.exports = (deployer, network, accounts) => {
             NullSettlementState,
             RevenueFund1,
             RevenueFundAccrualMonitor,
-            RevenueTokenManager,
             SecurityBond,
             SignerManager,
             TokenHolderRevenueFund,
@@ -1026,7 +1024,7 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('PartnerBenefactor', '0x55103eb32d8bcbf90003879a26db8dfb18175fed');
             addressStorage.set('PaymentHasher', '0x684d22495c0ee89d74fe37e132d4cef771b6ded6');
             addressStorage.set('RevenueFund1', '0x46c63c4d9c137b5883687d08d78c603a22e195e7');
-            await execDeploy(ctl, 'RevenueFundAccrualMonitor', '', RevenueFundAccrualMonitor);
+            addressStorage.set('RevenueFundAccrualMonitor', '0xf80314451520797264bf9272310da80abd8e375e');
             addressStorage.set('SecurityBond', '0x6e72335e13358f43e39bba87e709bfda7e9a9d1c');
             addressStorage.set('SignerManager', '0x0f8af4aaf302e2fd6883e20a3451606522ed9ea4');
             addressStorage.set('TokenHolderRevenueFund', '0x55a9051c48613d6edd1d327527a5a5ca2e6d6c20');
@@ -1422,11 +1420,11 @@ module.exports = (deployer, network, accounts) => {
             // await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
 
             instance = await RevenueFundAccrualMonitor.at(addressStorage.get('RevenueFundAccrualMonitor'));
-            await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
-            await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
+            // await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
+            // await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
             await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
-            await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
-            await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            // await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            // await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
 
             // instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -1468,9 +1466,9 @@ module.exports = (deployer, network, accounts) => {
             // await instance.registerService(addressStorage.get('FraudChallengeByTradeOrderResiduals'));
             // await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeOrderResiduals'), await instance.REWARD_ACTION.call());
 
-            // instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
+            instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            // await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
+            await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
             // await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
             // await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
             // await instance.registerService(addressStorage.get('RevenueFund1'));

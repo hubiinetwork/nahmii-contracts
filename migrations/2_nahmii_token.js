@@ -55,16 +55,16 @@ module.exports = (deployer, network, accounts) => {
         await deployer.link(SafeMath, NahmiiToken);
         await deployer.link(Math, NahmiiToken);
 
-        if (helpers.isTestNetwork(network)) {
+        if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
             const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
 
             debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
             debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
 
-        } else if (network.startsWith('ropsten')) {
-            addressStorage.set('NahmiiToken', '0x6b8f93bf1987c3c08353f306e69e7b2a6118d120');
-
-            NahmiiToken.address = addressStorage.get('NahmiiToken');
+        // } else if (network.startsWith('ropsten')) {
+        //     addressStorage.set('NahmiiToken', '0x6b8f93bf1987c3c08353f306e69e7b2a6118d120');
+        //
+        //     NahmiiToken.address = addressStorage.get('NahmiiToken');
 
         } else if (network.startsWith('mainnet')) {
             throw new Error('NahmiiToken at mainnet not configured'); // TODO Add reference

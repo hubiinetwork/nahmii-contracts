@@ -14,7 +14,7 @@ import {BalanceRecordable} from "./BalanceRecordable.sol";
 
 /**
  * @title RevenueTokenManager
- * @notice An token multi-timelock that supports the calculation of balance blocks
+ * @notice A token multi-timelock that supports the calculation of balance blocks
  * of the underlying revenue token as well as amount blocks from its own released amount
  */
 contract RevenueTokenManager is TokenMultiTimelock, BalanceRecordable {
