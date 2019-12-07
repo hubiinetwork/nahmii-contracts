@@ -16,7 +16,7 @@ chai.should();
 let provider;
 
 module.exports = (glob) => {
-    describe.only('DriipSettlementState', () => {
+    describe('DriipSettlementState', () => {
         let web3DriipSettlementState, ethersDriipSettlementState;
         let web3CommunityVote, ethersCommunityVote;
 
