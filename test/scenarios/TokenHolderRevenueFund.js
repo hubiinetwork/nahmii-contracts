@@ -945,8 +945,6 @@ module.exports = function (glob) {
             });
 
             describe('if called with overrunning accrual indices', () => {
-                let claimableAmount;
-
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3ERC20.address, glob.user_a, 3000
@@ -975,16 +973,12 @@ module.exports = function (glob) {
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
                         [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
                     );
-
-                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByAccruals(
-                        glob.user_a, web3ERC20.address, 0, 1, 1
-                    );
                 });
 
                 it('should return the claimable amount', async () => {
                     (await ethersTokenHolderRevenueFund.claimableAmountByAccruals(
                         glob.user_a, web3ERC20.address, 0, 10, 20
-                    ))._bn.should.eq.BN(claimableAmount._bn);
+                    ))._bn.should.eq.BN(0);
                 });
             });
 
@@ -2015,8 +2009,6 @@ module.exports = function (glob) {
             });
 
             describe('if called with overrunning accrual indices', () => {
-                let claimableAmount;
-
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3ERC20.address, glob.user_a, 3000
@@ -2045,10 +2037,6 @@ module.exports = function (glob) {
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
                         [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
                     );
-
-                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByAccruals(
-                        glob.user_a, web3ERC20.address, 0, 1, 1
-                    );
                 });
 
                 it('should successfully claim and stage', async () => {
@@ -2056,11 +2044,10 @@ module.exports = function (glob) {
                         web3ERC20.address, 0, 10, 20, {from: glob.user_a, gas: 1e6}
                     );
 
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('ClaimAndStageByAccrualsEvent');
+                    result.logs.should.be.an('array').that.is.empty;
 
                     (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
-                        ._bn.should.eq.BN(claimableAmount._bn);
+                        ._bn.should.eq.BN(0);
                 });
             });
 
