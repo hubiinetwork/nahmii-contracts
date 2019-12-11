@@ -1,7 +1,7 @@
 /*!
  * Hubii Nahmii
  *
- * Copyright (C) 2017-2018 Hubii AS
+ * Copyright (C) 2017-2019 Hubii AS
  */
 
 const fs = require('fs').promises;

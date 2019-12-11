@@ -16,7 +16,7 @@ describe('update_require_messages', () => {
  *
  * Compliant with the Hubii Nahmii specification v0.12.
  *
- * Copyright (C) 2017-2018 Hubii AS
+ * Copyright (C) 2017-2019 Hubii AS
  */
 
 pragma solidity >=0.4.25 <0.6.0;
