@@ -589,8 +589,6 @@ module.exports = function (glob) {
                         (await ethersMockedAccrualBeneficiary01._closedAccrualPeriodsCount())
                             ._bn.should.eq.BN(1);
 
-                        console.log(await ethersRevenueFund1.periodCurrenciesByIndices(0, 0)); // TODO Remove
-
                         (await ethersRevenueFund1.periodCurrenciesCount())
                             ._bn.should.eq.BN(2);
 
