@@ -41,71 +41,7 @@ module.exports = (deployer, network, accounts) => {
 
         SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
 
-        if (helpers.isTestNetwork(network)) {
-            await deployer.link(SafeMathUintLib, RevenueTokenManager);
-
-            const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
-
-            const nahmiiToken = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
-            await nahmiiToken.mint(addressStorage.get('RevenueTokenManager'), 120e24);
-
-            while (0 == (await nahmiiToken.balanceOf(revenueTokenManager.address)).toNumber()) {
-                debug(`Waiting 60s for token minting to be mined`);
-                await helpers.sleep(60000);
-            }
-
-            await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
-            await revenueTokenManager.setBeneficiary(deployerAccount);
-
-            const {earliestReleaseTimes, amounts} = airdriipReleases();
-
-            let result = await revenueTokenManager.defineReleases(
-                earliestReleaseTimes.slice(0, 60),
-                amounts.slice(0, 60),
-                [],
-                {gas: 5e6}
-            );
-
-            debug(`First batch of releases defined in TX ${result.tx}...`);
-
-            while (null == (await web3.eth.getTransactionReceipt(result.tx)).blockNumber) {
-                debug(`Waiting 60s for first batch of releases to be mined...`);
-                await helpers.sleep(60000);
-            }
-
-            result = await revenueTokenManager.defineReleases(
-                earliestReleaseTimes.slice(60),
-                amounts.slice(60),
-                [],
-                {gas: 5e6}
-            );
-
-            debug(`Second batch of releases defined in TX ${result.tx}...`);
-
-            while (null == (await web3.eth.getTransactionReceipt(result.tx)).blockNumber) {
-                debug(`Waiting 60s for second batch of releases to be mined...`);
-                await helpers.sleep(60000);
-            }
-
-            if (!helpers.isTestNetwork(network))
-                await revenueTokenManager.setBeneficiary('0xe8575e787e28bcb0ee3046605f795bf883e82e84');
-
-            debug(`Release times:`);
-            earliestReleaseTimes.forEach((t) => {
-                debug(`  ${moment.unix(t)}`);
-            });
-
-            const firstRelease = await revenueTokenManager.releases(0);
-            debug(`First release of ${firstRelease[1].toString()} at ${new Date(1000 * firstRelease[0].toNumber())}`);
-
-            const lastRelease = await revenueTokenManager.releases(119);
-            debug(`Last release of ${lastRelease[1].toString()} at ${new Date(1000 * lastRelease[0].toNumber())}`);
-
-            debug(`Total locked amount: ${(await revenueTokenManager.totalLockedAmount()).toNumber()}`);
-            debug(`Releases count: ${(await revenueTokenManager.releasesCount()).toNumber()}`);
-            debug(`Executed releases count: ${(await revenueTokenManager.executedReleasesCount()).toNumber()}`);
-
-        } else if (network.startsWith('ropsten')) {
+        if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
             await deployer.link(SafeMathUintLib, RevenueTokenManager);
 
             const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
