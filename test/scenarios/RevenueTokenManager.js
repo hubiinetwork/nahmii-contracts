@@ -151,30 +151,29 @@ module.exports = function (glob) {
         });
 
         describe('defineReleases()', () => {
-            let earliestReleaseTimes, amounts, blockNumbers;
+            let releases;
 
             beforeEach(async () => {
                 await web3NahmiiToken.mint(web3RevenueTokenManager.address, 120000);
 
                 await web3RevenueTokenManager.setToken(web3NahmiiToken.address);
 
-                earliestReleaseTimes = [];
-                amounts = [];
-                blockNumbers = [];
-
-                for (let i = 1; i <= 60; i++) {
-                    earliestReleaseTimes.push(futureEpoch(10 * i));
-                    amounts.push(1000);
-                    if (i <= 10)
-                        blockNumbers.push(1000000 * i);
+                releases = [];
+                for (let i = 1; i <= 20; i++) {
+                    releases.push({
+                        blockNumber: i <= 10 ? 1000000 * i : 0,
+                        earliestReleaseTime: futureEpoch(10 * i),
+                        amount: 1000,
+                        totalAmount: 0,
+                        done: false
+                    });
                 }
             });
 
             describe('if called by non-operator', () => {
                 it('should revert', async () => {
-                    await web3RevenueTokenManager.defineReleases(
-                        earliestReleaseTimes, amounts, blockNumbers, {from: glob.user_a}
-                    ).should.be.rejected;
+                    await ethersRevenueTokenManager.connect(glob.signer_a).defineReleases(releases)
+                        .should.be.rejected;
                 });
             });
 
@@ -187,61 +186,46 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    await web3RevenueTokenManager.defineReleases(
-                        earliestReleaseTimes, amounts, blockNumbers
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if number of release times differs from number of amounts', () => {
-                beforeEach(() => {
-                    amounts.push(4000);
-                });
-
-                it('should revert', async () => {
-                    await web3RevenueTokenManager.defineReleases(
-                        earliestReleaseTimes, amounts, blockNumbers
-                    ).should.be.rejected;
-                });
-            });
-
-            describe('if number of release times is less than the count of block numbers', () => {
-                beforeEach(() => {
-                    earliestReleaseTimes = [futureEpoch(10)];
-                });
-
-                it('should revert', async () => {
-                    await web3RevenueTokenManager.defineReleases(
-                        earliestReleaseTimes, amounts, blockNumbers
-                    ).should.be.rejected;
+                    await ethersRevenueTokenManager.defineReleases(releases)
+                        .should.be.rejected;
                 });
             });
 
             describe('if posterior total locked amount becomes greater than contracts token balance', () => {
                 beforeEach(() => {
-                    amounts[0] = 121000;
+                    releases[0].amount = 121000;
                 });
 
                 it('should revert', async () => {
-                    await web3RevenueTokenManager.defineReleases(
-                        earliestReleaseTimes, amounts, blockNumbers
-                    ).should.be.rejected;
+                    await ethersRevenueTokenManager.defineReleases(releases)
+                        .should.be.rejected;
                 });
             });
 
             describe('if within operational constraints', () => {
+                let topic, filter;
+
+                beforeEach(async () => {
+                    topic = ethersRevenueTokenManager.interface.events.DefineReleaseEvent.topics[0];
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: [topic]
+                    };
+                });
+
                 it('should successfully define releases', async () => {
-                    const result = await web3RevenueTokenManager.defineReleases(
-                        earliestReleaseTimes, amounts, blockNumbers, {gas: 5e6}
+                    const result = await ethersRevenueTokenManager.defineReleases(
+                        releases, {gasLimit: 5e6}
                     );
 
-                    result.logs.should.be.an('array').and.have.lengthOf(60);
-                    result.logs[0].event.should.equal('DefineReleaseEvent');
+                    const logs = await provider.getLogs(filter);
+                    logs.should.be.an('array').and.have.lengthOf(20);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
 
                     (await ethersRevenueTokenManager.totalLockedAmount())
-                        ._bn.should.eq.BN(60000);
+                        ._bn.should.eq.BN(20000);
                     (await ethersRevenueTokenManager.releasesCount())
-                        ._bn.should.eq.BN(60);
+                        ._bn.should.eq.BN(20);
                     (await ethersRevenueTokenManager.executedReleasesCount())
                         ._bn.should.eq.BN(0);
 
@@ -251,21 +235,21 @@ module.exports = function (glob) {
                     (await ethersRevenueTokenManager.recordBalance(address0, 0))
                         ._bn.should.eq.BN(0);
                     (await ethersRevenueTokenManager.recordBlockNumber(address0, 0))
-                        ._bn.should.eq.BN(blockNumbers[0]);
+                        ._bn.should.eq.BN(releases[0].blockNumber);
 
                     (await ethersRevenueTokenManager.recordBalance(address0, 10))
                         ._bn.should.eq.BN(0);
                     (await ethersRevenueTokenManager.recordBlockNumber(address0, 10))
                         ._bn.should.eq.BN(0);
 
-                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, blockNumbers[0]))
+                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, releases[0].blockNumber))
                         ._bn.should.eq.BN(0);
-                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, blockNumbers[0] + 10))
+                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, releases[0].blockNumber + 10))
                         ._bn.should.eq.BN(0);
 
-                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, blockNumbers[9]))
+                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, releases[9].blockNumber))
                         ._bn.should.eq.BN(9);
-                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, blockNumbers[9] + 10))
+                    (await ethersRevenueTokenManager.recordIndexByBlockNumber(address0, releases[9].blockNumber + 10))
                         ._bn.should.eq.BN(9);
                 });
             });
@@ -293,9 +277,13 @@ module.exports = function (glob) {
 
             describe('if release timer has not expired', () => {
                 beforeEach(async () => {
-                    await web3RevenueTokenManager.defineReleases(
-                        [futureEpoch(10)], [1000], []
-                    );
+                    await ethersRevenueTokenManager.defineReleases([{
+                        blockNumber: 0,
+                        earliestReleaseTime: futureEpoch(10),
+                        amount: 1000,
+                        totalAmount: 0,
+                        done: false
+                    }], {gasLimit: 5e6});
                 });
 
                 it('should revert', async () => {
@@ -306,9 +294,13 @@ module.exports = function (glob) {
             describe('if within operational constraints', () => {
                 describe('if block number is preset', () => {
                     beforeEach(async () => {
-                        await web3RevenueTokenManager.defineReleases(
-                            [futureEpoch(1)], [1000], [1000000]
-                        );
+                        await ethersRevenueTokenManager.defineReleases([{
+                            blockNumber: 1000000,
+                            earliestReleaseTime: futureEpoch(1),
+                            amount: 1000,
+                            totalAmount: 0,
+                            done: false
+                        }], {gasLimit: 5e6});
 
                         await sleep(1500);
                     });
@@ -345,9 +337,13 @@ module.exports = function (glob) {
 
                 describe('if block number is not preset', () => {
                     beforeEach(async () => {
-                        await web3RevenueTokenManager.defineReleases(
-                            [futureEpoch(1)], [1000], []
-                        );
+                        await ethersRevenueTokenManager.defineReleases([{
+                            blockNumber: 0,
+                            earliestReleaseTime: futureEpoch(1),
+                            amount: 1000,
+                            totalAmount: 0,
+                            done: false
+                        }], {gasLimit: 5e6});
 
                         await sleep(1500);
                     });
@@ -385,9 +381,13 @@ module.exports = function (glob) {
 
             describe('if called with index that has already been released', () => {
                 beforeEach(async () => {
-                    await web3RevenueTokenManager.defineReleases(
-                        [futureEpoch(1)], [1000], []
-                    );
+                    await ethersRevenueTokenManager.defineReleases([{
+                        blockNumber: 0,
+                        earliestReleaseTime: futureEpoch(1),
+                        amount: 1000,
+                        totalAmount: 0,
+                        done: false
+                    }], {gasLimit: 5e6});
 
                     await sleep(1500);
 
@@ -395,7 +395,8 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    await web3RevenueTokenManager.release(0, {from: glob.user_a, gas: 1e6}).should.be.rejected;
+                    await web3RevenueTokenManager.release(0, {from: glob.user_a, gas: 1e6})
+                        .should.be.rejected;
                 });
             });
         });
@@ -407,9 +408,13 @@ module.exports = function (glob) {
                 await web3RevenueTokenManager.setToken(web3NahmiiToken.address);
                 await web3RevenueTokenManager.setBeneficiary(glob.user_a);
 
-                await web3RevenueTokenManager.defineReleases(
-                    [futureEpoch(1)], [1000], []
-                );
+                await ethersRevenueTokenManager.defineReleases([{
+                    blockNumber: 0,
+                    earliestReleaseTime: futureEpoch(1),
+                    amount: 1000,
+                    totalAmount: 0,
+                    done: false
+                }], {gasLimit: 5e6});
             });
 
             describe('if called by non-beneficiary', () => {
