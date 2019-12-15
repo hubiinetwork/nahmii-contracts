@@ -41,19 +41,25 @@ module.exports = (deployer, network, accounts) => {
 
         SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
 
+        await deployer.link(SafeMathUintLib, RevenueTokenManager);
+
         if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
-            await deployer.link(SafeMathUintLib, RevenueTokenManager);
-
             const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
-
-            const nahmiiToken = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
-            await nahmiiToken.mint(addressStorage.get('RevenueTokenManager'), 120e24);
 
             await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
             await revenueTokenManager.setBeneficiary(deployerAccount);
 
-        } else if (network.startsWith('mainnet'))
-            addressStorage.set('RevenueTokenManager', '0xe3f2158610b7145c04ae03a6356038ad2404a9a6');
+            // } else if (network.startsWith('ropsten'))
+            //     addressStorage.set('RevenueTokenManager', '');
+
+        } else if (network.startsWith('mainnet')) {
+            throw new Error('RevenueTokenManager at mainnet not configured');
+
+            const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
+
+            await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
+            await revenueTokenManager.setBeneficiary(deployerAccount);
+        }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();

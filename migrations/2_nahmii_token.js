@@ -48,8 +48,13 @@ module.exports = (deployer, network, accounts) => {
             Math.address = addressStorage.get('Math');
 
         } else if (network.startsWith('mainnet')) {
-            throw new Error('SafeMath at mainnet not configured'); // TODO Add reference
+            throw new Error('SafeMath and Math at mainnet not configured');
+
+            await execDeploy(ctl, 'SafeMath', '', SafeMath);
+            await execDeploy(ctl, 'Math', '', Math);
+
             SafeMath.address = addressStorage.get('SafeMath');
+            Math.address = addressStorage.get('Math');
         }
 
         await deployer.link(SafeMath, NahmiiToken);
@@ -61,14 +66,13 @@ module.exports = (deployer, network, accounts) => {
             debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
             debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
 
-        // } else if (network.startsWith('ropsten')) {
-        //     addressStorage.set('NahmiiToken', '0x6b8f93bf1987c3c08353f306e69e7b2a6118d120');
-        //
-        //     NahmiiToken.address = addressStorage.get('NahmiiToken');
+            // } else if (network.startsWith('ropsten')) {
+            //     addressStorage.set('NahmiiToken', '');
 
         } else if (network.startsWith('mainnet')) {
-            throw new Error('NahmiiToken at mainnet not configured'); // TODO Add reference
-            NahmiiToken.address = addressStorage.get('NahmiiToken');
+            throw new Error('NahmiiToken at mainnet not configured');
+
+            await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
         }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
