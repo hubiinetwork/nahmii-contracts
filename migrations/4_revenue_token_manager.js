@@ -4,12 +4,10 @@
  * Copyright (C) 2017-2019 Hubii AS
  */
 
-const NahmiiToken = artifacts.require('NahmiiToken');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 
 const debug = require('debug')('4_revenue_token_manager');
-const moment = require('moment');
 const path = require('path');
 const helpers = require('../scripts/common/helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');
@@ -43,16 +41,16 @@ module.exports = (deployer, network, accounts) => {
 
         await deployer.link(SafeMathUintLib, RevenueTokenManager);
 
-        if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
+        if (helpers.isTestNetwork(network)) {
             const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
 
             await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
             await revenueTokenManager.setBeneficiary(deployerAccount);
 
-            // } else if (network.startsWith('ropsten'))
-            //     addressStorage.set('RevenueTokenManager', '');
+        } else if (network.startsWith('ropsten'))
+            addressStorage.set('RevenueTokenManager', '0xbd53ab36af7cc5dc36c5f7ecf4348f197014abf7');
 
-        } else if (network.startsWith('mainnet')) {
+        else if (network.startsWith('mainnet')) {
             throw new Error('RevenueTokenManager at mainnet not configured');
 
             const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
@@ -83,26 +81,12 @@ async function execDeploy(ctl, contractName, instanceName, contract, ownable) {
 }
 
 function shouldDeploy(contractName, deployFilters) {
-    if (!deployFilters) {
+    if (!deployFilters)
         return true;
-    }
-    for (let i = 0; i < deployFilters.length; i++) {
+
+    for (let i = 0; i < deployFilters.length; i++)
         if (deployFilters[i].test(contractName))
             return true;
-    }
+
     return false;
-}
-
-function airdriipReleases() {
-    let date = moment().startOf('day');
-
-    const earliestReleaseTimes = [];
-    const amounts = [];
-    for (let i = 0; i < 120; i++) {
-        earliestReleaseTimes.push(moment(date).subtract(1, 'hour').unix());
-        amounts.push(1e24);
-
-        date.add(1, 'day');
-    }
-    return {earliestReleaseTimes, amounts};
 }
