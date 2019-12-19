@@ -984,8 +984,8 @@ module.exports = (deployer, network, accounts) => {
                 ValidatorV2
             ]);
 
-            // await execDeploy(ctl, 'BalanceAucCalculator', BalanceAucCalculator);
-            addressStorage.set('BalanceAucCalculator', '0xb7f08c21c5be246609dc7f250be83e8f72bfa2ee');
+            await execDeploy(ctl, 'BalanceAucCalculator', BalanceAucCalculator);
+            // addressStorage.set('BalanceAucCalculator', '0xb7f08c21c5be246609dc7f250be83e8f72bfa2ee');
             addressStorage.set('BalanceTracker', '0x0593bd7bce0b8fb7c06a71be3c1494d72a269cd8');
             addressStorage.set('CancelOrdersChallenge', '0x6243a3c3a7753b7c2f41b531141a1e9f71581c89');
             addressStorage.set('ClientFund', '0x621204591f5940dba89db37d7ed74a51e5903d89');
@@ -1025,12 +1025,12 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('PartnerBenefactor', '0x55103eb32d8bcbf90003879a26db8dfb18175fed');
             addressStorage.set('PaymentHasher', '0x684d22495c0ee89d74fe37e132d4cef771b6ded6');
             addressStorage.set('RevenueFund1', '0x46c63c4d9c137b5883687d08d78c603a22e195e7');
-            // await execDeploy(ctl, 'RevenueFundAccrualMonitor', RevenueFundAccrualMonitor, [ctl.deployerAccount]);
-            addressStorage.set('RevenueFundAccrualMonitor', '0x669c88881742b9e8bd261a8b9cbb6468b84bfc6c');
+            await execDeploy(ctl, 'RevenueFundAccrualMonitor', RevenueFundAccrualMonitor, [ctl.deployerAccount]);
+            // addressStorage.set('RevenueFundAccrualMonitor', '0x669c88881742b9e8bd261a8b9cbb6468b84bfc6c');
             addressStorage.set('SecurityBond', '0x6e72335e13358f43e39bba87e709bfda7e9a9d1c');
             addressStorage.set('SignerManager', '0x0f8af4aaf302e2fd6883e20a3451606522ed9ea4');
-            // await execDeploy(ctl, 'TokenHolderRevenueFund', TokenHolderRevenueFund, [ctl.deployerAccount]);
-            addressStorage.set('TokenHolderRevenueFund', '0x57b699d326d17a0334b5c6cd0b191dbf07380e29');
+            await execDeploy(ctl, 'TokenHolderRevenueFund', TokenHolderRevenueFund, [ctl.deployerAccount]);
+            // addressStorage.set('TokenHolderRevenueFund', '0x57b699d326d17a0334b5c6cd0b191dbf07380e29');
             addressStorage.set('TradeHasher', '0xad3d1bbd54801a0057d6d3c38bdf3f53dd1fcdde');
             addressStorage.set('TransactionTracker', '0x57ded91a8ee6b53cbb85424867aae288dd70ca28');
             addressStorage.set('TransferControllerManager', '0x69cc78214eb94bc365b145bbab8790cd91b45590');
