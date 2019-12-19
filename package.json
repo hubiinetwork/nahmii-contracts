@@ -58,7 +58,7 @@
     "exec:script:ropsten": "npm run build && truffle exec scripts/truffle/script-template.js --network ropsten-infura",
     "exec:update-require-messages": "node scripts/node/update-require-messages",
     "exec:upgrade-state": "truffle exec scripts/truffle/upgrade-state.js",
-    "postinstall": "if [ -d '../../node_modules' ]; then cd ../..; else cd .; fi; npm explore truffle -- npm install solc@^0.5.8; cd -; npm dedupe",
+    "postinstall": "if [ -d '../../node_modules' ]; then cd ../..; else cd .; fi; npm explore truffle -- npm install solc@0.5.13; cd -; npm dedupe",
     "pretest": "npm run exec:update-require-messages",
     "sample:events": "concurrently --raw --success first --kill-others 'ganache-cli -l 8000000 -e 1000 >/dev/null' 'npm run build && truffle test ./sample/*.js'",
     "symlink:contract-abstractions": "npm run symlink:contract-abstractions-contracts && npm run symlink:contract-abstractions-events",
@@ -97,7 +97,7 @@
     "moment": "^2.23.0",
     "omphalos-commons": "github:hubiinetwork/omphalos-commons#develop",
     "openzeppelin-solidity": "^2.2.0",
-    "solc": "^0.5.8",
+    "solc": "0.5.13",
     "solidity-util": "github:willitscale/solidity-util",
     "truffle": "^4.1.15",
     "yargs": "^13.2.4"
