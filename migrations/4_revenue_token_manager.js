@@ -41,14 +41,14 @@ module.exports = (deployer, network, accounts) => {
 
         await deployer.link(SafeMathUintLib, RevenueTokenManager);
 
-        if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
+        if (helpers.isTestNetwork(network)) {
             const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
 
             await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
             await revenueTokenManager.setBeneficiary(deployerAccount);
 
-        } /*else if (network.startsWith('ropsten'))
-            addressStorage.set('RevenueTokenManager', '0xbd53ab36af7cc5dc36c5f7ecf4348f197014abf7');*/
+        } else if (network.startsWith('ropsten'))
+            addressStorage.set('RevenueTokenManager', '0x9fc6b7253d143b267034033f78959fb4458d5db9');
 
         else if (network.startsWith('mainnet')) {
             throw new Error('RevenueTokenManager at mainnet not configured');
