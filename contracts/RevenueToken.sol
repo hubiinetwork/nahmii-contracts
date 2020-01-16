@@ -158,17 +158,17 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
     public
     returns (bool)
     {
+        // Destroy old tokens of message sender
+        _burn(msg.sender, value);
+
         // Upgrade from message sender
         bool upgraded = tokenUpgradeAgent.upgradeFrom(msg.sender, value);
 
-        // If new token upgraded...
-        if (upgraded) {
-            // Destroy old tokens of message sender
-            _burn(msg.sender, value);
+        // Require successful upgrade
+        require(upgraded, "Upgrade failed [RevenueToken.sol:168]");
 
-            // Emit event
-            emit Upgrade(tokenUpgradeAgent, msg.sender, value);
-        }
+        // Emit event
+        emit Upgrade(tokenUpgradeAgent, msg.sender, value);
 
         // Return true
         return upgraded;
@@ -185,17 +185,17 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
     public
     returns (bool)
     {
+        // Destroy old tokens of wallet
+        _burnFrom(from, value);
+
         // Upgrade from wallet
         bool upgraded = tokenUpgradeAgent.upgradeFrom(from, value);
 
-        // If new token upgraded...
-        if (upgraded) {
-            // Destroy old tokens of wallet
-            _burnFrom(from, value);
+        // Require successful upgrade
+        require(upgraded, "Upgrade failed [RevenueToken.sol:195]");
 
-            // Emit event
-            emit UpgradeFrom(tokenUpgradeAgent, msg.sender, from, value);
-        }
+        // Emit event
+        emit UpgradeFrom(tokenUpgradeAgent, msg.sender, from, value);
 
         // Return true
         return upgraded;
@@ -264,6 +264,9 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
 
     /**
      * @notice Add the account's given set of balance records to the stored set of records
+     * @dev The balance records have to be ordered by increasing block number for the account.
+     * Also the smallest balance record block number passed in this function has to be greater
+     * than or equal to the ones of balance records previously stored for the account
      * @param account The concerned account
      * @param _balanceRecords The set of balance records to be added
      */
@@ -274,15 +277,26 @@ contract RevenueToken is ERC20Mintable, BalanceRecordable {
         // If there are input balance records
         if (0 < _balanceRecords.length) {
             // Require that minting has not been disabled
-            require(!mintingDisabled, "Minting disabled [RevenueToken.sol:277]");
+            require(!mintingDisabled, "Minting disabled [RevenueToken.sol:280]");
 
             // Calculate index range to be upgraded
             uint256 startIndex = balanceRecords[account].length;
             uint256 endIndex = startIndex.add(_balanceRecords.length).sub(1);
 
+            // Save block number from previous balance record
+            uint256 previousBlockNumber = startIndex > 0 ? balanceRecords[account][startIndex - 1].blockNumber : 0;
+
             // Add balance records
-            for (uint256 i = 0; i < _balanceRecords.length; i = i.add(1))
+            for (uint256 i = 0; i < _balanceRecords.length; i++) {
+                // Check block number is valid
+                require(previousBlockNumber <= _balanceRecords[i].blockNumber, "Invalid balance record block number [RevenueToken.sol:292]");
+
+                // Add incoming balance record
                 balanceRecords[account].push(_balanceRecords[i]);
+
+                // Update previous block number
+                previousBlockNumber = _balanceRecords[i].blockNumber;
+            }
 
             // Emit event
             emit UpgradeBalanceRecords(account, startIndex, endIndex);

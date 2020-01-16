@@ -264,17 +264,11 @@ module.exports = function (glob) {
                     await web3UpgradeAgent._setUpgradeFrom(false);
                 });
 
-                it('should not decrement the old balance', async () => {
-                    const result = await web3NahmiiToken.upgrade(web3UpgradeAgent.address, 600, {
+                it('should revert', async () => {
+                    await web3NahmiiToken.upgrade(web3UpgradeAgent.address, 600, {
                         from: glob.user_a,
                         gas: 1e6
-                    });
-
-                    result.logs.should.be.an('array');
-                    result.logs.map(l => l.event).should.not.include('Upgrade');
-
-                    (await ethersNahmiiToken.balanceOf(glob.user_a))
-                        ._bn.should.eq.BN(1000);
+                    }).should.be.rejected;
                 });
             });
         });
@@ -316,16 +310,10 @@ module.exports = function (glob) {
                     await web3UpgradeAgent._setUpgradeFrom(false);
                 });
 
-                it('should not decrement the old balance', async () => {
-                    const result = await web3NahmiiToken.upgradeFrom(web3UpgradeAgent.address, glob.user_a, 600, {
+                it('should revert', async () => {
+                    await web3NahmiiToken.upgradeFrom(web3UpgradeAgent.address, glob.user_a, 600, {
                         gas: 1e6
-                    });
-
-                    result.logs.should.be.an('array');
-                    result.logs.map(l => l.event).should.not.include('UpgradeFrom');
-
-                    (await ethersNahmiiToken.balanceOf(glob.user_a))
-                        ._bn.should.eq.BN(1000);
+                    }).should.be.rejected;
                 });
             });
 
@@ -461,6 +449,18 @@ module.exports = function (glob) {
                 });
             });
 
+            describe('if called with block numbers in non-increasing order', () => {
+                beforeEach(async () => {
+                    balanceRecords[1].blockNumber = 4;
+                });
+
+                it('should should revert', async () => {
+                    await ethersNahmiiToken.upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
             describe('if within operational constraints', () => {
                 let topic, filter;
 
@@ -482,6 +482,20 @@ module.exports = function (glob) {
 
                     (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                         ._bn.should.eq.BN(3);
+                });
+            });
+
+            describe('if called a second time and the second batch of balance record block numbers are invalid', () => {
+                beforeEach(async () => {
+                    await ethersNahmiiToken.upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    );
+                });
+
+                it('should should revert', async () => {
+                    await ethersNahmiiToken.upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
         });
