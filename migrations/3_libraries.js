@@ -117,7 +117,7 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'TradeTypesLib', '', TradeTypesLib);
 
         } else if (network.startsWith('ropsten')) {
-            addressStorage.set('BalanceTrackerLib', '0x0593bd7bce0b8fb7c06a71be3c1494d72a269cd8');
+            addressStorage.set('BalanceTrackerLib', '0x04d0af263fe204e6a02f5ce62f0a121c14553803');
             addressStorage.set('BlockNumbDisdIntsLib', '0x6b25a5d99ade3288313e47a5051f5b8a34bb682e');
             addressStorage.set('BlockNumbFiguresLib', '0xf402f0ff8c3c7b31e5e31bc09a506b43e200ee71');
             addressStorage.set('BlockNumbIntsLib', '0x50a824fb2a7728d5129dabdcdbc421bfe66f8541');
