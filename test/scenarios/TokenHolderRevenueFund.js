@@ -102,6 +102,21 @@ module.exports = function (glob) {
             });
         });
 
+        describe('maxClaimedBlockNumberByWalletCurrencyAccrual()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersTokenHolderRevenueFund.maxClaimedBlockNumberByWalletCurrencyAccrual(
+                    glob.user_a, mocks.address0, 0, 0
+                ))._bn.should.eq.BN(0);
+            });
+        });
+
+        describe('claimBlockNumberBatchSize()', () => {
+            it('should equal value initialized', async () => {
+                (await ethersTokenHolderRevenueFund.claimBlockNumberBatchSize())
+                    ._bn.should.eq.BN(0);
+            });
+        });
+
         describe('setRevenueTokenManager()', () => {
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
@@ -125,7 +140,7 @@ module.exports = function (glob) {
                     revenueTokenManager = Wallet.createRandom().address;
                 });
 
-                it('should successfully set revenue token manager and emit event', async () => {
+                it('should successfully set revenue token manager', async () => {
                     const result = await web3TokenHolderRevenueFund.setRevenueTokenManager(revenueTokenManager);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
@@ -160,7 +175,7 @@ module.exports = function (glob) {
                     calculator = Wallet.createRandom().address;
                 });
 
-                it('should successfully set token', async () => {
+                it('should successfully set the balance blocks calculator', async () => {
                     const result = await web3TokenHolderRevenueFund.setBalanceBlocksCalculator(calculator);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
@@ -195,7 +210,7 @@ module.exports = function (glob) {
                     calculator = Wallet.createRandom().address;
                 });
 
-                it('should successfully set token', async () => {
+                it('should successfully set the released amount blocks calculator', async () => {
                     const result = await web3TokenHolderRevenueFund.setReleasedAmountBlocksCalculator(calculator);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
@@ -203,6 +218,28 @@ module.exports = function (glob) {
 
                     (await ethersTokenHolderRevenueFund.releasedAmountBlocksCalculator())
                         .should.equal(calculator);
+                });
+            });
+        });
+
+        describe('setClaimBlockNumberBatchSize()', () => {
+            describe('if called by non-operator', () => {
+                it('should revert', async () => {
+                    await web3TokenHolderRevenueFund.setClaimBlockNumberBatchSize(
+                        1000, {from: glob.user_a}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                it('should successfully set the claim by block', async () => {
+                    const result = await web3TokenHolderRevenueFund.setClaimBlockNumberBatchSize(1000);
+
+                    result.logs.should.be.an('array').and.have.lengthOf(1);
+                    result.logs[0].event.should.equal('SetClaimBlockNumberBatchSizeEvent');
+
+                    (await ethersTokenHolderRevenueFund.claimBlockNumberBatchSize())
+                        ._bn.should.eq.BN(1000);
                 });
             });
         });
@@ -281,13 +318,6 @@ module.exports = function (glob) {
             });
         });
 
-        describe('depositsCount()', () => {
-            it('should return initial value', async () => {
-                (await ethersTokenHolderRevenueFund.depositsCount())
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
         describe('periodAccrualBalance()', () => {
             it('should return initial value', async () => {
                 (await ethersTokenHolderRevenueFund.periodAccrualBalance(mocks.address0, 0))
@@ -333,9 +363,6 @@ module.exports = function (glob) {
                         gas: 1e6
                     });
 
-                    (await ethersTokenHolderRevenueFund.depositsCount())
-                        ._bn.should.eq.BN(1);
-
                     (await ethersTokenHolderRevenueFund.periodAccrualBalance(mocks.address0, 0))
                         ._bn.should.eq.BN(utils.parseEther('1')._bn);
                     (await ethersTokenHolderRevenueFund.aggregateAccrualBalance(mocks.address0, 0))
@@ -360,9 +387,6 @@ module.exports = function (glob) {
                         value: web3.toWei(1, 'ether'),
                         gas: 1e6
                     });
-
-                    (await ethersTokenHolderRevenueFund.depositsCount())
-                        ._bn.should.eq.BN(2);
 
                     (await ethersTokenHolderRevenueFund.periodAccrualBalance(mocks.address0, 0))
                         ._bn.should.eq.BN(utils.parseEther('2')._bn);
@@ -387,9 +411,6 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ReceiveEvent');
 
-                    (await ethersTokenHolderRevenueFund.depositsCount())
-                        ._bn.should.eq.BN(1);
-
                     (await ethersTokenHolderRevenueFund.periodAccrualBalance(mocks.address0, 0))
                         ._bn.should.eq.BN(utils.parseEther('1')._bn);
                     (await ethersTokenHolderRevenueFund.aggregateAccrualBalance(mocks.address0, 0))
@@ -418,9 +439,6 @@ module.exports = function (glob) {
                             gas: 1e6
                         }
                     );
-
-                    (await ethersTokenHolderRevenueFund.depositsCount())
-                        ._bn.should.eq.BN(2);
 
                     (await ethersTokenHolderRevenueFund.periodAccrualBalance(mocks.address0, 0))
                         ._bn.should.eq.BN(utils.parseEther('2')._bn);
@@ -475,9 +493,6 @@ module.exports = function (glob) {
                         result.logs.should.be.an('array').and.have.lengthOf(1);
                         result.logs[0].event.should.equal('ReceiveEvent');
 
-                        (await ethersTokenHolderRevenueFund.depositsCount())
-                            ._bn.should.eq.BN(1);
-
                         (await ethersTokenHolderRevenueFund.periodAccrualBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(10);
                         (await ethersTokenHolderRevenueFund.aggregateAccrualBalance(web3ERC20.address, 0))
@@ -501,9 +516,6 @@ module.exports = function (glob) {
                         await web3TokenHolderRevenueFund.receiveTokens(
                             '', 10, web3ERC20.address, 0, '', {from: glob.user_a}
                         );
-
-                        (await ethersTokenHolderRevenueFund.depositsCount())
-                            ._bn.should.eq.BN(2);
 
                         (await ethersTokenHolderRevenueFund.periodAccrualBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(20);
@@ -564,9 +576,6 @@ module.exports = function (glob) {
                         result.logs.should.be.an('array').and.have.lengthOf(1);
                         result.logs[0].event.should.equal('ReceiveEvent');
 
-                        (await ethersTokenHolderRevenueFund.depositsCount())
-                            ._bn.should.eq.BN(1);
-
                         (await ethersTokenHolderRevenueFund.periodAccrualBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(10);
                         (await ethersTokenHolderRevenueFund.aggregateAccrualBalance(web3ERC20.address, 0))
@@ -591,9 +600,6 @@ module.exports = function (glob) {
                             glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
                         );
 
-                        (await ethersTokenHolderRevenueFund.depositsCount())
-                            ._bn.should.eq.BN(2);
-
                         (await ethersTokenHolderRevenueFund.periodAccrualBalance(web3ERC20.address, 0))
                             ._bn.should.eq.BN(20);
                         (await ethersTokenHolderRevenueFund.aggregateAccrualBalance(web3ERC20.address, 0))
@@ -601,51 +607,6 @@ module.exports = function (glob) {
 
                         (await ethersERC20.balanceOf(ethersTokenHolderRevenueFund.address))._bn.should.eq.BN(20);
                     });
-                });
-            });
-        });
-
-        describe('deposit()', () => {
-            describe('before first reception', () => {
-                it('should revert', async () => {
-                    web3TokenHolderRevenueFund.deposit.call(0).should.be.rejected;
-                });
-            });
-
-            describe('of Ether', () => {
-                beforeEach(async () => {
-                    await web3TokenHolderRevenueFund.receiveEthersTo(
-                        glob.user_a, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
-                    );
-                });
-
-                it('should return deposit', async () => {
-                    const deposit = await ethersTokenHolderRevenueFund.deposit(0);
-
-                    deposit.amount._bn.should.eq.BN(utils.parseEther('1')._bn);
-                    deposit.blockNumber.should.exist;
-                    deposit.currencyCt.should.equal(mocks.address0);
-                    deposit.currencyId._bn.should.eq.BN(0);
-                });
-            });
-
-            describe('of ERC20 token', () => {
-                beforeEach(async () => {
-                    await web3ERC20.approve(
-                        web3TokenHolderRevenueFund.address, 10, {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3TokenHolderRevenueFund.receiveTokensTo(
-                        glob.user_a, '', 10, web3ERC20.address, 0, '', {from: glob.user_a, gas: 1e6}
-                    );
-                });
-
-                it('should return deposit', async () => {
-                    const deposit = await ethersTokenHolderRevenueFund.deposit(0);
-
-                    deposit.amount._bn.should.eq.BN(10);
-                    deposit.blockNumber.should.exist;
-                    deposit.currencyCt.should.equal(utils.getAddress(web3ERC20.address));
-                    deposit.currencyId._bn.should.eq.BN(0);
                 });
             });
         });
@@ -1619,13 +1580,13 @@ module.exports = function (glob) {
             });
         });
 
-        describe('claimAndTransferToBeneficiary(address,address,string,address,uint256,uint256,uint256,string)', () => {
+        describe('claimAndTransferToBeneficiaryByAccruals()', () => {
             let filter;
 
             beforeEach(async () => {
                 filter = {
                     fromBlock: await provider.getBlockNumber(),
-                    topics: ethersTokenHolderRevenueFund.interface.events['ClaimAndTransferToBeneficiaryEvent'].topics
+                    topics: ethersTokenHolderRevenueFund.interface.events['ClaimAndTransferToBeneficiaryByAccrualsEvent'].topics
                 };
             });
 
@@ -1635,21 +1596,23 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
-                        'claimAndTransferToBeneficiary(address,address,string,address,uint256,uint256,uint256,string)'
-                        ](
-                        ethersMockedBeneficiary.address, glob.user_b, 'staged', mocks.address0, 0, 0, 0, ''
-                    ).should.be.rejected;
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByAccruals(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged', mocks.address0, 0, 0, 0, ''
+                        )
+                        .should.be.rejected;
                 });
             });
 
             describe('if called before any accrual period has been closed', () => {
                 it('should revert', async () => {
-                    await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
-                        'claimAndTransferToBeneficiary(address,address,string,address,uint256,uint256,uint256,string)'
-                        ](
-                        ethersMockedBeneficiary.address, glob.user_b, 'staged', mocks.address0, 0, 0, 0, ''
-                    ).should.be.rejected;
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByAccruals(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged', mocks.address0, 0, 0, 0, ''
+                        )
+                        .should.be.rejected;
                 });
             });
 
@@ -1677,12 +1640,12 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully claim and transfer', async () => {
-                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
-                            'claimAndTransferToBeneficiary(address,address,string,address,uint256,uint256,uint256,string)'
-                            ](
-                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
-                            mocks.address0, 0, 0, 0, '', {gasLimit: 1e6}
-                        );
+                        await ethersTokenHolderRevenueFund
+                            .connect(glob.signer_a)
+                            .claimAndTransferToBeneficiaryByAccruals(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                mocks.address0, 0, 0, 0, '', {gasLimit: 1e6}
+                            );
 
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
@@ -1724,12 +1687,12 @@ module.exports = function (glob) {
                     });
 
                     it('should successfully claim and transfer', async () => {
-                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
-                            'claimAndTransferToBeneficiary(address,address,string,address,uint256,uint256,uint256,string)'
-                            ](
-                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
-                            ethersERC20.address, 0, 0, 0, '', {gasLimit: 1e6}
-                        );
+                        await ethersTokenHolderRevenueFund
+                            .connect(glob.signer_a)
+                            .claimAndTransferToBeneficiaryByAccruals(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                ethersERC20.address, 0, 0, 0, '', {gasLimit: 1e6}
+                            );
 
                         const logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
@@ -1749,13 +1712,13 @@ module.exports = function (glob) {
             });
         });
 
-        describe('claimAndTransferToBeneficiary(address,address,string,address,uint256,string)', () => {
+        describe('claimAndTransferToBeneficiaryByBlockNumbers()', () => {
             let filter;
 
             beforeEach(async () => {
                 filter = {
                     fromBlock: await provider.getBlockNumber(),
-                    topics: ethersTokenHolderRevenueFund.interface.events['ClaimAndTransferToBeneficiaryEvent'].topics
+                    topics: ethersTokenHolderRevenueFund.interface.events['ClaimAndTransferToBeneficiaryByBlockNumbersEvent'].topics
                 };
             });
 
@@ -1765,25 +1728,941 @@ module.exports = function (glob) {
                 });
 
                 it('should revert', async () => {
-                    await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
-                        'claimAndTransferToBeneficiary(address,address,string,address,uint256,string)'
-                        ](
-                        ethersMockedBeneficiary.address, glob.user_b, 'staged', mocks.address0, 0, ''
-                    ).should.be.rejected;
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged', mocks.address0, 0, 0, 0, ''
+                        )
+                        .should.be.rejected;
                 });
             });
 
             describe('if called before any accrual period has been closed', () => {
                 it('should revert', async () => {
-                    await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
-                        'claimAndTransferToBeneficiary(address,address,string,address,uint256,string)'
-                        ](
-                        ethersMockedBeneficiary.address, glob.user_b, 'staged', mocks.address0, 0, ''
-                    ).should.be.rejected;
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged', mocks.address0, 0, 0, 0, ''
+                        )
+                        .should.be.rejected;
                 });
             });
 
-            describe('if within operational constraints', () => {
+            describe('if called with wrong block number parameter ordinality', () => {
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        web3ERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        web3MockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 10,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+                });
+
+                it('should revert', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            mocks.address0, 0, 1, 0, '', {gasLimit: 1e6}
+                        ).should.be.rejected;
+                });
+            });
+
+            describe('if called with block numbers strictly within the block span of one accrual', () => {
+                let blockNumber, claimableAmount;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 10,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, 1, blockNumber - 1
+                    );
+                });
+
+                it('should successfully claim and stage', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, 1, blockNumber - 1, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with block numbers exactly overlapping the block span of one accrual', () => {
+                let blockNumber, claimableAmount;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 10,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber
+                    );
+                });
+
+                it('should successfully claim and stage', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, 0, blockNumber, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with end block number beyond the block span of one accrual', () => {
+                let blockNumber, claimableAmount;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 10,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber + 1
+                    );
+                });
+
+                it('should successfully claim and stage', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, 0, blockNumber + 1, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with block numbers strictly within the block span of two accruals', () => {
+                let blockNumber, claimableAmount;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 30,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 10; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 20, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, 1, blockNumber - 1
+                    );
+                });
+
+                it('should successfully claim and stage', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, 1, blockNumber - 1, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with block numbers exactly overlapping the block span of two accruals', () => {
+                let blockNumber, claimableAmount;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 30,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 10; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 20, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber
+                    );
+                });
+
+                it('should successfully claim and stage', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, 0, blockNumber, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with end block number beyond the block span of two accruals', () => {
+                let blockNumber, claimableAmount;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 30,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 10; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 20, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber + 1
+                    );
+                });
+
+                it('should successfully claim and stage', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, 0, blockNumber + 1, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with block numbers strictly within the block span of three accruals', () => {
+                let blockNumber, claimableAmount;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 60,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 10; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 20, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 10; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 30, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, 1, blockNumber - 1
+                    );
+                });
+
+                it('should successfully claim and stage', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, 1, blockNumber - 1, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with block numbers exactly overlapping the block span of three accruals', () => {
+                let blockNumber, claimableAmount;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 60,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 10; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 20, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 10; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 30, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber
+                    );
+                });
+
+                it('should successfully claim and stage', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, 0, blockNumber, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with end block number beyond the block span of three accruals', () => {
+                let blockNumber, claimableAmount;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 60,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 10; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 20, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 10; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 30, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber + 1
+                    );
+                });
+
+                it('should successfully claim and stage', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, 0, blockNumber + 1, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with a one-block span from start of accrual period', () => {
+                let claimableAmount, blockNumber;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 10000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 30,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = (await provider.getBlockNumber()) + 1;
+
+                    for (let i = 0; i < 3; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 20, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, blockNumber, blockNumber
+                    );
+                });
+
+                it('should return the claimable amount', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, blockNumber, blockNumber, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with a one-block span from center of accrual period', () => {
+                let claimableAmount, blockNumber;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 10000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 30,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 3; i++)
+                        await provider.send('evm_mine');
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 20, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, blockNumber, blockNumber
+                    );
+                });
+
+                it('should return the claimable amount', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, blockNumber, blockNumber, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with a one-block span from end of accrual period', () => {
+                let claimableAmount, blockNumber;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 10000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 30,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    for (let i = 0; i < 3; i++)
+                        await provider.send('evm_mine');
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 20, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, ethersERC20.address, 0, blockNumber, blockNumber
+                    );
+                });
+
+                it('should return the claimable amount', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            ethersERC20.address, 0, blockNumber, blockNumber, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+                    benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                        ._bn.should.eq.BN(claimableAmount._bn);
+                });
+            });
+
+            describe('if called with Ethers', () => {
+                let blockNumber, claimableAmount, balanceBefore;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 10000
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveEthersTo(
+                        mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                    );
+
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: mocks.address0, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+
+                    claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, mocks.address0, 0, 0, blockNumber
+                    );
+
+                    balanceBefore = (await provider.getBalance(ethersMockedBeneficiary.address))._bn;
+                });
+
+                it('should successfully claim and transfer', async () => {
+                    await ethersTokenHolderRevenueFund
+                        .connect(glob.signer_a)
+                        .claimAndTransferToBeneficiaryByBlockNumbers(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                            mocks.address0, 0, 0, blockNumber, '', {gasLimit: 1e6}
+                        );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                    const benefit = await ethersMockedBeneficiary._getBenefit(0);
+                    benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                    benefit.balanceType.should.equal('staged');
+                    benefit.amount._bn.should.eq.BN(claimableAmount._bn);
+
+                    benefit.currencyCt.should.equal(mocks.address0);
+                    benefit.currencyId._bn.should.eq.BN(0);
+                    benefit.standard.should.be.a('string').that.is.empty;
+
+                    (await provider.getBalance(ethersMockedBeneficiary.address))
+                        ._bn.should.be.gt.BN(balanceBefore);
+                });
+            });
+        });
+
+        describe('claimAndTransferToBeneficiary()', () => {
+            let filter;
+
+            describe('if called by non-claimer', () => {
+                beforeEach(async () => {
+                    await ethersTokenHolderRevenueFund.registerNonClaimer(glob.user_a);
+                });
+
+                it('should revert', async () => {
+                    await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                        .claimAndTransferToBeneficiary(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged', mocks.address0, 0, ''
+                        ).should.be.rejected;
+                });
+            });
+
+            describe('if called before any accrual period has been closed', () => {
+                it('should revert', async () => {
+                    await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                        .claimAndTransferToBeneficiary(
+                            ethersMockedBeneficiary.address, glob.user_b, 'staged', mocks.address0, 0, ''
+                        ).should.be.rejected;
+                });
+            });
+
+            describe('with claim by block number batch size equal to 0', () => {
+                beforeEach(async () => {
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersTokenHolderRevenueFund.interface.events['ClaimAndTransferToBeneficiaryByAccrualsEvent'].topics
+                    };
+                });
+
                 describe('of Ether', () => {
                     let balanceBefore;
 
@@ -1812,13 +2691,12 @@ module.exports = function (glob) {
                         balanceBefore = (await provider.getBalance(ethersMockedBeneficiary.address))._bn;
                     });
 
-                    it('should successfully claim and transfer', async () => {
-                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
-                            'claimAndTransferToBeneficiary(address,address,string,address,uint256,string)'
-                            ](
-                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
-                            mocks.address0, 0, '', {gasLimit: 1e6}
-                        );
+                    it('should successfully claim and transfer by accruals', async () => {
+                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                            .claimAndTransferToBeneficiary(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                mocks.address0, 0, '', {gasLimit: 1e6}
+                            );
 
                         let logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
@@ -1831,12 +2709,11 @@ module.exports = function (glob) {
                         benefit.currencyId._bn.should.eq.BN(0);
                         benefit.standard.should.be.a('string').that.is.empty;
 
-                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
-                            'claimAndTransferToBeneficiary(address,address,string,address,uint256,string)'
-                            ](
-                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
-                            mocks.address0, 0, '', {gasLimit: 1e6}
-                        );
+                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                            .claimAndTransferToBeneficiary(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                mocks.address0, 0, '', {gasLimit: 1e6}
+                            );
 
                         logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
@@ -1890,13 +2767,12 @@ module.exports = function (glob) {
                         );
                     });
 
-                    it('should successfully claim and transfer', async () => {
-                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
-                            'claimAndTransferToBeneficiary(address,address,string,address,uint256,string)'
-                            ](
-                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
-                            ethersERC20.address, 0, '', {gasLimit: 1e6}
-                        );
+                    it('should successfully claim and transfer by accruals', async () => {
+                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                            .claimAndTransferToBeneficiary(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                ethersERC20.address, 0, '', {gasLimit: 1e6}
+                            );
 
                         let logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
@@ -1912,12 +2788,11 @@ module.exports = function (glob) {
                         (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
                             ._bn.should.eq.BN(3);
 
-                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)[
-                            'claimAndTransferToBeneficiary(address,address,string,address,uint256,string)'
-                            ](
-                            ethersMockedBeneficiary.address, glob.user_b, 'staged',
-                            ethersERC20.address, 0, '', {gasLimit: 1e6}
-                        );
+                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                            .claimAndTransferToBeneficiary(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                ethersERC20.address, 0, '', {gasLimit: 1e6}
+                            );
 
                         logs = await provider.getLogs(filter);
                         logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
@@ -1932,6 +2807,229 @@ module.exports = function (glob) {
 
                         (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
                             ._bn.should.eq.BN(6);
+                    });
+                });
+            });
+
+            describe('with claim by block number batch size greater than 0', () => {
+                let firstBlockNumber, secondBlockNumber;
+
+                beforeEach(async () => {
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: ethersTokenHolderRevenueFund.interface.events['ClaimAndTransferToBeneficiaryByBlockNumbersEvent'].topics
+                    };
+                });
+
+                describe('of Ether', () => {
+                    let balanceBefore;
+
+                    beforeEach(async () => {
+                        await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                            web3ERC20.address, glob.user_a, 3000
+                        );
+                        await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                            web3MockedRevenueTokenManager.address, mocks.address0, 10000
+                        );
+
+                        await web3TokenHolderRevenueFund.receiveEthersTo(
+                            mocks.address0, '', {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                        );
+                        await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                            [{ct: mocks.address0, id: 0}], {gasLimit: 1e6}
+                        );
+
+                        firstBlockNumber = await provider.getBlockNumber();
+
+                        await web3TokenHolderRevenueFund.receiveEthersTo(
+                            mocks.address0, '', {from: glob.user_a, value: web3.toWei(2, 'ether'), gas: 1e6}
+                        );
+                        await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                            [{ct: mocks.address0, id: 0}], {gasLimit: 1e6}
+                        );
+
+                        secondBlockNumber = await provider.getBlockNumber();
+
+                        balanceBefore = (await provider.getBalance(ethersMockedBeneficiary.address))._bn;
+                    });
+
+                    it('should successfully claim and transfer by block numbers', async () => {
+                        await ethersTokenHolderRevenueFund.setClaimBlockNumberBatchSize(firstBlockNumber + 1);
+
+                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                            .claimAndTransferToBeneficiary(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                mocks.address0, 0, '', {gasLimit: 1e6}
+                            );
+
+                        let logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                        let benefit = await ethersMockedBeneficiary._getBenefit(0);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                        benefit.balanceType.should.equal('staged');
+                        benefit.amount._bn.should.eq.BN(utils.parseEther('0.3')._bn);
+                        benefit.currencyCt.should.equal(mocks.address0);
+                        benefit.currencyId._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
+
+                        await ethersTokenHolderRevenueFund.setClaimBlockNumberBatchSize(
+                            utils.bigNumberify(secondBlockNumber).sub(firstBlockNumber).div(2)
+                        );
+
+                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                            .claimAndTransferToBeneficiary(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                mocks.address0, 0, '', {gasLimit: 1e6}
+                            );
+
+                        logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                        benefit = await ethersMockedBeneficiary._getBenefit(1);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                        benefit.balanceType.should.equal('staged');
+                        benefit.amount._bn.should.eq.BN(utils.parseEther('0.3')._bn);
+                        benefit.currencyCt.should.equal(mocks.address0);
+                        benefit.currencyId._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
+
+                        await ethersTokenHolderRevenueFund.setClaimBlockNumberBatchSize(
+                            utils.bigNumberify(secondBlockNumber).sub(firstBlockNumber)
+                        );
+
+                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                            .claimAndTransferToBeneficiary(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                mocks.address0, 0, '', {gasLimit: 1e6}
+                            );
+
+                        logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                        benefit = await ethersMockedBeneficiary._getBenefit(2);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                        benefit.balanceType.should.equal('staged');
+                        benefit.amount._bn.should.eq.BN(utils.parseEther('0.3')._bn);
+                        benefit.currencyCt.should.equal(mocks.address0);
+                        benefit.currencyId._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
+
+                        (await provider.getBalance(ethersMockedBeneficiary.address))
+                            ._bn.should.be.gt.BN(balanceBefore);
+                    });
+                });
+
+                describe('of ERC20 token', () => {
+                    beforeEach(async () => {
+                        await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                            web3ERC20.address, glob.user_a, 3000
+                        );
+                        await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                            web3MockedRevenueTokenManager.address, mocks.address0, 10000
+                        );
+
+                        await web3ERC20.approve(
+                            web3TokenHolderRevenueFund.address, 10,
+                            {from: glob.user_a, gas: 1e6}
+                        );
+                        await web3TokenHolderRevenueFund.receiveTokensTo(
+                            glob.user_a, '', 10, web3ERC20.address, 0, '',
+                            {from: glob.user_a, gas: 1e6}
+                        );
+
+                        await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                            [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                        );
+
+                        firstBlockNumber = await provider.getBlockNumber();
+
+                        await web3ERC20.approve(
+                            web3TokenHolderRevenueFund.address, 20,
+                            {from: glob.user_a, gas: 1e6}
+                        );
+                        await web3TokenHolderRevenueFund.receiveTokensTo(
+                            glob.user_a, '', 20, web3ERC20.address, 0, '',
+                            {from: glob.user_a, gas: 1e6}
+                        );
+
+                        await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                            [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
+                        );
+
+                        secondBlockNumber = await provider.getBlockNumber();
+                    });
+
+                    it('should successfully claim and transfer by block numbers', async () => {
+                        await ethersTokenHolderRevenueFund.setClaimBlockNumberBatchSize(firstBlockNumber + 1);
+
+                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                            .claimAndTransferToBeneficiary(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                ethersERC20.address, 0, '', {gasLimit: 1e6}
+                            );
+
+                        let logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                        let benefit = await ethersMockedBeneficiary._getBenefit(0);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                        benefit.balanceType.should.equal('staged');
+                        benefit.amount._bn.should.eq.BN(3);
+                        benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                        benefit.currencyId._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
+
+                        (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                            ._bn.should.eq.BN(3);
+
+                        await ethersTokenHolderRevenueFund.setClaimBlockNumberBatchSize(
+                            utils.bigNumberify(secondBlockNumber).sub(firstBlockNumber).div(2)
+                        );
+
+                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                            .claimAndTransferToBeneficiary(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                ethersERC20.address, 0, '', {gasLimit: 1e6}
+                            );
+
+                        logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                        benefit = await ethersMockedBeneficiary._getBenefit(1);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                        benefit.balanceType.should.equal('staged');
+                        benefit.amount._bn.should.eq.BN(2);
+                        benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                        benefit.currencyId._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
+
+                        (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                            ._bn.should.eq.BN(2);
+
+                        await ethersTokenHolderRevenueFund.setClaimBlockNumberBatchSize(
+                            utils.bigNumberify(secondBlockNumber).sub(firstBlockNumber)
+                        );
+
+                        await ethersTokenHolderRevenueFund.connect(glob.signer_a)
+                            .claimAndTransferToBeneficiary(
+                                ethersMockedBeneficiary.address, glob.user_b, 'staged',
+                                ethersERC20.address, 0, '', {gasLimit: 1e6}
+                            );
+
+                        logs = await provider.getLogs(filter);
+                        logs[logs.length - 1].topics[0].should.equal(filter.topics[0]);
+
+                        benefit = await ethersMockedBeneficiary._getBenefit(2);
+                        benefit.wallet.should.equal(utils.getAddress(glob.user_b));
+                        benefit.balanceType.should.equal('staged');
+                        benefit.amount._bn.should.eq.BN(4);
+                        benefit.currencyCt.should.equal(utils.getAddress(ethersERC20.address));
+                        benefit.currencyId._bn.should.eq.BN(0);
+                        benefit.standard.should.be.a('string').that.is.empty;
+
+                        (await ethersERC20.allowance(ethersTokenHolderRevenueFund.address, ethersMockedBeneficiary.address))
+                            ._bn.should.eq.BN(4);
                     });
                 });
             });
@@ -2139,7 +3237,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2155,13 +3253,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = await provider.getBlockNumber();
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, 1, blockNumber - 1
+                        glob.user_a, ethersERC20.address, 0, 1, blockNumber - 1
                     );
                 });
 
@@ -2183,7 +3281,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2199,13 +3297,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = await provider.getBlockNumber();
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, 0, blockNumber
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber
                     );
                 });
 
@@ -2227,7 +3325,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2243,13 +3341,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = await provider.getBlockNumber();
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, 0, blockNumber + 1
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber + 1
                     );
                 });
 
@@ -2261,7 +3359,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ClaimAndStageByBlockNumbersEvent');
 
-                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, ethersERC20.address, 0))
                         ._bn.should.eq.BN(claimableAmount._bn);
                 });
             });
@@ -2271,7 +3369,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2287,7 +3385,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 10; i++)
@@ -2298,13 +3396,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = await provider.getBlockNumber();
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, 1, blockNumber - 1
+                        glob.user_a, ethersERC20.address, 0, 1, blockNumber - 1
                     );
                 });
 
@@ -2316,7 +3414,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ClaimAndStageByBlockNumbersEvent');
 
-                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, ethersERC20.address, 0))
                         ._bn.should.eq.BN(claimableAmount._bn);
                 });
             });
@@ -2326,7 +3424,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2342,7 +3440,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 10; i++)
@@ -2353,13 +3451,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = await provider.getBlockNumber();
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, 0, blockNumber
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber
                     );
                 });
 
@@ -2371,7 +3469,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ClaimAndStageByBlockNumbersEvent');
 
-                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, ethersERC20.address, 0))
                         ._bn.should.eq.BN(claimableAmount._bn);
                 });
             });
@@ -2381,7 +3479,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2397,7 +3495,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 10; i++)
@@ -2408,13 +3506,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = await provider.getBlockNumber();
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, 0, blockNumber + 1
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber + 1
                     );
                 });
 
@@ -2426,7 +3524,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ClaimAndStageByBlockNumbersEvent');
 
-                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, ethersERC20.address, 0))
                         ._bn.should.eq.BN(claimableAmount._bn);
                 });
             });
@@ -2436,7 +3534,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2452,7 +3550,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 10; i++)
@@ -2463,7 +3561,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 10; i++)
@@ -2474,13 +3572,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = await provider.getBlockNumber();
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, 1, blockNumber - 1
+                        glob.user_a, ethersERC20.address, 0, 1, blockNumber - 1
                     );
                 });
 
@@ -2492,7 +3590,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ClaimAndStageByBlockNumbersEvent');
 
-                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, ethersERC20.address, 0))
                         ._bn.should.eq.BN(claimableAmount._bn);
                 });
             });
@@ -2502,7 +3600,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2518,7 +3616,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 10; i++)
@@ -2529,7 +3627,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 10; i++)
@@ -2540,13 +3638,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = await provider.getBlockNumber();
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, 0, blockNumber
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber
                     );
                 });
 
@@ -2558,7 +3656,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ClaimAndStageByBlockNumbersEvent');
 
-                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, ethersERC20.address, 0))
                         ._bn.should.eq.BN(claimableAmount._bn);
                 });
             });
@@ -2568,7 +3666,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2584,7 +3682,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 10; i++)
@@ -2595,7 +3693,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 10; i++)
@@ -2606,13 +3704,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = await provider.getBlockNumber();
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, 0, blockNumber + 1
+                        glob.user_a, ethersERC20.address, 0, 0, blockNumber + 1
                     );
                 });
 
@@ -2624,7 +3722,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ClaimAndStageByBlockNumbersEvent');
 
-                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, ethersERC20.address, 0))
                         ._bn.should.eq.BN(claimableAmount._bn);
                 });
             });
@@ -2634,7 +3732,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 10000
+                        ethersERC20.address, glob.user_a, 10000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2650,7 +3748,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = (await provider.getBlockNumber()) + 1;
@@ -2664,11 +3762,11 @@ module.exports = function (glob) {
                     );
 
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, blockNumber, blockNumber
+                        glob.user_a, ethersERC20.address, 0, blockNumber, blockNumber
                     );
                 });
 
@@ -2690,7 +3788,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 10000
+                        ethersERC20.address, glob.user_a, 10000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2706,7 +3804,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 3; i++)
@@ -2720,11 +3818,11 @@ module.exports = function (glob) {
                     );
 
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, blockNumber, blockNumber
+                        glob.user_a, ethersERC20.address, 0, blockNumber, blockNumber
                     );
                 });
 
@@ -2736,7 +3834,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ClaimAndStageByBlockNumbersEvent');
 
-                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, ethersERC20.address, 0))
                         ._bn.should.eq.BN(claimableAmount._bn);
                 });
             });
@@ -2746,7 +3844,7 @@ module.exports = function (glob) {
 
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 10000
+                        ethersERC20.address, glob.user_a, 10000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2762,7 +3860,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     for (let i = 0; i < 3; i++)
@@ -2774,13 +3872,13 @@ module.exports = function (glob) {
                     );
 
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     blockNumber = await provider.getBlockNumber();
 
                     claimableAmount = await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
-                        glob.user_a, web3ERC20.address, 0, blockNumber, blockNumber
+                        glob.user_a, ethersERC20.address, 0, blockNumber, blockNumber
                     );
                 });
 
@@ -2792,7 +3890,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('ClaimAndStageByBlockNumbersEvent');
 
-                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, web3ERC20.address, 0))
+                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_a, ethersERC20.address, 0))
                         ._bn.should.eq.BN(claimableAmount._bn);
                 });
             });
@@ -2810,7 +3908,7 @@ module.exports = function (glob) {
             describe('if called before accrual has been claimed', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2826,13 +3924,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
                 });
 
                 it('should return false', async () => {
                     (await ethersTokenHolderRevenueFund.fullyClaimed(
-                        glob.user_a, web3ERC20.address, 0, 0
+                        glob.user_a, ethersERC20.address, 0, 0
                     )).should.be.false;
                 });
             });
@@ -2840,7 +3938,7 @@ module.exports = function (glob) {
             describe('if called after accrual has been fully claimed', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2856,7 +3954,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     await web3TokenHolderRevenueFund.claimAndStageByAccruals(
@@ -2866,7 +3964,7 @@ module.exports = function (glob) {
 
                 it('should return true', async () => {
                     (await ethersTokenHolderRevenueFund.fullyClaimed(
-                        glob.user_a, web3ERC20.address, 0, 0
+                        glob.user_a, ethersERC20.address, 0, 0
                     )).should.be.true;
                 });
             });
@@ -2874,7 +3972,7 @@ module.exports = function (glob) {
             describe('if called after accrual has been partially claimed', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2890,7 +3988,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     const blockNumber = await provider.getBlockNumber();
@@ -2902,7 +4000,7 @@ module.exports = function (glob) {
 
                 it('should return false', async () => {
                     (await ethersTokenHolderRevenueFund.fullyClaimed(
-                        glob.user_a, web3ERC20.address, 0, 0
+                        glob.user_a, ethersERC20.address, 0, 0
                     )).should.be.false;
                 });
             });
@@ -2920,7 +4018,7 @@ module.exports = function (glob) {
             describe('if called before accrual has been claimed', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2936,13 +4034,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
                 });
 
                 it('should return false', async () => {
                     (await ethersTokenHolderRevenueFund.partiallyClaimed(
-                        glob.user_a, web3ERC20.address, 0, 0
+                        glob.user_a, ethersERC20.address, 0, 0
                     )).should.be.false;
                 });
             });
@@ -2950,7 +4048,7 @@ module.exports = function (glob) {
             describe('if called after accrual has been fully claimed', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -2966,7 +4064,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     await web3TokenHolderRevenueFund.claimAndStageByAccruals(
@@ -2976,7 +4074,7 @@ module.exports = function (glob) {
 
                 it('should return false', async () => {
                     (await ethersTokenHolderRevenueFund.partiallyClaimed(
-                        glob.user_a, web3ERC20.address, 0, 0
+                        glob.user_a, ethersERC20.address, 0, 0
                     )).should.be.false;
                 });
             });
@@ -2984,7 +4082,7 @@ module.exports = function (glob) {
             describe('if called after accrual has been partially claimed', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -3000,7 +4098,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     const blockNumber = await provider.getBlockNumber();
@@ -3012,7 +4110,7 @@ module.exports = function (glob) {
 
                 it('should return false', async () => {
                     (await ethersTokenHolderRevenueFund.partiallyClaimed(
-                        glob.user_a, web3ERC20.address, 0, 0
+                        glob.user_a, ethersERC20.address, 0, 0
                     )).should.be.true;
                 });
             });
@@ -3030,7 +4128,7 @@ module.exports = function (glob) {
             describe('if called before accrual has been claimed', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -3046,13 +4144,13 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
                 });
 
                 it('should return false', async () => {
                     (await ethersTokenHolderRevenueFund.claimedBlockSpans(
-                        glob.user_a, web3ERC20.address, 0, 0
+                        glob.user_a, ethersERC20.address, 0, 0
                     )).should.be.an('array').that.is.empty;
                 });
             });
@@ -3060,7 +4158,7 @@ module.exports = function (glob) {
             describe('if called after accrual has been fully claimed', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -3076,7 +4174,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     await web3TokenHolderRevenueFund.claimAndStageByAccruals(
@@ -3086,7 +4184,7 @@ module.exports = function (glob) {
 
                 it('should return false', async () => {
                     (await ethersTokenHolderRevenueFund.claimedBlockSpans(
-                        glob.user_a, web3ERC20.address, 0, 0
+                        glob.user_a, ethersERC20.address, 0, 0
                     )).should.be.an('array').that.is.empty;
                 });
             });
@@ -3094,7 +4192,7 @@ module.exports = function (glob) {
             describe('if called after accrual has been partially claimed', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, 3000
+                        ethersERC20.address, glob.user_a, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -3110,7 +4208,7 @@ module.exports = function (glob) {
                         {from: glob.user_a, gas: 1e6}
                     );
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     const blockNumber = await provider.getBlockNumber();
@@ -3122,7 +4220,7 @@ module.exports = function (glob) {
 
                 it('should return false', async () => {
                     (await ethersTokenHolderRevenueFund.claimedBlockSpans(
-                        glob.user_a, web3ERC20.address, 0, 0
+                        glob.user_a, ethersERC20.address, 0, 0
                     )).should.be.an('array').and.have.lengthOf(1);
                 });
             });
@@ -3140,7 +4238,7 @@ module.exports = function (glob) {
             describe('if within operational constraints', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_b, 3000
+                        ethersERC20.address, glob.user_b, 3000
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
                         web3MockedRevenueTokenManager.address, mocks.address0, 10000
@@ -3156,7 +4254,7 @@ module.exports = function (glob) {
                     );
 
                     await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
-                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                        [{ct: ethersERC20.address, id: 0}], {gasLimit: 1e6}
                     );
 
                     await web3TokenHolderRevenueFund.claimAndStageByAccruals(
@@ -3172,7 +4270,7 @@ module.exports = function (glob) {
                     result.logs.should.be.an('array').and.have.lengthOf(1);
                     result.logs[0].event.should.equal('WithdrawEvent');
 
-                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_b, web3ERC20.address, 0))
+                    (await ethersTokenHolderRevenueFund.stagedBalance(glob.user_b, ethersERC20.address, 0))
                         ._bn.should.eq.BN(1);
 
                     (await ethersERC20.balanceOf(glob.user_b))._bn.should.eq.BN(2);
