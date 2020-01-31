@@ -1036,6 +1036,40 @@ module.exports = function (glob) {
                 });
             });
 
+            describe('if called with 0 released amount blocks', () => {
+                let blockNumber;
+
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        web3ERC20.address, glob.user_a, 3000
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        web3MockedRevenueTokenManager.address, mocks.address0, 0
+                    );
+
+                    await web3ERC20.approve(
+                        web3TokenHolderRevenueFund.address, 10,
+                        {from: glob.user_a, gas: 1e6}
+                    );
+
+                    await web3TokenHolderRevenueFund.receiveTokensTo(
+                        glob.user_a, '', 10, web3ERC20.address, 0, '',
+                        {from: glob.user_a, gas: 1e6}
+                    );
+                    await ethersMockedTokenHolderRevenueFundService.closeAccrualPeriod(
+                        [{ct: web3ERC20.address, id: 0}], {gasLimit: 1e6}
+                    );
+
+                    blockNumber = await provider.getBlockNumber();
+                });
+
+                it('should return 0', async () => {
+                    (await ethersTokenHolderRevenueFund.claimableAmountByBlockNumbers(
+                        glob.user_a, web3ERC20.address, 0, 0, blockNumber
+                    ))._bn.should.eq.BN(0);
+                });
+            });
+
             describe('if called with block numbers strictly within the block span of one accrual', () => {
                 let blockNumber;
 
