@@ -3,7 +3,7 @@
  *
  * Compliant with the Hubii Nahmii specification v0.12.
  *
- * Copyright (C) 2017-2018 Hubii AS
+ * Copyright (C) 2017-2019 Hubii AS
  */
 
 pragma solidity >=0.4.25 <0.6.0;
@@ -283,6 +283,10 @@ contract RevenueFund is Ownable, AccrualBeneficiary, AccrualBenefactor, Transfer
 
             // Roll over remaining to next accrual period
             periodAccrual.set(remaining, currency.ct, currency.id);
+
+            // Remove currency from period in-use list if the remaining amount is 0
+            if (0 == remaining)
+                periodCurrencies.removeByCurrency(currency.ct, currency.id);
         }
 
         // Close accrual period of accrual beneficiaries

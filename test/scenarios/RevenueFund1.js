@@ -512,44 +512,98 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if called by operator', () => {
+            describe('if within operational constraints', () => {
                 let currencies;
 
                 beforeEach(async () => {
-                    await web3RevenueFund1.receiveEthersTo(
-                        glob.user_a, '',
-                        {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
-                    );
-
-                    await web3ERC20.approve(
-                        web3RevenueFund1.address, 100,
-                        {from: glob.user_a, gas: 1e6}
-                    );
-                    await web3RevenueFund1.receiveTokensTo(
-                        glob.user_a, '', 100, web3ERC20.address, 0, '',
-                        {from: glob.user_a, gas: 1e6}
-                    );
-
                     currencies = [{ct: mocks.address0, id: 0}, {ct: web3ERC20.address, id: 0}];
                 });
 
-                it('should successfully close accrual period of given currencies', async () => {
-                    await ethersRevenueFund1.closeAccrualPeriod(currencies, {gasLimit: 1e6});
+                describe('if full amount is transfer', () => {
+                    beforeEach(async () => {
+                        await web3RevenueFund1.receiveEthersTo(
+                            glob.user_a, '',
+                            {from: glob.user_a, value: web3.toWei(1, 'ether'), gas: 1e6}
+                        );
 
-                    (await ethersMockedAccrualBeneficiary99._closedAccrualPeriodsCount())
-                        ._bn.should.eq.BN(1);
-                    (await ethersMockedAccrualBeneficiary01._closedAccrualPeriodsCount())
-                        ._bn.should.eq.BN(1);
+                        await web3ERC20.approve(
+                            web3RevenueFund1.address, 100,
+                            {from: glob.user_a, gas: 1e6}
+                        );
+                        await web3RevenueFund1.receiveTokensTo(
+                            glob.user_a, '', 100, web3ERC20.address, 0, '',
+                            {from: glob.user_a, gas: 1e6}
+                        );
+                    });
 
-                    (await provider.getBalance(ethersMockedAccrualBeneficiary99.address))
-                        ._bn.should.eq.BN(utils.parseEther('0.99')._bn);
-                    (await provider.getBalance(ethersMockedAccrualBeneficiary01.address))
-                        ._bn.should.eq.BN(utils.parseEther('0.01')._bn);
+                    it('should successfully close accrual period of given currencies with no roll-over to the next accrual period', async () => {
+                        await ethersRevenueFund1.closeAccrualPeriod(currencies, {gasLimit: 1e6});
 
-                    (await ethersERC20.allowance(ethersRevenueFund1.address, ethersMockedAccrualBeneficiary99.address))
-                        ._bn.should.eq.BN(99);
-                    (await ethersERC20.allowance(ethersRevenueFund1.address, ethersMockedAccrualBeneficiary01.address))
-                        ._bn.should.eq.BN(1);
+                        (await ethersMockedAccrualBeneficiary99._closedAccrualPeriodsCount())
+                            ._bn.should.eq.BN(1);
+                        (await ethersMockedAccrualBeneficiary01._closedAccrualPeriodsCount())
+                            ._bn.should.eq.BN(1);
+
+                        (await provider.getBalance(ethersMockedAccrualBeneficiary99.address))
+                            ._bn.should.eq.BN(utils.parseEther('0.99')._bn);
+                        (await provider.getBalance(ethersMockedAccrualBeneficiary01.address))
+                            ._bn.should.eq.BN(utils.parseEther('0.01')._bn);
+
+                        (await ethersERC20.balanceOf(ethersMockedAccrualBeneficiary99.address))
+                            ._bn.should.eq.BN(99);
+                        (await ethersERC20.balanceOf(ethersMockedAccrualBeneficiary01.address))
+                            ._bn.should.eq.BN(1);
+
+                        (await ethersRevenueFund1.periodCurrenciesCount())
+                            ._bn.should.eq.BN(0);
+
+                        (await ethersRevenueFund1.periodAccrualBalance(mocks.address0, 0))
+                            ._bn.should.eq.BN(0);
+                        (await ethersRevenueFund1.periodAccrualBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(0);
+                    });
+                });
+
+                describe('if fractional amount is left after transfer', () => {
+                    beforeEach(async () => {
+                        await web3RevenueFund1.receiveEthersTo(
+                            glob.user_a, '',
+                            {from: glob.user_a, value: web3.toWei('1.23456789123456789', 'ether'), gas: 1e6}
+                        );
+
+                        await web3ERC20.approve(
+                            web3RevenueFund1.address, 123,
+                            {from: glob.user_a, gas: 1e6}
+                        );
+                        await web3RevenueFund1.receiveTokensTo(
+                            glob.user_a, '', 123, web3ERC20.address, 0, '',
+                            {from: glob.user_a, gas: 1e6}
+                        );
+                    });
+
+                    it('should successfully close accrual period of given currencies and roll over remainder to the next accrual period', async () => {
+                        await ethersRevenueFund1.closeAccrualPeriod(currencies, {gasLimit: 1e6});
+
+                        (await ethersMockedAccrualBeneficiary99._closedAccrualPeriodsCount())
+                            ._bn.should.eq.BN(1);
+                        (await ethersMockedAccrualBeneficiary01._closedAccrualPeriodsCount())
+                            ._bn.should.eq.BN(1);
+
+                        (await ethersRevenueFund1.periodCurrenciesCount())
+                            ._bn.should.eq.BN(2);
+
+                        const ethersBeneficiary99 = await provider.getBalance(ethersMockedAccrualBeneficiary99.address);
+                        const ethersBeneficiary01 = await provider.getBalance(ethersMockedAccrualBeneficiary01.address);
+                        const ethersRollOver = utils.parseEther('1.23456789123456789').sub(ethersBeneficiary99.add(ethersBeneficiary01));
+                        (await ethersRevenueFund1.periodAccrualBalance(mocks.address0, 0))
+                            ._bn.should.eq.BN(ethersRollOver._bn);
+
+                        const tokensBeneficiary99 = await ethersERC20.balanceOf(ethersMockedAccrualBeneficiary99.address);
+                        const tokensBeneficiary01 = await ethersERC20.balanceOf(ethersMockedAccrualBeneficiary01.address);
+                        const tokensRollOver = utils.bigNumberify(123).sub(tokensBeneficiary99.add(tokensBeneficiary01));
+                        (await ethersRevenueFund1.periodAccrualBalance(web3ERC20.address, 0))
+                            ._bn.should.eq.BN(tokensRollOver._bn);
+                    });
                 });
             });
         });

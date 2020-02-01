@@ -3,35 +3,40 @@
  *
  * Compliant with the Hubii Nahmii specification v0.12.
  *
- * Copyright (C) 2017-2018 Hubii AS
+ * Copyright (C) 2017-2019 Hubii AS
  */
 
 pragma solidity >=0.4.25 <0.6.0;
+pragma experimental ABIEncoderV2;
 
 import 'openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol';
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
+import 'openzeppelin-solidity/contracts/math/Math.sol';
+import {BalanceRecordable} from "./BalanceRecordable.sol";
+import {TokenUpgradeAgent} from "./TokenUpgradeAgent.sol";
 
 /**
  * @title RevenueToken
  * @dev Implementation of the EIP20 standard token (also known as ERC20 token) with added
- * calculation of balance blocks at every transfer.
+ * storage of balance records (block number/balance pairs) and upgrade support.
  */
-contract RevenueToken is ERC20Mintable {
+contract RevenueToken is ERC20Mintable, BalanceRecordable {
     using SafeMath for uint256;
+    using Math for uint256;
+
+    struct BalanceRecord {
+        uint256 blockNumber;
+        uint256 balance;
+    }
+
+    mapping(address => BalanceRecord[]) public balanceRecords;
 
     bool public mintingDisabled;
 
-    address[] public holders;
-
-    mapping(address => bool) public holdersMap;
-
-    mapping(address => uint256[]) public balances;
-
-    mapping(address => uint256[]) public balanceBlocks;
-
-    mapping(address => uint256[]) public balanceBlockNumbers;
-
     event DisableMinting();
+    event Upgrade(TokenUpgradeAgent tokenUpgradeAgent, address from, uint256 value);
+    event UpgradeFrom(TokenUpgradeAgent tokenUpgradeAgent, address upgrader, address from, uint256 value);
+    event UpgradeBalanceRecords(address account, uint256 startIndex, uint256 endIndex);
 
     /**
      * @notice Disable further minting
@@ -41,46 +46,43 @@ contract RevenueToken is ERC20Mintable {
     public
     onlyMinter
     {
+        // Disable minting
         mintingDisabled = true;
 
+        // Emit event
         emit DisableMinting();
     }
 
     /**
      * @notice Mint tokens
-     * @param to The address that will receive the minted tokens.
-     * @param value The amount of tokens to mint.
-     * @return A boolean that indicates if the operation was successful.
+     * @param to The address that will receive the minted tokens
+     * @param value The amount of tokens to mint
+     * @return A boolean that indicates if the operation was successful
      */
     function mint(address to, uint256 value)
     public
     onlyMinter
     returns (bool)
     {
-        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:60]");
+        // Require that minting has not been disabled
+        require(!mintingDisabled, "Minting disabled [RevenueToken.sol:68]");
 
         // Call super's mint, including event emission
         bool minted = super.mint(to, value);
 
-        if (minted) {
-            // Adjust balance blocks
-            addBalanceBlocks(to);
+        // Add balance record if minted
+        if (minted)
+            _addBalanceRecord(to);
 
-            // Add to the token holders list
-            if (!holdersMap[to]) {
-                holdersMap[to] = true;
-                holders.push(to);
-            }
-        }
-
+        // Return the minted flag
         return minted;
     }
 
     /**
      * @notice Transfer token for a specified address
-     * @param to The address to transfer to.
-     * @param value The amount to be transferred.
-     * @return A boolean that indicates if the operation was successful.
+     * @param to The address to transfer to
+     * @param value The amount to be transferred
+     * @return A boolean that indicates if the operation was successful
      */
     function transfer(address to, uint256 value)
     public
@@ -89,29 +91,23 @@ contract RevenueToken is ERC20Mintable {
         // Call super's transfer, including event emission
         bool transferred = super.transfer(to, value);
 
+        // Add balance records if funds were transferred
         if (transferred) {
-            // Adjust balance blocks
-            addBalanceBlocks(msg.sender);
-            addBalanceBlocks(to);
-
-            // Add to the token holders list
-            if (!holdersMap[to]) {
-                holdersMap[to] = true;
-                holders.push(to);
-            }
+            _addBalanceRecord(msg.sender);
+            _addBalanceRecord(to);
         }
 
+        // Return the transferred flag
         return transferred;
     }
 
     /**
-     * @notice Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
+     * @notice Approve the passed address to spend the specified amount of tokens on behalf of msg.sender
      * @dev Beware that to change the approve amount you first have to reduce the addresses'
      * allowance to zero by calling `approve(spender, 0)` if it is not already 0 to mitigate the race
-     * condition described here:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     * @param spender The address which will spend the funds.
-     * @param value The amount of tokens to be spent.
+     * condition described in https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     * @param spender The address which will spend the funds
+     * @param value The amount of tokens to be spent
      */
     function approve(address spender, uint256 value)
     public
@@ -120,7 +116,7 @@ contract RevenueToken is ERC20Mintable {
         // Prevent the update of non-zero allowance
         require(
             0 == value || 0 == allowance(msg.sender, spender),
-            "Value or allowance non-zero [RevenueToken.sol:121]"
+            "Value or allowance non-zero [RevenueToken.sol:117]"
         );
 
         // Call super's approve, including event emission
@@ -129,10 +125,10 @@ contract RevenueToken is ERC20Mintable {
 
     /**
      * @dev Transfer tokens from one address to another
-     * @param from address The address which you want to send tokens from
-     * @param to address The address which you want to transfer to
+     * @param from address The address to send tokens from
+     * @param to address The address to send tokens to
      * @param value uint256 the amount of tokens to be transferred
-     * @return A boolean that indicates if the operation was successful.
+     * @return A boolean that indicates if the operation was successful
      */
     function transferFrom(address from, address to, uint256 value)
     public
@@ -141,156 +137,164 @@ contract RevenueToken is ERC20Mintable {
         // Call super's transferFrom, including event emission
         bool transferred = super.transferFrom(from, to, value);
 
+        // Add balance records if funds were transferred
         if (transferred) {
-            // Adjust balance blocks
-            addBalanceBlocks(from);
-            addBalanceBlocks(to);
-
-            // Add to the token holders list
-            if (!holdersMap[to]) {
-                holdersMap[to] = true;
-                holders.push(to);
-            }
+            _addBalanceRecord(from);
+            _addBalanceRecord(to);
         }
 
+        // Return the transferred flag
         return transferred;
     }
 
     /**
-     * @notice Calculate the amount of balance blocks, i.e. the area under the curve (AUC) of
-     * balance as function of block number
-     * @dev The AUC is used as weight for the share of revenue that a token holder may claim
-     * @param account The account address for which calculation is done
-     * @param startBlock The start block number considered
-     * @param endBlock The end block number considered
-     * @return The calculated AUC
+     * @notice Upgrade the given value of this token to a new token contract
+     * using the given upgrade agent
+     * @param tokenUpgradeAgent The upgrade agent doing the increment of the new token
+     * @param value The value to decrement this token
+     * @return A boolean that indicates if the operation was successful
      */
-    function balanceBlocksIn(address account, uint256 startBlock, uint256 endBlock)
+    function upgrade(TokenUpgradeAgent tokenUpgradeAgent, uint256 value)
     public
-    view
-    returns (uint256)
+    returns (bool)
     {
-        require(startBlock < endBlock, "Bounds parameters mismatch [RevenueToken.sol:173]");
-        require(account != address(0), "Account is null address [RevenueToken.sol:174]");
+        // Upgrade from message sender
+        bool upgraded = tokenUpgradeAgent.upgradeFrom(msg.sender, value);
 
-        if (balanceBlockNumbers[account].length == 0 || endBlock < balanceBlockNumbers[account][0])
-            return 0;
+        // If new token upgraded...
+        if (upgraded) {
+            // Destroy old tokens of message sender
+            _burn(msg.sender, value);
 
-        uint256 i = 0;
-        while (i < balanceBlockNumbers[account].length && balanceBlockNumbers[account][i] < startBlock)
-            i++;
-
-        uint256 r;
-        if (i >= balanceBlockNumbers[account].length)
-            r = balances[account][balanceBlockNumbers[account].length - 1].mul(endBlock.sub(startBlock));
-
-        else {
-            uint256 l = (i == 0) ? startBlock : balanceBlockNumbers[account][i - 1];
-
-            uint256 h = balanceBlockNumbers[account][i];
-            if (h > endBlock)
-                h = endBlock;
-
-            h = h.sub(startBlock);
-            r = (h == 0) ? 0 : balanceBlocks[account][i].mul(h).div(balanceBlockNumbers[account][i].sub(l));
-            i++;
-
-            while (i < balanceBlockNumbers[account].length && balanceBlockNumbers[account][i] < endBlock) {
-                r = r.add(balanceBlocks[account][i]);
-                i++;
-            }
-
-            if (i >= balanceBlockNumbers[account].length)
-                r = r.add(
-                    balances[account][balanceBlockNumbers[account].length - 1].mul(
-                        endBlock.sub(balanceBlockNumbers[account][balanceBlockNumbers[account].length - 1])
-                    )
-                );
-
-            else if (balanceBlockNumbers[account][i - 1] < endBlock)
-                r = r.add(
-                    balanceBlocks[account][i].mul(
-                        endBlock.sub(balanceBlockNumbers[account][i - 1])
-                    ).div(
-                        balanceBlockNumbers[account][i].sub(balanceBlockNumbers[account][i - 1])
-                    )
-                );
+            // Emit event
+            emit Upgrade(tokenUpgradeAgent, msg.sender, value);
         }
 
-        return r;
+        // Return true
+        return upgraded;
     }
 
     /**
-     * @notice Get the count of balance updates for the given account
+    * @notice Upgrade the given wallet's value of this token to a new token contract using the given upgrade agent
+    * @param tokenUpgradeAgent The upgrade agent doing the increment of the new token
+    * @param from The wallet whose token balance will be upgraded
+    * @param value The value to decrement this token
+    * @return A boolean that indicates if the operation was successful
+    */
+    function upgradeFrom(TokenUpgradeAgent tokenUpgradeAgent, address from, uint256 value)
+    public
+    returns (bool)
+    {
+        // Upgrade from wallet
+        bool upgraded = tokenUpgradeAgent.upgradeFrom(from, value);
+
+        // If new token upgraded...
+        if (upgraded) {
+            // Destroy old tokens of wallet
+            _burnFrom(from, value);
+
+            // Emit event
+            emit UpgradeFrom(tokenUpgradeAgent, msg.sender, from, value);
+        }
+
+        // Return true
+        return upgraded;
+    }
+
+    /**
+     * @notice Get the count of balance records for the given account
+     * @param account The concerned account
      * @return The count of balance updates
      */
-    function balanceUpdatesCount(address account)
+    function balanceRecordsCount(address account)
     public
     view
     returns (uint256)
     {
-        return balanceBlocks[account].length;
+        return balanceRecords[account].length;
     }
 
     /**
-     * @notice Get the count of holders
-     * @return The count of holders
+     * @notice Get the balance record balance for the given account and balance record index
+     * @param account The concerned account
+     * @param index The concerned index
+     * @return The balance record balance
      */
-    function holdersCount()
+    function recordBalance(address account, uint256 index)
     public
     view
     returns (uint256)
     {
-        return holders.length;
+        return balanceRecords[account][index].balance;
     }
 
     /**
-     * @notice Get the subset of holders (optionally with positive balance only) in the given 0 based index range
-     * @param low The lower inclusive index
-     * @param up The upper inclusive index
-     * @param posOnly List only positive balance holders
-     * @return The subset of positive balance registered holders in the given range
+     * @notice Get the balance record block number for the given account and balance record index
+     * @param account The concerned account
+     * @param index The concerned index
+     * @return The balance record block number
      */
-    function holdersByIndices(uint256 low, uint256 up, bool posOnly)
+    function recordBlockNumber(address account, uint256 index)
     public
     view
-    returns (address[] memory)
+    returns (uint256)
     {
-        require(low <= up, "Bounds parameters mismatch [RevenueToken.sol:259]");
-
-        up = up > holders.length - 1 ? holders.length - 1 : up;
-
-        uint256 length = 0;
-        if (posOnly) {
-            for (uint256 i = low; i <= up; i++)
-                if (0 < balanceOf(holders[i]))
-                    length++;
-        } else
-            length = up - low + 1;
-
-        address[] memory _holders = new address[](length);
-
-        uint256 j = 0;
-        for (uint256 i = low; i <= up; i++)
-            if (!posOnly || 0 < balanceOf(holders[i]))
-                _holders[j++] = holders[i];
-
-        return _holders;
+        return balanceRecords[account][index].blockNumber;
     }
 
-    function addBalanceBlocks(address account)
+    /**
+     * @notice Get the index of the balance record containing the given block number,
+     * or -1 if the given block number is below the smallest balance record block number
+     * @param account The concerned account
+     * @param blockNumber The concerned block number
+     * @return The count of balance updates
+     */
+    function recordIndexByBlockNumber(address account, uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
+        for (uint256 i = balanceRecords[account].length; i > 0;) {
+            i = i.sub(1);
+            if (balanceRecords[account][i].blockNumber <= blockNumber)
+                return int256(i);
+        }
+        return - 1;
+    }
+
+    /**
+     * @notice Add the account's given set of balance records to the stored set of records
+     * @param account The concerned account
+     * @param _balanceRecords The set of balance records to be added
+     */
+    function upgradeBalanceRecords(address account, BalanceRecord[] memory _balanceRecords)
+    public
+    onlyMinter
+    {
+        // If there are input balance records
+        if (0 < _balanceRecords.length) {
+            // Require that minting has not been disabled
+            require(!mintingDisabled, "Minting disabled [RevenueToken.sol:277]");
+
+            // Calculate index range to be upgraded
+            uint256 startIndex = balanceRecords[account].length;
+            uint256 endIndex = startIndex.add(_balanceRecords.length).sub(1);
+
+            // Add balance records
+            for (uint256 i = 0; i < _balanceRecords.length; i = i.add(1))
+                balanceRecords[account].push(_balanceRecords[i]);
+
+            // Emit event
+            emit UpgradeBalanceRecords(account, startIndex, endIndex);
+        }
+    }
+
+    /**
+     * @dev Add balance record for the given account
+     */
+    function _addBalanceRecord(address account)
     private
     {
-        uint256 length = balanceBlockNumbers[account].length;
-        balances[account].push(balanceOf(account));
-        if (0 < length)
-            balanceBlocks[account].push(
-                balances[account][length - 1].mul(
-                    block.number.sub(balanceBlockNumbers[account][length - 1])
-                )
-            );
-        else
-            balanceBlocks[account].push(0);
-        balanceBlockNumbers[account].push(block.number);
+        balanceRecords[account].push(BalanceRecord(block.number, balanceOf(account)));
     }
 }

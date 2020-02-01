@@ -1,15 +1,13 @@
 /*!
  * Hubii Nahmii
  *
- * Copyright (C) 2017-2018 Hubii AS
+ * Copyright (C) 2017-2019 Hubii AS
  */
 
-const NahmiiToken = artifacts.require('NahmiiToken');
 const RevenueTokenManager = artifacts.require('RevenueTokenManager');
 const SafeMathUintLib = artifacts.require('SafeMathUintLib');
 
 const debug = require('debug')('4_revenue_token_manager');
-const moment = require('moment');
 const path = require('path');
 const helpers = require('../scripts/common/helpers.js');
 const AddressStorage = require('../scripts/common/address_storage.js');
@@ -25,108 +23,40 @@ module.exports = (deployer, network, accounts) => {
 
         await addressStorage.load();
 
-        // if (helpers.isResetArgPresent())
-        //     addressStorage.clear();
-
         if (helpers.isTestNetwork(network))
             deployerAccount = accounts[0];
-
-        else {
+        else
             deployerAccount = helpers.parseDeployerArg();
-
-            if (web3.eth.personal)
-                await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-            else
-                await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-        }
 
         debug(`deployerAccount: ${deployerAccount}`);
 
-        try {
-            let ctl = {
-                deployer,
-                deployFilters: helpers.getFiltersFromArgs(),
-                addressStorage,
-                deployerAccount
-            };
+        let ctl = {
+            deployer,
+            deployFilters: helpers.getFiltersFromArgs(),
+            addressStorage,
+            deployerAccount
+        };
 
-            SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
+        SafeMathUintLib.address = addressStorage.get('SafeMathUintLib');
 
-            if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
-                await deployer.link(SafeMathUintLib, [
-                    RevenueTokenManager
-                ]);
+        await deployer.link(SafeMathUintLib, RevenueTokenManager);
 
-                const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', 'RevenueTokenManager', RevenueTokenManager);
+        if (helpers.isTestNetwork(network)) {
+            const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
 
-                let nahmiiToken = await NahmiiToken.at(addressStorage.get('NahmiiToken'));
-                await nahmiiToken.mint(addressStorage.get('RevenueTokenManager'), 120e24);
+            await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
+            await revenueTokenManager.setBeneficiary(deployerAccount);
 
-                while (0 == (await nahmiiToken.balanceOf(revenueTokenManager.address)).toNumber()) {
-                    debug(`Waiting 60s for token minting to be mined`);
-                    await helpers.sleep(60000);
-                }
+        } else if (network.startsWith('ropsten'))
+            addressStorage.set('RevenueTokenManager', '0x9fc6b7253d143b267034033f78959fb4458d5db9');
 
-                await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
-                await revenueTokenManager.setBeneficiary(deployerAccount);
+        else if (network.startsWith('mainnet')) {
+            throw new Error('RevenueTokenManager at mainnet not configured');
 
-                const {earliestReleaseTimes, amounts} = airdriipReleases();
+            const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
 
-                let result = await revenueTokenManager.defineReleases(
-                    earliestReleaseTimes.slice(0, 60),
-                    amounts.slice(0, 60),
-                    [],
-                    {gas: 5e6}
-                );
-
-                debug(`First batch of releases defined in TX ${result.tx}...`);
-
-                while (null == (await web3.eth.getTransactionReceipt(result.tx)).blockNumber) {
-                    debug(`Waiting 60s for first batch of releases to be mined...`);
-                    await helpers.sleep(60000);
-                }
-
-                result = await revenueTokenManager.defineReleases(
-                    earliestReleaseTimes.slice(60),
-                    amounts.slice(60),
-                    [],
-                    {gas: 5e6}
-                );
-
-                debug(`Second batch of releases defined in TX ${result.tx}...`);
-
-                while (null == (await web3.eth.getTransactionReceipt(result.tx)).blockNumber) {
-                    debug(`Waiting 60s for second batch of releases to be mined...`);
-                    await helpers.sleep(60000);
-                }
-
-                if (!helpers.isTestNetwork(network))
-                    await revenueTokenManager.setBeneficiary('0xe8575e787e28bcb0ee3046605f795bf883e82e84');
-
-                debug(`Release times:`);
-                earliestReleaseTimes.forEach((t) => {
-                    debug(`  ${moment.unix(t)}`);
-                });
-
-                const firstRelease = await revenueTokenManager.releases(0);
-                debug(`First release of ${firstRelease[1].toString()} at ${new Date(1000 * firstRelease[0].toNumber())}`);
-
-                const lastRelease = await revenueTokenManager.releases(119);
-                debug(`Last release of ${lastRelease[1].toString()} at ${new Date(1000 * lastRelease[0].toNumber())}`);
-
-                debug(`Total locked amount: ${(await revenueTokenManager.totalLockedAmount()).toNumber()}`);
-                debug(`Releases count: ${(await revenueTokenManager.releasesCount()).toNumber()}`);
-                debug(`Executed releases count: ${(await revenueTokenManager.executedReleasesCount()).toNumber()}`);
-
-            } else if (network.startsWith('mainnet'))
-                addressStorage.set('RevenueTokenManager', '0xe3f2158610b7145c04ae03a6356038ad2404a9a6');
-
-        } finally {
-            if (!helpers.isTestNetwork(network))
-                if (web3.eth.personal)
-                    await web3.eth.personal.lockAccount(deployerAccount);
-                else
-                    await web3.personal.lockAccount(deployerAccount);
+            await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
+            await revenueTokenManager.setBeneficiary(deployerAccount);
         }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
@@ -134,18 +64,15 @@ module.exports = (deployer, network, accounts) => {
     });
 };
 
-async function execDeploy(ctl, contractName, instanceName, contract, usesAccessManager) {
+async function execDeploy(ctl, contractName, instanceName, contract, ownable) {
     let address = ctl.addressStorage.get(instanceName || contractName);
     let instance;
 
     if (!address || shouldDeploy(contractName, ctl.deployFilters)) {
-        if (usesAccessManager) {
-            let signerManager = ctl.addressStorage.get('SignerManager');
-
-            instance = await ctl.deployer.deploy(contract, ctl.deployerAccount, signerManager, {from: ctl.deployerAccount});
-
-        } else
+        if (ownable)
             instance = await ctl.deployer.deploy(contract, ctl.deployerAccount, {from: ctl.deployerAccount});
+        else
+            instance = await ctl.deployer.deploy(contract, {from: ctl.deployerAccount});
 
         ctl.addressStorage.set(instanceName || contractName, instance.address);
     }
@@ -154,26 +81,12 @@ async function execDeploy(ctl, contractName, instanceName, contract, usesAccessM
 }
 
 function shouldDeploy(contractName, deployFilters) {
-    if (!deployFilters) {
+    if (!deployFilters)
         return true;
-    }
-    for (let i = 0; i < deployFilters.length; i++) {
+
+    for (let i = 0; i < deployFilters.length; i++)
         if (deployFilters[i].test(contractName))
             return true;
-    }
+
     return false;
-}
-
-function airdriipReleases() {
-    let date = moment().startOf('day');
-
-    const earliestReleaseTimes = [];
-    const amounts = [];
-    for (let i = 0; i < 120; i++) {
-        earliestReleaseTimes.push(moment(date).subtract(1, 'hour').unix());
-        amounts.push(1e24);
-
-        date.add(1, 'day');
-    }
-    return {earliestReleaseTimes, amounts};
 }

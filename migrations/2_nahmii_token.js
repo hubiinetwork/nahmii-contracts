@@ -1,11 +1,12 @@
 /*!
  * Hubii Nahmii
  *
- * Copyright (C) 2017-2018 Hubii AS
+ * Copyright (C) 2017-2019 Hubii AS
  */
 
-const SafeMath = artifacts.require('SafeMath');
+const Math = artifacts.require('Math');
 const NahmiiToken = artifacts.require('NahmiiToken');
+const SafeMath = artifacts.require('SafeMath');
 
 const debug = require('debug')('2_nahmii_token');
 const path = require('path');
@@ -21,54 +22,54 @@ module.exports = (deployer, network, accounts) => {
 
         await addressStorage.load();
 
-        // if (helpers.isResetArgPresent())
-        //     addressStorage.clear();
-
         if (helpers.isTestNetwork(network))
             deployerAccount = accounts[0];
-
-        else {
+        else
             deployerAccount = helpers.parseDeployerArg();
-
-            if (web3.eth.personal)
-                await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-            else
-                await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 28800); // 8h
-        }
 
         debug(`deployerAccount: ${deployerAccount}`);
 
-        try {
-            if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
-                let ctl = {
-                    deployer,
-                    deployFilters: helpers.getFiltersFromArgs(),
-                    addressStorage,
-                    deployerAccount
-                };
+        let ctl = {
+            deployer,
+            deployFilters: helpers.getFiltersFromArgs(),
+            addressStorage,
+            deployerAccount
+        };
 
-                await execDeploy(ctl, 'SafeMath', '', SafeMath);
+        if (helpers.isTestNetwork(network)) {
+            await execDeploy(ctl, 'SafeMath', '', SafeMath);
+            await execDeploy(ctl, 'Math', '', Math);
 
-                await deployer.link(SafeMath, NahmiiToken);
+        } else if (network.startsWith('ropsten')) {
+            addressStorage.set('SafeMath', '0xfda9a5f546bd24b2aead0ca6a51d08cc475e26e8');
+            addressStorage.set('Math', '0x7286202281f28d09fd2b9dc60c8673db6bb375c0');
 
-                const instance = await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+            SafeMath.address = addressStorage.get('SafeMath');
+            Math.address = addressStorage.get('Math');
 
-                if (!helpers.isTestNetwork(network)) {
-                    debug(`Balance of token holder: ${(await instance.balanceOf(deployerAccount)).toString()}`);
-                    // await instance.disableMinting();
-                    debug(`Minting disabled:        ${await instance.mintingDisabled()}`);
-                }
-            }
+        } else if (network.startsWith('mainnet')) {
+            throw new Error('SafeMath and Math at mainnet not configured');
 
-            else if (network.startsWith('mainnet'))
-                addressStorage.set('NahmiiToken', '0xac4f2f204b38390b92d0540908447d5ed352799a');
+            await execDeploy(ctl, 'SafeMath', '', SafeMath);
+            await execDeploy(ctl, 'Math', '', Math);
 
-        } finally {
-            if (!helpers.isTestNetwork(network))
-                if (web3.eth.personal)
-                    await web3.eth.personal.lockAccount(deployerAccount);
-                else
-                    await web3.personal.lockAccount(deployerAccount);
+            SafeMath.address = addressStorage.get('SafeMath');
+            Math.address = addressStorage.get('Math');
+        }
+
+        await deployer.link(SafeMath, NahmiiToken);
+        await deployer.link(Math, NahmiiToken);
+
+        if (helpers.isTestNetwork(network))
+            await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+
+        else if (network.startsWith('ropsten'))
+            addressStorage.set('NahmiiToken', '0x5a9d2f49e739284ff4866f405b783570e8296433');
+
+        else if (network.startsWith('mainnet')) {
+            throw new Error('NahmiiToken at mainnet not configured');
+
+            await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
         }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
