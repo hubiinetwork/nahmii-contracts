@@ -5,15 +5,15 @@ const findUp = require('find-up');
 
 module.exports = {
     networks: {
-        'development': {
-            host: 'localhost',
-            port: 8545,
-            network_id: '*',
-            gas: 8000000
-        },
         'develop': {
             host: 'localhost',
             port: 9545,
+            network_id: '*',
+            gas: 8000000
+        },
+        'development': {
+            host: 'localhost',
+            port: 8545,
             network_id: '*',
             gas: 8000000
         },
@@ -27,6 +27,26 @@ module.exports = {
             host: 'localhost',
             port: 8545,
             network_id: '*',
+            gas: 8000000
+        },
+        'mainnet': {
+            provider: () => {
+                const dataDir = path.dirname(findUp.sync('keystore', {type: 'directory'}));
+                const keyObject = keythereum.importFromFile(process.env.ETH_MAINNET_ACCOUNT, dataDir);
+                const privateKey = keythereum.recover(process.env.ETH_MAINNET_SECRET, keyObject).toString('hex');
+                return new HDWalletProvider(privateKey, 'https://ethereum.hubii.com')
+            },
+            network_id: '1',
+            gas: 8000000
+        },
+        'mainnet-infura': {
+            provider: () => {
+                const dataDir = path.dirname(findUp.sync('keystore', {type: 'directory'}));
+                const keyObject = keythereum.importFromFile(process.env.ETH_MAINNET_ACCOUNT, dataDir);
+                const privateKey = keythereum.recover(process.env.ETH_MAINNET_SECRET, keyObject).toString('hex');
+                return new HDWalletProvider(privateKey, 'https://mainnet.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3')
+            },
+            network_id: '1',
             gas: 8000000
         },
         'ropsten': {
@@ -46,34 +66,7 @@ module.exports = {
                 const privateKey = keythereum.recover(process.env.ETH_TESTNET_SECRET, keyObject).toString('hex');
                 return new HDWalletProvider(privateKey, 'https://ropsten.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3')
             },
-            network_id: '*',
-            gas: 8000000
-        },
-        'rinkeby': {
-            host: 'geth-rinkeby.ethereum',
-            port: 80,
-            network_id: '*',
-            gas: 8000000
-        },
-        'mainnet': {
-            host: 'geth-homestead.ethereum',
-            port: 80,
-            network_id: '1',
-            gas: 8000000
-        },
-        'mainnet-infura': {
-            provider: () => {
-                const keyObject = keythereum.importFromFile(process.env.ETH_MAINNET_ACCOUNT, '.');
-                const privateKey = keythereum.recover(process.env.ETH_MAINNET_SECRET, keyObject).toString('hex');
-                return new HDWalletProvider(privateKey, 'https://mainnet.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3')
-            },
-            network_id: '*',
-            gas: 8000000
-        },
-        'mainnet-hubii': {
-            host: 'ethereum.hubii.com',
-            port: 8545,
-            network_id: '1',
+            network_id: '3',
             gas: 8000000
         }
     },
