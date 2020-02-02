@@ -44,14 +44,6 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if start block equals end block', () => {
-                it('should return zero', async () => {
-                    (await ethersBalanceAucCalculator.calculate(
-                        ethersBalanceRecordable.address, wallet, 1, 1
-                    ))._bn.should.eq.BN(0);
-                });
-            });
-
             describe('if the count of balance records is 0', () => {
                 it('should return zero', async () => {
                     (await ethersBalanceAucCalculator.calculate(
@@ -85,7 +77,7 @@ module.exports = function (glob) {
                     it('should return 0', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 3
-                        ))._bn.should.eq.BN(0);
+                        ))._bn.should.eq.BN(1000);
                     });
                 });
 
@@ -93,7 +85,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 5
-                        ))._bn.should.eq.BN(2000);
+                        ))._bn.should.eq.BN(3000);
                     });
                 });
 
@@ -101,7 +93,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 6
-                        ))._bn.should.eq.BN(3000);
+                        ))._bn.should.eq.BN(4000);
                     });
                 });
 
@@ -109,7 +101,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 7
-                        ))._bn.should.eq.BN(3000);
+                        ))._bn.should.eq.BN(4000);
                     });
                 });
             });
@@ -126,7 +118,7 @@ module.exports = function (glob) {
                     it('should return 0', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 3
-                        ))._bn.should.eq.BN(0);
+                        ))._bn.should.eq.BN(600);
                     });
                 });
 
@@ -134,7 +126,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 5
-                        ))._bn.should.eq.BN(1200);
+                        ))._bn.should.eq.BN(1800);
                     });
                 });
 
@@ -142,7 +134,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 6
-                        ))._bn.should.eq.BN(1800);
+                        ))._bn.should.eq.BN(2800);
                     });
                 });
 
@@ -150,31 +142,31 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 8
-                        ))._bn.should.eq.BN(3800);
+                        ))._bn.should.eq.BN(4800);
                     });
                 });
 
                 describe('n_s == n[0] && n[0] < n_e < n[1]', () => {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
-                            ethersBalanceRecordable.address, wallet, 2, 5
-                        ))._bn.should.eq.BN(1200);
+                            ethersBalanceRecordable.address, wallet, 3, 5
+                        ))._bn.should.eq.BN(1800);
                     });
                 });
 
                 describe('n_s == n[0] && n_e == n[1]', () => {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
-                            ethersBalanceRecordable.address, wallet, 2, 6
-                        ))._bn.should.eq.BN(1800);
+                            ethersBalanceRecordable.address, wallet, 3, 6
+                        ))._bn.should.eq.BN(2800);
                     });
                 });
 
                 describe('n_s == n[0] && n[1] < n_e', () => {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
-                            ethersBalanceRecordable.address, wallet, 2, 8
-                        ))._bn.should.eq.BN(3800);
+                            ethersBalanceRecordable.address, wallet, 3, 8
+                        ))._bn.should.eq.BN(4800);
                     });
                 });
 
@@ -182,7 +174,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 6
-                        ))._bn.should.eq.BN(1200);
+                        ))._bn.should.eq.BN(2200);
                     });
                 });
 
@@ -190,7 +182,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 10
-                        ))._bn.should.eq.BN(5200);
+                        ))._bn.should.eq.BN(6200);
                     });
                 });
 
@@ -198,7 +190,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 6, 10
-                        ))._bn.should.eq.BN(4000);
+                        ))._bn.should.eq.BN(5000);
                     });
                 });
 
@@ -206,7 +198,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 7, 10
-                        ))._bn.should.eq.BN(3000);
+                        ))._bn.should.eq.BN(4000);
                     });
                 });
             });
@@ -224,7 +216,7 @@ module.exports = function (glob) {
                     it('should return 0', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 3
-                        ))._bn.should.eq.BN(0);
+                        ))._bn.should.eq.BN(600);
                     });
                 });
 
@@ -232,7 +224,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 5
-                        ))._bn.should.eq.BN(1200);
+                        ))._bn.should.eq.BN(1800);
                     });
                 });
 
@@ -240,7 +232,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 7
-                        ))._bn.should.eq.BN(2400);
+                        ))._bn.should.eq.BN(2800);
                     });
                 });
 
@@ -248,7 +240,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 8
-                        ))._bn.should.eq.BN(2800);
+                        ))._bn.should.eq.BN(3200);
                     });
                 });
 
@@ -256,7 +248,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 10
-                        ))._bn.should.eq.BN(3600);
+                        ))._bn.should.eq.BN(4600);
                     });
                 });
 
@@ -264,7 +256,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 13
-                        ))._bn.should.eq.BN(6600);
+                        ))._bn.should.eq.BN(7600);
                     });
                 });
 
@@ -272,7 +264,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 5
-                        ))._bn.should.eq.BN(1200);
+                        ))._bn.should.eq.BN(1800);
                     });
                 });
 
@@ -280,7 +272,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 7
-                        ))._bn.should.eq.BN(2400);
+                        ))._bn.should.eq.BN(2800);
                     });
                 });
 
@@ -288,7 +280,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 8
-                        ))._bn.should.eq.BN(2800);
+                        ))._bn.should.eq.BN(3200);
                     });
                 });
 
@@ -296,7 +288,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 10
-                        ))._bn.should.eq.BN(3600);
+                        ))._bn.should.eq.BN(4600);
                     });
                 });
 
@@ -304,7 +296,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 13
-                        ))._bn.should.eq.BN(6600);
+                        ))._bn.should.eq.BN(7600);
                     });
                 });
 
@@ -312,7 +304,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 7
-                        ))._bn.should.eq.BN(1800);
+                        ))._bn.should.eq.BN(2200);
                     });
                 });
 
@@ -320,7 +312,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 8
-                        ))._bn.should.eq.BN(2200);
+                        ))._bn.should.eq.BN(2600);
                     });
                 });
 
@@ -328,7 +320,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 10
-                        ))._bn.should.eq.BN(3000);
+                        ))._bn.should.eq.BN(4000);
                     });
                 });
 
@@ -336,7 +328,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 13
-                        ))._bn.should.eq.BN(6000);
+                        ))._bn.should.eq.BN(7000);
                     });
                 });
 
@@ -344,7 +336,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 7, 9
-                        ))._bn.should.eq.BN(800);
+                        ))._bn.should.eq.BN(1200);
                     });
                 });
 
@@ -352,7 +344,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 7, 10
-                        ))._bn.should.eq.BN(1200);
+                        ))._bn.should.eq.BN(2200);
                     });
                 });
 
@@ -360,7 +352,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 7, 13
-                        ))._bn.should.eq.BN(4200);
+                        ))._bn.should.eq.BN(5200);
                     });
                 });
 
@@ -368,7 +360,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 8, 10
-                        ))._bn.should.eq.BN(800);
+                        ))._bn.should.eq.BN(1800);
                     });
                 });
 
@@ -376,7 +368,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 8, 13
-                        ))._bn.should.eq.BN(3800);
+                        ))._bn.should.eq.BN(4800);
                     });
                 });
 
@@ -384,7 +376,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 10, 13
-                        ))._bn.should.eq.BN(3000);
+                        ))._bn.should.eq.BN(4000);
                     });
                 });
 
@@ -392,7 +384,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 11, 13
-                        ))._bn.should.eq.BN(2000);
+                        ))._bn.should.eq.BN(3000);
                     });
                 });
             });
@@ -412,7 +404,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 6, 10
-                        ))._bn.should.eq.BN(3700);
+                        ))._bn.should.eq.BN(4800);
                     });
                 });
 
@@ -420,11 +412,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 1, 10
-                        ))._bn.should.eq.BN(
-                            (await ethersBalanceAucCalculator.calculate(
-                                ethersBalanceRecordable.address, wallet, 3, 10
-                            ))._bn
-                        );
+                        ))._bn.should.eq.BN(7500);
                     });
                 });
             });

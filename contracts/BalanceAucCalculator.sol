@@ -26,7 +26,7 @@ contract BalanceAucCalculator {
     returns (uint256)
     {
         // Return 0 if end boundary is not strictly greater than start boundary
-        if (endBlock <= startBlock)
+        if (endBlock < startBlock)
             return 0;
 
         // Get the count of balance records
@@ -79,7 +79,7 @@ contract BalanceAucCalculator {
             balanceRecordable.recordBalance(wallet, endIndex).mul(
                 endBlock.sub(
                     balanceRecordable.recordBlockNumber(wallet, endIndex).clampMin(startBlock)
-                )
+                ).add(1)
             )
         );
 
