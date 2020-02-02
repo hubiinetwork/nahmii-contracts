@@ -48,13 +48,11 @@ module.exports = (deployer, network, accounts) => {
             Math.address = addressStorage.get('Math');
 
         } else if (network.startsWith('mainnet')) {
-            throw new Error('SafeMath and Math at mainnet not configured');
-
-            await execDeploy(ctl, 'SafeMath', '', SafeMath);
-            await execDeploy(ctl, 'Math', '', Math);
+            addressStorage.set('SafeMath', '0x7c32460499575481d8179fa74e8f95414e6be213');
 
             SafeMath.address = addressStorage.get('SafeMath');
-            Math.address = addressStorage.get('Math');
+
+            await execDeploy(ctl, 'Math', '', Math);
         }
 
         await deployer.link(SafeMath, NahmiiToken);
@@ -67,8 +65,6 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('NahmiiToken', '0x5a9d2f49e739284ff4866f405b783570e8296433');
 
         else if (network.startsWith('mainnet')) {
-            throw new Error('NahmiiToken at mainnet not configured');
-
             await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
         }
 
