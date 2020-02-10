@@ -1518,7 +1518,7 @@ module.exports = (deployer, network, accounts) => {
             // await instance.authorizeInitialService(addressStorage.get('FraudChallengeByTradeSucceedingPayment'));
 
         } else if (network.startsWith('mainnet')) {
-            await execDeploy(ctl, 'BalanceAucCalculator', BalanceAucCalculator);
+            addressStorage.set('BalanceAucCalculator', '0x4a296588ba09346276f39b73d79746d7bcad6b68');
             addressStorage.set('BalanceTracker', '0xbc1bcc29edf605095bf4fe7a953b7c115ecc8cad');
             // await execDeploy(ctl, 'CancelOrdersChallenge', CancelOrdersChallenge, [ctl.deployerAccount]);
             addressStorage.set('ClientFund', '0xcc8d82f6ba952966e63001c7b320eef2ae729099');
@@ -1557,11 +1557,11 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('NullSettlementState', '0x05f0c37a4b8ebdf746e794b209c5f19dd3f4d8c8');
             addressStorage.set('PartnerBenefactor', '0xb4cb77714c236b73f63684863554e0323fe00345');
             addressStorage.set('PaymentHasher', '0x9dd11966d74b477a001808976db9e708add2ddfc');
-            addressStorage.set('RevenueFund1', '0x7f11c2e1b54650c9064e202eb46e6113f8e6cab7');
-            await execDeploy(ctl, 'RevenueFundAccrualMonitor', RevenueFundAccrualMonitor, [ctl.deployerAccount]);
+            await execDeploy(ctl, 'RevenueFund1', RevenueFund1, [ctl.deployerAccount]);
+            addressStorage.set('RevenueFundAccrualMonitor', '0xfc01359887f5b3ad2b180343930db5d98139439c');
             addressStorage.set('SecurityBond', '0xc0354bdaf2966bffe4e7237166be42ef2ad252af');
             addressStorage.set('SignerManager', '0x78ac6bb4e09b4d8be7eaddcc7dce567298980fe2');
-            await execDeploy(ctl, 'TokenHolderRevenueFund', TokenHolderRevenueFund, [ctl.deployerAccount]);
+            addressStorage.set('TokenHolderRevenueFund', '0x0b033c120d711d9e95392cb4be5cf0586ee4360a');
             // await execDeploy(ctl, 'TradeHasher', TradeHasher, [ctl.deployerAccount]);
             addressStorage.set('TransactionTracker', '0x8adfe445750937cefe42d9fb428563d61ea1aa02');
             addressStorage.set('TransferControllerManager', '0x7e88793fb8ee4f3c827027206223ba586218d58f');
@@ -1584,8 +1584,8 @@ module.exports = (deployer, network, accounts) => {
             // await instance.freezeTransactionTracker();
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             // await instance.freezeWalletLocker();
-            await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
-            // await instance.registerBeneficiary(addressStorage.get('RevenueFund1'));
+            // await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
+            await instance.registerBeneficiary(addressStorage.get('RevenueFund1'));
             // await instance.registerBeneficiary(addressStorage.get('PartnerFund'));
             // await instance.registerService(addressStorage.get('DriipSettlementByPayment'));
             // await instance.authorizeInitialService(addressStorage.get('DriipSettlementByPayment'));
@@ -1737,7 +1737,7 @@ module.exports = (deployer, network, accounts) => {
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.ADD_SETTLED_AMOUNT_ACTION.call());
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_TOTAL_FEE_ACTION.call());
 
-            // instance = await DriipSettlementByPayment.at(addressStorage.get('DriipSettlementByPayment'));
+            instance = await DriipSettlementByPayment.at(addressStorage.get('DriipSettlementByPayment'));
             // await instance.setClientFund(addressStorage.get('ClientFund'));
             // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             // await instance.setValidator(addressStorage.get('Validator'));
@@ -1747,7 +1747,7 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
             // await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
-            // await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
+            await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
             // await instance.setPartnerBenefactor(addressStorage.get('PartnerBenefactor'));
 
             // instance = await DriipSettlementByTrade.at(addressStorage.get('DriipSettlementByTrade'));
@@ -1952,16 +1952,16 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
 
             instance = await RevenueFund1.at(addressStorage.get('RevenueFund1'));
-            // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
-            // await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
+            await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
 
             instance = await RevenueFundAccrualMonitor.at(addressStorage.get('RevenueFundAccrualMonitor'));
             await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
-            await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
-            await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
-            await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
-            await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            // await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
+            // await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
+            // await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            // await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
 
             // instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -2004,10 +2004,10 @@ module.exports = (deployer, network, accounts) => {
             // await instance.enableServiceAction(addressStorage.get('FraudChallengeByTradeOrderResiduals'), await instance.REWARD_ACTION.call());
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
-            await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
-            await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
-            await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            // await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
+            // await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            // await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
             await instance.registerService(addressStorage.get('RevenueFund1'));
             await instance.enableServiceAction(addressStorage.get('RevenueFund1'), await instance.CLOSE_ACCRUAL_PERIOD_ACTION.call());
 

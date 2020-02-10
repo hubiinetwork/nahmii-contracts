@@ -40,19 +40,18 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'SafeMath', '', SafeMath);
             await execDeploy(ctl, 'Math', '', Math);
 
-        } else if (network.startsWith('ropsten')) {
-            addressStorage.set('SafeMath', '0xfda9a5f546bd24b2aead0ca6a51d08cc475e26e8');
-            addressStorage.set('Math', '0x7286202281f28d09fd2b9dc60c8673db6bb375c0');
+        } else {
+            if (network.startsWith('ropsten')) {
+                addressStorage.set('SafeMath', '0xfda9a5f546bd24b2aead0ca6a51d08cc475e26e8');
+                addressStorage.set('Math', '0x7286202281f28d09fd2b9dc60c8673db6bb375c0');
+
+            } else if (network.startsWith('mainnet')) {
+                addressStorage.set('SafeMath', '0x7c32460499575481d8179fa74e8f95414e6be213');
+                addressStorage.set('Math', '0x6aa91480ebba7c34eec9a17e11cdac97043625ef');
+            }
 
             SafeMath.address = addressStorage.get('SafeMath');
             Math.address = addressStorage.get('Math');
-
-        } else if (network.startsWith('mainnet')) {
-            addressStorage.set('SafeMath', '0x7c32460499575481d8179fa74e8f95414e6be213');
-
-            SafeMath.address = addressStorage.get('SafeMath');
-
-            await execDeploy(ctl, 'Math', '', Math);
         }
 
         await deployer.link(SafeMath, NahmiiToken);
@@ -65,7 +64,7 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('NahmiiToken', '0x5a9d2f49e739284ff4866f405b783570e8296433');
 
         else if (network.startsWith('mainnet')) {
-            await execDeploy(ctl, 'NahmiiToken', '', NahmiiToken);
+            addressStorage.set('NahmiiToken', '0x7c8155909cd385f120a56ef90728dd50f9ccbe52');
         }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);

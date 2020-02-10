@@ -50,12 +50,8 @@ module.exports = (deployer, network, accounts) => {
         } else if (network.startsWith('ropsten'))
             addressStorage.set('RevenueTokenManager', '0x9fc6b7253d143b267034033f78959fb4458d5db9');
 
-        else if (network.startsWith('mainnet')) {
-            const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
-
-            await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));
-            await revenueTokenManager.setBeneficiary(deployerAccount);
-        }
+        else if (network.startsWith('mainnet'))
+            addressStorage.set('RevenueTokenManager', '0x4fa70e4143cc38dca0a2101e522d8c0d3f040128');
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
         await addressStorage.save();
