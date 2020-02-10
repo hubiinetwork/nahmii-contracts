@@ -51,8 +51,6 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('RevenueTokenManager', '0x9fc6b7253d143b267034033f78959fb4458d5db9');
 
         else if (network.startsWith('mainnet')) {
-            throw new Error('RevenueTokenManager at mainnet not configured');
-
             const revenueTokenManager = await execDeploy(ctl, 'RevenueTokenManager', '', RevenueTokenManager, true);
 
             await revenueTokenManager.setToken(addressStorage.get('NahmiiToken'));

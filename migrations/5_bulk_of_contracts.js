@@ -1027,8 +1027,7 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('RevenueFundAccrualMonitor', '0x0f0c0e67b74f444cf64344dcf442d1ef6753fa84');
             addressStorage.set('SecurityBond', '0x6e72335e13358f43e39bba87e709bfda7e9a9d1c');
             addressStorage.set('SignerManager', '0x0f8af4aaf302e2fd6883e20a3451606522ed9ea4');
-            await execDeploy(ctl, 'TokenHolderRevenueFund', TokenHolderRevenueFund, [ctl.deployerAccount]);
-            // addressStorage.set('TokenHolderRevenueFund', '');
+            addressStorage.set('TokenHolderRevenueFund', '0x41a9adc0c7a2ae8097ab2643cda2d020d585f573');
             addressStorage.set('TradeHasher', '0xad3d1bbd54801a0057d6d3c38bdf3f53dd1fcdde');
             addressStorage.set('TransactionTracker', '0x57ded91a8ee6b53cbb85424867aae288dd70ca28');
             addressStorage.set('TransferControllerManager', '0x69cc78214eb94bc365b145bbab8790cd91b45590');
@@ -1530,13 +1529,11 @@ module.exports = (deployer, network, accounts) => {
             // await execDeploy(ctl, 'DriipSettlementChallengeByOrder', DriipSettlementChallengeByOrder, [ctl.deployerAccount]);
             addressStorage.set('DriipSettlementChallengeByPayment', '0x906fd331f5e382f05b8ae26900140c37f0db139a');
             // await execDeploy(ctl, 'DriipSettlementChallengeByTrade', DriipSettlementChallengeByTrade, [ctl.deployerAccount]);
-            // addressStorage.set('DriipSettlementChallengeState', '0xe2257105097e367eb38ddcd951db9718c234d328');
-            await execDeploy(ctl, 'DriipSettlementChallengeState', DriipSettlementChallengeState, [ctl.deployerAccount]);
+            addressStorage.set('DriipSettlementChallengeState', '0xbee46f40a0d83603e2d96d8850329983dc464c92');
             // await execDeploy(ctl, 'DriipSettlementDisputeByOrder', DriipSettlementDisputeByOrder, [ctl.deployerAccount]);
             addressStorage.set('DriipSettlementDisputeByPayment', '0x8f50e4b36fe1c34cdee57094b19c0d92ab46d153');
             // await execDeploy(ctl, 'DriipSettlementDisputeByTrade', DriipSettlementDisputeByTrade, [ctl.deployerAccount]);
-            // addressStorage.set('DriipSettlementState', '0x16ea9ca8a824aa7484658acde7b71c2e2e390574');
-            await execDeploy(ctl, 'DriipSettlementState', DriipSettlementState, [ctl.deployerAccount]);
+            addressStorage.set('DriipSettlementState', '0xc1f2fb0a975b2efc11bedefad46cbd72338388b7');
             addressStorage.set('ERC20TransferController', '0xde1586fb826fbd11bedb1b59e76d9e1b9e69e3ca');
             addressStorage.set('ERC721TransferController', '0x47321aa5facc22245dc05482e74385292aee7f9d');
             addressStorage.set('FraudChallenge', '0x95990bc424c1adf7d10488f2af59b7f42f464d9c');
@@ -1553,20 +1550,18 @@ module.exports = (deployer, network, accounts) => {
             // await execDeploy(ctl, 'NullSettlementChallengeByOrder', NullSettlementChallengeByOrder, [ctl.deployerAccount]);
             addressStorage.set('NullSettlementChallengeByPayment', '0x34fe0c8100dc8ec65e50ff195faa93297ebf4f19');
             // await execDeploy(ctl, 'NullSettlementChallengeByTrade', NullSettlementChallengeByTrade, [ctl.deployerAccount]);
-            // addressStorage.set('NullSettlementChallengeState', '0x0034ac166b6771fb749ef179284de36437c36374');
-            await execDeploy(ctl, 'NullSettlementChallengeState', NullSettlementChallengeState, [ctl.deployerAccount]);
+            addressStorage.set('NullSettlementChallengeState', '0x5578864b5d318645e1e7eeb8b20fff7dc361c581');
             // await execDeploy(ctl, 'NullSettlementDisputeByOrder', NullSettlementDisputeByOrder, [ctl.deployerAccount]);
             addressStorage.set('NullSettlementDisputeByPayment', '0xee322a2e5e54e92b19125dfa8c52c9ab31c9cffe');
             // await execDeploy(ctl, 'NullSettlementDisputeByTrade', NullSettlementDisputeByTrade, [ctl.deployerAccount]);
-            // addressStorage.set('NullSettlementState', '0x0c8abec84b5ef992c3fba2389d72fe98206bbd3c');
-            await execDeploy(ctl, 'NullSettlementState', NullSettlementState, [ctl.deployerAccount]);
+            addressStorage.set('NullSettlementState', '0x05f0c37a4b8ebdf746e794b209c5f19dd3f4d8c8');
             addressStorage.set('PartnerBenefactor', '0xb4cb77714c236b73f63684863554e0323fe00345');
             addressStorage.set('PaymentHasher', '0x9dd11966d74b477a001808976db9e708add2ddfc');
             addressStorage.set('RevenueFund1', '0x7f11c2e1b54650c9064e202eb46e6113f8e6cab7');
             await execDeploy(ctl, 'RevenueFundAccrualMonitor', RevenueFundAccrualMonitor, [ctl.deployerAccount]);
             addressStorage.set('SecurityBond', '0xc0354bdaf2966bffe4e7237166be42ef2ad252af');
             addressStorage.set('SignerManager', '0x78ac6bb4e09b4d8be7eaddcc7dce567298980fe2');
-            addressStorage.set('TokenHolderRevenueFund', '0x6ce039eb8ccbe7e5eeb09ebf131efb5556bfdec2');
+            await execDeploy(ctl, 'TokenHolderRevenueFund', TokenHolderRevenueFund, [ctl.deployerAccount]);
             // await execDeploy(ctl, 'TradeHasher', TradeHasher, [ctl.deployerAccount]);
             addressStorage.set('TransactionTracker', '0x8adfe445750937cefe42d9fb428563d61ea1aa02');
             addressStorage.set('TransferControllerManager', '0x7e88793fb8ee4f3c827027206223ba586218d58f');
@@ -1581,7 +1576,7 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setValidator(addressStorage.get('ValidatorV2'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
 
-            // instance = await ClientFund.at(addressStorage.get('ClientFund'));
+            instance = await ClientFund.at(addressStorage.get('ClientFund'));
             // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             // await instance.freezeBalanceTracker();
@@ -1589,7 +1584,7 @@ module.exports = (deployer, network, accounts) => {
             // await instance.freezeTransactionTracker();
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             // await instance.freezeWalletLocker();
-            // await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
+            await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
             // await instance.registerBeneficiary(addressStorage.get('RevenueFund1'));
             // await instance.registerBeneficiary(addressStorage.get('PartnerFund'));
             // await instance.registerService(addressStorage.get('DriipSettlementByPayment'));
@@ -1636,15 +1631,15 @@ module.exports = (deployer, network, accounts) => {
             // await instance.registerService(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'));
             // await instance.enableServiceAction(addressStorage.get('FraudChallengeByPaymentSucceedingTrade'), await instance.OPERATIONAL_MODE_ACTION.call());
 
-            instance = await DriipSettlementChallengeState.at(addressStorage.get('DriipSettlementChallengeState'));
-            await instance.setConfiguration(addressStorage.get('Configuration'));
-            await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), await instance.INITIATE_PROPOSAL_ACTION.call());
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
-            await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), await instance.DISQUALIFY_PROPOSAL_ACTION.call());
-            await instance.registerService(addressStorage.get('DriipSettlementByPayment'));
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
+            // instance = await DriipSettlementChallengeState.at(addressStorage.get('DriipSettlementChallengeState'));
+            // await instance.setConfiguration(addressStorage.get('Configuration'));
+            // await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), await instance.INITIATE_PROPOSAL_ACTION.call());
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
+            // await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), await instance.DISQUALIFY_PROPOSAL_ACTION.call());
+            // await instance.registerService(addressStorage.get('DriipSettlementByPayment'));
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
             // await instance.registerService(addressStorage.get('DriipSettlementChallengeByOrder'));
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByOrder'), await instance.INITIATE_PROPOSAL_ACTION.call());
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByOrder'), await instance.TERMINATE_PROPOSAL_ACTION.call());
@@ -1670,15 +1665,15 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
             // await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
 
-            instance = await DriipSettlementChallengeByPayment.at(addressStorage.get('DriipSettlementChallengeByPayment'));
+            // instance = await DriipSettlementChallengeByPayment.at(addressStorage.get('DriipSettlementChallengeByPayment'));
             // await instance.setValidator(addressStorage.get('Validator'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             // await instance.setDriipSettlementDisputeByPayment(addressStorage.get('DriipSettlementDisputeByPayment'));
-            await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
-            await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
-            await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
+            // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
+            // await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+            // await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
 
             // instance = await DriipSettlementChallengeByTrade.at(addressStorage.get('DriipSettlementChallengeByTrade'));
             // await instance.setValidator(addressStorage.get('ValidatorV2'));
@@ -1702,15 +1697,15 @@ module.exports = (deployer, network, accounts) => {
             // await instance.registerService(addressStorage.get('DriipSettlementChallengeByOrder'));
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByOrder'), await instance.CHALLENGE_BY_ORDER_ACTION.call());
 
-            instance = await DriipSettlementDisputeByPayment.at(addressStorage.get('DriipSettlementDisputeByPayment'));
+            // instance = await DriipSettlementDisputeByPayment.at(addressStorage.get('DriipSettlementDisputeByPayment'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
             // await instance.setValidator(addressStorage.get('Validator'));
             // await instance.setSecurityBond(addressStorage.get('SecurityBond'));
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             // await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
-            await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
-            await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+            // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
+            // await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
             // await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), await instance.CHALLENGE_BY_PAYMENT_ACTION.call());
 
@@ -1727,14 +1722,14 @@ module.exports = (deployer, network, accounts) => {
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByTrade'), await instance.UNCHALLENGE_ORDER_CANDIDATE_BY_TRADE_ACTION.call());
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByTrade'), await instance.CHALLENGE_BY_TRADE_ACTION.call());
 
-            instance = await DriipSettlementState.at(addressStorage.get('DriipSettlementState'));
-            await instance.setCommunityVote(addressStorage.get('CommunityVote'));
-            await instance.registerService(addressStorage.get('DriipSettlementByPayment'));
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.INIT_SETTLEMENT_ACTION.call());
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.COMPLETE_SETTLEMENT_ACTION.call());
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_MAX_NONCE_ACTION.call());
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.ADD_SETTLED_AMOUNT_ACTION.call());
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_TOTAL_FEE_ACTION.call());
+            // instance = await DriipSettlementState.at(addressStorage.get('DriipSettlementState'));
+            // await instance.setCommunityVote(addressStorage.get('CommunityVote'));
+            // await instance.registerService(addressStorage.get('DriipSettlementByPayment'));
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.INIT_SETTLEMENT_ACTION.call());
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.COMPLETE_SETTLEMENT_ACTION.call());
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_MAX_NONCE_ACTION.call());
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.ADD_SETTLED_AMOUNT_ACTION.call());
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementByPayment'), await instance.SET_TOTAL_FEE_ACTION.call());
             // await instance.registerService(addressStorage.get('DriipSettlementByTrade'));
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.INIT_SETTLEMENT_ACTION.call());
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.COMPLETE_SETTLEMENT_ACTION.call());
@@ -1742,7 +1737,7 @@ module.exports = (deployer, network, accounts) => {
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.ADD_SETTLED_AMOUNT_ACTION.call());
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_TOTAL_FEE_ACTION.call());
 
-            instance = await DriipSettlementByPayment.at(addressStorage.get('DriipSettlementByPayment'));
+            // instance = await DriipSettlementByPayment.at(addressStorage.get('DriipSettlementByPayment'));
             // await instance.setClientFund(addressStorage.get('ClientFund'));
             // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             // await instance.setValidator(addressStorage.get('Validator'));
@@ -1750,8 +1745,8 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setConfiguration(addressStorage.get('Configuration'));
             // await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
-            await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
-            await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
+            // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
+            // await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
             // await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
             // await instance.setPartnerBenefactor(addressStorage.get('PartnerBenefactor'));
 
@@ -1767,20 +1762,20 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
             // await instance.setPartnerBenefactor(addressStorage.get('PartnerBenefactor'));
 
-            instance = await NullSettlementChallengeState.at(addressStorage.get('NullSettlementChallengeState'));
-            await instance.setConfiguration(addressStorage.get('Configuration'));
-            await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
-            await instance.registerService(addressStorage.get('NullSettlement'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.TERMINATE_PROPOSAL_ACTION.call());
-            await instance.registerService(addressStorage.get('NullSettlementChallengeByPayment'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), await instance.INITIATE_PROPOSAL_ACTION.call());
-            await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
-            await instance.registerService(addressStorage.get('NullSettlementDisputeByPayment'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByPayment'), await instance.DISQUALIFY_PROPOSAL_ACTION.call());
-            await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
-            await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
-            await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
+            // instance = await NullSettlementChallengeState.at(addressStorage.get('NullSettlementChallengeState'));
+            // await instance.setConfiguration(addressStorage.get('Configuration'));
+            // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
+            // await instance.registerService(addressStorage.get('NullSettlement'));
+            // await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.TERMINATE_PROPOSAL_ACTION.call());
+            // await instance.registerService(addressStorage.get('NullSettlementChallengeByPayment'));
+            // await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), await instance.INITIATE_PROPOSAL_ACTION.call());
+            // await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
+            // await instance.registerService(addressStorage.get('NullSettlementDisputeByPayment'));
+            // await instance.enableServiceAction(addressStorage.get('NullSettlementDisputeByPayment'), await instance.DISQUALIFY_PROPOSAL_ACTION.call());
+            // await instance.registerService(addressStorage.get('DriipSettlementChallengeByPayment'));
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementChallengeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
+            // await instance.registerService(addressStorage.get('DriipSettlementDisputeByPayment'));
+            // await instance.enableServiceAction(addressStorage.get('DriipSettlementDisputeByPayment'), await instance.TERMINATE_PROPOSAL_ACTION.call());
             // await instance.registerService(addressStorage.get('NullSettlementChallengeByTrade'));
             // await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByTrade'), await instance.INITIATE_PROPOSAL_ACTION.call());
             // await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByTrade'), await instance.TERMINATE_PROPOSAL_ACTION.call());
@@ -1802,13 +1797,13 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setNullSettlementDisputeByOrder(addressStorage.get('NullSettlementDisputeByOrder'));
             // await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
 
-            instance = await NullSettlementChallengeByPayment.at(addressStorage.get('NullSettlementChallengeByPayment'));
+            // instance = await NullSettlementChallengeByPayment.at(addressStorage.get('NullSettlementChallengeByPayment'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
             // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             // await instance.setNullSettlementDisputeByPayment(addressStorage.get('NullSettlementDisputeByPayment'));
-            await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
-            await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
+            // await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+            // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
 
             // instance = await NullSettlementChallengeByTrade.at(addressStorage.get('NullSettlementChallengeByTrade'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -1830,14 +1825,14 @@ module.exports = (deployer, network, accounts) => {
             // await instance.registerService(addressStorage.get('NullSettlementChallengeByOrder'));
             // await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByOrder'), await instance.CHALLENGE_BY_ORDER_ACTION.call());
 
-            instance = await NullSettlementDisputeByPayment.at(addressStorage.get('NullSettlementDisputeByPayment'));
+            // instance = await NullSettlementDisputeByPayment.at(addressStorage.get('NullSettlementDisputeByPayment'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
             // await instance.setValidator(addressStorage.get('Validator'));
             // await instance.setSecurityBond(addressStorage.get('SecurityBond'));
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             // await instance.setFraudChallenge(addressStorage.get('FraudChallenge'));
-            await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+            // await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
             // await instance.registerService(addressStorage.get('NullSettlementChallengeByPayment'));
             // await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByPayment'), await instance.CHALLENGE_BY_PAYMENT_ACTION.call());
 
@@ -1853,19 +1848,19 @@ module.exports = (deployer, network, accounts) => {
             // await instance.registerService(addressStorage.get('NullSettlementChallengeByTrade'));
             // await instance.enableServiceAction(addressStorage.get('NullSettlementChallengeByTrade'), await instance.CHALLENGE_BY_TRADE_ACTION.call());
 
-            instance = await NullSettlementState.at(addressStorage.get('NullSettlementState'));
-            await instance.setCommunityVote(addressStorage.get('CommunityVote'));
-            await instance.registerService(addressStorage.get('NullSettlement'));
-            await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NULL_NONCE_ACTION.call());
-            await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NONCE_ACTION.call());
+            // instance = await NullSettlementState.at(addressStorage.get('NullSettlementState'));
+            // await instance.setCommunityVote(addressStorage.get('CommunityVote'));
+            // await instance.registerService(addressStorage.get('NullSettlement'));
+            // await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NULL_NONCE_ACTION.call());
+            // await instance.enableServiceAction(addressStorage.get('NullSettlement'), await instance.SET_MAX_NONCE_ACTION.call());
 
-            instance = await NullSettlement.at(addressStorage.get('NullSettlement'));
+            // instance = await NullSettlement.at(addressStorage.get('NullSettlement'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
             // await instance.setClientFund(addressStorage.get('ClientFund'));
             // await instance.setCommunityVote(addressStorage.get('CommunityVote'));
-            await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
-            await instance.setNullSettlementState(addressStorage.get('NullSettlementState'));
-            await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
+            // await instance.setNullSettlementChallengeState(addressStorage.get('NullSettlementChallengeState'));
+            // await instance.setNullSettlementState(addressStorage.get('NullSettlementState'));
+            // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
 
             // instance = await FraudChallenge.at(addressStorage.get('FraudChallenge'));
             // await instance.registerService(addressStorage.get('FraudChallengeByPayment'));
@@ -1956,9 +1951,9 @@ module.exports = (deployer, network, accounts) => {
             // instance = await PartnerFund.at(addressStorage.get('PartnerFund'));
             // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
 
-            // instance = await RevenueFund1.at(addressStorage.get('RevenueFund1'));
+            instance = await RevenueFund1.at(addressStorage.get('RevenueFund1'));
             // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            // await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
+            await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
             // await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
 
             instance = await RevenueFundAccrualMonitor.at(addressStorage.get('RevenueFundAccrualMonitor'));

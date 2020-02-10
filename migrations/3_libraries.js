@@ -220,8 +220,7 @@ module.exports = (deployer, network, accounts) => {
                 CurrenciesLib,
                 NahmiiTypesLib,
                 PaymentTypesLib,
-                SettlementChallengeTypesLib/*,
-                    TradeTypesLib*/
+                SettlementChallengeTypesLib
             ]);
             await deployer.link(SafeMathIntLib, [
                 BalanceTrackerLib,
@@ -246,11 +245,8 @@ module.exports = (deployer, network, accounts) => {
             NahmiiTypesLib.address = addressStorage.get('NahmiiTypesLib');
 
             await deployer.link(NahmiiTypesLib, [
-                PaymentTypesLib/*,
-                    TradeTypesLib*/
+                PaymentTypesLib
             ]);
-
-            // await execDeploy(ctl, 'TradeTypesLib', '', TradeTypesLib);
         }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);
