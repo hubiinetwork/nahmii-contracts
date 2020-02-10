@@ -1,7 +1,7 @@
 /*!
  * Hubii Nahmii
  *
- * Copyright (C) 2017-2018 Hubii AS
+ * Copyright (C) 2017-2019 Hubii AS
  */
 
 const Migrations = artifacts.require('Migrations');
@@ -23,33 +23,22 @@ module.exports = (deployer, network, accounts) => {
 
         if (helpers.isTestNetwork(network))
             deployerAccount = accounts[0];
-        else {
+        else
             deployerAccount = helpers.parseDeployerArg();
-
-            if (web3.eth.personal)
-                await web3.eth.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 14400); // 4h
-            else
-                await web3.personal.unlockAccount(deployerAccount, helpers.parsePasswordArg(), 14400); // 4h
-        }
 
         debug(`deployerAccount: ${deployerAccount}`);
 
-        try {
-            if (network.startsWith('ropsten') || helpers.isTestNetwork(network)) {
-                instance = await deployer.deploy(Migrations, {from: deployerAccount});
-                addressStorage.set('Migrations', instance.address);
+        if (helpers.isTestNetwork(network)) {
+            instance = await deployer.deploy(Migrations, {from: deployerAccount});
+            addressStorage.set('Migrations', instance.address);
 
-            } else {
-                Migrations.address = '0x14b641a8263c7a2ec41f117a3c82e2a61567a799';
-                addressStorage.set('Migrations', '0x14b641a8263c7a2ec41f117a3c82e2a61567a799');
-            }
+        } else if (network.startsWith('ropsten')) {
+            addressStorage.set('Migrations', '0x5868e542da7392de80c7ac0e7724a1e892f13611');
+            Migrations.address = addressStorage.get('Migrations');
 
-        } finally {
-            if (!helpers.isTestNetwork(network))
-                if (web3.eth.personal)
-                    await web3.eth.personal.lockAccount(deployerAccount);
-                else
-                    await web3.personal.lockAccount(deployerAccount);
+        } else if (network.startsWith('mainnet')) {
+            addressStorage.set('Migrations', '0x14b641a8263c7a2ec41f117a3c82e2a61567a799');
+            Migrations.address = addressStorage.get('Migrations');
         }
 
         debug(`Completed deployment as ${deployerAccount} and saving addresses in ${__filename}...`);

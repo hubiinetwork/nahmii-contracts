@@ -4,6 +4,7 @@ const BN = require('bn.js');
 const bnChai = require('bn-chai');
 const {Contract} = require('ethers');
 const NahmiiToken = artifacts.require('NahmiiToken');
+const MockedTokenUpgradeAgent = artifacts.require('MockedTokenUpgradeAgent');
 
 chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
@@ -32,7 +33,7 @@ module.exports = function (glob) {
         describe('setName()', () => {
             describe('if called by non-minter', () => {
                 it('should should revert', async () => {
-                    web3NahmiiToken.setName('some name', {from: glob.user_a})
+                    await web3NahmiiToken.setName('some name', {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -58,7 +59,7 @@ module.exports = function (glob) {
         describe('setSymbol()', () => {
             describe('if called by non-minter', () => {
                 it('should should revert', async () => {
-                    web3NahmiiToken.setName('some name', {from: glob.user_a})
+                    await web3NahmiiToken.setName('some name', {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -84,7 +85,7 @@ module.exports = function (glob) {
         describe('disabledMinting()', () => {
             describe('if called by non-minter', () => {
                 it('should should revert', async () => {
-                    web3NahmiiToken.disableMinting({from: glob.user_a})
+                    await web3NahmiiToken.disableMinting({from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -101,16 +102,9 @@ module.exports = function (glob) {
             });
         });
 
-        describe('holdersCount()', () => {
+        describe('balanceRecordsCount()', () => {
             it('should equal value initialized', async () => {
-                (await ethersNahmiiToken.holdersCount())
-                    ._bn.should.eq.BN(0);
-            });
-        });
-
-        describe('balanceUpdatesCount()', () => {
-            it('should equal value initialized', async () => {
-                (await ethersNahmiiToken.balanceUpdatesCount(glob.user_a))
+                (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                     ._bn.should.eq.BN(0);
             });
         });
@@ -118,7 +112,7 @@ module.exports = function (glob) {
         describe('mint()', () => {
             describe('if called by non-minter', () => {
                 it('should should revert', async () => {
-                    web3NahmiiToken.mint(glob.user_a, 1000, {from: glob.user_a})
+                    await web3NahmiiToken.mint(glob.user_a, 1000, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
@@ -129,7 +123,7 @@ module.exports = function (glob) {
                 });
 
                 it('should should revert', async () => {
-                    web3NahmiiToken.mint(glob.user_a, 1000).should.be.rejected;
+                    await web3NahmiiToken.mint(glob.user_a, 1000).should.be.rejected;
                 });
             });
 
@@ -143,9 +137,7 @@ module.exports = function (glob) {
                     (await ethersNahmiiToken.balanceOf(glob.user_a))
                         ._bn.should.eq.BN(1000);
 
-                    (await ethersNahmiiToken.holdersCount())
-                        ._bn.should.eq.BN(1);
-                    (await ethersNahmiiToken.balanceUpdatesCount(glob.user_a))
+                    (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                         ._bn.should.eq.BN(1);
                 });
             });
@@ -167,17 +159,15 @@ module.exports = function (glob) {
                 (await ethersNahmiiToken.balanceOf(glob.user_b))
                     ._bn.should.eq.BN(1000);
 
-                (await ethersNahmiiToken.holdersCount())
+                (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                     ._bn.should.eq.BN(2);
-                (await ethersNahmiiToken.balanceUpdatesCount(glob.user_a))
-                    ._bn.should.eq.BN(2);
-                (await ethersNahmiiToken.balanceUpdatesCount(glob.user_b))
+                (await ethersNahmiiToken.balanceRecordsCount(glob.user_b))
                     ._bn.should.eq.BN(1);
             });
         });
 
         describe('approve()', () => {
-            describe('if allowance is zero', () => {
+            describe('if old allowance is zero', () => {
                 it('should successfully approve', async () => {
                     const result = await web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a});
 
@@ -189,14 +179,28 @@ module.exports = function (glob) {
                 });
             });
 
-            describe('if allowance is non-zero', () => {
+            describe('if old allowance is non-zero', () => {
                 beforeEach(async () => {
                     await web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a});
                 });
 
-                it('should revert', async () => {
-                    web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a})
-                        .should.be.rejected;
+                describe('if new allowance is non-zero', () => {
+                    it('should revert', async () => {
+                        await web3NahmiiToken.approve(glob.user_b, 1000, {from: glob.user_a})
+                            .should.be.rejected;
+                    });
+                });
+
+                describe('if new allowance is zero', () => {
+                    it('should successfully approve', async () => {
+                        const result = await web3NahmiiToken.approve(glob.user_b, 0, {from: glob.user_a});
+
+                        result.logs.should.be.an('array').and.have.lengthOf(1);
+                        result.logs[0].event.should.equal('Approval');
+
+                        (await ethersNahmiiToken.allowance(glob.user_a, glob.user_b))
+                            ._bn.should.eq.BN(0);
+                    });
                 });
             });
         });
@@ -219,84 +223,279 @@ module.exports = function (glob) {
                 (await ethersNahmiiToken.balanceOf(glob.user_b))
                     ._bn.should.eq.BN(1000);
 
-                (await ethersNahmiiToken.holdersCount())
+                (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
                     ._bn.should.eq.BN(2);
-                (await ethersNahmiiToken.balanceUpdatesCount(glob.user_a))
-                    ._bn.should.eq.BN(2);
-                (await ethersNahmiiToken.balanceUpdatesCount(glob.user_b))
+                (await ethersNahmiiToken.balanceRecordsCount(glob.user_b))
                     ._bn.should.eq.BN(1);
             });
         });
 
-        describe('balanceBlocksIn()', () => {
-            let blockNumber;
+        describe('upgrade()', () => {
+            let web3UpgradeAgent;
 
             beforeEach(async () => {
                 await web3NahmiiToken.mint(glob.user_a, 1000);
-                await web3NahmiiToken.transfer(glob.user_b, 300, {from: glob.user_a});
-                blockNumber = await provider.getBlockNumber();
+
+                web3UpgradeAgent = await MockedTokenUpgradeAgent.new(web3NahmiiToken.address);
             });
 
-            it('should successfully return calculated balance blocks value', async () => {
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_a, blockNumber - 2, blockNumber - 1
-                ))._bn.should.eq.BN(0);
+            describe('if agent upgrades', () => {
+                beforeEach(async () => {
+                    await web3UpgradeAgent._setUpgradeFrom(true);
+                });
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_a, blockNumber - 1, blockNumber
-                ))._bn.should.eq.BN(1000);
+                it('should successfully decrement the old balance', async () => {
+                    const result = await web3NahmiiToken.upgrade(web3UpgradeAgent.address, 600, {
+                        from: glob.user_a,
+                        gas: 1e6
+                    });
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_a, blockNumber, blockNumber + 1
-                ))._bn.should.eq.BN(700);
+                    result.logs.should.be.an('array').and.have.lengthOf(2);
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_a, blockNumber - 1, blockNumber + 1
-                ))._bn.should.eq.BN(1700);
+                    result.logs.map(l => l.event).should.include('Upgrade');
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_b, blockNumber - 2, blockNumber - 1
-                ))._bn.should.eq.BN(0);
+                    (await ethersNahmiiToken.balanceOf(glob.user_a))
+                        ._bn.should.eq.BN(400);
+                });
+            });
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_b, blockNumber - 1, blockNumber
-                ))._bn.should.eq.BN(0);
+            describe('if agent does not upgrade', () => {
+                beforeEach(async () => {
+                    await web3UpgradeAgent._setUpgradeFrom(false);
+                });
 
-                (await ethersNahmiiToken.balanceBlocksIn(
-                    glob.user_b, blockNumber, blockNumber + 1
-                ))._bn.should.eq.BN(300);
+                it('should revert', async () => {
+                    await web3NahmiiToken.upgrade(web3UpgradeAgent.address, 600, {
+                        from: glob.user_a,
+                        gas: 1e6
+                    }).should.be.rejected;
+                });
             });
         });
 
-        describe('holdersByIndices()', () => {
+        describe('upgradeFrom()', () => {
+            let web3UpgradeAgent;
+
             beforeEach(async () => {
                 await web3NahmiiToken.mint(glob.user_a, 1000);
-                await web3NahmiiToken.transfer(glob.user_b, 1000, {from: glob.user_a});
+
+                web3UpgradeAgent = await MockedTokenUpgradeAgent.new(web3NahmiiToken.address);
             });
 
-            describe('if low is greater than up', () => {
+            describe('if agent upgrades', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.approve(glob.owner, 600, {from: glob.user_a});
+
+                    await web3UpgradeAgent._setUpgradeFrom(true);
+                });
+
+                it('should successfully decrement the old balance', async () => {
+                    const result = await web3NahmiiToken.upgradeFrom(web3UpgradeAgent.address, glob.user_a, 600, {
+                        gas: 1e6
+                    });
+
+                    result.logs.should.be.an('array').and.have.lengthOf(3);
+
+                    result.logs.map(l => l.event).should.include('UpgradeFrom');
+
+                    (await ethersNahmiiToken.balanceOf(glob.user_a))
+                        ._bn.should.eq.BN(400);
+                });
+            });
+
+            describe('if agent does not upgrade', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.approve(glob.owner, 600, {from: glob.user_a});
+
+                    await web3UpgradeAgent._setUpgradeFrom(false);
+                });
+
                 it('should revert', async () => {
-                    web3NahmiiToken.holdersByIndices.call(1, 0, false)
-                        .should.be.rejected;
+                    await web3NahmiiToken.upgradeFrom(web3UpgradeAgent.address, glob.user_a, 600, {
+                        gas: 1e6
+                    }).should.be.rejected;
                 });
             });
 
-            describe('if posOnly is false', () => {
-                it('should return the count of all holders', async () => {
-                    const holders = await web3NahmiiToken.holdersByIndices.call(0, 1, false);
+            describe('if wallet is not approved to burn', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.approve(glob.owner, 500, {from: glob.user_a});
 
-                    holders.should.be.an('array').and.have.lengthOf(2);
-                    holders[0].should.equal(glob.user_a);
-                    holders[1].should.equal(glob.user_b);
+                    await web3UpgradeAgent._setUpgradeFrom(true);
+                });
+
+                it('should revert', async () => {
+                    await web3NahmiiToken.upgradeFrom(web3UpgradeAgent.address, glob.user_a, 600, {
+                        gas: 1e6
+                    }).should.be.rejected;
+                });
+            });
+        });
+
+        describe('recordBalance()', () => {
+            describe('if the records count is zero', () => {
+                it('should revert', async () => {
+                    await ethersNahmiiToken.recordBalance(glob.user_a, 0).should.be.rejected;
                 });
             });
 
-            describe('if posOnly is true', () => {
-                it('should return the count of holders with positive balances', async () => {
-                    const holders = await web3NahmiiToken.holdersByIndices.call(0, 1, true);
+            describe('if the records count is non-zero', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.mint(glob.user_a, 1000);
+                    await web3NahmiiToken.mint(glob.user_a, 2000);
+                    await web3NahmiiToken.mint(glob.user_a, 3000);
+                });
 
-                    holders.should.be.an('array').and.have.lengthOf(1);
-                    holders[0].should.equal(glob.user_b);
+                it('should return the balance at the given record index', async () => {
+                    (await ethersNahmiiToken.recordBalance(glob.user_a, 0))
+                        ._bn.should.eq.BN(1000);
+                    (await ethersNahmiiToken.recordBalance(glob.user_a, 1))
+                        ._bn.should.eq.BN(3000);
+                    (await ethersNahmiiToken.recordBalance(glob.user_a, 2))
+                        ._bn.should.eq.BN(6000);
+                });
+            });
+        });
+
+        describe('recordBlockNumber()', () => {
+            describe('if the records count is zero', () => {
+                it('should revert', async () => {
+                    await ethersNahmiiToken.recordBlockNumber(glob.user_a, 0).should.be.rejected;
+                });
+            });
+
+            describe('if the records count is non-zero', () => {
+                let blockNumber;
+
+                beforeEach(async () => {
+                    await web3NahmiiToken.mint(glob.user_a, 1000);
+                    await web3NahmiiToken.mint(glob.user_a, 2000);
+                    await web3NahmiiToken.mint(glob.user_a, 3000);
+
+                    blockNumber = await provider.getBlockNumber()
+                });
+
+                it('should return the balance at the given record index', async () => {
+                    (await ethersNahmiiToken.recordBlockNumber(glob.user_a, 0))
+                        ._bn.should.eq.BN(blockNumber - 2);
+                    (await ethersNahmiiToken.recordBlockNumber(glob.user_a, 1))
+                        ._bn.should.eq.BN(blockNumber - 1);
+                    (await ethersNahmiiToken.recordBlockNumber(glob.user_a, 2))
+                        ._bn.should.eq.BN(blockNumber);
+                });
+            });
+        });
+
+        describe('recordIndexByBlockNumber()', () => {
+            describe('if the records count is zero', () => {
+                it('should return -1', async () => {
+                    (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, 1000))
+                        ._bn.should.eq.BN(-1);
+                });
+            });
+
+            describe('if the records count is non-zero', () => {
+                let blockNumber;
+
+                beforeEach(async () => {
+                    await web3NahmiiToken.mint(glob.user_a, 1000);
+                    await web3NahmiiToken.mint(glob.user_a, 2000);
+                    await web3NahmiiToken.mint(glob.user_a, 3000);
+
+                    blockNumber = await provider.getBlockNumber();
+                });
+
+                it('should return the balance at the given record index', async () => {
+                    (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, blockNumber - 2))
+                        ._bn.should.eq.BN(0);
+                    (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, blockNumber - 1))
+                        ._bn.should.eq.BN(1);
+                    (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, blockNumber))
+                        ._bn.should.eq.BN(2);
+                    (await ethersNahmiiToken.recordIndexByBlockNumber(glob.user_a, blockNumber + 10))
+                        ._bn.should.eq.BN(2);
+                });
+            });
+        });
+
+        describe('upgradeBalanceRecords()', () => {
+            let balanceRecords;
+
+            beforeEach(() => {
+                balanceRecords = [
+                    {blockNumber: 1, balance: 1000},
+                    {blockNumber: 2, balance: 2000},
+                    {blockNumber: 3, balance: 3000}
+                ];
+            });
+
+            describe('if called by non-minter', () => {
+                it('should should revert', async () => {
+                    await ethersNahmiiToken.connect(glob.signer_a).upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called when minting is disabled', () => {
+                beforeEach(async () => {
+                    await web3NahmiiToken.disableMinting();
+                });
+
+                it('should should revert', async () => {
+                    await ethersNahmiiToken.upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if called with block numbers in non-increasing order', () => {
+                beforeEach(async () => {
+                    balanceRecords[1].blockNumber = 4;
+                });
+
+                it('should should revert', async () => {
+                    await ethersNahmiiToken.upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    ).should.be.rejected;
+                });
+            });
+
+            describe('if within operational constraints', () => {
+                let topic, filter;
+
+                beforeEach(async () => {
+                    topic = ethersNahmiiToken.interface.events.UpgradeBalanceRecords.topics[0];
+                    filter = {
+                        fromBlock: await provider.getBlockNumber(),
+                        topics: [topic]
+                    };
+                });
+
+                it('should successfully mint', async () => {
+                    await ethersNahmiiToken.upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    );
+
+                    const logs = await provider.getLogs(filter);
+                    logs[logs.length - 1].topics[0].should.equal(topic);
+
+                    (await ethersNahmiiToken.balanceRecordsCount(glob.user_a))
+                        ._bn.should.eq.BN(3);
+                });
+            });
+
+            describe('if called a second time and the second batch of balance record block numbers are invalid', () => {
+                beforeEach(async () => {
+                    await ethersNahmiiToken.upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    );
+                });
+
+                it('should should revert', async () => {
+                    await ethersNahmiiToken.upgradeBalanceRecords(
+                        glob.user_a, balanceRecords, {gasLimit: 1e6}
+                    ).should.be.rejected;
                 });
             });
         });

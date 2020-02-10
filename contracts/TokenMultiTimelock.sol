@@ -3,30 +3,34 @@
  *
  * Compliant with the Hubii Nahmii specification v0.12.
  *
- * Copyright (C) 2017-2018 Hubii AS
+ * Copyright (C) 2017-2019 Hubii AS
  */
 
 pragma solidity >=0.4.25 <0.6.0;
+pragma experimental ABIEncoderV2;
 
 import {Ownable} from "./Ownable.sol";
+import {SafeMathUintLib} from "./SafeMathUintLib.sol";
 import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 /**
- * @title Balance tracker
+ * @title TokenMultiTimelock
  * @notice An ownable that allows a beneficiary to extract tokens in
  *   a number of batches each a given release time
  */
 contract TokenMultiTimelock is Ownable {
+    using SafeMathUintLib for uint256;
     using SafeERC20 for IERC20;
 
     //
     // Structures
     // -----------------------------------------------------------------------------------------------------------------
     struct Release {
+        uint256 blockNumber;
         uint256 earliestReleaseTime;
         uint256 amount;
-        uint256 blockNumber;
+        uint256 totalAmount;
         bool done;
     }
 
@@ -37,6 +41,7 @@ contract TokenMultiTimelock is Ownable {
     address public beneficiary;
 
     Release[] public releases;
+    uint256 public totalReleasedAmount;
     uint256 public totalLockedAmount;
     uint256 public executedReleasesCount;
 
@@ -45,7 +50,8 @@ contract TokenMultiTimelock is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     event SetTokenEvent(IERC20 token);
     event SetBeneficiaryEvent(address beneficiary);
-    event DefineReleaseEvent(uint256 earliestReleaseTime, uint256 amount, uint256 blockNumber);
+    event DefineReleaseEvent(uint256 blockNumber, uint256 earliestReleaseTime, uint256 amount,
+        uint256 totalAmount, bool done);
     event SetReleaseBlockNumberEvent(uint256 index, uint256 blockNumber);
     event ReleaseEvent(uint256 index, uint256 blockNumber, uint256 earliestReleaseTime,
         uint256 actualReleaseTime, uint256 amount);
@@ -70,7 +76,7 @@ contract TokenMultiTimelock is Ownable {
     notNullOrThisAddress(address(_token))
     {
         // Require that the token has not previously been set
-        require(address(token) == address(0), "Token previously set [TokenMultiTimelock.sol:73]");
+        require(address(token) == address(0), "Token previously set [TokenMultiTimelock.sol:79]");
 
         // Update beneficiary
         token = _token;
@@ -94,42 +100,29 @@ contract TokenMultiTimelock is Ownable {
     }
 
     /// @notice Define a set of new releases
-    /// @param earliestReleaseTimes The timestamp after which the corresponding amount may be released
-    /// @param amounts The amounts to be released
-    /// @param releaseBlockNumbers The set release block numbers for releases whose earliest release time
-    /// is in the past
-    function defineReleases(uint256[] memory earliestReleaseTimes, uint256[] memory amounts, uint256[] memory releaseBlockNumbers)
+    /// @param _releases The new set of releases
+    function defineReleases(Release[] memory _releases)
     onlyOperator
     public
     {
-        require(
-            earliestReleaseTimes.length == amounts.length,
-            "Earliest release times and amounts lengths mismatch [TokenMultiTimelock.sol:105]"
-        );
-        require(
-            earliestReleaseTimes.length >= releaseBlockNumbers.length,
-            "Earliest release times and release block numbers lengths mismatch [TokenMultiTimelock.sol:109]"
-        );
-
         // Require that token address has been set
-        require(address(token) != address(0), "Token not initialized [TokenMultiTimelock.sol:115]");
+        require(address(token) != address(0), "Token not initialized [TokenMultiTimelock.sol:109]");
 
-        for (uint256 i = 0; i < earliestReleaseTimes.length; i++) {
-            // Update the total amount locked by this contract
-            totalLockedAmount += amounts[i];
+        // For each in put release...
+        for (uint256 i = 0; i < _releases.length; i++) {
+            // Increment the total amount locked by this contract
+            totalLockedAmount += _releases[i].amount;
 
             // Require that total amount locked is less than or equal to the token balance of
             // this contract
-            require(token.balanceOf(address(this)) >= totalLockedAmount, "Total locked amount overrun [TokenMultiTimelock.sol:123]");
-
-            // Retrieve early block number where available
-            uint256 blockNumber = i < releaseBlockNumbers.length ? releaseBlockNumbers[i] : 0;
+            require(token.balanceOf(address(this)) >= totalLockedAmount, "Total locked amount overrun [TokenMultiTimelock.sol:118]");
 
             // Add release
-            releases.push(Release(earliestReleaseTimes[i], amounts[i], blockNumber, false));
+            releases.push(_releases[i]);
 
             // Emit event
-            emit DefineReleaseEvent(earliestReleaseTimes[i], amounts[i], blockNumber);
+            emit DefineReleaseEvent(_releases[i].blockNumber, _releases[i].earliestReleaseTime, _releases[i].amount,
+                totalLockedAmount, _releases[i].done);
         }
     }
 
@@ -151,13 +144,30 @@ contract TokenMultiTimelock is Ownable {
     onlyBeneficiary
     {
         // Require that the release is not done
-        require(!releases[index].done, "Release previously done [TokenMultiTimelock.sol:154]");
+        require(!releases[index].done, "Release previously done [TokenMultiTimelock.sol:147]");
 
         // Update the release block number
         releases[index].blockNumber = blockNumber;
 
         // Emit event
         emit SetReleaseBlockNumberEvent(index, blockNumber);
+    }
+
+    /// @notice Get the index of the release covering the given block number,
+    /// or -1 if the given block number is below the smallest release block number
+    /// @param blockNumber The concerned block number
+    /// @return The release index
+    function releaseIndexByBlockNumber(uint256 blockNumber)
+    public
+    view
+    returns (int256)
+    {
+        for (uint256 i = releases.length; i > 0;) {
+            i = i.sub(1);
+            if (0 < releases[i].blockNumber && releases[i].blockNumber <= blockNumber)
+                return int256(i);
+        }
+        return - 1;
     }
 
     /// @notice Transfers tokens held in the indicated release to beneficiary.
@@ -170,13 +180,19 @@ contract TokenMultiTimelock is Ownable {
         Release storage _release = releases[index];
 
         // Require that this release has been properly defined by having non-zero amount
-        require(0 < _release.amount, "Release amount not strictly positive [TokenMultiTimelock.sol:173]");
+        require(0 < _release.amount, "Release amount not strictly positive [TokenMultiTimelock.sol:183]");
 
         // Require that this release has not already been executed
-        require(!_release.done, "Release previously done [TokenMultiTimelock.sol:176]");
+        require(!_release.done, "Release previously done [TokenMultiTimelock.sol:186]");
 
         // Require that the current timestamp is beyond the nominal release time
-        require(block.timestamp >= _release.earliestReleaseTime, "Block time stamp less than earliest release time [TokenMultiTimelock.sol:179]");
+        require(block.timestamp >= _release.earliestReleaseTime, "Block time stamp less than earliest release time [TokenMultiTimelock.sol:189]");
+
+        // Increment total released amount
+        totalReleasedAmount = totalReleasedAmount.add(_release.amount);
+
+        // Set release' total (released) amount
+        _release.totalAmount = totalReleasedAmount;
 
         // Set release done
         _release.done = true;
@@ -186,10 +202,10 @@ contract TokenMultiTimelock is Ownable {
             _release.blockNumber = block.number;
 
         // Bump number of executed releases
-        executedReleasesCount++;
+        executedReleasesCount = executedReleasesCount.add(1);
 
         // Decrement the total locked amount
-        totalLockedAmount -= _release.amount;
+        totalLockedAmount = totalLockedAmount.sub(_release.amount);
 
         // Execute transfer
         token.safeTransfer(beneficiary, _release.amount);
@@ -201,7 +217,7 @@ contract TokenMultiTimelock is Ownable {
     // Modifiers
     // -----------------------------------------------------------------------------------------------------------------
     modifier onlyBeneficiary() {
-        require(msg.sender == beneficiary, "Message sender not beneficiary [TokenMultiTimelock.sol:204]");
+        require(msg.sender == beneficiary, "Message sender not beneficiary [TokenMultiTimelock.sol:220]");
         _;
     }
 }

@@ -194,7 +194,6 @@ exports.mockPayment = async (operator, params) => {
     const recipientWallet = Wallet.createRandom();
 
     const payment = exports.mergeDeep({
-        nonce: utils.bigNumberify(globalNonce++),
         amount: utils.parseUnits('100', 18),
         currency: {
             ct: exports.address1,
