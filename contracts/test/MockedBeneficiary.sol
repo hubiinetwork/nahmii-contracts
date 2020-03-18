@@ -88,4 +88,12 @@ contract MockedBeneficiary is Beneficiary {
         currencyId = _benefits[index].figure.currency.id;
         standard = _benefits[index].standard;
     }
+
+    function benefitsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return _benefits.length;
+    }
 }
