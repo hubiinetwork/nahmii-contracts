@@ -14,10 +14,10 @@ import {BalanceRecordable} from "./BalanceRecordable.sol";
 import {ConstantsLib} from "./ConstantsLib.sol";
 import {Ownable} from "./Ownable.sol";
 import {RevenueFund} from "./RevenueFund.sol";
-import {RevenueTokenManager} from "./RevenueTokenManager.sol";
+import {TokenHolderRevenueFund} from "./TokenHolderRevenueFund.sol";
+import {ClaimableAmountCalculator} from "./ClaimableAmountCalculator.sol";
 import {SafeMathIntLib} from "./SafeMathIntLib.sol";
 import {SafeMathUintLib} from "./SafeMathUintLib.sol";
-import {TokenHolderRevenueFund} from "./TokenHolderRevenueFund.sol";
 
 contract RevenueFundAccrualMonitor is Ownable {
     using SafeMathIntLib for int256;
@@ -28,18 +28,14 @@ contract RevenueFundAccrualMonitor is Ownable {
     // -----------------------------------------------------------------------------------------------------------------
     RevenueFund public revenueFund;
     TokenHolderRevenueFund public tokenHolderRevenueFund;
-    RevenueTokenManager public revenueTokenManager;
-    BalanceAucCalculator public balanceBlocksCalculator;
-    BalanceAucCalculator public releasedAmountBlocksCalculator;
+    ClaimableAmountCalculator public claimableAmountCalculator;
 
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
     event SetRevenueFundEvent(RevenueFund revenueFund);
     event SetTokenHolderRevenueFundEvent(TokenHolderRevenueFund tokenHolderRvenueFund);
-    event SetRevenueTokenManagerEvent(RevenueTokenManager revenueTokenManager);
-    event SetBalanceBlocksCalculatorEvent(BalanceAucCalculator balanceAucCalculator);
-    event SetReleasedAmountBlocksCalculatorEvent(BalanceAucCalculator balanceAucCalculator);
+    event SetClaimableAmountCalculatorEvent(ClaimableAmountCalculator calculator);
 
     //
     // Constructor
@@ -78,46 +74,18 @@ contract RevenueFundAccrualMonitor is Ownable {
         emit SetTokenHolderRevenueFundEvent(tokenHolderRevenueFund);
     }
 
-    /// @notice Set the revenue token manager contract
-    /// @param _revenueTokenManager The RevenueTokenManager contract instance
-    function setRevenueTokenManager(RevenueTokenManager _revenueTokenManager)
+    /// @notice Set the claimable amount calculator contract
+    /// @param calculator The (address of) ClaimableAmountCalculator contract instance
+    function setClaimableAmountCalculator(ClaimableAmountCalculator calculator)
     public
     onlyDeployer
-    notNullAddress(address(_revenueTokenManager))
+    notNullAddress(address(calculator))
     {
         // Set new revenue token manager
-        revenueTokenManager = _revenueTokenManager;
+        claimableAmountCalculator = calculator;
 
         // Emit event
-        emit SetRevenueTokenManagerEvent(revenueTokenManager);
-    }
-
-    /// @notice Set the balance AUC calculator for the calculation of revenue token balance blocks
-    /// @param _balanceAucCalculator The balance AUC calculator
-    function setBalanceBlocksCalculator(BalanceAucCalculator _balanceAucCalculator)
-    public
-    onlyDeployer
-    notNullOrThisAddress(address(_balanceAucCalculator))
-    {
-        // Set the calculator
-        balanceBlocksCalculator = _balanceAucCalculator;
-
-        // Emit event
-        emit SetBalanceBlocksCalculatorEvent(balanceBlocksCalculator);
-    }
-
-    /// @notice Set the balance AUC calculator for the calculation of released amount blocks
-    /// @param _balanceAucCalculator The balance AUC calculator
-    function setReleasedAmountBlocksCalculator(BalanceAucCalculator _balanceAucCalculator)
-    public
-    onlyDeployer
-    notNullOrThisAddress(address(_balanceAucCalculator))
-    {
-        // Set the calculator
-        releasedAmountBlocksCalculator = _balanceAucCalculator;
-
-        // Emit event
-        emit SetReleasedAmountBlocksCalculatorEvent(releasedAmountBlocksCalculator);
+        emit SetClaimableAmountCalculatorEvent(calculator);
     }
 
     /// @notice Get the claimable amount for the given wallet-currency pair for the
@@ -139,17 +107,12 @@ contract RevenueFundAccrualMonitor is Ownable {
         // of the previous closed accrual
         uint256 currentAccrualStartBlock = _currentAccrualStartBlock(currencyCt, currencyId);
 
-        // Get the wallet balance blocks in the ongoing accrual
-        int256 balanceBlocks = _balanceBlocks(wallet, currentAccrualStartBlock, block.number);
-
-        // Get the corrected released amount blocks in the ongoing accrual, i.e. the revenue token manager's
-        // released amount blocks subtracted the balance blocks of non-claimers
-        int256 amountBlocks = _correctedReleasedAmountBlocks(currentAccrualStartBlock, block.number);
-
-        // Return the calculated claimable amount
-        return accrualClaimableAmount
-        .mul_nn(balanceBlocks)
-        .div_nn(amountBlocks);
+        // Return the claimable amount
+        return claimableAmountCalculator.calculate(
+            wallet, accrualClaimableAmount,
+            currentAccrualStartBlock, block.number,
+            currentAccrualStartBlock, block.number
+        );
     }
 
     //
@@ -185,33 +148,5 @@ contract RevenueFundAccrualMonitor is Ownable {
             );
             return endBlock.add(1);
         }
-    }
-
-    function _balanceBlocks(address wallet, uint256 startBlock, uint256 endBlock)
-    private
-    view
-    returns (int256)
-    {
-        return int256(balanceBlocksCalculator.calculate(
-                BalanceRecordable(address(revenueTokenManager.token())), wallet, startBlock, endBlock
-            ));
-    }
-
-    function _correctedReleasedAmountBlocks(uint256 startBlock, uint256 endBlock)
-    private
-    view
-    returns (int256)
-    {
-        // Obtain the released amount blocks from revenue token manager
-        int256 amountBlocks = int256(releasedAmountBlocksCalculator.calculate(
-                BalanceRecordable(address(revenueTokenManager)), address(0), startBlock, endBlock
-            ));
-
-        // Correct the amount blocks by subtracting the contributions from contracts that may not claim
-        for (uint256 i = 0; i < tokenHolderRevenueFund.nonClaimersCount(); i = i.add(1))
-            amountBlocks = amountBlocks.sub(_balanceBlocks(tokenHolderRevenueFund.nonClaimers(i), startBlock, endBlock));
-
-        // Return corrected amount blocks
-        return amountBlocks;
     }
 }
