@@ -1092,7 +1092,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     {
         // Retrieve the released amount blocks
         int256 _releasedAmountBlocks = _correctedReleasedAmountBlocks(
-            startBlock, endBlock
+            accrual.startBlock, accrual.endBlock
         );
 
         // Return 0 if no revenue tokens were released
