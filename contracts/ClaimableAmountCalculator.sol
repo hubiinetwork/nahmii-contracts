@@ -210,15 +210,19 @@ contract ClaimableAmountCalculator is Ownable {
     returns (int256)
     {
         // Obtain the released amount blocks
-        int256 amountBlocks = int256(releasedAmountBlocksCalculator.calculate(
+        int256 releasedAmountBlocks = int256(releasedAmountBlocksCalculator.calculate(
                 BalanceRecordable(address(revenueTokenManager)), address(0), startBlock, endBlock
             ));
 
+        // Return 0 if no revenue tokens were released
+        if (0 == releasedAmountBlocks)
+            return 0;
+
         // Correct the amount blocks by subtracting the contributions from contracts that may not claim
         for (uint256 i = 0; i < nonClaimers.length; i = i.add(1))
-            amountBlocks = amountBlocks.sub(_balanceBlocks(nonClaimers[i], startBlock, endBlock));
+            releasedAmountBlocks = releasedAmountBlocks.sub(_balanceBlocks(nonClaimers[i], startBlock, endBlock));
 
         // Return corrected amount blocks
-        return amountBlocks;
+        return releasedAmountBlocks;
     }
 }

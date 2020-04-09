@@ -14,6 +14,7 @@ const BlockNumbIntsLib = artifacts.require('BlockNumbIntsLib');
 const BlockNumbReferenceCurrenciesLib = artifacts.require('BlockNumbReferenceCurrenciesLib');
 const BlockNumbUintsLib = artifacts.require('BlockNumbUintsLib');
 const CancelOrdersChallenge = artifacts.require('CancelOrdersChallenge');
+const ClaimableAmountCalculator = artifacts.require('ClaimableAmountCalculator');
 const ClientFund = artifacts.require('ClientFund');
 const ClientFundable = artifacts.require('ClientFundable');
 const CommunityVote = artifacts.require('CommunityVote');
@@ -277,6 +278,7 @@ module.exports = (deployer, network, accounts) => {
             AccrualBenefactor,
             BalanceTracker,
             CancelOrdersChallenge,
+            ClaimableAmountCalculator,
             ClientFund,
             Configuration,
             DriipSettlementByPayment,
@@ -316,6 +318,7 @@ module.exports = (deployer, network, accounts) => {
             BalanceAucCalculator,
             BalanceTracker,
             CancelOrdersChallenge,
+            ClaimableAmountCalculator,
             ClientFund,
             DriipSettlementByPayment,
             DriipSettlementByTrade,
@@ -422,6 +425,7 @@ module.exports = (deployer, network, accounts) => {
             await execDeploy(ctl, 'BalanceAucCalculator', BalanceAucCalculator);
             await execDeploy(ctl, 'BalanceTracker', BalanceTracker, [ctl.deployerAccount]);
             await execDeploy(ctl, 'CancelOrdersChallenge', CancelOrdersChallenge, [ctl.deployerAccount]);
+            await execDeploy(ctl, 'ClaimableAmountCalculator', ClaimableAmountCalculator, [ctl.deployerAccount]);
             await execDeploy(ctl, 'ClientFund', ClientFund, [ctl.deployerAccount]);
             await execDeploy(ctl, 'CommunityVote', CommunityVote, [ctl.deployerAccount]);
             await execDeploy(ctl, 'Configuration', Configuration, [ctl.deployerAccount]);
@@ -472,6 +476,11 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await BalanceTracker.at(addressStorage.get('BalanceTracker'));
             await instance.registerService(addressStorage.get('ClientFund'));
+
+            instance = await ClaimableAmountCalculator.at(addressStorage.get('ClaimableAmountCalculator'));
+            await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
+            await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
 
             instance = await CancelOrdersChallenge.at(addressStorage.get('CancelOrdersChallenge'));
             await instance.setValidator(addressStorage.get('ValidatorV2'));
@@ -857,9 +866,7 @@ module.exports = (deployer, network, accounts) => {
             instance = await RevenueFundAccrualMonitor.at(addressStorage.get('RevenueFundAccrualMonitor'));
             await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
             await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
-            await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
-            await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
-            await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            await instance.setClaimableAmountCalculator(addressStorage.get('ClaimableAmountCalculator'));
 
             instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
             await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -903,9 +910,7 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
-            await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
-            await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            await instance.setClaimableAmountCalculator(addressStorage.get('ClaimableAmountCalculator'));
             await instance.registerService(addressStorage.get('RevenueFund1'));
             await instance.enableServiceAction(addressStorage.get('RevenueFund1'), await instance.CLOSE_ACCRUAL_PERIOD_ACTION.call());
 
