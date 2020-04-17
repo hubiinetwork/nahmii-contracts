@@ -12,7 +12,7 @@ chai.use(bnChai(BN));
 chai.should();
 
 module.exports = function (glob) {
-    describe('BalanceAucCalculator', function () {
+    describe.only('BalanceAucCalculator', function () {
         let provider;
         let web3BalanceAucCalculator, ethersBalanceAucCalculator;
         let web3BalanceRecordable, ethersBalanceRecordable;
@@ -55,21 +55,21 @@ module.exports = function (glob) {
             describe('if the end block number is less than the first record\'s block number', () => {
                 beforeEach(async () => {
                     await ethersBalanceRecordable._addBalanceRecords([
-                        {n: 2, b: 10}
+                        {n: 2, b: utils.bigNumberify(10)}
                     ]);
                 });
 
                 it('should return zero', async () => {
                     (await ethersBalanceAucCalculator.calculate(
                         ethersBalanceRecordable.address, wallet, 0, 1
-                    ))._bn.should.eq.BN(0);
+                    ))._bn.should.eq.BN(utils.bigNumberify(0)._bn);
                 });
             });
 
             describe('if the count of balance records is 1', () => {
                 beforeEach(async () => {
                     await ethersBalanceRecordable._addBalanceRecords([
-                        {n: 3, b: 1000}
+                        {n: 3, b: utils.bigNumberify(1000)}
                     ], {gasLimit: 5e6});
                 });
 
@@ -77,7 +77,7 @@ module.exports = function (glob) {
                     it('should return 0', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 3
-                        ))._bn.should.eq.BN(1000);
+                        ))._bn.should.eq.BN(utils.bigNumberify(1000)._bn);
                     });
                 });
 
@@ -85,7 +85,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 5
-                        ))._bn.should.eq.BN(3000);
+                        ))._bn.should.eq.BN(utils.bigNumberify(3000)._bn);
                     });
                 });
 
@@ -93,7 +93,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 6
-                        ))._bn.should.eq.BN(4000);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4000)._bn);
                     });
                 });
 
@@ -101,7 +101,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 7
-                        ))._bn.should.eq.BN(4000);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4000)._bn);
                     });
                 });
             });
@@ -109,8 +109,8 @@ module.exports = function (glob) {
             describe('if the count of balance records is 2', () => {
                 beforeEach(async () => {
                     await ethersBalanceRecordable._addBalanceRecords([
-                        {n: 3, b: 600},
-                        {n: 6, b: 1000}
+                        {n: 3, b: utils.bigNumberify(600)},
+                        {n: 6, b: utils.bigNumberify(1000)}
                     ], {gasLimit: 5e6});
                 });
 
@@ -118,7 +118,7 @@ module.exports = function (glob) {
                     it('should return 0', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 3
-                        ))._bn.should.eq.BN(600);
+                        ))._bn.should.eq.BN(utils.bigNumberify(600)._bn);
                     });
                 });
 
@@ -126,7 +126,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 5
-                        ))._bn.should.eq.BN(1800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(1800)._bn);
                     });
                 });
 
@@ -134,7 +134,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 6
-                        ))._bn.should.eq.BN(2800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(2800)._bn);
                     });
                 });
 
@@ -142,7 +142,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 8
-                        ))._bn.should.eq.BN(4800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4800)._bn);
                     });
                 });
 
@@ -150,7 +150,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 5
-                        ))._bn.should.eq.BN(1800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(1800)._bn);
                     });
                 });
 
@@ -158,7 +158,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 6
-                        ))._bn.should.eq.BN(2800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(2800)._bn);
                     });
                 });
 
@@ -166,7 +166,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 8
-                        ))._bn.should.eq.BN(4800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4800)._bn);
                     });
                 });
 
@@ -174,7 +174,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 6
-                        ))._bn.should.eq.BN(2200);
+                        ))._bn.should.eq.BN(utils.bigNumberify(2200)._bn);
                     });
                 });
 
@@ -182,7 +182,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 10
-                        ))._bn.should.eq.BN(6200);
+                        ))._bn.should.eq.BN(utils.bigNumberify(6200)._bn);
                     });
                 });
 
@@ -190,7 +190,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 6, 10
-                        ))._bn.should.eq.BN(5000);
+                        ))._bn.should.eq.BN(utils.bigNumberify(5000)._bn);
                     });
                 });
 
@@ -198,7 +198,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 7, 10
-                        ))._bn.should.eq.BN(4000);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4000)._bn);
                     });
                 });
             });
@@ -206,9 +206,9 @@ module.exports = function (glob) {
             describe('if the count of balance records is 3', () => {
                 beforeEach(async () => {
                     await ethersBalanceRecordable._addBalanceRecords([
-                        {n: 3, b: 600}, // 2400
-                        {n: 7, b: 400}, // 1200 (3600)
-                        {n: 10, b: 1000}
+                        {n: 3, b: utils.bigNumberify(600)}, // 2400
+                        {n: 7, b: utils.bigNumberify(400)}, // 1200 (3600)
+                        {n: 10, b: utils.bigNumberify(1000)}
                     ], {gasLimit: 5e6});
                 });
 
@@ -216,7 +216,7 @@ module.exports = function (glob) {
                     it('should return 0', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 3
-                        ))._bn.should.eq.BN(600);
+                        ))._bn.should.eq.BN(utils.bigNumberify(600)._bn);
                     });
                 });
 
@@ -224,7 +224,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 5
-                        ))._bn.should.eq.BN(1800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(1800)._bn);
                     });
                 });
 
@@ -232,7 +232,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 7
-                        ))._bn.should.eq.BN(2800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(2800)._bn);
                     });
                 });
 
@@ -240,7 +240,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 8
-                        ))._bn.should.eq.BN(3200);
+                        ))._bn.should.eq.BN(utils.bigNumberify(3200)._bn);
                     });
                 });
 
@@ -248,7 +248,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 10
-                        ))._bn.should.eq.BN(4600);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4600)._bn);
                     });
                 });
 
@@ -256,7 +256,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 2, 13
-                        ))._bn.should.eq.BN(7600);
+                        ))._bn.should.eq.BN(utils.bigNumberify(7600)._bn);
                     });
                 });
 
@@ -264,7 +264,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 5
-                        ))._bn.should.eq.BN(1800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(1800)._bn);
                     });
                 });
 
@@ -272,7 +272,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 7
-                        ))._bn.should.eq.BN(2800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(2800)._bn);
                     });
                 });
 
@@ -280,7 +280,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 8
-                        ))._bn.should.eq.BN(3200);
+                        ))._bn.should.eq.BN(utils.bigNumberify(3200)._bn);
                     });
                 });
 
@@ -288,7 +288,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 10
-                        ))._bn.should.eq.BN(4600);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4600)._bn);
                     });
                 });
 
@@ -296,7 +296,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 3, 13
-                        ))._bn.should.eq.BN(7600);
+                        ))._bn.should.eq.BN(utils.bigNumberify(7600)._bn);
                     });
                 });
 
@@ -304,7 +304,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 7
-                        ))._bn.should.eq.BN(2200);
+                        ))._bn.should.eq.BN(utils.bigNumberify(2200)._bn);
                     });
                 });
 
@@ -312,7 +312,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 8
-                        ))._bn.should.eq.BN(2600);
+                        ))._bn.should.eq.BN(utils.bigNumberify(2600)._bn);
                     });
                 });
 
@@ -320,7 +320,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 10
-                        ))._bn.should.eq.BN(4000);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4000)._bn);
                     });
                 });
 
@@ -328,7 +328,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 4, 13
-                        ))._bn.should.eq.BN(7000);
+                        ))._bn.should.eq.BN(utils.bigNumberify(7000)._bn);
                     });
                 });
 
@@ -336,7 +336,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 7, 9
-                        ))._bn.should.eq.BN(1200);
+                        ))._bn.should.eq.BN(utils.bigNumberify(1200)._bn);
                     });
                 });
 
@@ -344,7 +344,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 7, 10
-                        ))._bn.should.eq.BN(2200);
+                        ))._bn.should.eq.BN(utils.bigNumberify(2200)._bn);
                     });
                 });
 
@@ -352,7 +352,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 7, 13
-                        ))._bn.should.eq.BN(5200);
+                        ))._bn.should.eq.BN(utils.bigNumberify(5200)._bn);
                     });
                 });
 
@@ -360,7 +360,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 8, 10
-                        ))._bn.should.eq.BN(1800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(1800)._bn);
                     });
                 });
 
@@ -368,7 +368,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 8, 13
-                        ))._bn.should.eq.BN(4800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4800)._bn);
                     });
                 });
 
@@ -376,7 +376,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 10, 13
-                        ))._bn.should.eq.BN(4000);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4000)._bn);
                     });
                 });
 
@@ -384,7 +384,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 11, 13
-                        ))._bn.should.eq.BN(3000);
+                        ))._bn.should.eq.BN(utils.bigNumberify(3000)._bn);
                     });
                 });
             });
@@ -392,11 +392,11 @@ module.exports = function (glob) {
             describe('if the count of balance records is 5', () => {
                 beforeEach(async () => {
                     await ethersBalanceRecordable._addBalanceRecords([
-                        {n: 3, b: 1000},
-                        {n: 5, b: 700},
-                        {n: 8, b: 1200},
-                        {n: 9, b: 1100},
-                        {n: 11, b: 800}
+                        {n: 3, b: utils.bigNumberify(1000)},
+                        {n: 5, b: utils.bigNumberify(700)},
+                        {n: 8, b: utils.bigNumberify(1200)},
+                        {n: 9, b: utils.bigNumberify(1100)},
+                        {n: 11, b: utils.bigNumberify(800)}
                     ], {gasLimit: 5e6});
                 });
 
@@ -404,7 +404,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 6, 10
-                        ))._bn.should.eq.BN(4800);
+                        ))._bn.should.eq.BN(utils.bigNumberify(4800)._bn);
                     });
                 });
 
@@ -412,7 +412,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC by clamping n_s to n[0]', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 1, 10
-                        ))._bn.should.eq.BN(7500);
+                        ))._bn.should.eq.BN(utils.bigNumberify(7500)._bn);
                     });
                 });
 
@@ -420,7 +420,7 @@ module.exports = function (glob) {
                     it('should calculate the AUC', async () => {
                         (await ethersBalanceAucCalculator.calculate(
                             ethersBalanceRecordable.address, wallet, 1, 12
-                        ))._bn.should.eq.BN(9100);
+                        ))._bn.should.eq.BN(utils.bigNumberify(9100)._bn);
                     });
                 });
             });
@@ -428,11 +428,11 @@ module.exports = function (glob) {
             describe('if calculating for partial block number spans', () => {
                 beforeEach(async () => {
                     await ethersBalanceRecordable._addBalanceRecords([
-                        {n: 3, b: 1000},
-                        {n: 5, b: 700},
-                        {n: 8, b: 1200},
-                        {n: 9, b: 1100},
-                        {n: 11, b: 800}
+                        {n: 3, b: utils.bigNumberify(1000)},
+                        {n: 5, b: utils.bigNumberify(700)},
+                        {n: 8, b: utils.bigNumberify(1200)},
+                        {n: 9, b: utils.bigNumberify(1100)},
+                        {n: 11, b: utils.bigNumberify(800)}
                     ], {gasLimit: 5e6});
                 });
 
