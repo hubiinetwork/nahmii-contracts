@@ -2,7 +2,7 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const BN = require('bn.js');
 const bnChai = require('bn-chai');
-const {Contract, Wallet} = require('ethers');
+const {Contract, Wallet, utils} = require('ethers');
 
 const BalanceAucCalculator = artifacts.require('BalanceAucCalculator');
 const MockedBalanceRecordable = artifacts.require('MockedBalanceRecordable');
@@ -414,6 +414,47 @@ module.exports = function (glob) {
                             ethersBalanceRecordable.address, wallet, 1, 10
                         ))._bn.should.eq.BN(7500);
                     });
+                });
+
+                describe('n_s < n[0] && n[4] < n_e', () => {
+                    it('should calculate the AUC', async () => {
+                        (await ethersBalanceAucCalculator.calculate(
+                            ethersBalanceRecordable.address, wallet, 1, 12
+                        ))._bn.should.eq.BN(9100);
+                    });
+                });
+            });
+
+            describe('if calculating for partial block number spans', () => {
+                beforeEach(async () => {
+                    await ethersBalanceRecordable._addBalanceRecords([
+                        {n: 3, b: 1000},
+                        {n: 5, b: 700},
+                        {n: 8, b: 1200},
+                        {n: 9, b: 1100},
+                        {n: 11, b: 800}
+                    ], {gasLimit: 5e6});
+                });
+
+                it('should calculate the sum of partial calculations as the amount calculated for the complete block number span', async () => {
+                    const partials = await Promise.all([
+                        ethersBalanceAucCalculator.calculate(
+                            ethersBalanceRecordable.address, wallet, 1, 4
+                        ),
+                        ethersBalanceAucCalculator.calculate(
+                            ethersBalanceRecordable.address, wallet, 5, 7
+                        ),
+                        ethersBalanceAucCalculator.calculate(
+                            ethersBalanceRecordable.address, wallet, 8, 11
+                        ),
+                        ethersBalanceAucCalculator.calculate(
+                            ethersBalanceRecordable.address, wallet, 12, 14
+                        ),
+                    ]);
+                    const partialSum = partials.reduce((a, c) => a.add(c), utils.bigNumberify(0));
+                    (await ethersBalanceAucCalculator.calculate(
+                        ethersBalanceRecordable.address, wallet, 1, 14
+                    ))._bn.should.eq.BN(partialSum._bn);
                 });
             });
         });

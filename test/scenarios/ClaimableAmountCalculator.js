@@ -282,10 +282,10 @@ module.exports = function (glob) {
             describe('if called without non-claimers', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3ERC20.address, glob.user_a, utils.parseUnits('3000', 15)
+                        ethersERC20.address, glob.user_a, utils.parseUnits('3000', 15)
                     );
                     await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
-                        web3MockedRevenueTokenManager.address, mocks.address0, utils.parseUnits('10000', 15)
+                        ethersMockedRevenueTokenManager.address, mocks.address0, utils.parseUnits('10000', 15)
                     );
                 });
 
