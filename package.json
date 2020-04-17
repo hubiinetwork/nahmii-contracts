@@ -127,6 +127,7 @@
     "BlockNumbUintsLib.sol",
     "CancelOrdersChallengable.sol",
     "CancelOrdersChallenge.sol",
+    "ClaimableAmountCalculator.sol",
     "ClientFundable.sol",
     "CommunityVotable.sol",
     "Configurable.sol",
