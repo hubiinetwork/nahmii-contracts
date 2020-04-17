@@ -140,6 +140,7 @@ contract RevenueFundAccrualMonitor is Ownable {
         uint256 lastClosedAccrualIndex = tokenHolderRevenueFund.closedAccrualsCount(
             currencyCt, currencyId
         );
+
         if (0 == lastClosedAccrualIndex)
             return 0;
         else {

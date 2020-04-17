@@ -6,9 +6,8 @@ const {Wallet, Contract} = require('ethers');
 const mocks = require('../mocks');
 const RevenueFundAccrualMonitor = artifacts.require('RevenueFundAccrualMonitor');
 const MockedTokenHolderRevenueFund = artifacts.require('MockedTokenHolderRevenueFund');
-const MockedRevenueTokenManager = artifacts.require('MockedRevenueTokenManager');
 const MockedRevenueFund = artifacts.require('MockedRevenueFund');
-const MockedBalanceAucCalculator = artifacts.require('MockedBalanceAucCalculator');
+const MockedClaimableAmountCalculator = artifacts.require('MockedClaimableAmountCalculator');
 
 chai.use(chaiAsPromised);
 chai.use(bnChai(BN));
@@ -19,8 +18,7 @@ module.exports = function (glob) {
         let provider;
         let web3RevenueFundAccrualMonitor, ethersRevenueFundAccrualMonitor;
         let web3MockedRevenueFund, ethersMockedRevenueFund;
-        let web3MockedRevenueTokenManager, ethersMockedRevenueTokenManager;
-        let web3MockedBalanceAucCalculator, ethersMockedBalanceAucCalculator;
+        let web3MockedClaimableAmountCalculator, ethersMockedClaimableAmountCalculator;
         let web3MockedTokenHolderRevenueFund, ethersMockedTokenHolderRevenueFund;
 
         before(async () => {
@@ -33,10 +31,8 @@ module.exports = function (glob) {
 
             web3MockedRevenueFund = await MockedRevenueFund.new();
             ethersMockedRevenueFund = new Contract(web3MockedRevenueFund.address, MockedRevenueFund.abi, glob.signer_owner);
-            web3MockedRevenueTokenManager = await MockedRevenueTokenManager.new();
-            ethersMockedRevenueTokenManager = new Contract(web3MockedRevenueTokenManager.address, MockedRevenueTokenManager.abi, glob.signer_owner);
-            web3MockedBalanceAucCalculator = await MockedBalanceAucCalculator.new();
-            ethersMockedBalanceAucCalculator = new Contract(web3MockedBalanceAucCalculator.address, MockedBalanceAucCalculator.abi, glob.signer_owner);
+            web3MockedClaimableAmountCalculator = await MockedClaimableAmountCalculator.new();
+            ethersMockedClaimableAmountCalculator = new Contract(web3MockedClaimableAmountCalculator.address, MockedClaimableAmountCalculator.abi, glob.signer_owner);
             web3MockedTokenHolderRevenueFund = await MockedTokenHolderRevenueFund.new();
             ethersMockedTokenHolderRevenueFund = new Contract(web3MockedTokenHolderRevenueFund.address, MockedTokenHolderRevenueFund.abi, glob.signer_owner);
         });
@@ -102,7 +98,7 @@ module.exports = function (glob) {
             });
         });
 
-        describe('setRevenueTokenManager()', () => {
+        describe('setClaimableAmountCalculator()', () => {
             let address;
 
             before(() => {
@@ -111,73 +107,19 @@ module.exports = function (glob) {
 
             describe('if called by non-deployer', () => {
                 it('should revert', async () => {
-                    await web3RevenueFundAccrualMonitor.setRevenueTokenManager(address, {from: glob.user_a})
+                    await web3RevenueFundAccrualMonitor.setClaimableAmountCalculator(address, {from: glob.user_a})
                         .should.be.rejected;
                 });
             });
 
             describe('if called by deployer', () => {
                 it('should set new value and emit event', async () => {
-                    const result = await web3RevenueFundAccrualMonitor.setRevenueTokenManager(address);
+                    const result = await web3RevenueFundAccrualMonitor.setClaimableAmountCalculator(address);
 
                     result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetRevenueTokenManagerEvent');
+                    result.logs[0].event.should.equal('SetClaimableAmountCalculatorEvent');
 
-                    (await ethersRevenueFundAccrualMonitor.revenueTokenManager())
-                        .should.equal(address);
-                });
-            });
-        });
-
-        describe('setBalanceBlocksCalculator()', () => {
-            let address;
-
-            before(() => {
-                address = Wallet.createRandom().address;
-            });
-
-            describe('if called by non-deployer', () => {
-                it('should revert', async () => {
-                    await web3RevenueFundAccrualMonitor.setBalanceBlocksCalculator(address, {from: glob.user_a})
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called by deployer', () => {
-                it('should set new value and emit event', async () => {
-                    const result = await web3RevenueFundAccrualMonitor.setBalanceBlocksCalculator(address);
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetBalanceBlocksCalculatorEvent');
-
-                    (await ethersRevenueFundAccrualMonitor.balanceBlocksCalculator())
-                        .should.equal(address);
-                });
-            });
-        });
-
-        describe('setReleasedAmountBlocksCalculator()', () => {
-            let address;
-
-            before(() => {
-                address = Wallet.createRandom().address;
-            });
-
-            describe('if called by non-deployer', () => {
-                it('should revert', async () => {
-                    await web3RevenueFundAccrualMonitor.setReleasedAmountBlocksCalculator(address, {from: glob.user_a})
-                        .should.be.rejected;
-                });
-            });
-
-            describe('if called by deployer', () => {
-                it('should set new value and emit event', async () => {
-                    const result = await web3RevenueFundAccrualMonitor.setReleasedAmountBlocksCalculator(address);
-
-                    result.logs.should.be.an('array').and.have.lengthOf(1);
-                    result.logs[0].event.should.equal('SetReleasedAmountBlocksCalculatorEvent');
-
-                    (await ethersRevenueFundAccrualMonitor.releasedAmountBlocksCalculator())
+                    (await ethersRevenueFundAccrualMonitor.claimableAmountCalculator())
                         .should.equal(address);
                 });
             });
@@ -194,16 +136,10 @@ module.exports = function (glob) {
 
                 await web3RevenueFundAccrualMonitor.setRevenueFund(web3MockedRevenueFund.address);
                 await web3RevenueFundAccrualMonitor.setTokenHolderRevenueFund(web3MockedTokenHolderRevenueFund.address);
-                await web3RevenueFundAccrualMonitor.setRevenueTokenManager(web3MockedRevenueTokenManager.address);
-                await web3RevenueFundAccrualMonitor.setBalanceBlocksCalculator(web3MockedBalanceAucCalculator.address);
-                await web3RevenueFundAccrualMonitor.setReleasedAmountBlocksCalculator(web3MockedBalanceAucCalculator.address);
+                await web3RevenueFundAccrualMonitor.setClaimableAmountCalculator(web3MockedClaimableAmountCalculator.address);
 
                 await web3MockedRevenueFund._setPeriodAccrualBalance(currencyCt, currencyId, 1000);
-                await web3MockedRevenueFund._setBeneficiaryFraction(
-                    web3MockedTokenHolderRevenueFund.address, 99e16
-                );
-
-                await web3MockedRevenueTokenManager._setToken(token);
+                await web3MockedRevenueFund._setBeneficiaryFraction(web3MockedTokenHolderRevenueFund.address, 99e16);
             });
 
             describe('if there is a previously closed accrual', () => {
@@ -212,11 +148,10 @@ module.exports = function (glob) {
                         currencyCt, currencyId, {startBlock: 10, endBlock: 20, amount: 100}, {gasLimit: 1e6}
                     );
 
-                    await ethersMockedBalanceAucCalculator['_setCalculate(address,address,uint256,uint256)'](
-                        token, wallet, 21, 1000
-                    );
-                    await ethersMockedBalanceAucCalculator['_setCalculate(address,address,uint256,uint256)'](
-                        web3MockedRevenueTokenManager.address, mocks.address0, 21, 10000
+                    const blockNumber = await provider.getBlockNumber()
+
+                    await ethersMockedClaimableAmountCalculator._setCalculate(
+                        wallet, 990, 21, blockNumber + 2, 99
                     );
                 });
 
@@ -228,40 +163,16 @@ module.exports = function (glob) {
 
             describe('if there is no previously closed accrual', () => {
                 beforeEach(async () => {
-                    await ethersMockedBalanceAucCalculator['_setCalculate(address,address,uint256)'](
-                        token, wallet, 1000
-                    );
-                    await ethersMockedBalanceAucCalculator['_setCalculate(address,address,uint256)'](
-                        web3MockedRevenueTokenManager.address, mocks.address0, 10000
-                    );
-                });
+                    const blockNumber = await provider.getBlockNumber()
 
-                it('should successfully calculate and return the claimable amount', async () => {
-                    (await ethersRevenueFundAccrualMonitor.claimableAmount(wallet, currencyCt, currencyId))
-                        ._bn.should.eq.BN(99);
-                });
-            });
-
-            describe('if there is a non-claimer', () => {
-                beforeEach(async () => {
-                    const nonClaimer = Wallet.createRandom().address;
-
-                    await web3MockedTokenHolderRevenueFund._setNonClaimer(nonClaimer);
-
-                    await ethersMockedBalanceAucCalculator['_setCalculate(address,address,uint256)'](
-                        token, wallet, 1000
-                    );
-                    await ethersMockedBalanceAucCalculator['_setCalculate(address,address,uint256)'](
-                        token, nonClaimer, 9000
-                    );
-                    await ethersMockedBalanceAucCalculator['_setCalculate(address,address,uint256)'](
-                        web3MockedRevenueTokenManager.address, mocks.address0, 10000
+                    await ethersMockedClaimableAmountCalculator._setCalculate(
+                        wallet, 990, 0, blockNumber + 2, -123
                     );
                 });
 
                 it('should successfully calculate and return the claimable amount', async () => {
                     (await ethersRevenueFundAccrualMonitor.claimableAmount(wallet, currencyCt, currencyId))
-                        ._bn.should.eq.BN(990);
+                        ._bn.should.eq.BN(-123);
                 });
             });
         });
