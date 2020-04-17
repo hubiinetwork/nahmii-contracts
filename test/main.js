@@ -52,6 +52,7 @@ contract('Unit tests', function () {
     require('./scenarios/AuthorizableServable')(glob);
     require('./scenarios/BalanceAucCalculator')(glob);
     require('./scenarios/BalanceTracker')(glob);
+    require('./scenarios/ClaimableAmountCalculator')(glob);
     require('./scenarios/CancelOrdersChallenge')(glob);
     require('./scenarios/ClientFund')(glob);
     require('./scenarios/Configuration')(glob);

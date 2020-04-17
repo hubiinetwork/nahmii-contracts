@@ -3,7 +3,7 @@
  *
  * Compliant with the Hubii Nahmii specification v0.12.
  *
- * Copyright (C) 2017-2019 Hubii AS
+ * Copyright (C) 2017-2020 Hubii AS
  */
 
 pragma solidity >=0.4.25 <0.6.0;
@@ -19,11 +19,9 @@ import {FungibleBalanceLib} from "./FungibleBalanceLib.sol";
 import {MonetaryTypesLib} from "./MonetaryTypesLib.sol";
 import {CurrenciesLib} from "./CurrenciesLib.sol";
 import {RevenueToken} from "./RevenueToken.sol";
-import {RevenueTokenManager} from "./RevenueTokenManager.sol";
+import {ClaimableAmountCalculator} from "./ClaimableAmountCalculator.sol";
 import {TransferController} from "./TransferController.sol";
 import {Beneficiary} from "./Beneficiary.sol";
-import {BalanceAucCalculator} from "./BalanceAucCalculator.sol";
-import {BalanceRecordable} from "./BalanceRecordable.sol";
 
 /**
  * @title TokenHolderRevenueFund
@@ -64,9 +62,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Variables
     // -----------------------------------------------------------------------------------------------------------------
-    RevenueTokenManager public revenueTokenManager;
-    BalanceAucCalculator public balanceBlocksCalculator;
-    BalanceAucCalculator public releasedAmountBlocksCalculator;
+    ClaimableAmountCalculator public claimableAmountCalculator;
 
     FungibleBalanceLib.Balance private periodAccrual;
     CurrenciesLib.Currencies private periodCurrencies;
@@ -75,9 +71,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     CurrenciesLib.Currencies private aggregateCurrencies;
 
     mapping(address => mapping(uint256 => Accrual[])) public closedAccrualsByCurrency;
-
-    address[] public nonClaimers;
-    mapping(address => uint256) public nonClaimerIndicesByWallet;
 
     mapping(address => mapping(address => mapping(uint256 => uint256[]))) public claimedAccrualIndicesByWalletCurrency;
     mapping(address => mapping(address => mapping(uint256 => mapping(uint256 => bool)))) public accrualClaimedByWalletCurrencyAccrual;
@@ -92,12 +85,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
-    event SetRevenueTokenManagerEvent(RevenueTokenManager manager);
-    event SetBalanceBlocksCalculatorEvent(BalanceAucCalculator calculator);
-    event SetReleasedAmountBlocksCalculatorEvent(BalanceAucCalculator calculator);
+    event SetClaimableAmountCalculatorEvent(ClaimableAmountCalculator calculator);
     event SetClaimBlockNumberBatchSizeEvent(uint256 batchSize);
-    event RegisterNonClaimerEvent(address wallet);
-    event DeregisterNonClaimerEvent(address wallet);
     event ReceiveEvent(address wallet, int256 amount, address currencyCt,
         uint256 currencyId);
     event WithdrawEvent(address to, int256 amount, address currencyCt, uint256 currencyId);
@@ -125,46 +114,18 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Functions
     // -----------------------------------------------------------------------------------------------------------------
-    /// @notice Set the revenue token manager contract
-    /// @param manager The (address of) RevenueTokenManager contract instance
-    function setRevenueTokenManager(RevenueTokenManager manager)
+    /// @notice Set the claimable amount calculator contract
+    /// @param _claimableAmountCalculator The ClaimableAmountCalculator contract instance
+    function setClaimableAmountCalculator(ClaimableAmountCalculator _claimableAmountCalculator)
     public
     onlyDeployer
-    notNullAddress(address(manager))
+    notNullAddress(address(_claimableAmountCalculator))
     {
-        // Set new revenue token manager
-        revenueTokenManager = manager;
+        // Set new claimable amount calculator
+        claimableAmountCalculator = _claimableAmountCalculator;
 
         // Emit event
-        emit SetRevenueTokenManagerEvent(manager);
-    }
-
-    /// @notice Set the balance AUC calculator for calculation of revenue token balance blocks
-    /// @param calculator The balance AUC calculator
-    function setBalanceBlocksCalculator(BalanceAucCalculator calculator)
-    public
-    onlyDeployer
-    notNullOrThisAddress(address(calculator))
-    {
-        // Set the calculator
-        balanceBlocksCalculator = calculator;
-
-        // Emit event
-        emit SetBalanceBlocksCalculatorEvent(balanceBlocksCalculator);
-    }
-
-    /// @notice Set the balance AUC calculator for calculation of revenue token balance blocks
-    /// @param calculator The balance AUC calculator
-    function setReleasedAmountBlocksCalculator(BalanceAucCalculator calculator)
-    public
-    onlyDeployer
-    notNullOrThisAddress(address(calculator))
-    {
-        // Set the calculator
-        releasedAmountBlocksCalculator = calculator;
-
-        // Emit event
-        emit SetReleasedAmountBlocksCalculatorEvent(releasedAmountBlocksCalculator);
+        emit SetClaimableAmountCalculatorEvent(claimableAmountCalculator);
     }
 
     /// @notice Set the block number batch size for claims with function
@@ -180,67 +141,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
         // Emit event
         emit SetClaimBlockNumberBatchSizeEvent(batchSize);
-    }
-
-    /// @notice Get the number of registered non-claimers
-    /// @return The number of registered non-claimers
-    function nonClaimersCount()
-    public
-    view
-    returns (uint256)
-    {
-        return nonClaimers.length;
-    }
-
-    /// @notice Gauge whether the given wallet is a registered non-claimer, i.e. prevented from claiming
-    /// @param wallet The address of the concerned wallet
-    /// @return true if wallet is non-claimer
-    function isNonClaimer(address wallet)
-    public
-    view
-    returns (bool)
-    {
-        return 0 < nonClaimerIndicesByWallet[wallet];
-    }
-
-    /// @notice Register the given wallet as a non-claimer that is prevented from claiming
-    /// @param wallet The address of the concerned wallet
-    function registerNonClaimer(address wallet)
-    public
-    onlyDeployer
-    notNullAddress(wallet)
-    {
-        // If non-claimer has not been added already...
-        if (0 == nonClaimerIndicesByWallet[wallet]) {
-            // Add non-claimer
-            nonClaimers.push(wallet);
-            nonClaimerIndicesByWallet[wallet] = nonClaimers.length;
-
-            // Emit event
-            emit RegisterNonClaimerEvent(wallet);
-        }
-    }
-
-    /// @notice Deregister the given wallet as a non-claimer that is prevented from claiming
-    /// @param wallet The address of the concerned wallet
-    function deregisterNonClaimer(address wallet)
-    public
-    onlyDeployer
-    notNullAddress(wallet)
-    {
-        // If non-claimer has been added previously...
-        if (0 < nonClaimerIndicesByWallet[wallet]) {
-            // Remove non-claimer
-            if (nonClaimerIndicesByWallet[wallet] < nonClaimers.length) {
-                nonClaimers[nonClaimerIndicesByWallet[wallet].sub(1)] = nonClaimers[nonClaimers.length.sub(1)];
-                nonClaimerIndicesByWallet[nonClaimers[nonClaimers.length.sub(1)]] = nonClaimerIndicesByWallet[wallet];
-            }
-            nonClaimers.length--;
-            nonClaimerIndicesByWallet[wallet] = 0;
-
-            // Emit event
-            emit DeregisterNonClaimerEvent(wallet);
-        }
     }
 
     /// @notice Fallback function that deposits ethers
@@ -290,7 +190,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         uint256 currencyId, string memory standard)
     public
     {
-        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:293]");
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:193]");
 
         // Execute transfer
         TransferController controller = transferController(currencyCt, standard);
@@ -299,7 +199,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                 controller.getReceiveSignature(), msg.sender, this, uint256(amount), currencyCt, currencyId
             )
         );
-        require(success, "Reception by controller failed [TokenHolderRevenueFund.sol:302]");
+        require(success, "Reception by controller failed [TokenHolderRevenueFund.sol:202]");
 
         // Add to balances
         periodAccrual.add(amount, currencyCt, currencyId);
@@ -484,16 +384,16 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     view
     returns (int256)
     {
-        // Return 0 if wallet is non-claimer
-        if (isNonClaimer(wallet))
-            return 0;
+        // Impose ordinality constraint
+        require(startAccrualIndex <= endAccrualIndex, "Accrual index ordinality mismatch [TokenHolderRevenueFund.sol:388]");
 
         // Return 0 if no accrual has terminated
         if (0 == closedAccrualsByCurrency[currencyCt][currencyId].length)
             return 0;
 
-        // Impose ordinality constraint
-        require(startAccrualIndex <= endAccrualIndex, "Accrual index ordinality mismatch [TokenHolderRevenueFund.sol:496]");
+        // Return 0 if wallet is non-claimer
+        if (claimableAmountCalculator.isNonClaimer(wallet))
+            return 0;
 
         // Declare claimable amount
         int256 claimableAmount = 0;
@@ -528,16 +428,16 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     view
     returns (int256)
     {
-        // Return 0 if wallet is non-claimer
-        if (isNonClaimer(wallet))
-            return 0;
+        // Impose ordinality constraint
+        require(startBlock <= endBlock, "Block number ordinality mismatch [TokenHolderRevenueFund.sol:432]");
 
         // Return 0 if no accrual has terminated
         if (0 == closedAccrualsByCurrency[currencyCt][currencyId].length)
             return 0;
 
-        // Impose ordinality constraint
-        require(startBlock <= endBlock, "Block number ordinality mismatch [TokenHolderRevenueFund.sol:540]");
+        // Return 0 if wallet is non-claimer
+        if (claimableAmountCalculator.isNonClaimer(wallet))
+            return 0;
 
         // Obtain accrual indices corresponding to block number boundaries
         uint256 startAccrualIndex = closedAccrualIndexByBlockNumber(currencyCt, currencyId, startBlock);
@@ -546,7 +446,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         // Obtain accrual
         Accrual storage endAccrual = closedAccrualsByCurrency[currencyCt][currencyId][endAccrualIndex];
 
-        // Return 0 if end block is before the end accrual's start block
+        // Return 0 if end block is before any accrual's start block
         if (endBlock < endAccrual.startBlock)
             return 0;
 
@@ -587,6 +487,56 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         return claimableAmount;
     }
 
+    /// @notice Claim accrual amount and stage for later withdrawal by accrual index bounds
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param startAccrualIndex The index of the first accrual in the range, clamped to the max accrual index
+    /// @param endAccrualIndex The index of the last accrual in the range, clamped to the max accrual index
+    function claimAndStageByAccruals(address currencyCt, uint256 currencyId,
+        uint256 startAccrualIndex, uint256 endAccrualIndex)
+    public
+    {
+        // Require that message sender is non-claimer
+        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:500]");
+
+        // Claim accrual and obtain the claimed amount
+        int256 claimedAmount = _claimByAccruals(msg.sender, currencyCt, currencyId, startAccrualIndex, endAccrualIndex);
+
+        // If the claimed amount is strictly positive...
+        if (0 < claimedAmount) {
+            // Update staged balance
+            stagedByWallet[msg.sender].add(claimedAmount, currencyCt, currencyId);
+
+            // Emit event
+            emit ClaimAndStageByAccrualsEvent(msg.sender, claimedAmount, currencyCt, currencyId, startAccrualIndex, endAccrualIndex);
+        }
+    }
+
+    /// @notice Claim accrual amount and stage for later withdrawal by block number bounds
+    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
+    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
+    /// @param startBlock The first block number in the range
+    /// @param endBlock The last block number in the range
+    function claimAndStageByBlockNumbers(address currencyCt, uint256 currencyId,
+        uint256 startBlock, uint256 endBlock)
+    public
+    {
+        // Require that message sender is non-claimer
+        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:525]");
+
+        // Claim accrual and obtain the claimed amount
+        int256 claimedAmount = _claimByBlockNumbers(msg.sender, currencyCt, currencyId, startBlock, endBlock);
+
+        // If the claimed amount is strictly positive...
+        if (0 < claimedAmount) {
+            // Update staged balance
+            stagedByWallet[msg.sender].add(claimedAmount, currencyCt, currencyId);
+
+            // Emit event
+            emit ClaimAndStageByBlockNumbersEvent(msg.sender, claimedAmount, currencyCt, currencyId, startBlock, endBlock);
+        }
+    }
+
     /// @notice Claim accrual amounts and transfer to beneficiary by accrual index bounds
     /// @param beneficiary The concerned beneficiary
     /// @param destWallet The concerned destination wallet of the transfer
@@ -602,18 +552,21 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     public
     {
         // Require that message sender is non-claimer
-        require(!isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:605]");
+        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:555]");
 
         // Claim accrual and obtain the claimed amount
         int256 claimedAmount = _claimByAccruals(msg.sender, currencyCt, currencyId, startAccrualIndex, endAccrualIndex);
 
-        // Transfer to beneficiary
-        _transferToBeneficiary(beneficiary, destWallet, balanceType, claimedAmount,
-            currencyCt, currencyId, standard);
+        // If the claimed amount is strictly positive...
+        if (0 < claimedAmount) {
+            // Transfer to beneficiary
+            _transferToBeneficiary(beneficiary, destWallet, balanceType, claimedAmount,
+                currencyCt, currencyId, standard);
 
-        // Emit event
-        emit ClaimAndTransferToBeneficiaryByAccrualsEvent(msg.sender, balanceType, claimedAmount, currencyCt, currencyId,
-            startAccrualIndex, endAccrualIndex, standard);
+            // Emit event
+            emit ClaimAndTransferToBeneficiaryByAccrualsEvent(msg.sender, balanceType, claimedAmount, currencyCt, currencyId,
+                startAccrualIndex, endAccrualIndex, standard);
+        }
     }
 
     /// @notice Claim accrual amounts and transfer to beneficiary by block number bounds
@@ -631,18 +584,21 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     public
     {
         // Require that message sender is non-claimer
-        require(!isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:634]");
+        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:587]");
 
         // Claim accrual and obtain the claimed amount
         int256 claimedAmount = _claimByBlockNumbers(msg.sender, currencyCt, currencyId, startBlock, endBlock);
 
-        // Transfer to beneficiary
-        _transferToBeneficiary(beneficiary, destWallet, balanceType, claimedAmount,
-            currencyCt, currencyId, standard);
+        // If the claimed amount is strictly positive...
+        if (0 < claimedAmount) {
+            // Transfer to beneficiary
+            _transferToBeneficiary(beneficiary, destWallet, balanceType, claimedAmount,
+                currencyCt, currencyId, standard);
 
-        // Emit event
-        emit ClaimAndTransferToBeneficiaryByBlockNumbersEvent(msg.sender, balanceType, claimedAmount, currencyCt,
-            currencyId, startBlock, endBlock, standard);
+            // Emit event
+            emit ClaimAndTransferToBeneficiaryByBlockNumbersEvent(msg.sender, balanceType, claimedAmount, currencyCt,
+                currencyId, startBlock, endBlock, standard);
+        }
     }
 
     /// @notice Claim last unclaimed accrual's amount and transfer to beneficiary
@@ -685,7 +641,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
             // Obtain the block number bounds
             uint256 startBlock = (
-            0 == maxClaimedBlockNumberByWalletCurrencyAccrual[msg.sender][currencyCt][currencyId][accrualIndex] ?
+            0 == closedAccrualsByCurrency[currencyCt][currencyId][accrualIndex].claimRecordsByWallet[msg.sender].completedSpans.length ?
             accrual.startBlock :
             maxClaimedBlockNumberByWalletCurrencyAccrual[msg.sender][currencyCt][currencyId][accrualIndex] + 1
             ).clampMax(accrual.endBlock);
@@ -703,56 +659,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                 beneficiary, destWallet, balanceType, currencyCt, currencyId,
                 startBlock, endBlock, standard
             );
-        }
-    }
-
-    /// @notice Claim accrual amount and stage for later withdrawal by accrual index bounds
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param startAccrualIndex The index of the first accrual in the range, clamped to the max accrual index
-    /// @param endAccrualIndex The index of the last accrual in the range, clamped to the max accrual index
-    function claimAndStageByAccruals(address currencyCt, uint256 currencyId,
-        uint256 startAccrualIndex, uint256 endAccrualIndex)
-    public
-    {
-        // Require that message sender is non-claimer
-        require(!isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:719]");
-
-        // Claim accrual and obtain the claimed amount
-        int256 claimedAmount = _claimByAccruals(msg.sender, currencyCt, currencyId, startAccrualIndex, endAccrualIndex);
-
-        // If the claimed amount is strictly positive...
-        if (0 < claimedAmount) {
-            // Update staged balance
-            stagedByWallet[msg.sender].add(claimedAmount, currencyCt, currencyId);
-
-            // Emit event
-            emit ClaimAndStageByAccrualsEvent(msg.sender, claimedAmount, currencyCt, currencyId, startAccrualIndex, endAccrualIndex);
-        }
-    }
-
-    /// @notice Claim accrual amount and stage for later withdrawal by block number bounds
-    /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
-    /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
-    /// @param startBlock The first block number in the range
-    /// @param endBlock The last block number in the range
-    function claimAndStageByBlockNumbers(address currencyCt, uint256 currencyId,
-        uint256 startBlock, uint256 endBlock)
-    public
-    {
-        // Require that message sender is non-claimer
-        require(!isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:744]");
-
-        // Claim accrual and obtain the claimed amount
-        int256 claimedAmount = _claimByBlockNumbers(msg.sender, currencyCt, currencyId, startBlock, endBlock);
-
-        // If the claimed amount is strictly positive...
-        if (0 < claimedAmount) {
-            // Update staged balance
-            stagedByWallet[msg.sender].add(claimedAmount, currencyCt, currencyId);
-
-            // Emit event
-            emit ClaimAndStageByBlockNumbersEvent(msg.sender, claimedAmount, currencyCt, currencyId, startBlock, endBlock);
         }
     }
 
@@ -820,7 +726,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     public
     {
         // Require that amount is strictly positive
-        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:823]");
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:729]");
 
         // Clamp amount to the max given by staged balance
         amount = amount.clampMax(stagedByWallet[msg.sender].get(currencyCt, currencyId));
@@ -839,7 +745,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                     controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId
                 )
             );
-            require(success, "Dispatch by controller failed [TokenHolderRevenueFund.sol:842]");
+            require(success, "Dispatch by controller failed [TokenHolderRevenueFund.sol:748]");
         }
 
         // Emit event
@@ -854,11 +760,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     private
     returns (int256)
     {
-        // Require that at least one accrual has terminated
-        require(0 < closedAccrualsByCurrency[currencyCt][currencyId].length, "No terminated accrual found [TokenHolderRevenueFund.sol:858]");
-
         // Impose ordinality constraint
-        require(startAccrualIndex <= endAccrualIndex, "Accrual index mismatch [TokenHolderRevenueFund.sol:861]");
+        require(startAccrualIndex <= endAccrualIndex, "Accrual index mismatch [TokenHolderRevenueFund.sol:764]");
+
+        // Require that at least one accrual has terminated
+        require(0 < closedAccrualsByCurrency[currencyCt][currencyId].length, "No terminated accrual found [TokenHolderRevenueFund.sol:767]");
 
         // Declare claimed amount
         int256 claimedAmount = 0;
@@ -888,11 +794,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     private
     returns (int256)
     {
-        // Require that at least one accrual has terminated
-        require(0 < closedAccrualsByCurrency[currencyCt][currencyId].length, "No terminated accrual found [TokenHolderRevenueFund.sol:892]");
-
         // Impose ordinality constraint
-        require(startBlock <= endBlock, "Block number mismatch [TokenHolderRevenueFund.sol:895]");
+        require(startBlock <= endBlock, "Block number mismatch [TokenHolderRevenueFund.sol:798]");
+
+        // Require that at least one accrual has terminated
+        require(0 < closedAccrualsByCurrency[currencyCt][currencyId].length, "No terminated accrual found [TokenHolderRevenueFund.sol:801]");
 
         // Obtain accrual indices corresponding to block number boundaries
         uint256 startAccrualIndex = closedAccrualIndexByBlockNumber(currencyCt, currencyId, startBlock);
@@ -966,7 +872,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                     controller.getApproveSignature(), address(beneficiary), uint256(amount), currencyCt, currencyId
                 )
             );
-            require(success, "Approval by controller failed [TokenHolderRevenueFund.sol:969]");
+            require(success, "Approval by controller failed [TokenHolderRevenueFund.sol:875]");
 
             // Transfer tokens to the beneficiary
             beneficiary.receiveTokensTo(destWallet, balanceType, amount, currencyCt, currencyId, standard);
@@ -1060,24 +966,10 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         if (!_isClaimable(wallet, accrual))
             return 0;
 
-        // Retrieve the released amount blocks
-        int256 _releasedAmountBlocks = _correctedReleasedAmountBlocks(
-            accrual.startBlock, accrual.endBlock
+        // Return claimable amount by block numbers
+        return claimableAmountCalculator.calculate(
+            wallet, accrual.amount, accrual.startBlock, accrual.endBlock, accrual.startBlock, accrual.endBlock
         );
-
-        // Return 0 if no revenue tokens were released
-        if (0 == _releasedAmountBlocks)
-            return 0;
-
-        // Retrieve the balance blocks of wallet
-        int256 _walletBalanceBlocks = _balanceBlocks(
-            wallet, accrual.startBlock, accrual.endBlock
-        );
-
-        // Calculate the claimed amount
-        return accrual.amount
-        .mul_nn(_walletBalanceBlocks)
-        .div_nn(_releasedAmountBlocks);
     }
 
     function _claimableAmount(address wallet, Accrual storage accrual,
@@ -1090,56 +982,9 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         if (!_isClaimable(wallet, accrual, startBlock, endBlock))
             return 0;
 
-        // Retrieve the released amount blocks
-        int256 _releasedAmountBlocks = _correctedReleasedAmountBlocks(
-            startBlock, endBlock
+        // Return claimable amount by block numbers
+        return claimableAmountCalculator.calculate(
+            wallet, accrual.amount, accrual.startBlock, accrual.endBlock, startBlock, endBlock
         );
-
-        // Return 0 if no revenue tokens were released
-        if (0 == _releasedAmountBlocks)
-            return 0;
-
-        // Retrieve the balance blocks of wallet
-        int256 _walletBalanceBlocks = _balanceBlocks(
-            wallet, startBlock, endBlock
-        );
-
-        // Calculate scaling factor numerator and denominator to account for partial concerned span of accrual
-        int256 _accrualNumerator = int256(endBlock.sub(startBlock).add(1));
-        int256 _accrualDenominator = int256(accrual.endBlock.sub(accrual.startBlock).add(1));
-
-        // Calculate the scaled claimable amount
-        return accrual.amount
-        .mul_nn(_walletBalanceBlocks)
-        .mul_nn(_accrualNumerator)
-        .div_nn(_releasedAmountBlocks.mul_nn(_accrualDenominator));
-    }
-
-    function _balanceBlocks(address wallet, uint256 startBlock, uint256 endBlock)
-    private
-    view
-    returns (int256)
-    {
-        return int256(balanceBlocksCalculator.calculate(
-                BalanceRecordable(address(revenueTokenManager.token())), wallet, startBlock, endBlock
-            ));
-    }
-
-    function _correctedReleasedAmountBlocks(uint256 startBlock, uint256 endBlock)
-    private
-    view
-    returns (int256)
-    {
-        // Obtain the released amount blocks
-        int256 amountBlocks = int256(releasedAmountBlocksCalculator.calculate(
-                BalanceRecordable(address(revenueTokenManager)), address(0), startBlock, endBlock
-            ));
-
-        // Correct the amount blocks by subtracting the contributions from contracts that may not claim
-        for (uint256 i = 0; i < nonClaimers.length; i = i.add(1))
-            amountBlocks = amountBlocks.sub(_balanceBlocks(nonClaimers[i], startBlock, endBlock));
-
-        // Return corrected amount blocks
-        return amountBlocks;
     }
 }

@@ -3,7 +3,7 @@
  *
  * Compliant with the Hubii Nahmii specification v0.12.
  *
- * Copyright (C) 2017-2019 Hubii AS based on Open-Zeppelin's SafeMath library
+ * Copyright (C) 2017-2020 Hubii AS based on Open-Zeppelin's SafeMath library
  */
 
 pragma solidity >=0.4.25 <0.6.0;

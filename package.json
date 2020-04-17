@@ -1,6 +1,6 @@
 {
   "name": "nahmii-contracts",
-  "version": "1.5.0",
+  "version": "1.5.1-ropsten.2",
   "description": "Smart contracts for nahmii",
   "main": "truffle.js",
   "directories": {
@@ -127,6 +127,7 @@
     "BlockNumbUintsLib.sol",
     "CancelOrdersChallengable.sol",
     "CancelOrdersChallenge.sol",
+    "ClaimableAmountCalculator.sol",
     "ClientFundable.sol",
     "CommunityVotable.sol",
     "Configurable.sol",

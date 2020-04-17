@@ -3,6 +3,8 @@ const keythereum = require('keythereum');
 const path = require('path');
 const findUp = require('find-up');
 
+const infuraProjectId = process.env.INFURA_PROJECT_ID || '36deff216fd744b9bfba9f884df9fdc3';
+
 module.exports = {
     networks: {
         'develop': {
@@ -44,7 +46,7 @@ module.exports = {
                 const dataDir = path.dirname(findUp.sync('keystore', {type: 'directory'}));
                 const keyObject = keythereum.importFromFile(process.env.ETH_MAINNET_ACCOUNT, dataDir);
                 const privateKey = keythereum.recover(process.env.ETH_MAINNET_SECRET, keyObject).toString('hex');
-                return new HDWalletProvider(privateKey, 'https://mainnet.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3')
+                return new HDWalletProvider(privateKey, `https://mainnet.infura.io/v3/${infuraProjectId}`);
             },
             network_id: '1',
             gas: 8000000
@@ -64,7 +66,7 @@ module.exports = {
                 const dataDir = path.dirname(findUp.sync('keystore', {type: 'directory'}));
                 const keyObject = keythereum.importFromFile(process.env.ETH_TESTNET_ACCOUNT, dataDir);
                 const privateKey = keythereum.recover(process.env.ETH_TESTNET_SECRET, keyObject).toString('hex');
-                return new HDWalletProvider(privateKey, 'https://ropsten.infura.io/v3/36deff216fd744b9bfba9f884df9fdc3')
+                return new HDWalletProvider(privateKey, `https://ropsten.infura.io/v3/${infuraProjectId}`);
             },
             network_id: '3',
             gas: 8000000

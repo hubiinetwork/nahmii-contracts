@@ -3,7 +3,7 @@
  *
  * Compliant with the Hubii Nahmii specification v0.12.
  *
- * Copyright (C) 2017-2019 Hubii AS
+ * Copyright (C) 2017-2020 Hubii AS
  */
 
 pragma solidity >=0.4.25 <0.6.0;
@@ -87,5 +87,13 @@ contract MockedBeneficiary is Beneficiary {
         currencyCt = _benefits[index].figure.currency.ct;
         currencyId = _benefits[index].figure.currency.id;
         standard = _benefits[index].standard;
+    }
+
+    function benefitsCount()
+    public
+    view
+    returns (uint256)
+    {
+        return _benefits.length;
     }
 }

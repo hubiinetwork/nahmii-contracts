@@ -1,3 +1,11 @@
+/*
+ * Hubii Nahmii
+ *
+ * Compliant with the Hubii Nahmii specification v0.12.
+ *
+ * Copyright (C) 2017-2020 Hubii AS
+ */
+
 pragma solidity >=0.4.25 <0.6.0;
 
 import {BalanceRecordable} from "./BalanceRecordable.sol";
