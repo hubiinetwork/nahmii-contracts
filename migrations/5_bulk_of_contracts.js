@@ -477,14 +477,14 @@ module.exports = (deployer, network, accounts) => {
             instance = await BalanceTracker.at(addressStorage.get('BalanceTracker'));
             await instance.registerService(addressStorage.get('ClientFund'));
 
+            instance = await CancelOrdersChallenge.at(addressStorage.get('CancelOrdersChallenge'));
+            await instance.setValidator(addressStorage.get('ValidatorV2'));
+            await instance.setConfiguration(addressStorage.get('Configuration'));
+
             instance = await ClaimableAmountCalculator.at(addressStorage.get('ClaimableAmountCalculator'));
             await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
             await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
             await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
-
-            instance = await CancelOrdersChallenge.at(addressStorage.get('CancelOrdersChallenge'));
-            await instance.setValidator(addressStorage.get('ValidatorV2'));
-            await instance.setConfiguration(addressStorage.get('Configuration'));
 
             instance = await ClientFund.at(addressStorage.get('ClientFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
@@ -992,6 +992,7 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('BalanceAucCalculator', '0x565e8d803aff56fc584aca032a8960a1afb799f3');
             addressStorage.set('BalanceTracker', '0x0593bd7bce0b8fb7c06a71be3c1494d72a269cd8');
             addressStorage.set('CancelOrdersChallenge', '0x6243a3c3a7753b7c2f41b531141a1e9f71581c89');
+            await execDeploy(ctl, 'ClaimableAmountCalculator', ClaimableAmountCalculator, [ctl.deployerAccount]);
             addressStorage.set('ClientFund', '0x621204591f5940dba89db37d7ed74a51e5903d89');
             addressStorage.set('CommunityVote', '0xbed9099f2123144f96bdb6e0988cd557358deb69');
             addressStorage.set('Configuration', '0xba820a11cbc2bd013d3577606a9487b44207ba28');
@@ -1028,8 +1029,8 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('NullSettlementState', '0xa07373145ec71b74acf6da428c0fbc8336a7e359');
             addressStorage.set('PartnerBenefactor', '0x55103eb32d8bcbf90003879a26db8dfb18175fed');
             addressStorage.set('PaymentHasher', '0x684d22495c0ee89d74fe37e132d4cef771b6ded6');
-            await execDeploy(ctl, 'RevenueFund1', RevenueFund1, [ctl.deployerAccount]);
-            addressStorage.set('RevenueFundAccrualMonitor', '0x0f0c0e67b74f444cf64344dcf442d1ef6753fa84');
+            addressStorage.set('RevenueFund1', '0x10dd0277ce5c1c707d4631e999915d909681dc64');
+            await execDeploy(ctl, 'RevenueFundAccrualMonitor', RevenueFundAccrualMonitor, [ctl.deployerAccount]);
             addressStorage.set('SecurityBond', '0x6e72335e13358f43e39bba87e709bfda7e9a9d1c');
             addressStorage.set('SignerManager', '0x0f8af4aaf302e2fd6883e20a3451606522ed9ea4');
             await execDeploy(ctl, 'TokenHolderRevenueFund', TokenHolderRevenueFund, [ctl.deployerAccount]);
@@ -1047,6 +1048,11 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setValidator(addressStorage.get('ValidatorV2'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
 
+            instance = await ClaimableAmountCalculator.at(addressStorage.get('ClaimableAmountCalculator'));
+            await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
+            await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+
             instance = await ClientFund.at(addressStorage.get('ClientFund'));
             // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
@@ -1056,7 +1062,7 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             // await instance.freezeWalletLocker();
             await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
-            await instance.registerBeneficiary(addressStorage.get('RevenueFund1'));
+            // await instance.registerBeneficiary(addressStorage.get('RevenueFund1'));
             // // await instance.registerBeneficiary(addressStorage.get('PartnerFund'));
             // await instance.registerService(addressStorage.get('DriipSettlementByPayment'));
             // await instance.authorizeInitialService(addressStorage.get('DriipSettlementByPayment'));
@@ -1205,7 +1211,7 @@ module.exports = (deployer, network, accounts) => {
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.ADD_SETTLED_AMOUNT_ACTION.call());
             // await instance.enableServiceAction(addressStorage.get('DriipSettlementByTrade'), await instance.SET_TOTAL_FEE_ACTION.call());
 
-            instance = await DriipSettlementByPayment.at(addressStorage.get('DriipSettlementByPayment'));
+            // instance = await DriipSettlementByPayment.at(addressStorage.get('DriipSettlementByPayment'));
             // await instance.setClientFund(addressStorage.get('ClientFund'));
             // await instance.setBalanceTracker(addressStorage.get('BalanceTracker'));
             // await instance.setValidator(addressStorage.get('Validator'));
@@ -1215,10 +1221,10 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
             // await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
-            await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
+            // await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
             // // await instance.setPartnerBenefactor(addressStorage.get('PartnerBenefactor'));
 
-            instance = await DriipSettlementByTrade.at(addressStorage.get('DriipSettlementByTrade'));
+            // instance = await DriipSettlementByTrade.at(addressStorage.get('DriipSettlementByTrade'));
             // await instance.setClientFund(addressStorage.get('ClientFund'));
             // await instance.setValidator(addressStorage.get('ValidatorV2'));
             // await instance.setCommunityVote(addressStorage.get('CommunityVote'));
@@ -1227,7 +1233,7 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setWalletLocker(addressStorage.get('WalletLocker'));
             // await instance.setDriipSettlementChallengeState(addressStorage.get('DriipSettlementChallengeState'));
             // await instance.setDriipSettlementState(addressStorage.get('DriipSettlementState'));
-            await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
+            // await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
             // // await instance.setPartnerFund(addressStorage.get('PartnerFund'));
 
             // instance = await NullSettlementChallengeState.at(addressStorage.get('NullSettlementChallengeState'));
@@ -1420,16 +1426,14 @@ module.exports = (deployer, network, accounts) => {
             // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
 
             instance = await RevenueFund1.at(addressStorage.get('RevenueFund1'));
-            await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
+            // await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
             await instance.registerFractionalBeneficiary(addressStorage.get('TokenHolderRevenueFund'), 99e16);
-            await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
+            // await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
 
             instance = await RevenueFundAccrualMonitor.at(addressStorage.get('RevenueFundAccrualMonitor'));
             await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
             await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
-            // await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
-            // await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
-            // await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            await instance.setClaimableAmountCalculator(addressStorage.get('ClaimableAmountCalculator'));
 
             // instance = await SecurityBond.at(addressStorage.get('SecurityBond'));
             // await instance.setConfiguration(addressStorage.get('Configuration'));
@@ -1473,9 +1477,7 @@ module.exports = (deployer, network, accounts) => {
 
             instance = await TokenHolderRevenueFund.at(addressStorage.get('TokenHolderRevenueFund'));
             await instance.setTransferControllerManager(addressStorage.get('TransferControllerManager'));
-            await instance.setRevenueTokenManager(addressStorage.get('RevenueTokenManager'));
-            await instance.setBalanceBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
-            await instance.setReleasedAmountBlocksCalculator(addressStorage.get('BalanceAucCalculator'));
+            await instance.setClaimableAmountCalculator(addressStorage.get('ClaimableAmountCalculator'));
             await instance.registerService(addressStorage.get('RevenueFund1'));
             await instance.enableServiceAction(addressStorage.get('RevenueFund1'), await instance.CLOSE_ACCRUAL_PERIOD_ACTION.call());
 
