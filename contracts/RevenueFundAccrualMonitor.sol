@@ -75,17 +75,17 @@ contract RevenueFundAccrualMonitor is Ownable {
     }
 
     /// @notice Set the claimable amount calculator contract
-    /// @param calculator The (address of) ClaimableAmountCalculator contract instance
-    function setClaimableAmountCalculator(ClaimableAmountCalculator calculator)
+    /// @param _claimableAmountCalculator The ClaimableAmountCalculator contract instance
+    function setClaimableAmountCalculator(ClaimableAmountCalculator _claimableAmountCalculator)
     public
     onlyDeployer
-    notNullAddress(address(calculator))
+    notNullAddress(address(_claimableAmountCalculator))
     {
-        // Set new revenue token manager
-        claimableAmountCalculator = calculator;
+        // Set new claimable amount calculator
+        claimableAmountCalculator = _claimableAmountCalculator;
 
         // Emit event
-        emit SetClaimableAmountCalculatorEvent(calculator);
+        emit SetClaimableAmountCalculatorEvent(claimableAmountCalculator);
     }
 
     /// @notice Get the claimable amount for the given wallet-currency pair for the
