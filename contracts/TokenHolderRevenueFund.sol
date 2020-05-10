@@ -82,6 +82,8 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
 
     mapping(address => FungibleBalanceLib.Balance) private stagedByWallet;
 
+    uint256 public baselineBlockNumber;
+
     //
     // Events
     // -----------------------------------------------------------------------------------------------------------------
@@ -109,6 +111,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     // Constructor
     // -----------------------------------------------------------------------------------------------------------------
     constructor(address deployer) Ownable(deployer) public {
+        baselineBlockNumber = block.number;
     }
 
     //
@@ -323,7 +326,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
             // Define start block of the completed accrual, as (if existent) previous period end block + 1, else 0
             uint256 startBlock = (
             0 == closedAccrualsByCurrency[currency.ct][currency.id].length ?
-            0 :
+            baselineBlockNumber :
             closedAccrualsByCurrency[currency.ct][currency.id][closedAccrualsByCurrency[currency.ct][currency.id].length - 1].endBlock + 1
             );
 
@@ -352,6 +355,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         }
     }
 
+    // TODO Adjust unit tests
     /// @notice Get the index of closed accrual for the given currency and block number
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
@@ -362,12 +366,9 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     view
     returns (uint256)
     {
-        for (uint256 i = closedAccrualsByCurrency[currencyCt][currencyId].length; i > 0;) {
-            i = i.sub(1);
-            if (closedAccrualsByCurrency[currencyCt][currencyId][i].startBlock <= blockNumber)
-                return i;
-        }
-        return 0;
+        uint256 oneBasedIndex = _closedAccrualIndexByBlockNumber(currencyCt, currencyId, blockNumber);
+        require(oneBasedIndex > 0, "Block number out of accrual scope");
+        return oneBasedIndex - 1;
     }
 
     /// @notice Get the claimable amount for the given wallet-currency pair in the given
@@ -440,11 +441,15 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
             return 0;
 
         // Obtain accrual indices corresponding to block number boundaries
-        uint256 startAccrualIndex = closedAccrualIndexByBlockNumber(currencyCt, currencyId, startBlock);
-        uint256 endAccrualIndex = closedAccrualIndexByBlockNumber(currencyCt, currencyId, endBlock);
+        uint256 startAccrualIndex = _closedAccrualIndexByBlockNumber(currencyCt, currencyId, startBlock);
+        uint256 endAccrualIndex = _closedAccrualIndexByBlockNumber(currencyCt, currencyId, endBlock);
+
+        // Return 0 if block window is before the first accrual
+        if (0 == endAccrualIndex)
+            return 0;
 
         // Obtain accrual
-        Accrual storage endAccrual = closedAccrualsByCurrency[currencyCt][currencyId][endAccrualIndex];
+        Accrual storage endAccrual = closedAccrualsByCurrency[currencyCt][currencyId][endAccrualIndex - 1];
 
         // Return 0 if end block is before any accrual's start block
         if (endBlock < endAccrual.startBlock)
@@ -456,7 +461,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         // If start accrual index is strictly smaller than end accrual index...
         if (startAccrualIndex < endAccrualIndex) {
             // Obtain accrual
-            Accrual storage startAccrual = closedAccrualsByCurrency[currencyCt][currencyId][startAccrualIndex];
+            Accrual storage startAccrual = closedAccrualsByCurrency[currencyCt][currencyId][startAccrualIndex - 1];
 
             // Add to claimable amount for first (potentially partial) accrual
             claimableAmount = _claimableAmount(
@@ -470,7 +475,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         for (uint256 i = startAccrualIndex.add(1); i < endAccrualIndex; i = i.add(1)) {
             // Add to claimable amount
             claimableAmount = claimableAmount.add(
-                _claimableAmount(wallet, closedAccrualsByCurrency[currencyCt][currencyId][i])
+                _claimableAmount(wallet, closedAccrualsByCurrency[currencyCt][currencyId][i - 1])
             );
         }
 
@@ -755,6 +760,18 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     //
     // Private functions
     // -----------------------------------------------------------------------------------------------------------------
+    function _closedAccrualIndexByBlockNumber(address currencyCt, uint256 currencyId, uint256 blockNumber)
+    public
+    view
+    returns (uint256)
+    {
+        for (uint256 i = closedAccrualsByCurrency[currencyCt][currencyId].length; i > 0; i--) {
+            if (closedAccrualsByCurrency[currencyCt][currencyId][i - 1].startBlock <= blockNumber)
+                return i;
+        }
+        return 0;
+    }
+
     function _claimByAccruals(address wallet, address currencyCt, uint256 currencyId,
         uint256 startAccrualIndex, uint256 endAccrualIndex)
     private
@@ -801,8 +818,11 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         require(0 < closedAccrualsByCurrency[currencyCt][currencyId].length, "No terminated accrual found [TokenHolderRevenueFund.sol:801]");
 
         // Obtain accrual indices corresponding to block number boundaries
-        uint256 startAccrualIndex = closedAccrualIndexByBlockNumber(currencyCt, currencyId, startBlock);
-        uint256 endAccrualIndex = closedAccrualIndexByBlockNumber(currencyCt, currencyId, endBlock);
+        uint256 startAccrualIndex = _closedAccrualIndexByBlockNumber(currencyCt, currencyId, startBlock);
+        uint256 endAccrualIndex = _closedAccrualIndexByBlockNumber(currencyCt, currencyId, endBlock);
+
+        // Return 0 if block window is before the first accrual
+        require(0 < endAccrualIndex, "Block numbers out of accrual scope");
 
         // Declare claimed amount and clamped blocks
         int256 claimedAmount = 0;
@@ -812,7 +832,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         // If start accrual index is strictly smaller than end accrual index...
         if (startAccrualIndex < endAccrualIndex) {
             // Obtain start accrual
-            Accrual storage accrual = closedAccrualsByCurrency[currencyCt][currencyId][startAccrualIndex];
+            Accrual storage accrual = closedAccrualsByCurrency[currencyCt][currencyId][startAccrualIndex - 1];
 
             // Clamp start and end blocks
             clampedStartBlock = startBlock.clampMin(accrual.startBlock);
@@ -828,7 +848,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         // For each accrual index in range...
         for (uint256 i = startAccrualIndex.add(1); i < endAccrualIndex; i = i.add(1)) {
             // Obtain accrual
-            Accrual storage accrual = closedAccrualsByCurrency[currencyCt][currencyId][i];
+            Accrual storage accrual = closedAccrualsByCurrency[currencyCt][currencyId][i - 1];
 
             // Add to claimable amount for accrual
             claimedAmount = claimedAmount.add(_claimableAmount(wallet, accrual));
@@ -838,7 +858,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         }
 
         // Obtain end accrual
-        Accrual storage accrual = closedAccrualsByCurrency[currencyCt][currencyId][endAccrualIndex];
+        Accrual storage accrual = closedAccrualsByCurrency[currencyCt][currencyId][endAccrualIndex - 1];
 
         // Clamp start and end blocks
         clampedStartBlock = startBlock.clampMin(accrual.startBlock);
