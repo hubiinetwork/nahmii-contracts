@@ -155,6 +155,26 @@ contract ClaimableAmountCalculator is Ownable {
         }
     }
 
+    /// @notice Calculate the claimable amount from an entire accrual period
+    /// @param wallet The concerned wallet
+    /// @param accrualAmount The full amount of the accrual period
+    /// @param accrualStartBlock The lower accrual period block number boundary
+    /// @param accrualEndBlock The upper accrual period block number boundary
+    /// @return The calculated claimable amount
+    function calculate(address wallet, int256 accrualAmount,
+        uint256 accrualStartBlock, uint256 accrualEndBlock)
+    public
+    view
+    returns (int256)
+    {
+        // Return the claimable amount
+        return this.calculate(
+            wallet, accrualAmount,
+            accrualStartBlock, accrualEndBlock,
+            accrualStartBlock, accrualEndBlock
+        );
+    }
+
     /// @notice Calculate the claimable amount from an accrual period and a limited block number
     /// window within that accrual period
     /// @param wallet The concerned wallet
