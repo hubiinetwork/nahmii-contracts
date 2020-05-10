@@ -59,6 +59,15 @@ contract MockedClaimableAmountCalculator {
     }
 
     function calculate(address wallet, int256 accrualAmount,
+        uint256 accrualStartBlock, uint256 accrualEndBlock)
+    public
+    view
+    returns (int256)
+    {
+        return calculateByWalletAmountWindowBlocks[wallet][accrualAmount][accrualStartBlock][accrualEndBlock];
+    }
+
+    function calculate(address wallet, int256 accrualAmount,
         uint256 /*accrualStartBlock*/, uint256 /*accrualEndBlock*/,
         uint256 windowStartBlock, uint256 windowEndBlock)
     public

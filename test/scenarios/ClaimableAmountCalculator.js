@@ -261,7 +261,7 @@ module.exports = function (glob) {
             });
         });
 
-        describe('calculate()', () => {
+        describe('calculate(address,int256,uint256,uint256)', () => {
             describe('if called with 0 released amount blocks', () => {
                 beforeEach(async () => {
                     await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
@@ -273,7 +273,69 @@ module.exports = function (glob) {
                 });
 
                 it('should return 0', async () => {
-                    (await ethersClaimableAmountCalculator.calculate(
+                    (await ethersClaimableAmountCalculator['calculate(address,int256,uint256,uint256)'](
+                        glob.user_a, utils.parseUnits('2000', 15), 0, 10
+                    ))._bn.should.eq.BN(0);
+                });
+            });
+
+            describe('if called without non-claimers', () => {
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, utils.parseUnits('3000', 15)
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, utils.parseUnits('10000', 15)
+                    );
+                });
+
+                it('should return the claimable amount', async () => {
+                    (await ethersClaimableAmountCalculator['calculate(address,int256,uint256,uint256)'](
+                        glob.user_a, utils.parseUnits('2000', 15), 0, 10
+                    ))._bn.should.eq.BN(utils.parseUnits('600', 15)._bn);
+                });
+            });
+
+            describe('if called with non-claimers', () => {
+                beforeEach(async () => {
+                    await ethersClaimableAmountCalculator.registerNonClaimer(glob.user_b);
+                    await ethersClaimableAmountCalculator.registerNonClaimer(glob.user_c);
+
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, utils.parseUnits('3000', 15)
+                    );
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_b, utils.parseUnits('2000', 15)
+                    );
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_c, utils.parseUnits('3000', 15)
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, utils.parseUnits('10000', 15)
+                    );
+                });
+
+                it('should return the claimable amount', async () => {
+                    (await ethersClaimableAmountCalculator['calculate(address,int256,uint256,uint256)'](
+                        glob.user_a, utils.parseUnits('2000', 15), 0, 10
+                    ))._bn.should.eq.BN(utils.parseUnits('1200', 15)._bn);
+                });
+            });
+        });
+
+        describe('calculate(address,int256,uint256,uint256,uint256,uint256)', () => {
+            describe('if called with 0 released amount blocks', () => {
+                beforeEach(async () => {
+                    await ethersMockedBalanceBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersERC20.address, glob.user_a, utils.parseUnits('3000', 15)
+                    );
+                    await ethersMockedReleasedAmountBlocksCalculator['_setCalculate(address,address,uint256)'](
+                        ethersMockedRevenueTokenManager.address, mocks.address0, 0
+                    );
+                });
+
+                it('should return 0', async () => {
+                    (await ethersClaimableAmountCalculator['calculate(address,int256,uint256,uint256,uint256,uint256)'](
                         glob.user_a, utils.parseUnits('2000', 15), 0, 10, 0, 10
                     ))._bn.should.eq.BN(0);
                 });
@@ -290,7 +352,7 @@ module.exports = function (glob) {
                 });
 
                 it('should return the claimable amount', async () => {
-                    (await ethersClaimableAmountCalculator.calculate(
+                    (await ethersClaimableAmountCalculator['calculate(address,int256,uint256,uint256,uint256,uint256)'](
                         glob.user_a, utils.parseUnits('2000', 15), 0, 10, 0, 10
                     ))._bn.should.eq.BN(utils.parseUnits('600', 15)._bn);
                 });
@@ -316,7 +378,7 @@ module.exports = function (glob) {
                 });
 
                 it('should return the claimable amount', async () => {
-                    (await ethersClaimableAmountCalculator.calculate(
+                    (await ethersClaimableAmountCalculator['calculate(address,int256,uint256,uint256,uint256,uint256)'](
                         glob.user_a, utils.parseUnits('2000', 15), 0, 10, 0, 10
                     ))._bn.should.eq.BN(utils.parseUnits('1200', 15)._bn);
                 });

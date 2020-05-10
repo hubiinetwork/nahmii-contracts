@@ -355,7 +355,6 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
         }
     }
 
-    // TODO Adjust unit tests
     /// @notice Get the index of closed accrual for the given currency and block number
     /// @param currencyCt The address of the concerned currency contract (address(0) == ETH)
     /// @param currencyId The ID of the concerned currency (0 for ETH and ERC20)
@@ -367,7 +366,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     returns (uint256)
     {
         uint256 oneBasedIndex = _closedAccrualIndexByBlockNumber(currencyCt, currencyId, blockNumber);
-        require(oneBasedIndex > 0, "Block number out of accrual scope [TokenHolderRevenueFund.sol:370]");
+        require(oneBasedIndex > 0, "Block number out of accrual scope [TokenHolderRevenueFund.sol:369]");
         return oneBasedIndex - 1;
     }
 
@@ -386,7 +385,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     returns (int256)
     {
         // Impose ordinality constraint
-        require(startAccrualIndex <= endAccrualIndex, "Accrual index ordinality mismatch [TokenHolderRevenueFund.sol:389]");
+        require(startAccrualIndex <= endAccrualIndex, "Accrual index ordinality mismatch [TokenHolderRevenueFund.sol:388]");
 
         // Return 0 if no accrual has terminated for the given currency
         if (0 == closedAccrualsByCurrency[currencyCt][currencyId].length)
@@ -430,7 +429,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     returns (int256)
     {
         // Impose ordinality constraint
-        require(startBlock <= endBlock, "Block number ordinality mismatch [TokenHolderRevenueFund.sol:433]");
+        require(startBlock <= endBlock, "Block number ordinality mismatch [TokenHolderRevenueFund.sol:432]");
 
         // Return 0 if no accrual has terminated for the given currency
         if (0 == closedAccrualsByCurrency[currencyCt][currencyId].length)
@@ -504,7 +503,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     public
     {
         // Require that message sender is non-claimer
-        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:507]");
+        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:506]");
 
         // Claim accrual and obtain the claimed amount
         int256 claimedAmount = _claimByAccruals(msg.sender, currencyCt, currencyId, startAccrualIndex, endAccrualIndex);
@@ -529,7 +528,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     public
     {
         // Require that message sender is non-claimer
-        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:532]");
+        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:531]");
 
         // Claim accrual and obtain the claimed amount
         int256 claimedAmount = _claimByBlockNumbers(msg.sender, currencyCt, currencyId, startBlock, endBlock);
@@ -559,7 +558,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     public
     {
         // Require that message sender is non-claimer
-        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:562]");
+        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:561]");
 
         // Claim accrual and obtain the claimed amount
         int256 claimedAmount = _claimByAccruals(msg.sender, currencyCt, currencyId, startAccrualIndex, endAccrualIndex);
@@ -591,7 +590,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     public
     {
         // Require that message sender is non-claimer
-        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:594]");
+        require(!claimableAmountCalculator.isNonClaimer(msg.sender), "Message sender is non-claimer [TokenHolderRevenueFund.sol:593]");
 
         // Claim accrual and obtain the claimed amount
         int256 claimedAmount = _claimByBlockNumbers(msg.sender, currencyCt, currencyId, startBlock, endBlock);
@@ -733,7 +732,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     public
     {
         // Require that amount is strictly positive
-        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:736]");
+        require(amount.isNonZeroPositiveInt256(), "Amount not strictly positive [TokenHolderRevenueFund.sol:735]");
 
         // Clamp amount to the max given by staged balance
         amount = amount.clampMax(stagedByWallet[msg.sender].get(currencyCt, currencyId));
@@ -752,7 +751,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                     controller.getDispatchSignature(), address(this), msg.sender, uint256(amount), currencyCt, currencyId
                 )
             );
-            require(success, "Dispatch by controller failed [TokenHolderRevenueFund.sol:755]");
+            require(success, "Dispatch by controller failed [TokenHolderRevenueFund.sol:754]");
         }
 
         // Emit event
@@ -780,10 +779,10 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     returns (int256)
     {
         // Impose ordinality constraint
-        require(startAccrualIndex <= endAccrualIndex, "Accrual index mismatch [TokenHolderRevenueFund.sol:783]");
+        require(startAccrualIndex <= endAccrualIndex, "Accrual index mismatch [TokenHolderRevenueFund.sol:782]");
 
         // Require that at least one accrual has terminated
-        require(0 < closedAccrualsByCurrency[currencyCt][currencyId].length, "No terminated accrual found [TokenHolderRevenueFund.sol:786]");
+        require(0 < closedAccrualsByCurrency[currencyCt][currencyId].length, "No terminated accrual found [TokenHolderRevenueFund.sol:785]");
 
         // Declare claimed amount
         int256 claimedAmount = 0;
@@ -814,22 +813,22 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
     returns (int256)
     {
         // Impose ordinality constraint
-        require(startBlock <= endBlock, "Block number mismatch [TokenHolderRevenueFund.sol:817]");
+        require(startBlock <= endBlock, "Block number mismatch [TokenHolderRevenueFund.sol:816]");
 
         // Require that at least one accrual has terminated
-        require(0 < closedAccrualsByCurrency[currencyCt][currencyId].length, "No terminated accrual found [TokenHolderRevenueFund.sol:820]");
+        require(0 < closedAccrualsByCurrency[currencyCt][currencyId].length, "No terminated accrual found [TokenHolderRevenueFund.sol:819]");
 
         // Obtain accrual index corresponding to end block number boundary
         uint256 endAccrualIndex = _closedAccrualIndexByBlockNumber(currencyCt, currencyId, endBlock);
 
         // Require that the block window does not underrun the accrual scope
-        require(0 < endAccrualIndex, "Block numbers below accruals' block number scope [TokenHolderRevenueFund.sol:826]");
+        require(0 < endAccrualIndex, "Block numbers below accruals' block number scope [TokenHolderRevenueFund.sol:825]");
 
         // Obtain end accrual
         Accrual storage endAccrual = closedAccrualsByCurrency[currencyCt][currencyId][endAccrualIndex - 1];
 
         // Require that the block window does not overrun the accrual scope
-        require(startBlock <= endAccrual.endBlock, "Block numbers above accruals' block number scope [TokenHolderRevenueFund.sol:832]");
+        require(startBlock <= endAccrual.endBlock, "Block numbers above accruals' block number scope [TokenHolderRevenueFund.sol:831]");
 
         // Obtain accrual index corresponding to start block number boundary
         uint256 startAccrualIndex = _closedAccrualIndexByBlockNumber(currencyCt, currencyId, startBlock);
@@ -899,7 +898,7 @@ contract TokenHolderRevenueFund is Ownable, AccrualBeneficiary, Servable, Transf
                     controller.getApproveSignature(), address(beneficiary), uint256(amount), currencyCt, currencyId
                 )
             );
-            require(success, "Approval by controller failed [TokenHolderRevenueFund.sol:902]");
+            require(success, "Approval by controller failed [TokenHolderRevenueFund.sol:901]");
 
             // Transfer tokens to the beneficiary
             beneficiary.receiveTokensTo(destWallet, balanceType, amount, currencyCt, currencyId, standard);
