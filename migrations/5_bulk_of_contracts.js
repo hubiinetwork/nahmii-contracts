@@ -1030,7 +1030,7 @@ module.exports = (deployer, network, accounts) => {
             addressStorage.set('PartnerBenefactor', '0x55103eb32d8bcbf90003879a26db8dfb18175fed');
             addressStorage.set('PaymentHasher', '0x684d22495c0ee89d74fe37e132d4cef771b6ded6');
             addressStorage.set('RevenueFund1', '0x10dd0277ce5c1c707d4631e999915d909681dc64');
-            await execDeploy(ctl, 'RevenueFundAccrualMonitor', RevenueFundAccrualMonitor, [ctl.deployerAccount]);
+            addressStorage.set('RevenueFundAccrualMonitor', '0x776556a6c86b595057d348fde911388a210d158f');
             addressStorage.set('SecurityBond', '0x6e72335e13358f43e39bba87e709bfda7e9a9d1c');
             addressStorage.set('SignerManager', '0x0f8af4aaf302e2fd6883e20a3451606522ed9ea4');
             await execDeploy(ctl, 'TokenHolderRevenueFund', TokenHolderRevenueFund, [ctl.deployerAccount]);
@@ -1431,7 +1431,7 @@ module.exports = (deployer, network, accounts) => {
             // await instance.registerFractionalBeneficiary(addressStorage.get('SecurityBond'), 1e16);
 
             instance = await RevenueFundAccrualMonitor.at(addressStorage.get('RevenueFundAccrualMonitor'));
-            await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
+            // await instance.setRevenueFund(addressStorage.get('RevenueFund1'));
             await instance.setTokenHolderRevenueFund(addressStorage.get('TokenHolderRevenueFund'));
             await instance.setClaimableAmountCalculator(addressStorage.get('ClaimableAmountCalculator'));
 
